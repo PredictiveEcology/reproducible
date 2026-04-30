@@ -571,6 +571,31 @@ pp_remote_hash_check <- function(ctx) {
   }
   if (is.null(localFile)) return(ctx)   # nothing local yet — let download proceed
 
+  # Fast path: a `.hash` sidecar from a previous successful match means the
+  # file has already been validated against the remote source. By default we
+  # trust it and skip the network round-trip entirely. To force a remote
+  # re-check on every call (e.g. when the upstream file may change), set
+  # `options(reproducible.checkRemoteHash = TRUE)`. The first call (no
+  # sidecar yet) always falls through to the remote check below so the
+  # sidecar can be written. Sidecar removal forces re-verification.
+  remoteHashFileLocal <- makeRemoteHashFile(
+    ctx$url, ctx$destinationPath, basename(localFile), ""
+  )
+  haveSidecar <- file.exists(remoteHashFileLocal) &&
+    isTRUE(suppressWarnings(file.size(remoteHashFileLocal)) > 0L)
+  if (haveSidecar &&
+      !isTRUE(getOption("reproducible.checkRemoteHash", FALSE))) {
+    messagePreProcess(
+      "Local file matches remote version (cached); skipping download: ",
+      .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
+    )
+    ctx$skipDownload <- TRUE
+    ctx$hashVerified <- unique(c(ctx$hashVerified, localFile))
+    if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
+      ctx$archive <- localFile
+    return(ctx)
+  }
+
   # Fetch remote metadata; bail silently on any error
   remoteMetadata <- tryCatch(
     getRemoteMetadata(url = ctx$url),

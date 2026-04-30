@@ -38,6 +38,17 @@
 #'     systems, but much slower than `digest::digest(algo = "spooky)`.
 #'     So, if all caching is happening on a single machine, `"fast"` would be a good setting.
 #'   }
+#'   \item{`checkRemoteHash`}{
+#'     Default: `FALSE`. Used in [preProcess()] / [prepInputs()]. Controls whether
+#'     `pp_remote_hash_check` re-contacts the remote source (e.g. Google Drive,
+#'     HTTP HEAD) when a `.hash` sidecar from a previous successful match
+#'     already exists in `destinationPath`. With the default (`FALSE`), the
+#'     sidecar is trusted and the remote check is skipped — typically saving
+#'     1–2 s per file when the cluster cache is warm. Set to `TRUE` to force a
+#'     remote round-trip on every call (the pre-3.0.0.9050 behaviour); use
+#'     this if the upstream file may change and you need to detect that.
+#'     Removing the `<file>_*.hash` sidecar also forces a re-check.
+#'   }
 #'   \item{`conn`}{
 #'     Default: `NULL`. Sets a specific connection to a database, e.g.,
 #'     `dbConnect(drv = RSQLite::SQLite())` or `dbConnect(drv = RPostgres::Postgres()`.
@@ -283,6 +294,7 @@ reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
     reproducible.cacheChaining = FALSE,
+    reproducible.checkRemoteHash = FALSE,
     reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
     reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",
