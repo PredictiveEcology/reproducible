@@ -299,6 +299,29 @@ pp_resolve_files <- function(ctx) {
 pp_checksums_init <- function(ctx) {
   filesToCheck <- na.omit(unique(c(ctx$archive, ctx$targetFilePath, ctx$alsoExtract)))
 
+  # Pre-verify via remote-hash sidecar files. A `<basename>_<urlEncoded>.hash`
+  # file in destinationPath (or any reproducible.inputPaths dir) is written
+  # only by a successful pp_remote_hash_check, so its presence implies the
+  # file has been validated against the remote source. Skip the local
+  # CHECKSUMS.txt-driven re-digest for those files — re-hashing a multi-GB
+  # archive in this phase otherwise dominates wall time of an idempotent
+  # preProcess() call (4 invocations: destinationPath + inputPaths × 2
+  # CHECKSUMS.txt locations). User can `rm` the .hash file to force a full
+  # local re-verification.
+  filesPreVerified <- character()
+  if (length(filesToCheck)) {
+    sidecarDirs <- unique(c(ctx$destinationPath, .getDataPath()))
+    hasSidecar <- vapply(filesToCheck, function(f) {
+      length(.findRemoteHashSidecars(basename2(f), sidecarDirs)) > 0L &&
+        file.exists(f)
+    }, FUN.VALUE = logical(1L))
+    if (any(hasSidecar)) {
+      filesPreVerified <- filesToCheck[hasSidecar]
+      filesToCheck     <- filesToCheck[!hasSidecar]
+      ctx$hashVerified <- unique(c(ctx$hashVerified, filesPreVerified))
+    }
+  }
+
   inputPaths <- runChecksums(ctx$destinationPath, ctx$checkSumFilePath, filesToCheck, ctx$verbose)
 
   ctx$reproducible.inputPaths <- inputPaths$reproducible.inputPaths
@@ -324,6 +347,34 @@ pp_checksums_init <- function(ctx) {
     ctx$needChecksums <- 1L
     ctx$checkSums     <- .emptyChecksumsResult
   }
+
+  # Synthesise OK rows for pre-verified files so downstream phases
+  # (.compareChecksumsAndFilesAddDirs, .checkLocalSources) see them as
+  # already-OK without a digest pass. If a row with the same expectedFile
+  # already exists (e.g. left over from a stale CHECKSUMS.txt comparison),
+  # drop it — the synthetic row's "OK" is authoritative for downstream joins.
+  if (length(filesPreVerified)) {
+    rel <- makeRelative(filesPreVerified, ctx$destinationPath)
+    sz  <- as.character(file.size(filesPreVerified))
+    okRows <- data.table::data.table(
+      result       = "OK",
+      expectedFile = rel,
+      actualFile   = rel,
+      checksum.x   = NA_character_,
+      checksum.y   = NA_character_,
+      algorithm.x  = NA_character_,
+      algorithm.y  = NA_character_,
+      filesize.x   = sz,
+      filesize.y   = sz
+    )
+    if (NROW(ctx$checkSums)) {
+      ctx$checkSums <- ctx$checkSums[!ctx$checkSums$expectedFile %in% rel, ]
+    }
+    ctx$checkSums <- data.table::rbindlist(
+      list(ctx$checkSums, okRows), fill = TRUE
+    )
+  }
+
   ctx
 }
 
@@ -2101,6 +2152,28 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
     archive = archive,
     fileGuess = fileGuess
   )
+}
+
+#' Find any remote-hash sidecar files for a given basename across one or more
+#' directories. Returns absolute paths of non-empty sidecars.
+#' @keywords internal
+#' @noRd
+.findRemoteHashSidecars <- function(filename, dirs) {
+  if (is.null(filename) || length(filename) != 1L ||
+      is.na(filename) || !nzchar(filename)) return(character())
+  prefix <- paste0(filename, "_")
+  out <- character()
+  for (d in dirs) {
+    if (!is.null(d) && nzchar(d) && dir.exists(d)) {
+      all <- list.files(d, full.names = FALSE)
+      isSidecar <- startsWith(all, prefix) & endsWith(all, ".hash")
+      sidecars <- file.path(d, all[isSidecar])
+      if (length(sidecars))
+        sidecars <- sidecars[file.size(sidecars) > 0L]
+      out <- c(out, sidecars)
+    }
+  }
+  out
 }
 
 isNULLorNA <- function(x) {
