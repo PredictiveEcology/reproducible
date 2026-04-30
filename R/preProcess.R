@@ -563,11 +563,11 @@ pp_remote_hash_check <- function(ctx) {
     )
     ctx$skipDownload   <- TRUE
     ctx$remoteMetadata <- remoteMetadata
-    # Only treat localFile as an archive if it actually is one; otherwise
-    # (e.g. a direct .tif download) leave ctx$archive alone so downstream
-    # code does not try to run 7z/unzip on a non-archive file.
-    if ((is.null(ctx$archive) || isTRUE(is.na(ctx$archive))) &&
-        !is.null(.isArchive(localFile)))
+    # Only treat localFile as an archive if it actually is one AND the user
+    # didn't supply an `archive` value at all. archive = NA is explicit user
+    # intent ("do not extract"), so leave it alone; only auto-fill when
+    # archive was NULL (meaning "figure it out").
+    if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
       ctx$archive <- localFile
   }
 
