@@ -254,6 +254,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     successfulCheckSumFilePath = NULL,
     downloadResult = NULL, funChar = NULL,
     skipDownload = FALSE, remoteMetadata = NULL,
+    hashVerified = character(),
     verboseCFS = verbose
   )
 }
@@ -563,6 +564,10 @@ pp_remote_hash_check <- function(ctx) {
     )
     ctx$skipDownload   <- TRUE
     ctx$remoteMetadata <- remoteMetadata
+    # Record that this file has been verified via the remote-hash sidecar
+    # (.hash file). pp_finalize uses this to skip an otherwise-redundant
+    # local rehash that can take 10s of seconds for multi-GB archives.
+    ctx$hashVerified   <- unique(c(ctx$hashVerified, localFile))
     # Only treat localFile as an archive if it actually is one AND the user
     # didn't supply an `archive` value at all. archive = NA is explicit user
     # intent ("do not extract"), so leave it alone; only auto-fill when
@@ -875,7 +880,18 @@ pp_finalize <- function(ctx) {
 
   # Write checksums (replaces 3 scattered on.exit blocks)
   needChecksums <- ctx$needChecksums
-  if (needChecksums > 0L) {
+  # Drop files that pp_remote_hash_check already validated against the remote
+  # sidecar (.hash file) — re-hashing a multi-GB archive locally to populate
+  # CHECKSUMS.txt is wasted work; the .hash file is already the authoritative
+  # record for this run and any future run.
+  filesToChecksum <- ctx$filesToChecksum
+  if (length(ctx$hashVerified)) {
+    fileBases     <- basename2(filesToChecksum)
+    verifiedBases <- basename2(ctx$hashVerified)
+    keep          <- !fileBases %in% verifiedBases
+    filesToChecksum <- filesToChecksum[keep]
+  }
+  if (needChecksums > 0L && length(filesToChecksum) > 0L) {
     if (needChecksums == 3L) {
       if (identical(ctx$checkSumFilePath, ctx$successfulCheckSumFilePath))
         ctx$checkSumFilePath <- identifyCHECKSUMStxtFile(ctx$successfulDir)
@@ -887,7 +903,7 @@ pp_finalize <- function(ctx) {
       csfp <- identifyCHECKSUMStxtFile(csp)
       ctx$checkSums <- appendChecksumsTable(
         checkSumFilePath = csfp,
-        filesToChecksum  = basename2(unique(ctx$filesToChecksum)),
+        filesToChecksum  = basename2(unique(filesToChecksum)),
         destinationPath  = csp,
         append           = needChecksums >= 2L
       )
@@ -895,7 +911,7 @@ pp_finalize <- function(ctx) {
     if (!is.null(ctx$reproducible.inputPaths) && needChecksums != 3L) {
       ctx$checkSums <- appendChecksumsTable(
         checkSumFilePath = identifyCHECKSUMStxtFile(ctx$reproducible.inputPaths[[1L]]),
-        filesToChecksum  = unique(ctx$filesToChecksum),
+        filesToChecksum  = unique(filesToChecksum),
         destinationPath  = ctx$destinationPath,
         append           = needChecksums == 2L,
         verbose          = ctx$verbose - 1L
