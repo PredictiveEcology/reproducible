@@ -883,13 +883,15 @@ pp_finalize <- function(ctx) {
   # Drop files that pp_remote_hash_check already validated against the remote
   # sidecar (.hash file) — re-hashing a multi-GB archive locally to populate
   # CHECKSUMS.txt is wasted work; the .hash file is already the authoritative
-  # record for this run and any future run.
+  # record for this run and any future run. Also drop NAs (which can land in
+  # filesToChecksum from the skipDownload path where downloaded == archive == NA)
+  # so they don't keep the "write" branch alive on otherwise-empty input.
   filesToChecksum <- ctx$filesToChecksum
-  if (length(ctx$hashVerified)) {
+  filesToChecksum <- filesToChecksum[!is.na(filesToChecksum)]
+  if (length(ctx$hashVerified) && length(filesToChecksum)) {
     fileBases     <- basename2(filesToChecksum)
     verifiedBases <- basename2(ctx$hashVerified)
-    keep          <- !fileBases %in% verifiedBases
-    filesToChecksum <- filesToChecksum[keep]
+    filesToChecksum <- filesToChecksum[!fileBases %in% verifiedBases]
   }
   if (needChecksums > 0L && length(filesToChecksum) > 0L) {
     if (needChecksums == 3L) {
