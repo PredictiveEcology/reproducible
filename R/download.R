@@ -916,29 +916,36 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     on.exit(options(opts))
   }
 
+  # Cache the drive_get / drive_ls result for an hour. `getRemoteMetadata()`
+  # already does this for its own drive_get; mirroring it here closes the
+  # consistency gap. Without this, .guessAtFile (and therefore the very first
+  # phase of pp_resolve_files) hits the Google Drive API on every call, which
+  # is ~1-2 s of latency that the sidecar fast-path further down the
+  # pipeline can never recover.
   # if (is.null(archive) || is.na(archive)) {
   if (isTRUE(isDirectory(url, FALSE))) {
-    if (packageVersion("googledrive") < "2.0.0") {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
-                                                                  shared_drive = team_drive
-      )))
-    } else {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
-                                                                 shared_drive = team_drive
-      )))
-    }
+    fileAttr <- Cache(
+      retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
+                                                     shared_drive = team_drive))),
+      notOlderThan = Sys.time() - 60 * 60,
+      verbose = FALSE
+    )
   } else {
     if (packageVersion("googledrive") < "2.0.0") {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                                  team_drive = team_drive
-      )))
+      fileAttr <- Cache(
+        retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
+                                                        team_drive = team_drive))),
+        notOlderThan = Sys.time() - 60 * 60,
+        verbose = FALSE
+      )
     } else {
-
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                                  shared_drive = team_drive
-      )))
+      fileAttr <- Cache(
+        retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
+                                                        shared_drive = team_drive))),
+        notOlderThan = Sys.time() - 60 * 60,
+        verbose = FALSE
+      )
     }
-
   }
 
   fileSize <- sapply(fileAttr$drive_resource, function(x) x$size)
