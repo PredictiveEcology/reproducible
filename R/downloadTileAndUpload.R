@@ -168,7 +168,9 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
   #     then gdrive tile, then full remote file
   targetObjCRS <- getTargetCRS(targetFileFullPath, dirTilesFolder, tilesFolderFullPath, remoteMetadata$targetFile,
                                destinationPath = destinationPath,
-                           url, urlTiles, remoteMetadata$fileSize, remoteMetadata$remoteHash, purge, doUploads, verbose)
+                           url, urlTiles, remoteMetadata$fileSize, remoteMetadata$remoteHash,
+                           remoteAlgorithm = remoteMetadata$remoteAlgorithm,
+                           purge, doUploads, verbose)
   # need to rerun because there may have been a rm in previous line
   dirTilesFolder <- dir(tilesFolderFullPath, recursive = TRUE, all.files = TRUE)
 
@@ -564,7 +566,9 @@ crsFromLocalFile <- function(targetFileFullPath, targetObjCRS) {
 
 getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath,
                          targetFile, destinationPath,
-                         url, urlTiles, fileSize, remoteHash, purge, doUploads, verbose) {
+                         url, urlTiles, fileSize, remoteHash,
+                         remoteAlgorithm = .classifyRemoteHashAlgo(remoteHash),
+                         purge, doUploads, verbose) {
 
   targetObjCRS <- NULL # don't know it yet
   if (file.exists(targetFileFullPath)) {
@@ -586,7 +590,8 @@ getTargetCRS <- function(targetFileFullPath, dirTilesFolder, tilesFolderFullPath
     # rfull <- terra::rast(targetFileFullPath)
     targetObjCRS <- terra::crs(terra::rast(targetFileFullPath))
   }
-  makeRemoteHashFile(url, destinationPath, targetFile, remoteHash, write = TRUE)
+  makeRemoteHashFile(url, destinationPath, targetFile, remoteHash,
+                     algorithm = remoteAlgorithm, write = TRUE)
   targetObjCRS
 }
 
@@ -797,13 +802,61 @@ numCoresToUse <- function(min = 2, max = NULL) {
   # max(min, max)
 }
 
-makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash, write = FALSE) {
+# Classify a remote-supplied hash string into a content-hash algorithm or
+# "etag-opaque" when no positive trust is possible. Google Drive ETag-shaped
+# strings are forced to "md5" via the isGDurl override at the call site.
+#
+# Heuristic:
+#   ^[0-9a-f]{32}$ -> md5   (most common content-hash ETag; Google Drive)
+#   ^[0-9a-f]{40}$ -> sha1
+#   ^[0-9a-f]{64}$ -> sha256
+#   anything else  -> "etag-opaque" (weak ETags, server-derived, unknown)
+.classifyRemoteHashAlgo <- function(hash, isGDurl = FALSE) {
+  if (isTRUE(isGDurl)) return("md5")
+  if (is.null(hash) || is.na(hash) || !is.character(hash) || !nzchar(hash))
+    return("etag-opaque")
+  hl <- tolower(hash)
+  if (grepl("^[0-9a-f]{32}$", hl)) return("md5")
+  if (grepl("^[0-9a-f]{40}$", hl)) return("sha1")
+  if (grepl("^[0-9a-f]{64}$", hl)) return("sha256")
+  "etag-opaque"
+}
+
+# Parse the contents of a `.hash` sidecar file. Format is `<algo>:<hash>`
+# (one line). For backward compatibility with legacy single-hash sidecars
+# written before this format change, fall back to inferring `algo` from the
+# hash length (32/40/64 hex => md5/sha1/sha256).
+#
+# Returns list(algorithm = ..., hash = ...) or NULL on read error.
+.parseRemoteHashFile <- function(remoteHashFile) {
+  if (!file.exists(remoteHashFile)) return(NULL)
+  txt <- try(readLines(remoteHashFile, warn = FALSE), silent = TRUE)
+  if (is(txt, "try-error") || !length(txt)) return(NULL)
+  line <- txt[[1L]]
+  if (grepl(":", line, fixed = TRUE)) {
+    parts <- strsplit(line, ":", fixed = TRUE)[[1L]]
+    if (length(parts) >= 2L)
+      return(list(algorithm = parts[[1L]],
+                  hash      = paste(parts[-1L], collapse = ":")))
+  }
+  # Legacy single-hash sidecar: infer algorithm from hash length.
+  list(algorithm = .classifyRemoteHashAlgo(line), hash = line)
+}
+
+makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
+                               algorithm = NULL, write = FALSE) {
   url_no_protocol <- sub("^https?://", "", url)
   # Replace all slashes with underscores
   urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
   remoteHashFile <- file.path(destinationPath, paste0(urlWithUnderscores, ".hash"))
-  if (isTRUE(write) && !file.exists(remoteHashFile))
-    writeLines(remoteHash, remoteHashFile)
+  if (isTRUE(write) && !file.exists(remoteHashFile)) {
+    if (is.null(algorithm) || is.na(algorithm) || !nzchar(algorithm)) {
+      # Legacy callers: write hash-only line.
+      writeLines(remoteHash, remoteHashFile)
+    } else {
+      writeLines(paste0(algorithm, ":", remoteHash), remoteHashFile)
+    }
+  }
   return(remoteHashFile)
 }
 
@@ -815,7 +868,9 @@ checkHaveCorrectHashedVersion <- function(targetFile, remoteHashFile, remoteMeta
   fe <- file.exists(remoteHashFile)
   # But still could be incomplete
   if (isTRUE(fe)) {
-    haveCorrectVersion <- identical(readLines(remoteHashFile), remoteMetadata$remoteHash)
+    parsed <- .parseRemoteHashFile(remoteHashFile)
+    haveCorrectVersion <- !is.null(parsed) &&
+      identical(parsed$hash, remoteMetadata$remoteHash)
     if (haveCorrectVersion %in% FALSE) {
       askAboutPurge <- TRUE
     } else {
@@ -856,7 +911,7 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     }
     timestampOnline <- file$drive_resource[[1]]$modifiedTime
   }
-  
+
   if (missing(targetFile)) {
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
     remoteHash <- httr2::resp_headers(response)[["etag"]] |>
@@ -872,7 +927,9 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
       targetFile <- basename(url)
     }
   }
-  list(targetFile = targetFile, fileSize = fileSize, remoteHash = remoteHash, timestampOnline = timestampOnline)
+  remoteAlgorithm <- .classifyRemoteHashAlgo(remoteHash, isGDurl = isGDurl)
+  list(targetFile = targetFile, fileSize = fileSize, remoteHash = remoteHash,
+       remoteAlgorithm = remoteAlgorithm, timestampOnline = timestampOnline)
 }
 
 sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,

@@ -39,13 +39,9 @@ is wrong and should be edited first, then code follows). Not shipped on CRAN
 - §5 case matrix expanded for targetFile inference, remoteHash matching, and
   CHECKSUMS divergence.
 
-## 0. Naming
+## 0. Naming  *(decided)*
 
-The current option is `reproducible.dataPath` (with deprecated alias
-`reproducible.inputPaths`). "dataPath" tells the reader nothing about what's
-stored or why it's distinct from `destinationPath` or `Cache()`'s cachePath.
-
-The **proposed name** is `reproducible.sharedInputs` — two words, both
+The canonical option is **`reproducible.sharedInputs`**. Two words, both
 load-bearing:
 - "shared" — the directory is meant to be reused across projects (and on
   research clusters, across users via NFS).
@@ -53,20 +49,17 @@ load-bearing:
   matches the conceptual category in `prepInputs` / `preProcess`.
 
 Rejected alternatives:
-- `reproducible.dataPath` (status quo) — vague.
+- `reproducible.dataPath` — vague; briefly used in branch but never released.
 - `reproducible.dataMirror` — accurate ("mirror" of remote downloads) but the
   word implies remote sync semantics we are not implementing.
 - `reproducible.inputCache` — clear, but mentally collides with `Cache()`.
 - `reproducible.preProcessCache` — verbose; same `Cache()` collision.
 - `reproducible.dataLibrary` — "library" is overloaded in R.
 
-**Migration:** the deprecation chain becomes
-`inputPaths` (already deprecated) → `dataPath` (briefly current, never
-released widely) → `sharedInputs` (new). Both prior names emit one-shot
-deprecation messages and are honored if `sharedInputs` is unset.
-
-Decision needed before §4 step 4 lands. If you'd rather keep `dataPath`,
-swap names everywhere below; the rest of the spec is unchanged.
+**Migration (final):** the deprecation chain is
+`inputPaths` (legacy alias) → `sharedInputs` (canonical). The intermediate
+`dataPath` name was dropped before release. `inputPaths` emits a one-shot
+deprecation message and is honored if `sharedInputs` is unset.
 
 ---
 
@@ -471,53 +464,81 @@ Internal helpers stay `.`-prefixed (see §6).
 
 ## 4. Refactor plan
 
-In dependency order — each step lands as its own small commit, tests included:
+> **Status note (May 2026):** the implementation took a different, smaller
+> shape than this 13-step plan envisaged. The status of each item is shown
+> below. Items marked **DONE-DIFFERENT** were achieved with different
+> function/option names than the plan specified; **DONE** matches; **PARTIAL**
+> means some functionality exists; **DEFERRED** means not built yet.
 
-1. **Tests-first scaffold**: add `tests/testthat/test-sharedInputs.R` with
-   the case matrix in §5. Most cases will fail today — that's the baseline.
-2. **Sidecar I/O**: introduce `.readSidecar(dir, filename)`,
-   `.writeSidecar(dir, filename, ...)`, `.sidecarPath(dir, filename)`. Pure
-   read/write of the §3.6 JSON format, no business logic. Unit-tested in
-   isolation.
-3. **Locking shim**: `.withFileLock(path, mode = c("shared","exclusive"),
-   timeout = 30)`. Wraps `filelock` if available; degrades to a no-op with
-   one-shot warning if not. Used by every sidecar write and every into/out-
-   of-shared file operation.
-4. **Legacy hydration**: `.hydrateLegacyChecksums(dir)` — reads
-   `<dir>/CHECKSUMS.txt` and `<dir>/<urlEncoded>.hash` if present and writes
-   sidecars; idempotent; one-shot info message; does not delete the legacy
-   files in shared dirs (only deletes legacy `.hash` files in
-   destinationPath after migration).
-5. **Option getter**: introduce `.getSharedInputs()` and
-   `.getSharedInputsRecursive()`. Handle the deprecation chain
-   (`inputPaths` → `dataPath` → `sharedInputs`) with one-shot per-session
-   messages. Replace all 4 current `.getDataPath()` call-sites to delegate.
-6. **`resolveExpectedHash()` helper**: implements the 4-step lookup in §3.3
-   (remote → destinationPath sidecar → project CHECKSUMS → shared sidecar).
-   Returns `(hash, algo)` or `(NULL, NULL)`.
-7. **Single phase**: introduce `pp_resolve_inputs()` per §3.2, replacing both
-   `pp_check_local_sources()` and `pp_remote_hash_check()`. The old
-   functions become thin shims for one release in case downstream code calls
-   them, then are removed.
-8. **Vector support, validated**: helper `.normalizeSharedInputs(x,
-   destinationPath)` handles dedup, drop-self, create-if-missing. Called
-   once at the entrance to `pp_resolve_inputs`.
-9. **Drop shared CHECKSUMS writes**: remove `runChecksums()`'s write-back to
-   `<sharedInputs>/CHECKSUMS.txt` (`preProcess.R:1972` block). Project
-   CHECKSUMS write path in `destinationPath` is unchanged.
-10. **Internal rename**: `reproducible.inputPaths` (the *variable*) →
-    `sharedInputs` everywhere in `preProcess.R`. The *option name* is the
-    new one (with deprecated aliases). Mechanical change; tests guard it.
-11. **Mismatch handling**: when a `sharedInputs` candidate exists with bad
-    hash, do not delete; emit one informative message naming the file and
-    the `sharedInputs` dir.
-12. **Add `filelock` to DESCRIPTION** under `Suggests`. Update
-    `cran-comments.md` if needed.
-13. **Docs**: rewrite `options.R:77-104` against §3, add a section to
-    `?prepInputs`, update the "Downloading Data" vignette with one worked
-    example, document the sidecar format and migration in NEWS.md.
+1. **DONE.** Tests-first scaffold: `tests/testthat/test-sharedInputs.R` with
+   the case matrix in §5. (Many cases are still skipped because they target
+   helpers that were never built; see notes below.)
+2. **DONE-DIFFERENT.** Sidecar I/O is provided via the existing
+   `makeRemoteHashFile(url, dir, basename, hash, algorithm = …, write = TRUE)`
+   for write and the new `.parseRemoteHashFile(path)` for read. The `.hash`
+   file format is now one line `<algo>:<hash>` (with a length-heuristic
+   legacy fallback for plain-hash files). The originally-proposed
+   `.readSidecar / .writeSidecar / .sidecarPath` triplet was not introduced.
+3. **DEFERRED.** No dedicated `.withFileLock` shim around sidecar/CHECKSUMS
+   writes. Locking still happens at the Cache layer (`R/GPT2.R::lockFile`),
+   not around per-file sidecar writes. Per-file locking is a real gap; in
+   practice the no-overwrite property of `makeRemoteHashFile` mitigates it.
+4. **PARTIAL.** Legacy hydration is on-the-fly: `.parseRemoteHashFile`
+   accepts plain single-line hashes (legacy format) and the multi-row
+   CHECKSUMS.txt support means an old `xxhash64`-only row coexists with a
+   new `md5` row written by `pp_remote_hash_check`. There is no batch
+   `.hydrateLegacyChecksums(dir)` helper.
+5. **DONE-DIFFERENT.** Option getter is `.getSharedInputs()` /
+   `.getSharedInputsRecursive()`. The deprecation chain is two names, not
+   three: `reproducible.sharedInputs` (canonical) ←
+   `reproducible.inputPaths` (legacy alias). The intermediate
+   `reproducible.dataPath` name was dropped before release.
+6. **DEFERRED.** No named `resolveExpectedHash()` helper. The 4-step lookup
+   logic (remote → destinationPath sidecar → project CHECKSUMS → shared
+   sidecar) is distributed across `pp_checksums_init`,
+   `pp_check_local_sources`, and `pp_remote_hash_check`.
+7. **PARTIAL.** No unified `pp_resolve_inputs()` phase. `pp_check_local_sources`
+   and `pp_remote_hash_check` remain separate. The latter was rewritten
+   (May 2026) to use a content-hash-with-fail-fast-size algorithm:
+   - size mismatch ⇒ download
+   - opaque ETag ⇒ download (no positive trust possible)
+   - size match + hash match (in remote's algorithm) ⇒ write sidecar +
+     CHECKSUMS row, skip download
+   - size match + hash mismatch ⇒ download
+8. **DEFERRED.** No `.normalizeSharedInputs(x, destinationPath)` helper for
+   dedup / drop-self / create-if-missing. Vector handling is informal.
+9. **DEFERRED.** `runChecksums()` still writes back to `<sharedInputs>/CHECKSUMS.txt`
+   in some paths.
+10. **DEFERRED.** `ctx$reproducible.inputPaths` (the variable) is still
+    named for the old option in `R/preProcess.R`. The option name is the
+    new one with the legacy alias; the internal variable rename was not
+    done.
+11. **PARTIAL.** On hash mismatch we silently fall through to download (no
+    sidecar/CHECKSUMS row is written), but we don't emit an informative
+    "candidate file in shared dir didn't match" message.
+12. **DONE-DIFFERENT.** `filelock` is in `DESCRIPTION:Imports` (not
+    `Suggests`), pinned to `>= 1.0.3` (CRAN). The PredictiveEcology fork
+    fix for the fd leak is not pinned because it isn't on CRAN; an R-level
+    `EMFILE` retry workaround in `R/GPT2.R::lockFile` covers most cases
+    (with a known >42-min worst-case cliff documented in NEWS.md).
+13. **PARTIAL.** Options docs in `R/options.R` updated; NEWS describes the
+    sidecar format and the rename. The "Downloading Data" vignette has not
+    been rewritten with a worked example.
 
-After step 13, every behavior in §3 is true and every case in §5 is green.
+### Outstanding work (summary)
+
+The honest remaining gap, in priority order:
+
+- **Step 7** (unified `pp_resolve_inputs` + first-class `resolveExpectedHash`
+  helper) — would clean up the most code. Steps 6 and 7 collapse together.
+- **Step 3** (locking shim around sidecar/CHECKSUMS writes) — required for
+  correctness under heavy concurrency, especially on NFS.
+- **Step 10** (rename internal `reproducible.inputPaths` variable) —
+  cosmetic but keeps things confusing until done.
+- **Step 11** (informative mismatch message) — quality-of-life only.
+- **Step 13** (vignette example) — documentation only.
+
+After those land, every behavior in §3 is true and every case in §5 is green.
 
 ## 5. Test matrix (the part that matters)
 

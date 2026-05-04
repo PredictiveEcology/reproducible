@@ -17,7 +17,7 @@ or \code{maskTo} (a spatial object defining the area of interest).}
 \value{
 A \code{SpatRaster} windowed to the bounding box of the \code{to}/\code{cropTo}/\code{maskTo}
 object (in the COG's own CRS), or the character string \code{"NULL"} if any
-pre-condition fails (not HTTP, not a COG, no spatial arg, network error, etc.).
+pre-condition fails (not HTTP, no spatial arg, network error, empty window, etc.).
 }
 \description{
 An alternative fast-path inside \code{\link[=prepInputs]{prepInputs()}} for remote Cloud Optimized GeoTiffs.

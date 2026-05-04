@@ -753,38 +753,47 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
 }
 
 # ---------------------------------------------------------------------------
-# Backwards-compatible accessors for the dataPath / inputPaths option pair.
-# The canonical names are reproducible.dataPath and reproducible.dataPathRecursive.
+# Backwards-compatible accessors for the sharedInputs / inputPaths option pair.
+# The canonical names are reproducible.sharedInputs and
+# reproducible.sharedInputsRecursive (matching the prepInputs naming family).
 # The old names (reproducible.inputPaths, reproducible.inputPathsRecursive) are
 # still accepted: if the new name is NULL but the old name is set, the old value
 # is used and a one-time deprecation message is emitted.
 # ---------------------------------------------------------------------------
 
 #' @keywords internal
-.getDataPath <- function() {
-  newVal <- getOption("reproducible.dataPath", NULL)
+.getSharedInputs <- function() {
+  newVal <- getOption("reproducible.sharedInputs", NULL)
   if (!is.null(newVal)) return(newVal)
   oldVal <- getOption("reproducible.inputPaths", NULL)
   if (!is.null(oldVal)) {
     message(
       "Option 'reproducible.inputPaths' is deprecated; ",
-      "please use 'reproducible.dataPath' instead."
+      "please use 'reproducible.sharedInputs' instead."
     )
   }
   oldVal
 }
 
 #' @keywords internal
-.getDataPathRecursive <- function() {
-  newVal <- getOption("reproducible.dataPathRecursive", NULL)
+.getSharedInputsRecursive <- function() {
+  newVal <- getOption("reproducible.sharedInputsRecursive", NULL)
   if (!is.null(newVal)) return(newVal)
   oldVal <- getOption("reproducible.inputPathsRecursive", NULL)
   if (!is.null(oldVal)) {
     message(
       "Option 'reproducible.inputPathsRecursive' is deprecated; ",
-      "please use 'reproducible.dataPathRecursive' instead."
+      "please use 'reproducible.sharedInputsRecursive' instead."
     )
   }
   # Default is FALSE when neither is set
   if (is.null(oldVal)) FALSE else oldVal
 }
+
+# Deprecated wrappers — to be removed in a future release; preserved only so
+# any out-of-tree code that referenced the previous (branch-only) names still
+# resolves until callers can be updated.
+#' @keywords internal
+.getDataPath <- function() .getSharedInputs()
+#' @keywords internal
+.getDataPathRecursive <- function() .getSharedInputsRecursive()

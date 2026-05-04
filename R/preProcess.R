@@ -310,7 +310,7 @@ pp_checksums_init <- function(ctx) {
   # local re-verification.
   filesPreVerified <- character()
   if (length(filesToCheck)) {
-    sidecarDirs <- unique(c(ctx$destinationPath, .getDataPath()))
+    sidecarDirs <- unique(c(ctx$destinationPath, .getSharedInputs()))
     hasSidecar <- vapply(filesToCheck, function(f) {
       length(.findRemoteHashSidecars(basename2(f), sidecarDirs)) > 0L &&
         file.exists(f)
@@ -536,18 +536,31 @@ pp_check_local_sources <- function(ctx) {
 # ---------------------------------------------------------------------------
 # Phase 6: Remote hash check
 # ---------------------------------------------------------------------------
-# If a local copy of the archive/target already exists, fetch remote metadata
-# (ETag / content-length for HTTP; md5Checksum / size for Google Drive) and
-# compare to what we have locally.  When they match we can skip the download
-# entirely — even if the file never made it into CHECKSUMS.txt for this
-# particular destinationPath (common on shared cluster mounts where the file
-# lives in reproducible.inputPaths but the run-specific CHECKSUMS.txt is empty).
+# When a local copy already exists, decide whether it can stand in for a fresh
+# download by consulting the remote source. The semantic rule:
 #
-# Comparison strategy (in order):
-#   1. A stored .hash file in destinationPath matches the remote hash  → skip
-#   2. Remote content-length == local file size (fast proxy)           → skip
-#      and write the .hash file for future runs
-# Any network/package error causes a silent fall-through to the normal download.
+#   filesize is a NEGATIVE-only signal. remote.size != local.size proves
+#   the bytes differ → download. remote.size == local.size proves nothing
+#   on its own (two GeoTIFFs of identical pixel count have identical byte
+#   size with arbitrary content), so a positive trust decision REQUIRES a
+#   content-hash comparison in the remote's algorithm.
+#
+# Algorithm:
+#   1. If a `.hash` sidecar exists and `reproducible.checkRemoteHash = FALSE`
+#      (the default), trust it and skip the network round-trip entirely.
+#   2. Otherwise HEAD the remote (`getRemoteMetadata`) for size, hash, and
+#      hash algorithm.
+#   3. If `remote.size != local.size` → return; let `pp_download` proceed.
+#   4. If `remote.algorithm == "etag-opaque"` (HTTP ETag we cannot reproduce
+#      locally — no positive trust possible) → return; `pp_download` proceeds.
+#   5. Digest local file with the remote's algorithm; if hashes differ →
+#      return; `pp_download` proceeds.
+#   6. On match: write `.hash` sidecar (`<algo>:<hash>`), upsert the
+#      `(file, hash, size, algorithm)` row in CHECKSUMS.txt, mark
+#      `skipDownload` and `hashVerified`.
+#
+# Any network/package error causes a silent fall-through to the normal
+# download (best-effort optimisation, not a hard precondition).
 pp_remote_hash_check <- function(ctx) {
   if (is.null(ctx$url)) return(ctx)
   # Skip file:// URLs only: they are local (no remote to compare against),
@@ -571,13 +584,15 @@ pp_remote_hash_check <- function(ctx) {
   }
   if (is.null(localFile)) return(ctx)   # nothing local yet — let download proceed
 
-  # Fast path: a `.hash` sidecar from a previous successful match means the
-  # file has already been validated against the remote source. By default we
-  # trust it and skip the network round-trip entirely. To force a remote
-  # re-check on every call (e.g. when the upstream file may change), set
-  # `options(reproducible.checkRemoteHash = TRUE)`. The first call (no
-  # sidecar yet) always falls through to the remote check below so the
-  # sidecar can be written. Sidecar removal forces re-verification.
+  # ------------------------------------------------------------------
+  # Step 1: sidecar fast-path (no network)
+  # ------------------------------------------------------------------
+  # A `.hash` sidecar from a previous successful match means the file has
+  # already been validated against the remote source. By default we trust it
+  # and skip the network round-trip entirely. To force a remote re-check on
+  # every call (e.g. when the upstream file may change), set
+  # `options(reproducible.checkRemoteHash = TRUE)`. Sidecar removal forces
+  # re-verification.
   remoteHashFileLocal <- makeRemoteHashFile(
     ctx$url, ctx$destinationPath, basename(localFile), ""
   )
@@ -596,7 +611,9 @@ pp_remote_hash_check <- function(ctx) {
     return(ctx)
   }
 
-  # Fetch remote metadata; bail silently on any error
+  # ------------------------------------------------------------------
+  # Step 2: HEAD remote
+  # ------------------------------------------------------------------
   remoteMetadata <- tryCatch(
     getRemoteMetadata(url = ctx$url),
     error = function(e) NULL
@@ -604,53 +621,94 @@ pp_remote_hash_check <- function(ctx) {
   if (is.null(remoteMetadata)) return(ctx)
 
   # ------------------------------------------------------------------
-  # Check 1: stored .hash file
+  # Step 3: size fail-fast (negative-only)
   # ------------------------------------------------------------------
-  remoteHashFile <- makeRemoteHashFile(
-    ctx$url, ctx$destinationPath,
-    remoteMetadata$targetFile, remoteMetadata$remoteHash
-  )
-  localMatchesRemote <- if (file.exists(remoteHashFile)) {
-    identical(readLines(remoteHashFile, warn = FALSE), remoteMetadata$remoteHash)
-  } else {
-    FALSE
+  remoteSize <- suppressWarnings(as.numeric(remoteMetadata$fileSize))
+  localSize  <- file.size(localFile)
+  if (!is.na(remoteSize) && !is.na(localSize) && remoteSize != localSize) {
+    return(ctx)  # bytes definitely differ → let pp_download fetch
   }
 
   # ------------------------------------------------------------------
-  # Check 2: file-size fallback
+  # Step 4: opaque ETag → no positive trust possible → download
   # ------------------------------------------------------------------
-  if (!localMatchesRemote && !is.null(remoteMetadata$fileSize)) {
-    remoteSize <- suppressWarnings(as.numeric(remoteMetadata$fileSize))
-    localSize  <- file.size(localFile)
-    if (!is.na(remoteSize) && !is.na(localSize) && localSize == remoteSize) {
-      localMatchesRemote <- TRUE
-      # Persist the hash so future runs use check 1
-      makeRemoteHashFile(
-        ctx$url, ctx$destinationPath,
-        remoteMetadata$targetFile, remoteMetadata$remoteHash,
-        write = TRUE
+  remoteAlgo <- remoteMetadata$remoteAlgorithm
+  if (is.null(remoteAlgo) || identical(remoteAlgo, "etag-opaque") ||
+      !nzchar(remoteAlgo)) {
+    return(ctx)
+  }
+
+  # ------------------------------------------------------------------
+  # Step 4b: existing sidecar with checkRemoteHash = TRUE — quick check.
+  # If the sidecar's recorded hash already matches what the server now
+  # advertises, skip re-digesting the local file.
+  # ------------------------------------------------------------------
+  if (haveSidecar) {
+    parsedSidecar <- .parseRemoteHashFile(remoteHashFileLocal)
+    if (!is.null(parsedSidecar) &&
+        identical(parsedSidecar$hash, remoteMetadata$remoteHash)) {
+      messagePreProcess(
+        "Local file matches remote version; skipping download: ",
+        .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
       )
+      ctx$skipDownload   <- TRUE
+      ctx$remoteMetadata <- remoteMetadata
+      ctx$hashVerified   <- unique(c(ctx$hashVerified, localFile))
+      if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
+        ctx$archive <- localFile
+      return(ctx)
     }
   }
 
-  if (localMatchesRemote) {
-    messagePreProcess(
-      "Local file matches remote version; skipping download: ",
-      .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
-    )
-    ctx$skipDownload   <- TRUE
-    ctx$remoteMetadata <- remoteMetadata
-    # Record that this file has been verified via the remote-hash sidecar
-    # (.hash file). pp_finalize uses this to skip an otherwise-redundant
-    # local rehash that can take 10s of seconds for multi-GB archives.
-    ctx$hashVerified   <- unique(c(ctx$hashVerified, localFile))
-    # Only treat localFile as an archive if it actually is one AND the user
-    # didn't supply an `archive` value at all. archive = NA is explicit user
-    # intent ("do not extract"), so leave it alone; only auto-fill when
-    # archive was NULL (meaning "figure it out").
-    if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
-      ctx$archive <- localFile
+  # ------------------------------------------------------------------
+  # Step 5: digest local file with remote algorithm and compare
+  # ------------------------------------------------------------------
+  localHash <- tryCatch(
+    .digest(localFile, algo = remoteAlgo, quickCheck = FALSE),
+    error = function(e) NULL
+  )
+  if (is.null(localHash) || !length(localHash) ||
+      !identical(tolower(localHash[[1L]]),
+                 tolower(as.character(remoteMetadata$remoteHash)))) {
+    return(ctx)  # hash mismatch (or compute failed) → download
   }
+
+  # ------------------------------------------------------------------
+  # Step 6: confirmed match — persist sidecar + CHECKSUMS row, skip download
+  # ------------------------------------------------------------------
+  makeRemoteHashFile(
+    ctx$url, ctx$destinationPath,
+    remoteMetadata$targetFile, remoteMetadata$remoteHash,
+    algorithm = remoteAlgo, write = TRUE
+  )
+
+  # Upsert (file, algorithm) row in CHECKSUMS.txt without re-digesting via
+  # Checksums(write=TRUE) — we already have the hash. Preserves any other
+  # algorithm rows recorded for this file (e.g. xxhash64 from a prior
+  # pp_finalize).
+  csfp <- ctx$checkSumFilePath
+  if (is.null(csfp) || !nzchar(csfp))
+    csfp <- identifyCHECKSUMStxtFile(ctx$destinationPath)
+  tryCatch(
+    .upsertChecksumsRow(
+      checkSumFilePath = csfp,
+      file      = makeRelative(localFile, ctx$destinationPath),
+      hash      = remoteMetadata$remoteHash,
+      filesize  = localSize,
+      algorithm = remoteAlgo
+    ),
+    error = function(e) NULL
+  )
+
+  messagePreProcess(
+    "Local file matches remote version; skipping download: ",
+    .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
+  )
+  ctx$skipDownload   <- TRUE
+  ctx$remoteMetadata <- remoteMetadata
+  ctx$hashVerified   <- unique(c(ctx$hashVerified, localFile))
+  if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
+    ctx$archive <- localFile
 
   ctx
 }
@@ -1381,7 +1439,7 @@ isGoogleDriveURL <- function(url) {
     neededFilesRel <- makeRelative(neededFiles, destinationPath)
     if (!all(neededFilesRel %in% filesInHand)) {
       for (op in otherPaths) {
-        recursively <- .getDataPathRecursive()
+        recursively <- .getSharedInputsRecursive()
         opFiles <- dir(op, recursive = recursively, full.names = TRUE)
         if (any(neededFilesRel %in% basename2(opFiles))) {
           isNeeded <- basename2(opFiles) %in% neededFilesRel
@@ -1437,9 +1495,9 @@ isGoogleDriveURL <- function(url) {
         }
       }
     }
-    # do a check here that destinationPath is already the inputPaths
+    # do a check here that destinationPath is already the sharedInputs
     #   need to emulate the above behaviour
-    reproducible.inputPaths <- .getDataPath()
+    reproducible.inputPaths <- .getSharedInputs()
     if (!is.null(reproducible.inputPaths)) {
       reproducible.inputPaths <- normPath(reproducible.inputPaths)
     }
@@ -2081,7 +2139,7 @@ setupArchive <- function(archive, destinationPath) {
 }
 
 runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
-  reproducible.inputPaths <- .getDataPath()
+  reproducible.inputPaths <- .getSharedInputs()
   if (!is.null(reproducible.inputPaths)) {
     reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
   }

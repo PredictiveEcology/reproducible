@@ -43,6 +43,17 @@ Default \code{"slow"}. One of \code{"slow"} or \code{"fast"} (1 or 2).
 systems, but much slower than \verb{digest::digest(algo = "spooky)}.
 So, if all caching is happening on a single machine, \code{"fast"} would be a good setting.
 }
+\item{\code{checkRemoteHash}}{
+Default: \code{FALSE}. Used in \code{\link[=preProcess]{preProcess()}} / \code{\link[=prepInputs]{prepInputs()}}. Controls whether
+\code{pp_remote_hash_check} re-contacts the remote source (e.g. Google Drive,
+HTTP HEAD) when a \code{.hash} sidecar from a previous successful match
+already exists in \code{destinationPath}. With the default (\code{FALSE}), the
+sidecar is trusted and the remote check is skipped — typically saving
+1–2 s per file when the cluster cache is warm. Set to \code{TRUE} to force a
+remote round-trip on every call (the pre-3.0.0.9050 behaviour); use
+this if the upstream file may change and you need to detect that.
+Removing the \verb{<file>_*.hash} sidecar also forces a re-check.
+}
 \item{\code{conn}}{
 Default: \code{NULL}. Sets a specific connection to a database, e.g.,
 \code{dbConnect(drv = RSQLite::SQLite())} or \verb{dbConnect(drv = RPostgres::Postgres()}.
@@ -79,7 +90,7 @@ compatibility and will be removed in a future release.
 \strong{Deprecated — do not use} (see \code{gdalwarp} above). Default: \code{2}.
 Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
-\item{\code{dataPath}}{
+\item{\code{sharedInputs}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
 file to this location, with a hardlink (via \code{file.link}) to the file created in the
@@ -91,27 +102,27 @@ Because the files are hardlinks, there is no extra space taken up by the apparen
 duplicated files.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPaths`; the old
-name is still accepted and will continue to work, but `reproducible.dataPath` is
-preferred going forward.
+name is still accepted and will continue to work, but `reproducible.sharedInputs` is
+preferred going forward (it matches the [prepInputs()] naming family).
 }\if{html}{\out{</div>}}
 
 }
-\item{\code{dataPathRecursive}}{
+\item{\code{sharedInputsRecursive}}{
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
-Should \code{reproducible.dataPath} be searched recursively for existence of a file?
+Should \code{reproducible.sharedInputs} be searched recursively for existence of a file?
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
-the old name is still accepted but `reproducible.dataPathRecursive` is preferred.
+the old name is still accepted but `reproducible.sharedInputsRecursive` is preferred.
 }\if{html}{\out{</div>}}
 
 }
 \item{\code{inputPaths}}{
-\strong{Deprecated} — use \code{reproducible.dataPath} instead.
-Retained for backwards compatibility; if set and \code{reproducible.dataPath} is \code{NULL},
+\strong{Deprecated} — use \code{reproducible.sharedInputs} instead.
+Retained for backwards compatibility; if set and \code{reproducible.sharedInputs} is \code{NULL},
 the value of \code{reproducible.inputPaths} is used automatically.
 }
 \item{\code{inputPathsRecursive}}{
-\strong{Deprecated} — use \code{reproducible.dataPathRecursive} instead.
+\strong{Deprecated} — use \code{reproducible.sharedInputsRecursive} instead.
 Retained for backwards compatibility.
 }
 \item{\code{leaveOnDisk}}{

@@ -2,8 +2,16 @@
 # used by prepInputs() / preProcess() to avoid re-downloads across projects.
 #
 # Test matrix lives in dev/dataPath-design.md (§5). Case IDs (P1, H1, ...)
-# in this file map 1:1 to that matrix. Tests for behavior not yet
-# implemented are stubbed with skip() so the matrix is visible end-to-end.
+# in this file map 1:1 to that matrix. Tests for behaviour that has not been
+# implemented in this branch have been removed (rather than left as `skip()`
+# stubs that misleadingly pad the count) — see `dev/dataPath-design.md` §4
+# for the rolling status of each design item.
+#
+# Note: the option is now named `reproducible.sharedInputs` (matching the
+# `prepInputs` naming family); `reproducible.inputPaths` remains as a
+# backwards-compatible alias. The intermediate `reproducible.dataPath` name
+# briefly used in this branch was dropped before release — case IDs that
+# referenced it have been retired.
 #
 # Conventions:
 #   - No real network. Fixtures use file:// URLs pointing at on-disk files.
@@ -83,6 +91,35 @@ getSharedInputsRecursiveFn <- function() {
     getInternalOrNull(".getDataPathRecursive")
 }
 
+# Build a minimal pp_* ctx matching what .pp_make_ctx produces, with just the
+# fields pp_remote_hash_check reads/writes. Keeps tests self-contained without
+# invoking the full preProcess() pipeline.
+makePPCtx <- function(url, destinationPath, neededFiles = NULL, archive = NULL) {
+  identifyCS <- getFromNamespace("identifyCHECKSUMStxtFile", "reproducible")
+  emptyCS    <- getFromNamespace(".emptyChecksumsResult", "reproducible")
+  list(
+    url = url, archive = archive, neededFiles = neededFiles,
+    destinationPath = destinationPath,
+    checkSumFilePath = identifyCS(destinationPath),
+    checkSums = emptyCS, needChecksums = 0L,
+    skipDownload = FALSE, hashVerified = character(),
+    remoteMetadata = NULL, verbose = 0L
+  )
+}
+
+readSidecar <- function(dir, fixture, url) {
+  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
+  p  <- mk(url, dir, basename(fixture$path), "")
+  if (!file.exists(p)) return(NULL)
+  list(path = p, contents = readLines(p, warn = FALSE))
+}
+
+readChecksumsRows <- function(dir) {
+  csf <- file.path(dir, "CHECKSUMS.txt")
+  if (!file.exists(csf) || file.size(csf) == 0L) return(NULL)
+  read.table(csf, header = TRUE, stringsAsFactors = FALSE)
+}
+
 
 # ===========================================================================
 # §5.1  Option plumbing (no I/O)
@@ -92,52 +129,27 @@ test_that("P1: option unset → getter returns NULL", {
   testInit()
   withr::local_options(list(
     reproducible.sharedInputs = NULL,
-    reproducible.dataPath     = NULL,
     reproducible.inputPaths   = NULL
   ))
   fn <- getSharedInputsFn()
-  skip_if(is.null(fn), "no sharedInputs/dataPath getter available")
+  skip_if(is.null(fn), "no sharedInputs getter available")
   expect_null(fn())
 })
 
-test_that("P2: sharedInputs = '/x' → '/x'  [BASELINE: fails until §4 step 5]", {
+test_that("P2: sharedInputs = '/x' → '/x'", {
   testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "sharedInputs option not yet wired (§4 step 5)"
-  )
+  fn <- getInternalOrNull(".getSharedInputs")
+  skip_if(is.null(fn), "no sharedInputs getter available")
   withr::local_options(list(reproducible.sharedInputs = "/x"))
-  expect_identical(getInternalOrNull(".getSharedInputs")(), "/x")
+  expect_identical(fn(), "/x")
 })
 
 test_that("P3: vector value preserved", {
   testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "sharedInputs option not yet wired (§4 step 5)"
-  )
-  withr::local_options(list(reproducible.sharedInputs = c("/a", "/b")))
-  expect_identical(getInternalOrNull(".getSharedInputs")(), c("/a", "/b"))
-})
-
-test_that("P4: only dataPath set → returned + deprecation message once", {
-  testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "dataPath alias activates after §4 step 5"
-  )
-  withr::local_options(list(
-    reproducible.sharedInputs = NULL,
-    reproducible.dataPath     = "/x",
-    reproducible.inputPaths   = NULL
-  ))
   fn <- getInternalOrNull(".getSharedInputs")
-  msgs1 <- testthat::capture_messages(out1 <- fn())
-  msgs2 <- testthat::capture_messages(out2 <- fn())
-  expect_identical(out1, "/x")
-  expect_identical(out2, "/x")
-  expect_true(any(grepl("deprecated", msgs1)))
-  expect_false(any(grepl("deprecated", msgs2)))    # one-shot
+  skip_if(is.null(fn), "no sharedInputs getter available")
+  withr::local_options(list(reproducible.sharedInputs = c("/a", "/b")))
+  expect_identical(fn(), c("/a", "/b"))
 })
 
 test_that("P5: only inputPaths set → returned + deprecation message", {
@@ -146,7 +158,6 @@ test_that("P5: only inputPaths set → returned + deprecation message", {
   skip_if(is.null(fn), "no getter available")
   withr::local_options(list(
     reproducible.sharedInputs = NULL,
-    reproducible.dataPath     = NULL,
     reproducible.inputPaths   = "/x"
   ))
   msgs <- testthat::capture_messages(out <- fn())
@@ -154,72 +165,17 @@ test_that("P5: only inputPaths set → returned + deprecation message", {
   expect_true(any(grepl("deprecated", msgs)))
 })
 
-test_that("P6: sharedInputs and dataPath both set → new wins, no deprecation", {
+test_that("P6: sharedInputs and inputPaths both set → sharedInputs wins, no deprecation", {
   testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "sharedInputs option not yet wired (§4 step 5)"
-  )
+  fn <- getInternalOrNull(".getSharedInputs")
+  skip_if(is.null(fn), "no sharedInputs getter available")
   withr::local_options(list(
     reproducible.sharedInputs = "/new",
-    reproducible.dataPath     = "/old"
-  ))
-  msgs <- testthat::capture_messages(
-    out <- getInternalOrNull(".getSharedInputs")()
-  )
-  expect_identical(out, "/new")
-  expect_false(any(grepl("deprecated", msgs)))
-})
-
-test_that("P7: all three options set → sharedInputs wins, no deprecation", {
-  testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "sharedInputs option not yet wired (§4 step 5)"
-  )
-  withr::local_options(list(
-    reproducible.sharedInputs = "/new",
-    reproducible.dataPath     = "/mid",
     reproducible.inputPaths   = "/old"
   ))
-  msgs <- testthat::capture_messages(
-    out <- getInternalOrNull(".getSharedInputs")()
-  )
+  msgs <- testthat::capture_messages(out <- fn())
   expect_identical(out, "/new")
   expect_false(any(grepl("deprecated", msgs)))
-})
-
-test_that("P8: empty string entry → error", {
-  testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".normalizeSharedInputs")),
-    "validator not yet implemented (§4 step 8)"
-  )
-  expect_error(
-    getInternalOrNull(".normalizeSharedInputs")("", destinationPath = tmpdir)
-  )
-})
-
-test_that("P9: duplicate entries deduplicated", {
-  testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".normalizeSharedInputs")),
-    "validator not yet implemented (§4 step 8)"
-  )
-  out <- getInternalOrNull(".normalizeSharedInputs")(c("/x", "/x"),
-                                                     destinationPath = tmpdir)
-  expect_identical(out, "/x")
-})
-
-test_that("P10: entry equal to destinationPath dropped", {
-  testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".normalizeSharedInputs")),
-    "validator not yet implemented (§4 step 8)"
-  )
-  out <- getInternalOrNull(".normalizeSharedInputs")(tmpdir,
-                                                     destinationPath = tmpdir)
-  expect_length(out, 0)
 })
 
 test_that("P11: recursive option unset → FALSE", {
@@ -228,7 +184,6 @@ test_that("P11: recursive option unset → FALSE", {
   skip_if(is.null(fn), "no recursive getter available")
   withr::local_options(list(
     reproducible.sharedInputsRecursive = NULL,
-    reproducible.dataPathRecursive     = NULL,
     reproducible.inputPathsRecursive   = NULL
   ))
   expect_false(fn())
@@ -250,28 +205,9 @@ test_that("P13: only inputPathsRecursive = TRUE → TRUE + deprecation", {
   skip_if(is.null(fn), "no recursive getter available")
   withr::local_options(list(
     reproducible.sharedInputsRecursive = NULL,
-    reproducible.dataPathRecursive     = NULL,
     reproducible.inputPathsRecursive   = TRUE
   ))
   msgs <- testthat::capture_messages(out <- fn())
-  expect_true(out)
-  expect_true(any(grepl("deprecated", msgs)))
-})
-
-test_that("P14: only dataPathRecursive = TRUE → TRUE + deprecation", {
-  testInit()
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputsRecursive")),
-    "dataPathRecursive alias activates after §4 step 5"
-  )
-  withr::local_options(list(
-    reproducible.sharedInputsRecursive = NULL,
-    reproducible.dataPathRecursive     = TRUE
-  ))
-  msgs <- capture.output(
-    out <- getInternalOrNull(".getSharedInputsRecursive")(),
-    type = "message"
-  )
   expect_true(out)
   expect_true(any(grepl("deprecated", msgs)))
 })
@@ -314,10 +250,6 @@ test_that("H1: file in sharedInputs with matching CHECKSUMS → hardlinked, no c
                info = "destinationPath copy should share inode with sharedInputs (hardlink)")
 })
 
-test_that("H2: cross-device → copy fallback", {
-  skip("cross-device cannot be reliably simulated in unit tests; manual coverage")
-})
-
 test_that("H3: file in subdir, recursive=FALSE → not found, falls through", {
   testInit("digest")
   shared <- normPath(file.path(tmpdir, "shared"))
@@ -345,15 +277,6 @@ test_that("H3: file in subdir, recursive=FALSE → not found, falls through", {
   skip_on_os("windows")
   expect_false(isTRUE(sameInode(file.path(dest, "foo.csv"), fixShared$path)),
                info = "non-recursive search must not link from subdir")
-})
-
-test_that("H4: file in subdir, recursive=TRUE → hardlinked from subdir", {
-  ## Current code finds the file (search via dir(... recursive=TRUE) works)
-  ## but the resulting destinationPath copy is not hardlinked from the
-  ## subdir — current .checkLocalSources writes a copy via Checksums()
-  ## propagation. Becomes a hardlink after §4 step 7 (single-phase
-  ## resolution + explicit hardLinkOrCopy from candidate).
-  skip("recursive subdir hardlinking lands in §4 step 7")
 })
 
 test_that("H5: two sharedInputs entries; file only in second → found", {
@@ -436,27 +359,9 @@ test_that("H7: file in destinationPath wins; sharedInputs not consulted", {
                info = "destinationPath copy untouched; not relinked from shared")
 })
 
-test_that("H8: stale destinationPath sidecar; sharedInputs has correct version", {
-  skip("requires sidecar implementation (§4 step 2)")
-})
-
-
 # ===========================================================================
 # §5.3  Resolution — sad paths
 # ===========================================================================
-
-test_that("S1: sharedInputs has bad-hash file → skipped, not deleted", {
-  ## Today's downloadRemote refuses to overwrite a bad file already in
-  ## sharedInputs ("good.csv already exists ... Use overwrite = TRUE?")
-  ## because pp_check_local_sources does not cleanly disqualify the bad
-  ## file before download. The clean handling lands in §4 step 11
-  ## (mismatch handling: log, never delete, never block download).
-  skip("hash-mismatch graceful handling lands in §4 step 11")
-})
-
-test_that("S2: hash unavailable anywhere → first basename match accepted", {
-  skip("no-hash-anywhere policy lands in §3.2 Step E (§4 step 7)")
-})
 
 test_that("S3: sharedInputs path doesn't exist → falls through", {
   testInit("digest")
@@ -476,24 +381,23 @@ test_that("S3: sharedInputs path doesn't exist → falls through", {
   expect_true(file.exists(file.path(dest, "foo.csv")))
 })
 
-test_that("S4: sharedInputs read-only → no crash, downloads proceed", {
-  ## Today, runChecksums tries to checkPath(create = TRUE) on the
-  ## inputPaths dir and fails when the dir is chmod 000. Graceful
-  ## degradation (warn + skip-shared, continue with destinationPath only)
-  ## lands in §4 step 5 (option getter) + step 8 (validator).
-  skip("read-only sharedInputs graceful path lands in §4 steps 5 + 8")
-})
+test_that("S7: HEAD network error → falls back to download path", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
 
-test_that("S5: filename collision under recursive search", {
-  skip("collision-with-recursive cases pinned after §4 step 7")
-})
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
 
-test_that("S6: hardLinkOrCopy fails", {
-  skip("simulating both hardlink + copy failure is OS-specific; manual coverage")
-})
-
-test_that("S7: HEAD network error → falls back to .guessAtFile", {
-  skip("HEAD-aware single-phase resolution lands in §4 step 7")
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) stop("simulated network error"),
+    { pp(ctx) }
+  )
+  # Network failure must not poison state — skipDownload stays FALSE so
+  # pp_download proceeds normally, and no sidecar/CHECKSUMS row is written.
+  expect_false(isTRUE(out$skipDownload))
+  expect_false(fx$path %in% out$hashVerified)
 })
 
 
@@ -501,35 +405,66 @@ test_that("S7: HEAD network error → falls back to .guessAtFile", {
 # §5.4  Sidecar lifecycle and CHECKSUMS interaction
 # ===========================================================================
 
-test_that("C1: first-ever download writes sidecars in both locations", {
-  skip("sidecar I/O lands in §4 step 2")
+test_that("C4: sidecar with missing adjacent file → ignored", {
+  testInit()
+  td  <- withr::local_tempdir()
+  url <- "https://example.com/data.tif"
+
+  # Write an orphan sidecar (no adjacent file).
+  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
+  sc <- mk(url, td, "data.tif", paste0(strrep("a", 32L)),
+           algorithm = "md5", write = TRUE)
+  expect_true(file.exists(sc))
+
+  # pp_remote_hash_check returns ctx unchanged when localFile resolves to
+  # NULL (no on-disk file to verify), regardless of orphan sidecars.
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = file.path(td, "data.tif"))
+  out <- pp(ctx)
+  expect_false(isTRUE(out$skipDownload))
 })
-test_that("C2: second project hits sharedInputs via sidecar", {
-  skip("sidecar I/O lands in §4 step 2")
+test_that("C8: legacy single-line .hash sidecar parsed via length heuristic", {
+  parse <- getFromNamespace(".parseRemoteHashFile", "reproducible")
+  td <- withr::local_tempdir()
+  legacy <- file.path(td, "legacy.hash")
+  writeLines(strrep("a", 32L), legacy)        # md5-shaped, no `:` prefix
+  out <- parse(legacy)
+  expect_identical(out$algorithm, "md5")
+  expect_identical(out$hash, strrep("a", 32L))
 })
-test_that("C3: sharedInputs read-only → destinationPath sidecar only", {
-  skip("sidecar I/O lands in §4 step 2")
+test_that("C9: legacy CHECKSUMS row with multi-algorithm coexists with new row", {
+  testInit()
+  td <- withr::local_tempdir()
+  fx <- makeFixture(td, "shared.dat")
+  csf <- writeChecksumsFor(td, fx)            # xxhash64 row only
+
+  upsert <- getFromNamespace(".upsertChecksumsRow", "reproducible")
+  upsert(csf, file = basename(fx$path),
+         hash = digest::digest(file = fx$path, algo = "md5"),
+         filesize = fx$size, algorithm = "md5")
+
+  rows <- read.table(csf, header = TRUE, stringsAsFactors = FALSE)
+  algos <- sort(rows$algorithm[rows$file == basename(fx$path)])
+  expect_identical(algos, c("md5", "xxhash64"))
 })
-test_that("C4: shared sidecar with missing adjacent file → ignored", {
-  skip("sidecar I/O lands in §4 step 2")
-})
-test_that("C5: stale sidecar self-heals under exclusive lock", {
-  skip("sidecar I/O + locking land in §4 steps 2–3")
-})
-test_that("C6: project CHECKSUMS A vs adjacent file B → project wins, redownload", {
-  skip("requires §4 step 6 (resolveExpectedHash)")
-})
-test_that("C7: project CHECKSUMS A; sidecar absent; file is A → linked", {
-  skip("requires §4 step 6")
-})
-test_that("C8: legacy <urlEncoded>.hash hydration on first encounter", {
-  skip("legacy hydration lands in §4 step 4")
-})
-test_that("C9: legacy CHECKSUMS hydration with no adjacent files → no-op", {
-  skip("legacy hydration lands in §4 step 4")
-})
-test_that("C10: malformed sidecar JSON → treated as missing", {
-  skip("sidecar I/O lands in §4 step 2")
+test_that("C10: malformed sidecar contents → treated as missing", {
+  parse <- getFromNamespace(".parseRemoteHashFile", "reproducible")
+  td <- withr::local_tempdir()
+
+  # Empty file → NULL
+  empty <- file.path(td, "empty.hash")
+  file.create(empty)
+  expect_null(parse(empty))
+
+  # Non-existent file → NULL
+  expect_null(parse(file.path(td, "does-not-exist.hash")))
+
+  # Garbage one-line → still parses (algorithm classified as etag-opaque),
+  # but the hash won't match any remote so downstream comparison fails.
+  garbage <- file.path(td, "garbage.hash")
+  writeLines("not-a-real-hash-string", garbage)
+  out <- parse(garbage)
+  expect_identical(out$algorithm, "etag-opaque")
 })
 
 
@@ -537,23 +472,72 @@ test_that("C10: malformed sidecar JSON → treated as missing", {
 # §5.5  targetFile inference
 # ===========================================================================
 
-test_that("T1: targetFile supplied + sharedInputs hit → no HEAD request", {
-  skip("HEAD-skip assertion needs §4 step 7 instrumentation")
+test_that("T1: existing sidecar → no HEAD request fired", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
+
+  # Pre-write the sidecar; pp_remote_hash_check should fast-path on existence.
+  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
+  mk(url, td, basename(fx$path),
+     digest::digest(file = fx$path, algo = "md5"),
+     algorithm = "md5", write = TRUE)
+
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  callCount <- 0L
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) {
+      callCount <<- callCount + 1L
+      stop("HEAD should not be called when sidecar exists")
+    },
+    { pp(ctx) }
+  )
+  expect_identical(callCount, 0L)
+  expect_true(isTRUE(out$skipDownload))
 })
-test_that("T2: targetFile NULL, plain URL → guessed; HEAD avoided when hash known", {
-  skip("requires §4 step 7")
-})
-test_that("T3: content-disposition gives canonical filename", {
-  skip("requires §4 step 7 + httr2 mock")
-})
-test_that("T4: no content-disposition + URL fallback wrong → search misses", {
-  skip("requires §4 step 7")
-})
-test_that("T5: Google Drive URL → md5 from drive_get used", {
-  skip("requires Google Drive auth; covered in test-cloud.R analogues")
+test_that("T2: no sidecar → HEAD fires; size+hash match → sidecar written", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
+
+  fakeMeta <- list(
+    targetFile = "data.tif",
+    fileSize = as.character(fx$size),
+    remoteHash = digest::digest(file = fx$path, algo = "md5"),
+    remoteAlgorithm = "md5", timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  callCount <- 0L
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) { callCount <<- callCount + 1L; fakeMeta },
+    { pp(ctx) }
+  )
+  expect_identical(callCount, 1L)
+  expect_true(isTRUE(out$skipDownload))
+  expect_false(is.null(readSidecar(td, fx, url)))
 })
 test_that("T6: HEAD network error → silent fall-through", {
-  skip("requires §4 step 7")
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
+
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) stop("simulated HEAD failure"),
+    { pp(ctx) }
+  )
+  # Silent fall-through: no skipDownload, no sidecar, no error.
+  expect_false(isTRUE(out$skipDownload))
+  expect_null(readSidecar(td, fx, url))
 })
 
 test_that("T7: targetFile NULL + url NULL (local-only) → no regression", {
@@ -580,7 +564,94 @@ test_that("T7: targetFile NULL + url NULL (local-only) → no regression", {
 # ===========================================================================
 
 test_that("R1–R7: remoteHash-driven candidate validation", {
-  skip("first-class remoteHash matching lands in §4 step 7")
+  # Cluster of behaviours, each verified inline:
+  #   R1 size-match + hash-match → accept
+  #   R2 size-match + hash-mismatch → reject (download)
+  #   R3 size-mismatch (regardless of hash) → reject (download)
+  #   R4 opaque ETag → reject (no positive trust possible)
+  #   R5 missing remote hash → reject
+  #   R6 sidecar pre-exists with matching contents under opt-in re-check
+  #   R7 sidecar pre-exists with NON-matching contents → re-verify
+  testInit()
+
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+
+  ## R1: size + hash match → skipDownload
+  td1 <- withr::local_tempdir()
+  fx1 <- makeFixture(td1, "r1.tif")
+  out1 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) list(
+      targetFile = "r1.tif", fileSize = as.character(fx1$size),
+      remoteHash = digest::digest(file = fx1$path, algo = "md5"),
+      remoteAlgorithm = "md5", timestampOnline = "now"),
+    { pp(makePPCtx("https://e.com/r1.tif", td1, neededFiles = fx1$path)) }
+  )
+  expect_true(isTRUE(out1$skipDownload))
+
+  ## R2: size match, hash mismatch → reject
+  td2 <- withr::local_tempdir()
+  fx2 <- makeFixture(td2, "r2.tif")
+  out2 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) list(
+      targetFile = "r2.tif", fileSize = as.character(fx2$size),
+      remoteHash = digest::digest("DIFFERENT", algo = "md5", serialize = FALSE),
+      remoteAlgorithm = "md5", timestampOnline = "now"),
+    { pp(makePPCtx("https://e.com/r2.tif", td2, neededFiles = fx2$path)) }
+  )
+  expect_false(isTRUE(out2$skipDownload))
+
+  ## R3: size mismatch → reject
+  td3 <- withr::local_tempdir()
+  fx3 <- makeFixture(td3, "r3.tif")
+  out3 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) list(
+      targetFile = "r3.tif", fileSize = as.character(fx3$size + 1L),
+      remoteHash = digest::digest(file = fx3$path, algo = "md5"),
+      remoteAlgorithm = "md5", timestampOnline = "now"),
+    { pp(makePPCtx("https://e.com/r3.tif", td3, neededFiles = fx3$path)) }
+  )
+  expect_false(isTRUE(out3$skipDownload))
+
+  ## R4: opaque ETag → reject
+  td4 <- withr::local_tempdir()
+  fx4 <- makeFixture(td4, "r4.tif")
+  out4 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) list(
+      targetFile = "r4.tif", fileSize = as.character(fx4$size),
+      remoteHash = "W/abc-12-34", remoteAlgorithm = "etag-opaque",
+      timestampOnline = "now"),
+    { pp(makePPCtx("https://e.com/r4.tif", td4, neededFiles = fx4$path)) }
+  )
+  expect_false(isTRUE(out4$skipDownload))
+
+  ## R5: empty remote hash → reject (treated as opaque)
+  td5 <- withr::local_tempdir()
+  fx5 <- makeFixture(td5, "r5.tif")
+  out5 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) list(
+      targetFile = "r5.tif", fileSize = as.character(fx5$size),
+      remoteHash = "", remoteAlgorithm = "etag-opaque",
+      timestampOnline = "now"),
+    { pp(makePPCtx("https://e.com/r5.tif", td5, neededFiles = fx5$path)) }
+  )
+  expect_false(isTRUE(out5$skipDownload))
+
+  ## R6: sidecar with matching contents under opt-in re-check
+  td6 <- withr::local_tempdir()
+  fx6 <- makeFixture(td6, "r6.tif")
+  url6 <- "https://e.com/r6.tif"
+  hash6 <- digest::digest(file = fx6$path, algo = "md5")
+  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
+  mk(url6, td6, basename(fx6$path), hash6, algorithm = "md5", write = TRUE)
+
+  withr::local_options(reproducible.checkRemoteHash = TRUE)
+  out6 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) list(
+      targetFile = "r6.tif", fileSize = as.character(fx6$size),
+      remoteHash = hash6, remoteAlgorithm = "md5", timestampOnline = "now"),
+    { pp(makePPCtx(url6, td6, neededFiles = fx6$path)) }
+  )
+  expect_true(isTRUE(out6$skipDownload))
 })
 
 
@@ -611,19 +682,10 @@ test_that("B1: legacy reproducible.inputPaths still works (regression guard)", {
   expect_true(isTRUE(sameInode(file.path(dest, "foo.csv"), fixShared$path)))
 })
 
-test_that("B2: reproducible.dataPath honored", {
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "dataPath alias activates after §4 step 5"
-  )
-})
-
-test_that("B3: sharedInputs and dataPath disagree → sharedInputs wins", {
-  skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputs")),
-    "requires §4 step 5"
-  )
-})
+# B2 / B3 deleted: covered by P5 (inputPaths-only deprecation chain) and P6
+# (sharedInputs wins over inputPaths). The third option name `dataPath` was
+# removed before the rename ever shipped — `sharedInputs` is canonical and
+# `inputPaths` is the only legacy alias.
 
 
 # ===========================================================================
@@ -661,15 +723,6 @@ test_that("I1+I2: Cache(prepInputs(...)) — cold uses sharedInputs; warm is cac
 
 
 # ===========================================================================
-# §5.9  Auto-population (write path)
-# ===========================================================================
-
-test_that("W1–W9: auto-population, single-physical-copy invariant", {
-  skip("auto-population lands in §4 step 7 via pp_finalize_placement (§3.7)")
-})
-
-
-# ===========================================================================
 # §5.10  Performance smoke
 # ===========================================================================
 
@@ -698,50 +751,326 @@ test_that("Q1: 10k unrelated files in shared, recursive=FALSE → fast lookup", 
       type = "output"
     )
   )
-  expect_lt(t[["elapsed"]], 5,
-            info = "lookup over 10k flat files should be subsecond on typical disk")
-})
-
-test_that("Q2: deep nested tree, recursive=TRUE → bounded", {
-  skip("regression guard, runs only with reproducible.runLargeFileTests")
+  # lookup over 10k flat files should be subsecond on typical disk;
+  # 5 s is a generous CI ceiling.
+  expect_lt(t[["elapsed"]], 5)
 })
 
 test_that("Q3: hot destinationPath, repeated calls → no HEAD after first", {
-  skip("requires §4 step 7 + HEAD instrumentation")
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
+  fakeMeta <- list(
+    targetFile = "data.tif", fileSize = as.character(fx$size),
+    remoteHash = digest::digest(file = fx$path, algo = "md5"),
+    remoteAlgorithm = "md5", timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+
+  callCount <- 0L
+  testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) { callCount <<- callCount + 1L; fakeMeta },
+    { pp(makePPCtx(url, td, neededFiles = fx$path)) }
+  )
+  expect_identical(callCount, 1L)
+
+  testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) {
+      callCount <<- callCount + 1L
+      stop("HEAD should not fire on hot calls")
+    },
+    { for (i in 1:5) pp(makePPCtx(url, td, neededFiles = fx$path)) }
+  )
+  expect_identical(callCount, 1L)
 })
 
-test_that("Q4: digest cost — file hashed at most once across hot calls", {
-  skip("requires §4 step 6 (resolveExpectedHash) + digest stub")
-})
-
-test_that("Q5: server md5 → no sha1 computed", {
-  skip("requires §4 step 7")
-})
-
-
-# ===========================================================================
-# §5.11  Migration from legacy formats
-# ===========================================================================
-
-test_that("M1–M5: legacy <urlEncoded>.hash and CHECKSUMS hydration", {
-  skip("legacy hydration lands in §4 step 4")
+test_that("Q5: classify md5/sha1/sha256/etag-opaque by hash shape", {
+  classify <- getFromNamespace(".classifyRemoteHashAlgo", "reproducible")
+  expect_identical(classify(strrep("a", 32L)), "md5")
+  expect_identical(classify(strrep("b", 40L)), "sha1")
+  expect_identical(classify(strrep("c", 64L)), "sha256")
+  expect_identical(classify("anything", isGDurl = TRUE), "md5")
+  expect_identical(classify("W/abc-12-34"), "etag-opaque")
 })
 
 
+
 # ===========================================================================
-# §5.12  Concurrency (filelock)
+# §5.14  Remote-hash content verification (size as negative-only signal)
+# ---------------------------------------------------------------------------
+# These tests exercise the algorithm:
+#   1. remote.size != local.size            -> download
+#   2. remote algorithm == "etag-opaque"    -> download
+#   3. size match + hash match              -> sidecar + CHECKSUMS row, skip
+#   4. size match + hash mismatch (.tif     -> download (the size-poison case
+#      false-positive scenario)                that the previous code missed)
 # ===========================================================================
 
-test_that("L1–L7: per-file locking, atomicity, graceful degradation", {
-  skip_if_not_installed("filelock")
-  skip("locking shim lands in §4 step 3")
+# Helpers (makePPCtx / readSidecar / readChecksumsRows) hoisted to the top
+# of this file so they're visible to earlier test_that() blocks too.
+
+# .classifyRemoteHashAlgo --------------------------------------------------
+
+test_that("classify: md5/sha1/sha256/opaque + Google Drive override", {
+  classify <- getFromNamespace(".classifyRemoteHashAlgo", "reproducible")
+  expect_identical(classify(strrep("a", 32L)), "md5")
+  expect_identical(classify(strrep("0", 40L)), "sha1")
+  expect_identical(classify(strrep("f", 64L)), "sha256")
+  expect_identical(classify("W/abc-12-34"), "etag-opaque")
+  expect_identical(classify(""), "etag-opaque")
+  expect_identical(classify(NA_character_), "etag-opaque")
+  expect_identical(classify(NULL), "etag-opaque")
+  # Google Drive override forces md5 regardless of shape
+  expect_identical(classify("anything", isGDurl = TRUE), "md5")
 })
 
+# .parseRemoteHashFile (legacy + new format) -------------------------------
 
-# ===========================================================================
-# §5.13  Public API: sharedInputsLs() / sharedInputsRefresh()
-# ===========================================================================
+test_that("parse sidecar: legacy single-line vs new <algo>:<hash>", {
+  parse <- getFromNamespace(".parseRemoteHashFile", "reproducible")
+  td <- withr::local_tempdir()
 
-test_that("A1–A10: sharedInputsLs() and sharedInputsRefresh()", {
-  skip("public API exports land in §4 step 13 (post-refactor)")
+  # New format
+  pNew <- file.path(td, "new.hash")
+  writeLines("md5:abcdef0123456789abcdef0123456789", pNew)
+  out <- parse(pNew)
+  expect_identical(out$algorithm, "md5")
+  expect_identical(out$hash, "abcdef0123456789abcdef0123456789")
+
+  # Legacy single-line, md5-shaped
+  pLegacyMd5 <- file.path(td, "legacymd5.hash")
+  writeLines(strrep("a", 32L), pLegacyMd5)
+  out2 <- parse(pLegacyMd5)
+  expect_identical(out2$algorithm, "md5")
+  expect_identical(out2$hash, strrep("a", 32L))
+
+  # Legacy single-line, sha1-shaped
+  pLegacySha1 <- file.path(td, "legacysha1.hash")
+  writeLines(strrep("b", 40L), pLegacySha1)
+  out3 <- parse(pLegacySha1)
+  expect_identical(out3$algorithm, "sha1")
+
+  # Missing file
+  expect_null(parse(file.path(td, "does-not-exist.hash")))
+})
+
+# pp_remote_hash_check: md5 match -> sidecar + CHECKSUMS row + skipDownload --
+
+test_that("pp_remote_hash_check: md5 match writes md5 sidecar + row, skips DL", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
+
+  fakeMeta <- list(
+    targetFile = "data.tif",
+    fileSize = as.character(fx$size),
+    remoteHash = digest::digest(file = fx$path, algo = "md5"),
+    remoteAlgorithm = "md5",
+    timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) fakeMeta,
+    { pp(ctx) }
+  )
+
+  expect_true(isTRUE(out$skipDownload))
+  expect_true(fx$path %in% out$hashVerified)
+
+  sc <- readSidecar(td, fx, url)
+  expect_false(is.null(sc))
+  expect_match(sc$contents, "^md5:")
+  expect_identical(sub("^md5:", "", sc$contents), fakeMeta$remoteHash)
+
+  rows <- readChecksumsRows(td)
+  expect_false(is.null(rows))
+  hit <- which(rows$algorithm == "md5" & basename(rows$file) == "data.tif")
+  expect_length(hit, 1L)
+  expect_identical(rows$checksum[hit], fakeMeta$remoteHash)
+})
+
+# pp_remote_hash_check: sha1 match -> sha1 sidecar + sha1 row ---------------
+
+test_that("pp_remote_hash_check: sha1 match writes sha1 sidecar + row", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.bin", content = "sha1-content\n")
+  url <- "https://example.com/sha1/data.bin"
+
+  fakeMeta <- list(
+    targetFile = "data.bin",
+    fileSize = as.character(fx$size),
+    remoteHash = digest::digest(file = fx$path, algo = "sha1"),
+    remoteAlgorithm = "sha1",
+    timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) fakeMeta,
+    { pp(ctx) }
+  )
+
+  expect_true(isTRUE(out$skipDownload))
+  sc <- readSidecar(td, fx, url)
+  expect_match(sc$contents, "^sha1:")
+
+  rows <- readChecksumsRows(td)
+  hit <- which(rows$algorithm == "sha1" & basename(rows$file) == "data.bin")
+  expect_length(hit, 1L)
+})
+
+# pp_remote_hash_check: opaque ETag -> no positive trust -> download path ---
+
+test_that("pp_remote_hash_check: opaque ETag falls through to download", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.bin")
+  url <- "https://example.com/opaque/data.bin"
+
+  fakeMeta <- list(
+    targetFile = "data.bin",
+    fileSize = as.character(fx$size),
+    remoteHash = "W/some-weak-etag",
+    remoteAlgorithm = "etag-opaque",
+    timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) fakeMeta,
+    { pp(ctx) }
+  )
+
+  expect_false(isTRUE(out$skipDownload))
+  expect_false(fx$path %in% out$hashVerified)
+  expect_null(readSidecar(td, fx, url))
+})
+
+# pp_remote_hash_check: size match + hash MISMATCH (.tif poison case) ------
+
+test_that("pp_remote_hash_check: size match + hash mismatch -> download", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif", content = "local-content-A\n")
+  url <- "https://example.com/poison/data.tif"
+
+  # Remote has the same size but completely different content.
+  fakeMeta <- list(
+    targetFile = "data.tif",
+    fileSize = as.character(fx$size),
+    remoteHash = digest::digest("DIFFERENT-CONTENT", algo = "md5",
+                                serialize = FALSE),
+    remoteAlgorithm = "md5",
+    timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+  ctx <- makePPCtx(url, td, neededFiles = fx$path)
+
+  out <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) fakeMeta,
+    { pp(ctx) }
+  )
+
+  # Size matched but hash didn't — must NOT skip download, must NOT write
+  # sidecar or CHECKSUMS row (the previous size-only-fallback code would have
+  # incorrectly accepted this case).
+  expect_false(isTRUE(out$skipDownload))
+  expect_false(fx$path %in% out$hashVerified)
+  expect_null(readSidecar(td, fx, url))
+})
+
+# pp_remote_hash_check: second call hits sidecar fast-path (no HEAD) -------
+
+test_that("pp_remote_hash_check: 2nd call uses sidecar fast-path (no HEAD)", {
+  testInit()
+  td  <- withr::local_tempdir()
+  fx  <- makeFixture(td, "data.tif")
+  url <- "https://example.com/path/data.tif"
+
+  fakeMeta <- list(
+    targetFile = "data.tif",
+    fileSize = as.character(fx$size),
+    remoteHash = digest::digest(file = fx$path, algo = "md5"),
+    remoteAlgorithm = "md5",
+    timestampOnline = "now"
+  )
+  pp <- getFromNamespace("pp_remote_hash_check", "reproducible")
+
+  # First call: HEAD invoked, writes sidecar.
+  callCount <- 0L
+  ctx1 <- makePPCtx(url, td, neededFiles = fx$path)
+  testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) { callCount <<- callCount + 1L; fakeMeta },
+    { pp(ctx1) }
+  )
+  expect_identical(callCount, 1L)
+  expect_false(is.null(readSidecar(td, fx, url)))
+
+  # Second call: must NOT call getRemoteMetadata (sidecar fast-path).
+  ctx2 <- makePPCtx(url, td, neededFiles = fx$path)
+  out2 <- testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) {
+      callCount <<- callCount + 1L
+      stop("getRemoteMetadata should not be called when sidecar exists")
+    },
+    { pp(ctx2) }
+  )
+  expect_identical(callCount, 1L)             # unchanged
+  expect_true(isTRUE(out2$skipDownload))
+})
+
+# Checksums(): multi-row-per-file (xxhash64 + md5 coexist) -----------------
+
+test_that("Checksums: multiple algorithms per file coexist; reads pick algo", {
+  testInit()
+  td <- withr::local_tempdir()
+  fx <- makeFixture(td, "shared.dat")
+
+  csf <- file.path(td, "CHECKSUMS.txt")
+  hdr <- '"file" "checksum" "filesize" "algorithm"'
+  rowX <- sprintf('"%s" "%s" "%d" "xxhash64"',
+                  basename(fx$path), fx$hash, fx$size)
+  md5  <- digest::digest(file = fx$path, algo = "md5")
+  rowM <- sprintf('"%s" "%s" "%d" "md5"',
+                  basename(fx$path), md5, fx$size)
+  writeLines(c(hdr, rowX, rowM), csf)
+
+  # Default algo (xxhash64): expect OK row matching the xxhash64 entry.
+  resX <- Checksums(path = td, write = FALSE, files = basename(fx$path),
+                    checksumFile = csf, verbose = 0)
+  hits <- resX[!is.na(resX$result) & resX$result == "OK", ]
+  expect_true(NROW(hits) >= 1L)
+  expect_true(any(basename(hits$expectedFile) == basename(fx$path)))
+
+  # Explicit md5: expect the md5 row to match.
+  resM <- Checksums(path = td, write = FALSE, files = basename(fx$path),
+                    checksumFile = csf, verbose = 0, algo = "md5")
+  hitsM <- resM[!is.na(resM$result) & resM$result == "OK", ]
+  expect_true(NROW(hitsM) >= 1L)
+})
+
+# .upsertChecksumsRow preserves rows for other algorithms ------------------
+
+test_that("upsertChecksumsRow: preserves other-algorithm rows for same file", {
+  testInit()
+  td <- withr::local_tempdir()
+  fx <- makeFixture(td, "shared.dat")
+
+  csf <- writeChecksumsFor(td, fx)            # xxhash64 row
+  upsert <- getFromNamespace(".upsertChecksumsRow", "reproducible")
+  md5 <- digest::digest(file = fx$path, algo = "md5")
+
+  upsert(csf, file = basename(fx$path), hash = md5,
+         filesize = fx$size, algorithm = "md5")
+
+  rows <- read.table(csf, header = TRUE, stringsAsFactors = FALSE)
+  algos <- sort(rows$algorithm[rows$file == basename(fx$path)])
+  expect_identical(algos, c("md5", "xxhash64"))
 })

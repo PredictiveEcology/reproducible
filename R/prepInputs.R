@@ -158,7 +158,7 @@ utils::globalVariables(c(
 #'   and save the file that comes from `url` and is also where the function
 #'   will look for `archive` or `targetFile`. NOTE (still experimental):
 #'   To prevent repeated downloads in different locations, the user can also set
-#'   `options("reproducible.dataPath")` to one or more local file paths to
+#'   `options("reproducible.sharedInputs")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is
 #'   `NULL` meaning do not search locally. The previous name
 #'   `options("reproducible.inputPaths")` is still accepted as a backwards-compatible
@@ -1182,7 +1182,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     )
   })
 
-  rip <- .getDataPath()
+  rip <- .getSharedInputs()
   checkSumFilePaths <- if (!is.null(rip)) {
     unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
   } else {
@@ -1222,7 +1222,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
             # corrupted
             unlink(archive[1])
             message("archive (", archive[1], ") appears corrupted; deleting it; ",
-                    "you may have to manually delete it and the copy in `reproducible.dataPath` if using ")
+                    "you may have to manually delete it and the copy in `reproducible.sharedInputs` if using ")
             return(NULL)
           }
           needSystemCall <- needSystemCall || fsArch > 2e9
@@ -1754,12 +1754,23 @@ readCheckSumFilePath <- function(checkSumFilePath, destinationPath, filesToCheck
   cs
 }
 
-extractFileNOTtoChecksum <- function(cs, destinationPath, filesToChecksum) {
+extractFileNOTtoChecksum <- function(cs, destinationPath, filesToChecksum,
+                                     algorithms = NULL) {
   setDT(cs)
-  cs[!makeRelative(file, destinationPath) %in%
-       makeRelative(filesToChecksum, destinationPath)]
-  setDF(cs)
-  cs
+  files <- makeRelative(filesToChecksum, destinationPath)
+  if (is.null(algorithms) || all(is.na(algorithms)) ||
+      is.null(cs$algorithm)) {
+    # Backward-compat: drop rows for any file we're updating, regardless of
+    # algorithm. Used when caller doesn't know which algorithm it's writing.
+    out <- cs[!(makeRelative(file, destinationPath) %in% files)]
+  } else {
+    # Multi-algorithm: only drop rows where (file, algorithm) is being
+    # upserted. Rows recording other algorithms for the same file are kept.
+    out <- cs[!(makeRelative(file, destinationPath) %in% files &
+                  algorithm %in% algorithms)]
+  }
+  setDF(out)
+  out
 }
 
 
@@ -1771,8 +1782,17 @@ appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath
     if (is.null(cs)) {
       append <- FALSE
     } else {
-      # a checksums file already existed, need to keep some of it
-      nonCurrentFiles <- extractFileNOTtoChecksum(cs, destinationPath, filesToChecksum)
+      # a checksums file already existed, need to keep some of it.
+      # Restrict the drop to (file, algorithm) pairs we're writing so other
+      # algorithms recorded for the same file (e.g. an md5 row written by
+      # pp_remote_hash_check) are preserved alongside the xxhash64 row this
+      # call is producing.
+      currAlgo <- if (!is.null(currentFiles$algorithm.x)) {
+        unique(currentFiles$algorithm.x)
+      } else NULL
+      nonCurrentFiles <- extractFileNOTtoChecksum(
+        cs, destinationPath, filesToChecksum, algorithms = currAlgo
+      )
     }
   }
 

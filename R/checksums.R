@@ -154,7 +154,7 @@ setMethod(
         files <- files[inTxt]
       else {
         # might fail because it is listed in inputPaths; check there
-        possPath <- .getDataPath()
+        possPath <- .getSharedInputs()
         # can be length > 1
         if (!is.null(possPath)) {
           possPath <- normPath(possPath)
@@ -197,6 +197,17 @@ setMethod(
         dots$algo <- dots$algo[!is.na(dots$algo)][1]
         # dots$algo <- na.omit(dots$algo)[1]
         if (is.na(dots$algo)) dots$algo <- defaultWriteHashAlgo
+      }
+      # Multi-algorithm support: a file may have multiple rows in CHECKSUMS.txt,
+      # one per algorithm (e.g. xxhash64 written by pp_finalize, md5 written by
+      # pp_remote_hash_check from a remote md5Checksum). Restrict the comparison
+      # to rows matching the algorithm we're about to digest with — otherwise
+      # the join below produces N rows per file (one per recorded algorithm)
+      # and the dedup `.SD[1, ], by = expectedFile` step risks keeping a
+      # spurious FAIL row where a different algo's recorded hash didn't match
+      # the freshly-digested hash.
+      if (NROW(txt) && length(dots$algo) && nzchar(dots$algo)) {
+        txt <- txt[is.na(txt$algorithm) | txt$algorithm == dots$algo, , drop = FALSE]
       }
     } else {
       if (NROW(txt)) {
@@ -330,6 +341,45 @@ writeChecksumsTable <- function(out, checksumFile, dots) {
       dots
     )
   )
+}
+
+# Upsert a single (file, algorithm) row into a CHECKSUMS.txt file using a
+# precomputed hash. Used by pp_remote_hash_check after a confirmed remote
+# match to record an md5/sha1/sha256 row without re-digesting via Checksums().
+# Existing rows for OTHER algorithms recording the same file are preserved.
+.upsertChecksumsRow <- function(checkSumFilePath, file, hash, filesize,
+                                algorithm) {
+  newRow <- data.table::data.table(
+    file = as.character(file),
+    checksum = as.character(hash),
+    filesize = as.character(filesize),
+    algorithm = as.character(algorithm)
+  )
+
+  existing <- if (file.exists(checkSumFilePath) &&
+                    file.size(checkSumFilePath) > 0L) {
+    cs <- try(read.table(checkSumFilePath, header = TRUE,
+                          stringsAsFactors = FALSE), silent = TRUE)
+    if (is(cs, "try-error")) NULL else data.table::as.data.table(cs)
+  } else NULL
+
+  combined <- if (is.null(existing) || !NROW(existing)) {
+    newRow
+  } else {
+    if (is.null(existing$algorithm)) existing[, algorithm := NA_character_]
+    if (is.null(existing$filesize)) existing[, filesize := NA_character_]
+    existing[, file := as.character(file)]
+    existing[, checksum := as.character(checksum)]
+    existing[, filesize := as.character(filesize)]
+    existing[, algorithm := as.character(algorithm)]
+
+    keep <- !(existing$file %in% newRow$file &
+                existing$algorithm %in% newRow$algorithm)
+    rbindlist(list(existing[keep, ], newRow), fill = TRUE)
+  }
+
+  writeChecksumsTable(as.data.frame(combined), checkSumFilePath, dots = list())
+  invisible(combined)
 }
 
 #' Calculate the hashes of multiple files

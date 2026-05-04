@@ -1,8 +1,8 @@
 test_that("prepInputs correctly unzips large files", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(isInteractive(), "tests extracting large files should be run manually devtools::test()")
-  skip_if_not(getOption("reproducible.runLargeFileTests"))
+  skip_if_not(isTRUE(getOption("reproducible.runLargeFileTests")),
+              "set reproducible.runLargeFileTests=TRUE to run (~30 GB extraction)")
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
   testInit("terra")
   # tmpdir <- "/mnt/d/temp" # need a drive that is large enough
@@ -33,8 +33,8 @@ test_that("prepInputs correctly unzips large files", {
 test_that("Issue 181 geodatabase file", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(isInteractive(), "test #2: extracting large files should be run manually devtools::test()")
-  skip_if_not(getOption("reproducible.runLargeFileTests"))
+  skip_if_not(isTRUE(getOption("reproducible.runLargeFileTests")),
+              "set reproducible.runLargeFileTests=TRUE to run (Google Drive download)")
 
   ## based on #145. extracted file is ~30 GB so this takes a long time to test!
   testInit(c("terra", "googledrive"), needGoogleDriveAuth = TRUE)
