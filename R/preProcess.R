@@ -979,11 +979,11 @@ pp_link_to_destination <- function(ctx) {
         common       <- ctx$checkSums[ctx$checkSums$expectedFile %in% a$file]
         missingFiles <- common[!a, on = c("expectedFile" = "file", "checksum.x" = "checksum")]
         if (NROW(missingFiles)) {
-          messagePreProcess("... linking to getOption('reproducible.inputPaths')...",
+          messagePreProcess("... linking to getOption('reproducible.destinationPathShared')...",
                             verbose = ctx$verbose)
           hardLinkOrCopy(from, to, verbose = ctx$verbose)
         } else {
-          messagePreProcess("Skipping copy from inputPaths; all files present",
+          messagePreProcess("Skipping copy from destinationPathShared; all files present",
                             verbose = ctx$verbose)
         }
       }

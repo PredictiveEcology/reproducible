@@ -902,8 +902,9 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
   if (missing(isGDurl))
     isGDurl <- isGoogleDriveURL(url) || isGoogleID(url)
   if (isGDurl) {
+    # Cache indefinitely — same rationale as assessGoogle().
     file <- googledrive::drive_get(url) |>
-      Cache(verbose = FALSE, notOlderThan = Sys.time() - 60*60) # refresh every hour
+      Cache(verbose = FALSE)
     fileSize <- file$drive_resource[[1]]$size
     remoteHash <- file$drive_resource[[1]]$md5Checksum
     if (missing(targetFile)) {

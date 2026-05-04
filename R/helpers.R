@@ -761,17 +761,28 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
 # is used and a one-time deprecation message is emitted.
 # ---------------------------------------------------------------------------
 
+# One-shot per-session deprecation messaging. `.pkgEnv$.deprecMsgEmitted`
+# accumulates the option names whose deprecation message has already fired,
+# so subsequent calls in the same R session stay silent regardless of how
+# many times the getter is invoked from inside the preProcess pipeline.
+.deprecMsgOnce <- function(optName, replacementName) {
+  emitted <- .pkgEnv$.deprecMsgEmitted
+  if (is.null(emitted)) emitted <- character()
+  if (optName %in% emitted) return(invisible())
+  message("Option '", optName, "' is deprecated; ",
+          "please use '", replacementName, "' instead.")
+  .pkgEnv$.deprecMsgEmitted <- c(emitted, optName)
+  invisible()
+}
+
 #' @keywords internal
 .getDestinationPathShared <- function() {
   newVal <- getOption("reproducible.destinationPathShared", NULL)
   if (!is.null(newVal)) return(newVal)
   oldVal <- getOption("reproducible.inputPaths", NULL)
-  if (!is.null(oldVal)) {
-    message(
-      "Option 'reproducible.inputPaths' is deprecated; ",
-      "please use 'reproducible.destinationPathShared' instead."
-    )
-  }
+  if (!is.null(oldVal))
+    .deprecMsgOnce("reproducible.inputPaths",
+                   "reproducible.destinationPathShared")
   oldVal
 }
 
@@ -780,12 +791,9 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
   newVal <- getOption("reproducible.destinationPathSharedRecursive", NULL)
   if (!is.null(newVal)) return(newVal)
   oldVal <- getOption("reproducible.inputPathsRecursive", NULL)
-  if (!is.null(oldVal)) {
-    message(
-      "Option 'reproducible.inputPathsRecursive' is deprecated; ",
-      "please use 'reproducible.destinationPathSharedRecursive' instead."
-    )
-  }
+  if (!is.null(oldVal))
+    .deprecMsgOnce("reproducible.inputPathsRecursive",
+                   "reproducible.destinationPathSharedRecursive")
   # Default is FALSE when neither is set
   if (is.null(oldVal)) FALSE else oldVal
 }

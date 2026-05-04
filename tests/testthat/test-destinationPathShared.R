@@ -160,6 +160,10 @@ test_that("P5: only inputPaths set → returned + deprecation message", {
     reproducible.destinationPathShared = NULL,
     reproducible.inputPaths   = "/x"
   ))
+  # Deprecation messaging is one-shot per session; reset the registry so
+  # this test sees the message regardless of test ordering.
+  pkgEnv <- getInternalOrNull(".pkgEnv")
+  if (!is.null(pkgEnv)) pkgEnv$.deprecMsgEmitted <- character()
   msgs <- testthat::capture_messages(out <- fn())
   expect_identical(out, "/x")
   expect_true(any(grepl("deprecated", msgs)))
@@ -207,6 +211,9 @@ test_that("P13: only inputPathsRecursive = TRUE → TRUE + deprecation", {
     reproducible.destinationPathSharedRecursive = NULL,
     reproducible.inputPathsRecursive   = TRUE
   ))
+  # Reset one-shot deprecation registry — see P5 comment.
+  pkgEnv <- getInternalOrNull(".pkgEnv")
+  if (!is.null(pkgEnv)) pkgEnv$.deprecMsgEmitted <- character()
   msgs <- testthat::capture_messages(out <- fn())
   expect_true(out)
   expect_true(any(grepl("deprecated", msgs)))
