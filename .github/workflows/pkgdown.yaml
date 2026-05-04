@@ -19,6 +19,7 @@ jobs:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_PKG_INSTALL_RETRIES: 3
     steps:
       - uses: actions/checkout@v4
 
@@ -29,10 +30,11 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           Ncpus: 2
-          use-public-rspm: false
+          use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          pak-version: stable
           extra-packages: |
             any::pkgdown
             local::.

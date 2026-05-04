@@ -40,6 +40,8 @@ jobs:
       R_REPRODUCIBLE_RUN_ALL_EXAMPLES: true
       R_REPRODUCIBLE_RUN_ALL_TESTS: true
       R_VERSION_LABEL: ${{ matrix.config.r }}
+      # pak respects this for individual download retries on transient errors.
+      R_PKG_INSTALL_RETRIES: 3
 
     steps:
       - uses: actions/checkout@v4
@@ -71,10 +73,17 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           Ncpus: 2
           r-version: ${{ matrix.config.r }}
-          use-public-rspm: false
+          # Posit Public Package Manager — pre-built Windows + macOS binaries
+          # served from a CDN. Far more reliable than CRAN mirrors for the
+          # binary-download step that has been failing intermittently on the
+          # Windows runner under `pak`.
+          use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # Pin pak to its stable channel; the action defaults to devel which
+          # occasionally regresses on Windows.
+          pak-version: stable
           extra-packages: |
             any::rcmdcheck
             rspatial/geodata
