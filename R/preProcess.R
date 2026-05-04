@@ -310,7 +310,7 @@ pp_checksums_init <- function(ctx) {
   # local re-verification.
   filesPreVerified <- character()
   if (length(filesToCheck)) {
-    sidecarDirs <- unique(c(ctx$destinationPath, .getSharedInputs()))
+    sidecarDirs <- unique(c(ctx$destinationPath, .getDestinationPathShared()))
     hasSidecar <- vapply(filesToCheck, function(f) {
       length(.findRemoteHashSidecars(basename2(f), sidecarDirs)) > 0L &&
         file.exists(f)
@@ -1439,7 +1439,7 @@ isGoogleDriveURL <- function(url) {
     neededFilesRel <- makeRelative(neededFiles, destinationPath)
     if (!all(neededFilesRel %in% filesInHand)) {
       for (op in otherPaths) {
-        recursively <- .getSharedInputsRecursive()
+        recursively <- .getDestinationPathSharedRecursive()
         opFiles <- dir(op, recursive = recursively, full.names = TRUE)
         if (any(neededFilesRel %in% basename2(opFiles))) {
           isNeeded <- basename2(opFiles) %in% neededFilesRel
@@ -1495,9 +1495,9 @@ isGoogleDriveURL <- function(url) {
         }
       }
     }
-    # do a check here that destinationPath is already the sharedInputs
+    # do a check here that destinationPath is already the destinationPathShared
     #   need to emulate the above behaviour
-    reproducible.inputPaths <- .getSharedInputs()
+    reproducible.inputPaths <- .getDestinationPathShared()
     if (!is.null(reproducible.inputPaths)) {
       reproducible.inputPaths <- normPath(reproducible.inputPaths)
     }
@@ -2139,7 +2139,7 @@ setupArchive <- function(archive, destinationPath) {
 }
 
 runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
-  reproducible.inputPaths <- .getSharedInputs()
+  reproducible.inputPaths <- .getDestinationPathShared()
   if (!is.null(reproducible.inputPaths)) {
     reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
   }

@@ -158,7 +158,7 @@ utils::globalVariables(c(
 #'   and save the file that comes from `url` and is also where the function
 #'   will look for `archive` or `targetFile`. NOTE (still experimental):
 #'   To prevent repeated downloads in different locations, the user can also set
-#'   `options("reproducible.sharedInputs")` to one or more local file paths to
+#'   `options("reproducible.destinationPathShared")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is
 #'   `NULL` meaning do not search locally. The previous name
 #'   `options("reproducible.inputPaths")` is still accepted as a backwards-compatible
@@ -1182,7 +1182,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     )
   })
 
-  rip <- .getSharedInputs()
+  rip <- .getDestinationPathShared()
   checkSumFilePaths <- if (!is.null(rip)) {
     unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
   } else {
@@ -1222,7 +1222,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
             # corrupted
             unlink(archive[1])
             message("archive (", archive[1], ") appears corrupted; deleting it; ",
-                    "you may have to manually delete it and the copy in `reproducible.sharedInputs` if using ")
+                    "you may have to manually delete it and the copy in `reproducible.destinationPathShared` if using ")
             return(NULL)
           }
           needSystemCall <- needSystemCall || fsArch > 2e9

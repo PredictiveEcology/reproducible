@@ -154,7 +154,7 @@ setMethod(
         files <- files[inTxt]
       else {
         # might fail because it is listed in inputPaths; check there
-        possPath <- .getSharedInputs()
+        possPath <- .getDestinationPathShared()
         # can be length > 1
         if (!is.null(possPath)) {
           possPath <- normPath(possPath)

@@ -85,7 +85,7 @@
 #'     **Deprecated — do not use** (see `gdalwarp` above). Default: `2`.
 #'     Previously set `-wo NUM_THREADS=` for `gdalProject`.
 #'   }
-#'   \item{`sharedInputs`}{
+#'   \item{`destinationPathShared`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
 #'     file to this location, with a hardlink (via `file.link`) to the file created in the
@@ -97,23 +97,23 @@
 #'     duplicated files.
 #'
 #'     **Note:** the previous name for this option was `reproducible.inputPaths`; the old
-#'     name is still accepted and will continue to work, but `reproducible.sharedInputs` is
+#'     name is still accepted and will continue to work, but `reproducible.destinationPathShared` is
 #'     preferred going forward (it matches the [prepInputs()] naming family).
 #'   }
-#'   \item{`sharedInputsRecursive`}{
+#'   \item{`destinationPathSharedRecursive`}{
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
-#'     Should `reproducible.sharedInputs` be searched recursively for existence of a file?
+#'     Should `reproducible.destinationPathShared` be searched recursively for existence of a file?
 #'
 #'     **Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
-#'     the old name is still accepted but `reproducible.sharedInputsRecursive` is preferred.
+#'     the old name is still accepted but `reproducible.destinationPathSharedRecursive` is preferred.
 #'   }
 #'   \item{`inputPaths`}{
-#'     **Deprecated** — use `reproducible.sharedInputs` instead.
-#'     Retained for backwards compatibility; if set and `reproducible.sharedInputs` is `NULL`,
+#'     **Deprecated** — use `reproducible.destinationPathShared` instead.
+#'     Retained for backwards compatibility; if set and `reproducible.destinationPathShared` is `NULL`,
 #'     the value of `reproducible.inputPaths` is used automatically.
 #'   }
 #'   \item{`inputPathsRecursive`}{
-#'     **Deprecated** — use `reproducible.sharedInputsRecursive` instead.
+#'     **Deprecated** — use `reproducible.destinationPathSharedRecursive` instead.
 #'     Retained for backwards compatibility.
 #'   }
 #'   \item{`leaveOnDisk`}{
@@ -306,10 +306,10 @@ reproducibleOptions <- function() {
     reproducible.gdalwarp = FALSE,
     reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
-    reproducible.sharedInputs = NULL,
-    reproducible.sharedInputsRecursive = FALSE,
-    reproducible.inputPaths = NULL,           # deprecated alias for reproducible.sharedInputs
-    reproducible.inputPathsRecursive = FALSE, # deprecated alias for reproducible.sharedInputsRecursive
+    reproducible.destinationPathShared = NULL,
+    reproducible.destinationPathSharedRecursive = FALSE,
+    reproducible.inputPaths = NULL,           # deprecated alias for reproducible.destinationPathShared
+    reproducible.inputPathsRecursive = FALSE, # deprecated alias for reproducible.destinationPathSharedRecursive
     reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
     reproducible.memoisePersist = FALSE,

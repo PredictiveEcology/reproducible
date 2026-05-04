@@ -17,7 +17,7 @@
   triggered the "already exists at <path>. Use overwrite = TRUE?" stop later
   in the function, and surfaced as a confusing error mentioning unrelated
   stashed files (e.g. shapefile pieces extracted by an earlier `prepInputs`
-  call into the same `reproducible.inputPaths`/`reproducible.sharedInputs`).
+  call into the same `reproducible.inputPaths`/`reproducible.destinationPathShared`).
 
 * `prepInputs`/`preProcess`: when called with `dlFun` only (no `url`,
   `targetFile`, or `archive`), the file produced by `dlFun` is now treated as
@@ -64,13 +64,13 @@
 ## enhancements
 
 * The options `reproducible.inputPaths` and `reproducible.inputPathsRecursive`
-  have been renamed to `reproducible.sharedInputs` and
-  `reproducible.sharedInputsRecursive` respectively (matching the `prepInputs`
+  have been renamed to `reproducible.destinationPathShared` and
+  `reproducible.destinationPathSharedRecursive` respectively (matching the `prepInputs`
   naming family). The old names remain fully functional as backwards-compatible
-  aliases: if `reproducible.sharedInputs` is `NULL` and `reproducible.inputPaths`
+  aliases: if `reproducible.destinationPathShared` is `NULL` and `reproducible.inputPaths`
   is set, the old value is used automatically (with a deprecation message).
   Update your code by replacing `options(reproducible.inputPaths = ...)` with
-  `options(reproducible.sharedInputs = ...)` at your convenience.
+  `options(reproducible.destinationPathShared = ...)` at your convenience.
 
 * `alsoExtract` in `prepInputs`/`preProcess` now accepts regex patterns in
   addition to exact filenames. For example,

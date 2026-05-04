@@ -753,37 +753,37 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
 }
 
 # ---------------------------------------------------------------------------
-# Backwards-compatible accessors for the sharedInputs / inputPaths option pair.
-# The canonical names are reproducible.sharedInputs and
-# reproducible.sharedInputsRecursive (matching the prepInputs naming family).
+# Backwards-compatible accessors for the destinationPathShared / inputPaths option pair.
+# The canonical names are reproducible.destinationPathShared and
+# reproducible.destinationPathSharedRecursive (matching the prepInputs naming family).
 # The old names (reproducible.inputPaths, reproducible.inputPathsRecursive) are
 # still accepted: if the new name is NULL but the old name is set, the old value
 # is used and a one-time deprecation message is emitted.
 # ---------------------------------------------------------------------------
 
 #' @keywords internal
-.getSharedInputs <- function() {
-  newVal <- getOption("reproducible.sharedInputs", NULL)
+.getDestinationPathShared <- function() {
+  newVal <- getOption("reproducible.destinationPathShared", NULL)
   if (!is.null(newVal)) return(newVal)
   oldVal <- getOption("reproducible.inputPaths", NULL)
   if (!is.null(oldVal)) {
     message(
       "Option 'reproducible.inputPaths' is deprecated; ",
-      "please use 'reproducible.sharedInputs' instead."
+      "please use 'reproducible.destinationPathShared' instead."
     )
   }
   oldVal
 }
 
 #' @keywords internal
-.getSharedInputsRecursive <- function() {
-  newVal <- getOption("reproducible.sharedInputsRecursive", NULL)
+.getDestinationPathSharedRecursive <- function() {
+  newVal <- getOption("reproducible.destinationPathSharedRecursive", NULL)
   if (!is.null(newVal)) return(newVal)
   oldVal <- getOption("reproducible.inputPathsRecursive", NULL)
   if (!is.null(oldVal)) {
     message(
       "Option 'reproducible.inputPathsRecursive' is deprecated; ",
-      "please use 'reproducible.sharedInputsRecursive' instead."
+      "please use 'reproducible.destinationPathSharedRecursive' instead."
     )
   }
   # Default is FALSE when neither is set
@@ -794,6 +794,6 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
 # any out-of-tree code that referenced the previous (branch-only) names still
 # resolves until callers can be updated.
 #' @keywords internal
-.getDataPath <- function() .getSharedInputs()
+.getDataPath <- function() .getDestinationPathShared()
 #' @keywords internal
-.getDataPathRecursive <- function() .getSharedInputsRecursive()
+.getDataPathRecursive <- function() .getDestinationPathSharedRecursive()

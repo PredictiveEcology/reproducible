@@ -249,10 +249,10 @@ downloadFile <- function(archive, targetFile, neededFiles,
                     normPath(fileToDownload),
                     "')\n",
                     "      then rerun this current function call.\n",
-                    if (!is.null(.getSharedInputs())) {
-                      obj <- dir(.getSharedInputs(), full.names = TRUE, pattern = basename(fileToDownload))
+                    if (!is.null(.getDestinationPathShared())) {
+                      obj <- dir(.getDestinationPathShared(), full.names = TRUE, pattern = basename(fileToDownload))
                       if (length(obj)) {
-                        paste0(" 2b) The copy of the file in getOption('reproducible.sharedInputs')",
+                        paste0(" 2b) The copy of the file in getOption('reproducible.destinationPathShared')",
                                " may have been changed or corrupted -- run:\n",
                                "      file.remove(c('",
                                paste(normPath(obj), collapse = "', '"),

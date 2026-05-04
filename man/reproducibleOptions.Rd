@@ -90,7 +90,7 @@ compatibility and will be removed in a future release.
 \strong{Deprecated — do not use} (see \code{gdalwarp} above). Default: \code{2}.
 Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
-\item{\code{sharedInputs}}{
+\item{\code{destinationPathShared}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
 file to this location, with a hardlink (via \code{file.link}) to the file created in the
@@ -102,27 +102,27 @@ Because the files are hardlinks, there is no extra space taken up by the apparen
 duplicated files.
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPaths`; the old
-name is still accepted and will continue to work, but `reproducible.sharedInputs` is
+name is still accepted and will continue to work, but `reproducible.destinationPathShared` is
 preferred going forward (it matches the [prepInputs()] naming family).
 }\if{html}{\out{</div>}}
 
 }
-\item{\code{sharedInputsRecursive}}{
+\item{\code{destinationPathSharedRecursive}}{
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
-Should \code{reproducible.sharedInputs} be searched recursively for existence of a file?
+Should \code{reproducible.destinationPathShared} be searched recursively for existence of a file?
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
-the old name is still accepted but `reproducible.sharedInputsRecursive` is preferred.
+the old name is still accepted but `reproducible.destinationPathSharedRecursive` is preferred.
 }\if{html}{\out{</div>}}
 
 }
 \item{\code{inputPaths}}{
-\strong{Deprecated} — use \code{reproducible.sharedInputs} instead.
-Retained for backwards compatibility; if set and \code{reproducible.sharedInputs} is \code{NULL},
+\strong{Deprecated} — use \code{reproducible.destinationPathShared} instead.
+Retained for backwards compatibility; if set and \code{reproducible.destinationPathShared} is \code{NULL},
 the value of \code{reproducible.inputPaths} is used automatically.
 }
 \item{\code{inputPathsRecursive}}{
-\strong{Deprecated} — use \code{reproducible.sharedInputsRecursive} instead.
+\strong{Deprecated} — use \code{reproducible.destinationPathSharedRecursive} instead.
 Retained for backwards compatibility.
 }
 \item{\code{leaveOnDisk}}{

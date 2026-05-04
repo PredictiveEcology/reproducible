@@ -1,13 +1,13 @@
-# Tests for `reproducible.sharedInputs` — the read-write shared local cache
+# Tests for `reproducible.destinationPathShared` — the read-write shared local cache
 # used by prepInputs() / preProcess() to avoid re-downloads across projects.
 #
-# Test matrix lives in dev/dataPath-design.md (§5). Case IDs (P1, H1, ...)
+# Test matrix lives in dev/destinationPathShared-design.md (§5). Case IDs (P1, H1, ...)
 # in this file map 1:1 to that matrix. Tests for behaviour that has not been
 # implemented in this branch have been removed (rather than left as `skip()`
-# stubs that misleadingly pad the count) — see `dev/dataPath-design.md` §4
+# stubs that misleadingly pad the count) — see `dev/destinationPathShared-design.md` §4
 # for the rolling status of each design item.
 #
-# Note: the option is now named `reproducible.sharedInputs` (matching the
+# Note: the option is now named `reproducible.destinationPathShared` (matching the
 # `prepInputs` naming family); `reproducible.inputPaths` remains as a
 # backwards-compatible alias. The intermediate `reproducible.dataPath` name
 # briefly used in this branch was dropped before release — case IDs that
@@ -83,11 +83,11 @@ toFileUrl <- function(p) {
   paste0("file://", p)
 }
 
-getSharedInputsFn <- function() {
-  getInternalOrNull(".getSharedInputs") %||% getInternalOrNull(".getDataPath")
+getDestinationPathSharedFn <- function() {
+  getInternalOrNull(".getDestinationPathShared") %||% getInternalOrNull(".getDataPath")
 }
-getSharedInputsRecursiveFn <- function() {
-  getInternalOrNull(".getSharedInputsRecursive") %||%
+getDestinationPathSharedRecursiveFn <- function() {
+  getInternalOrNull(".getDestinationPathSharedRecursive") %||%
     getInternalOrNull(".getDataPathRecursive")
 }
 
@@ -128,36 +128,36 @@ readChecksumsRows <- function(dir) {
 test_that("P1: option unset → getter returns NULL", {
   testInit()
   withr::local_options(list(
-    reproducible.sharedInputs = NULL,
+    reproducible.destinationPathShared = NULL,
     reproducible.inputPaths   = NULL
   ))
-  fn <- getSharedInputsFn()
-  skip_if(is.null(fn), "no sharedInputs getter available")
+  fn <- getDestinationPathSharedFn()
+  skip_if(is.null(fn), "no destinationPathShared getter available")
   expect_null(fn())
 })
 
-test_that("P2: sharedInputs = '/x' → '/x'", {
+test_that("P2: destinationPathShared = '/x' → '/x'", {
   testInit()
-  fn <- getInternalOrNull(".getSharedInputs")
-  skip_if(is.null(fn), "no sharedInputs getter available")
-  withr::local_options(list(reproducible.sharedInputs = "/x"))
+  fn <- getInternalOrNull(".getDestinationPathShared")
+  skip_if(is.null(fn), "no destinationPathShared getter available")
+  withr::local_options(list(reproducible.destinationPathShared = "/x"))
   expect_identical(fn(), "/x")
 })
 
 test_that("P3: vector value preserved", {
   testInit()
-  fn <- getInternalOrNull(".getSharedInputs")
-  skip_if(is.null(fn), "no sharedInputs getter available")
-  withr::local_options(list(reproducible.sharedInputs = c("/a", "/b")))
+  fn <- getInternalOrNull(".getDestinationPathShared")
+  skip_if(is.null(fn), "no destinationPathShared getter available")
+  withr::local_options(list(reproducible.destinationPathShared = c("/a", "/b")))
   expect_identical(fn(), c("/a", "/b"))
 })
 
 test_that("P5: only inputPaths set → returned + deprecation message", {
   testInit()
-  fn <- getSharedInputsFn()
+  fn <- getDestinationPathSharedFn()
   skip_if(is.null(fn), "no getter available")
   withr::local_options(list(
-    reproducible.sharedInputs = NULL,
+    reproducible.destinationPathShared = NULL,
     reproducible.inputPaths   = "/x"
   ))
   msgs <- testthat::capture_messages(out <- fn())
@@ -165,12 +165,12 @@ test_that("P5: only inputPaths set → returned + deprecation message", {
   expect_true(any(grepl("deprecated", msgs)))
 })
 
-test_that("P6: sharedInputs and inputPaths both set → sharedInputs wins, no deprecation", {
+test_that("P6: destinationPathShared and inputPaths both set → destinationPathShared wins, no deprecation", {
   testInit()
-  fn <- getInternalOrNull(".getSharedInputs")
-  skip_if(is.null(fn), "no sharedInputs getter available")
+  fn <- getInternalOrNull(".getDestinationPathShared")
+  skip_if(is.null(fn), "no destinationPathShared getter available")
   withr::local_options(list(
-    reproducible.sharedInputs = "/new",
+    reproducible.destinationPathShared = "/new",
     reproducible.inputPaths   = "/old"
   ))
   msgs <- testthat::capture_messages(out <- fn())
@@ -180,31 +180,31 @@ test_that("P6: sharedInputs and inputPaths both set → sharedInputs wins, no de
 
 test_that("P11: recursive option unset → FALSE", {
   testInit()
-  fn <- getSharedInputsRecursiveFn()
+  fn <- getDestinationPathSharedRecursiveFn()
   skip_if(is.null(fn), "no recursive getter available")
   withr::local_options(list(
-    reproducible.sharedInputsRecursive = NULL,
+    reproducible.destinationPathSharedRecursive = NULL,
     reproducible.inputPathsRecursive   = NULL
   ))
   expect_false(fn())
 })
 
-test_that("P12: sharedInputsRecursive = TRUE → TRUE", {
+test_that("P12: destinationPathSharedRecursive = TRUE → TRUE", {
   testInit()
   skip_if_not(
-    !is.null(getInternalOrNull(".getSharedInputsRecursive")),
+    !is.null(getInternalOrNull(".getDestinationPathSharedRecursive")),
     "recursive option not yet wired (§4 step 5)"
   )
-  withr::local_options(list(reproducible.sharedInputsRecursive = TRUE))
-  expect_true(getInternalOrNull(".getSharedInputsRecursive")())
+  withr::local_options(list(reproducible.destinationPathSharedRecursive = TRUE))
+  expect_true(getInternalOrNull(".getDestinationPathSharedRecursive")())
 })
 
 test_that("P13: only inputPathsRecursive = TRUE → TRUE + deprecation", {
   testInit()
-  fn <- getSharedInputsRecursiveFn()
+  fn <- getDestinationPathSharedRecursiveFn()
   skip_if(is.null(fn), "no recursive getter available")
   withr::local_options(list(
-    reproducible.sharedInputsRecursive = NULL,
+    reproducible.destinationPathSharedRecursive = NULL,
     reproducible.inputPathsRecursive   = TRUE
   ))
   msgs <- testthat::capture_messages(out <- fn())
@@ -222,7 +222,7 @@ test_that("P13: only inputPathsRecursive = TRUE → TRUE + deprecation", {
 # and hardlinks it into destinationPath. Inode comparison on POSIX is the
 # strongest assertion that no copy/download happened.
 
-test_that("H1: file in sharedInputs with matching CHECKSUMS → hardlinked, no copy", {
+test_that("H1: file in destinationPathShared with matching CHECKSUMS → hardlinked, no copy", {
   testInit("digest")
   shared <- normPath(file.path(tmpdir, "shared"))
   dest   <- normPath(file.path(tmpdir, "dest"))
@@ -247,7 +247,7 @@ test_that("H1: file in sharedInputs with matching CHECKSUMS → hardlinked, no c
   expect_true(file.exists(file.path(dest, "foo.csv")))
   skip_on_os("windows")
   expect_true(isTRUE(sameInode(file.path(dest, "foo.csv"), fixShared$path)),
-               info = "destinationPath copy should share inode with sharedInputs (hardlink)")
+               info = "destinationPath copy should share inode with destinationPathShared (hardlink)")
 })
 
 test_that("H3: file in subdir, recursive=FALSE → not found, falls through", {
@@ -279,7 +279,7 @@ test_that("H3: file in subdir, recursive=FALSE → not found, falls through", {
                info = "non-recursive search must not link from subdir")
 })
 
-test_that("H5: two sharedInputs entries; file only in second → found", {
+test_that("H5: two destinationPathShared entries; file only in second → found", {
   testInit("digest")
   s1   <- normPath(file.path(tmpdir, "s1"))
   s2   <- normPath(file.path(tmpdir, "s2"))
@@ -303,7 +303,7 @@ test_that("H5: two sharedInputs entries; file only in second → found", {
   expect_true(isTRUE(sameInode(file.path(dest, "foo.csv"), fixShared$path)))
 })
 
-test_that("H6: file in both sharedInputs entries → first wins", {
+test_that("H6: file in both destinationPathShared entries → first wins", {
   testInit("digest")
   s1   <- normPath(file.path(tmpdir, "s1"))
   s2   <- normPath(file.path(tmpdir, "s2"))
@@ -327,11 +327,11 @@ test_that("H6: file in both sharedInputs entries → first wins", {
 
   skip_on_os("windows")
   expect_true(isTRUE(sameInode(file.path(dest, "foo.csv"), fix1$path)),
-               info = "deterministic order: first sharedInputs entry wins")
+               info = "deterministic order: first destinationPathShared entry wins")
   expect_false(isTRUE(sameInode(file.path(dest, "foo.csv"), fix2$path)))
 })
 
-test_that("H7: file in destinationPath wins; sharedInputs not consulted", {
+test_that("H7: file in destinationPath wins; destinationPathShared not consulted", {
   testInit("digest")
   shared <- normPath(file.path(tmpdir, "shared"))
   dest   <- normPath(file.path(tmpdir, "dest"))
@@ -363,7 +363,7 @@ test_that("H7: file in destinationPath wins; sharedInputs not consulted", {
 # §5.3  Resolution — sad paths
 # ===========================================================================
 
-test_that("S3: sharedInputs path doesn't exist → falls through", {
+test_that("S3: destinationPathShared path doesn't exist → falls through", {
   testInit("digest")
   shared <- file.path(tmpdir, "doesnotexist")
   dest   <- normPath(file.path(tmpdir, "dest"))
@@ -683,8 +683,8 @@ test_that("B1: legacy reproducible.inputPaths still works (regression guard)", {
 })
 
 # B2 / B3 deleted: covered by P5 (inputPaths-only deprecation chain) and P6
-# (sharedInputs wins over inputPaths). The third option name `dataPath` was
-# removed before the rename ever shipped — `sharedInputs` is canonical and
+# (destinationPathShared wins over inputPaths). The third option name `dataPath` was
+# removed before the rename ever shipped — `destinationPathShared` is canonical and
 # `inputPaths` is the only legacy alias.
 
 
@@ -692,7 +692,7 @@ test_that("B1: legacy reproducible.inputPaths still works (regression guard)", {
 # §5.8  Integration with prepInputs/Cache
 # ===========================================================================
 
-test_that("I1+I2: Cache(prepInputs(...)) — cold uses sharedInputs; warm is cache hit", {
+test_that("I1+I2: Cache(prepInputs(...)) — cold uses destinationPathShared; warm is cache hit", {
   testInit("digest")
   shared <- normPath(file.path(tmpdir, "shared"))
   dest   <- normPath(file.path(tmpdir, "dest"))
