@@ -103,12 +103,12 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 60
           retry_on: error
-          shell: Rscript
+          # GitHub Actions needs the `{0}` placeholder so the runner knows
+          # where to inject the script body. Plain `Rscript` would shell out
+          # to bash and silently fail on Linux jobs.
+          shell: 'Rscript {0}'
           command: |
-            install.packages("pak", repos = sprintf(
-              "https://r-lib.github.io/p/pak/stable/%s/%s/%s",
-              .Platform$pkgType, R.Version()$os, R.Version()$arch
-            ))
+            install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
             pak::local_install_dev_deps(ask = FALSE, dependencies = TRUE)
             pak::pkg_install(c("any::rcmdcheck", "rspatial/geodata"), ask = FALSE)
 
