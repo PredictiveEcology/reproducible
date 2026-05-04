@@ -48,7 +48,27 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
+      # On Linux runners the upstream action installs from the ubuntugis-
+      # unstable PPA on Launchpad, whose CDN is intermittently unreachable
+      # ("Connection timed out [IP: 185.125.190.80 443]"). Retry the install
+      # ourselves up to 3 times with 60 s backoff. Other OSes still use the
+      # action.
+      - if: runner.os != 'Linux'
+        uses: PredictiveEcology/actions/install-spatial-deps@v0.2
+
+      - if: runner.os == 'Linux'
+        name: Install spatial deps (Linux, with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 60
+          retry_on: error
+          command: |
+            sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+            sudo apt-get update -y
+            sudo apt-get install -y --fix-missing \
+              libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev
 
       # On macOS the system GDAL/PROJ install (via Homebrew) does not always
       # leave `proj.db` on PROJ's default search path. Without that file, every
