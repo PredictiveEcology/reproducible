@@ -59,14 +59,22 @@ prepInputsCOG <- function(url,
     return("NULL")
 
   # ---- Reproject to_obj extent into COG's CRS for the window read ----------
-  cog_crs   <- terra::crs(r_meta)
+  # Both `terra::crs()` and `postProcessTo()` can fail on a system where PROJ
+  # is misconfigured (e.g. missing proj.db on macOS), in ways that range from
+  # an empty CRS string to an unhandled C-level error. Wrap both, and bail
+  # out to the regular `prepInputs` download path on any failure.
+  cog_crs <- tryCatch(terra::crs(r_meta), error = function(e) NA_character_)
+  if (is.na(cog_crs) || !nzchar(cog_crs))
+    return("NULL")
   to_reproj <- tryCatch(
     postProcessTo(to_obj, to = cog_crs, verbose = verbose - 2),
     error = function(e) NULL
   )
   if (is.null(to_reproj))
     return("NULL")
-  to_ext <- terra::ext(to_reproj)
+  to_ext <- tryCatch(terra::ext(to_reproj), error = function(e) NULL)
+  if (is.null(to_ext))
+    return("NULL")
 
   # ---- Window-crop: GDAL fetches only tile blocks intersecting to_ext ------
   r_windowed <- tryCatch({

@@ -48,6 +48,24 @@ jobs:
 
       - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
 
+      # On macOS the system GDAL/PROJ install (via Homebrew) does not always
+      # leave `proj.db` on PROJ's default search path. Without that file, every
+      # `terra::project()` / `terra::crs()` call emits
+      #   PROJ: proj_identify: Cannot find proj.db (GDAL error 1)
+      # and reprojections fail outright. Point PROJ at Homebrew's data dir
+      # explicitly so spatial tests can run.
+      - name: Configure PROJ data path (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          PROJ_PREFIX="$(brew --prefix proj 2>/dev/null || true)"
+          PROJ_DATA="$PROJ_PREFIX/share/proj"
+          if [ ! -d "$PROJ_DATA" ]; then PROJ_DATA="/usr/local/share/proj"; fi
+          if [ ! -d "$PROJ_DATA" ]; then PROJ_DATA="/opt/homebrew/share/proj"; fi
+          echo "PROJ_DATA=$PROJ_DATA" >> "$GITHUB_ENV"
+          echo "PROJ_LIB=$PROJ_DATA"  >> "$GITHUB_ENV"
+          echo "Using PROJ_DATA=$PROJ_DATA"
+          ls -1 "$PROJ_DATA" | head -5 || true
+
       - uses: r-lib/actions/setup-r@v2
         with:
           http-user-agent: ${{ matrix.config.http-user-agent }}
