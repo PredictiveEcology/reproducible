@@ -79,7 +79,9 @@ jobs:
           # Windows runner under `pak`.
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      - id: deps
+        continue-on-error: true
+        uses: r-lib/actions/setup-r-dependencies@v2
         with:
           # Pin pak to its stable channel; the action defaults to devel which
           # occasionally regresses on Windows.
@@ -87,6 +89,28 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             rspatial/geodata
+
+      # Fallback: when setup-r-dependencies fails (most often a transient
+      # binary-fetch failure under pak on Windows oldrel), retry the install
+      # via a fresh pak-stable install + pkg_install loop, up to 3 attempts
+      # with 60s backoff. continue-on-error: true on the primary step lets
+      # this step run and decide the job's actual success/failure.
+      - name: Install R deps (retry fallback)
+        if: steps.deps.outcome == 'failure'
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 60
+          retry_on: error
+          shell: Rscript
+          command: |
+            install.packages("pak", repos = sprintf(
+              "https://r-lib.github.io/p/pak/stable/%s/%s/%s",
+              .Platform$pkgType, R.Version()$os, R.Version()$arch
+            ))
+            pak::local_install_dev_deps(ask = FALSE, dependencies = TRUE)
+            pak::pkg_install(c("any::rcmdcheck", "rspatial/geodata"), ask = FALSE)
 
       - uses: r-lib/actions/check-r-package@v2
         with:
