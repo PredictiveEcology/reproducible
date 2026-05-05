@@ -2,6 +2,13 @@
 
 ## bug fixes
 
+* `prepInputs`/`.guessAtTargetAndFun`: no longer auto-selects OS-injected archive
+  metadata when `targetFile` is unspecified. Previously, a Mac-created zip
+  containing both `foo.shp` and `__MACOSX/._foo.shp` could pick the
+  AppleDouble copy and fail to load. Filtering covers macOS (`__MACOSX/*`,
+  `._*` AppleDouble, `.DS_Store`) and Windows (`Thumbs.db`, `desktop.ini`).
+  An explicit `targetFile` pointing at one of these is still honored.
+
 * `pp_remote_hash_check`: now skips URLs that are not `http://` or `https://`.
   Previously, `file://` URLs would attempt a HEAD-style metadata fetch and then
   call `makeRemoteHashFile`, whose URL-to-filename mapping only strips the

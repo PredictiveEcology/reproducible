@@ -2201,3 +2201,34 @@ test_that("test prepInputs with zip file with hidden files", {
   b <- prepInputs(targetFile = theFile, archive = zipFilename, fun = NA)
   expect_true(file.exists(file = theFile))
 })
+
+test_that(".guessAtTargetAndFun ignores OS archive metadata when auto-picking", {
+  testInit()
+  # When no targetFile is specified, OS-injected metadata files must not be
+  # auto-selected: macOS __MACOSX/*, ._ AppleDouble, .DS_Store; Windows Thumbs.db,
+  # desktop.ini.
+  filesExtracted <- c(
+    "data/clean_NMC_20kmBuff.shp",
+    "data/__MACOSX/._clean_NMC_20kmBuff.shp",
+    "data/._clean_NMC_20kmBuff.shp",
+    "data/.DS_Store",
+    "data/Thumbs.db",
+    "data/desktop.ini"
+  )
+  out <- .guessAtTargetAndFun(
+    targetFilePath = NULL,
+    filesExtracted = filesExtracted,
+    fun = NULL,
+    verbose = 0
+  )
+  expect_identical(out$targetFilePath, "data/clean_NMC_20kmBuff.shp")
+
+  # If the user explicitly asks for an otherwise-filtered path, honor it.
+  out2 <- .guessAtTargetAndFun(
+    targetFilePath = "data/__MACOSX/._clean_NMC_20kmBuff.shp",
+    filesExtracted = filesExtracted,
+    fun = "readLines",
+    verbose = 0
+  )
+  expect_identical(out2$targetFilePath, "data/__MACOSX/._clean_NMC_20kmBuff.shp")
+})
