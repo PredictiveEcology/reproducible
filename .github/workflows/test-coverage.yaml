@@ -12,7 +12,12 @@ name: test-coverage
 
 jobs:
   test-coverage:
-    runs-on: macOS-latest
+    # Mirrors the recipe used by PredictiveEcology/SpaDES.tools, which is
+    # currently green on test-coverage. The previous macOS-latest run was
+    # failing inside covr's R CMD check sub-process with an opaque
+    # "Failure in <path>/test-all.Rout.fail", in a way that R-CMD-check on
+    # the same image does not reproduce.
+    runs-on: ubuntu-latest
     env:
       GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -25,12 +30,20 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
+      # Stock Noble apt; ubuntugis-unstable PPA dropped — see the rationale
+      # in R-CMD-check.yaml.
+      - name: Install spatial deps (Linux, stock Noble)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -f -y || true
+          sudo apt-get install -y --fix-missing \
+            libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev
 
       - uses: r-lib/actions/setup-r@v2
         with:
+          extra-repositories: 'https://predictiveecology.r-universe.dev/'
           Ncpus: 2
-          use-public-rspm: true
+          use-public-rspm: false
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -42,26 +55,31 @@ jobs:
       - id: covr
         name: Test coverage
         continue-on-error: true
-        run: covr::codecov(token = Sys.getenv("CODECOV_TOKEN"))
-        shell: Rscript {0}
-
-      # covr's R CMD check sub-process writes test output to `test-all.Rout.fail`
-      # on failure but the GHA log only sees an opaque
-      # "Failure in <path>/test-all.Rout.fail". Surface the file so the actual
-      # failing test names + tracebacks land in the workflow log.
-      - if: steps.covr.outcome == 'failure'
-        name: Dump test-all.Rout.fail on failure
+        # Wrap covr in tryCatch so the per-session tempdir's
+        # `test-all.Rout.fail` is dumped to the GHA log _before_ R exits and
+        # the tempdir is cleaned up. Without this, a covr failure surfaces
+        # only as an opaque "Failure in <path>/test-all.Rout.fail" with the
+        # actual failing test names and tracebacks lost.
         run: |
-          set +e
-          find /tmp /private/var/folders /private/tmp ~/Library 2>/dev/null \
-              -name 'test-all.Rout.fail' -print0 \
-            | while IFS= read -r -d '' f; do
-                echo "=========================================="
-                echo "=== $f ==="
-                echo "=========================================="
-                cat "$f"
-              done
-          exit 0
+          res <- tryCatch(
+            covr::codecov(token = Sys.getenv("CODECOV_TOKEN")),
+            error = function(e) e
+          )
+          if (inherits(res, "error")) {
+            files <- list.files(
+              tempdir(), pattern = "test-all\\.Rout\\.fail$",
+              recursive = TRUE, full.names = TRUE
+            )
+            for (f in files) {
+              cat("==========================================\n")
+              cat("=== ", f, " ===\n", sep = "")
+              cat("==========================================\n")
+              cat(readLines(f, warn = FALSE), sep = "\n")
+              cat("\n")
+            }
+            stop(res)
+          }
+        shell: Rscript {0}
 
       - if: steps.covr.outcome == 'failure'
         name: Re-fail the job

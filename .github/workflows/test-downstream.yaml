@@ -86,11 +86,18 @@ jobs:
           )
         shell: Rscript {0}
 
+      # Drop --run-dontrun for SpaDES.project: its own R-CMD-check.yaml uses
+      # the default (no --run-dontrun), and a \dontrun example like
+      # `experiment3` deliberately requires a `global.R` script in the working
+      # directory that the example does not (and should not) create. Forcing
+      # \dontrun blocks here means we are stricter than the upstream
+      # repository's own check, and we hit a contrived failure that has
+      # nothing to do with reproducible.
       - name: Check SpaDES.project
         run: |
           rcmdcheck::rcmdcheck(
             "SpaDES.project",
-            args = c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest"),
+            args = c("--no-manual", "--as-cran", "--run-donttest"),
             error_on = "error",
             check_dir = "check"
           )
