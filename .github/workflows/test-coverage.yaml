@@ -39,6 +39,30 @@ jobs:
             any::covr
             rspatial/geodata
 
-      - name: Test coverage
+      - id: covr
+        name: Test coverage
+        continue-on-error: true
         run: covr::codecov(token = Sys.getenv("CODECOV_TOKEN"))
         shell: Rscript {0}
+
+      # covr's R CMD check sub-process writes test output to `test-all.Rout.fail`
+      # on failure but the GHA log only sees an opaque
+      # "Failure in <path>/test-all.Rout.fail". Surface the file so the actual
+      # failing test names + tracebacks land in the workflow log.
+      - if: steps.covr.outcome == 'failure'
+        name: Dump test-all.Rout.fail on failure
+        run: |
+          set +e
+          find /tmp /private/var/folders /private/tmp ~/Library 2>/dev/null \
+              -name 'test-all.Rout.fail' -print0 \
+            | while IFS= read -r -d '' f; do
+                echo "=========================================="
+                echo "=== $f ==="
+                echo "=========================================="
+                cat "$f"
+              done
+          exit 0
+
+      - if: steps.covr.outcome == 'failure'
+        name: Re-fail the job
+        run: exit 1
