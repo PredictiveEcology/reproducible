@@ -923,24 +923,31 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   # pp_resolve_files) hits the Google Drive API on every call, ~1-2 s of
   # latency that the sidecar fast-path further down the pipeline cannot
   # recover.
+  #
+  # Do NOT wrap the inner call in `quote(...)`: Cache's digest treats a
+  # `quote(...)` expression as opaque text and never resolves the `url`
+  # symbol against the calling frame, so every URL collides on the same
+  # cache key and the first-cached fileAttr is returned for every later
+  # URL. retry() captures its `expr` argument with substitute() and works
+  # the same way whether or not it's wrapped in quote().
   # if (is.null(archive) || is.na(archive)) {
   if (isTRUE(isDirectory(url, FALSE))) {
     fileAttr <- Cache(
-      retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
-                                                     shared_drive = team_drive))),
+      retry(retries = 1, googledrive::drive_ls(googledrive::as_id(url),
+                                               shared_drive = team_drive)),
       verbose = FALSE
     )
   } else {
     if (packageVersion("googledrive") < "2.0.0") {
       fileAttr <- Cache(
-        retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                        team_drive = team_drive))),
+        retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
+                                                  team_drive = team_drive)),
         verbose = FALSE
       )
     } else {
       fileAttr <- Cache(
-        retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                        shared_drive = team_drive))),
+        retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
+                                                  shared_drive = team_drive)),
         verbose = FALSE
       )
     }
