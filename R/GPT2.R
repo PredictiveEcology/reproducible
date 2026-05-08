@@ -33,6 +33,11 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
   optionsSetForCache(drv = drv, conn = conn)
 
+  ## Lazy showCache async pre-populate: idempotent, ~10us when already spawned.
+  ## See R/showCacheEtc.R::.maybeSpawnShowCacheAsync. Targets the cachePath
+  ## actually being used (not the default at .onLoad time).
+  .maybeSpawnShowCacheAsync(cachePath)
+
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
@@ -532,9 +537,13 @@ check_and_get_memoised_copy <- function(detailed_key, cachePaths, functionName, 
       return(output)
     }
   } else {
-    # If useMemoise gets turned off, it needs to be emptied or there will be stale entries
+    # If useMemoise gets turned off, it needs to be emptied or there will be stale entries.
+    # Preserve the "shownCache" binding -- it holds the showCache memoised
+    # data.table and the async-spawn job table; both are independent of
+    # useMemoise and clearing them would defeat the lazy async pre-populate
+    # mechanism (jobs would be re-spawned on every Cache() call).
     me <- memoiseEnv(cachePaths[[1]])
-    le <- ls(me)
+    le <- setdiff(ls(me), "shownCache")
     if (length(le))
       rm(list = le, envir = me)
   }
