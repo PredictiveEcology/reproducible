@@ -32,3 +32,40 @@ test_that(".installAsyncShownCache is idempotent and updates $sc in place", {
   expect_identical(scEnv1, scEnv2)
   expect_equal(scEnv2$sc$v, 2)
 })
+
+test_that(".installAsyncShownCache copies bindings from an env-shaped result", {
+  ## Regression for: child returns the inner per-cachePath env (sc + FileInfo)
+  ## and we previously stored that env directly at scEnv$sc, breaking
+  ## rbindlist(list(scEnv$sc, ret)) downstream with
+  ## "Item 1 of input is not a data.frame, data.table or list".
+  pe <- new.env(parent = emptyenv())
+
+  childEnv <- new.env(parent = emptyenv())
+  childEnv$sc <- data.frame(cacheId = "abc", tagKey = "k", tagValue = "v",
+                            stringsAsFactors = FALSE)
+  childEnv$FileInfo <- data.frame(filename = "/tmp/foo.rds",
+                                  mtime = Sys.time(), size = 1L,
+                                  stringsAsFactors = FALSE)
+
+  reproducible:::.installAsyncShownCache(pe, "/p", childEnv)
+
+  scEnv <- pe[["shownCache"]][["/p"]]
+  expect_true(is.environment(scEnv))
+  expect_true(is.data.frame(scEnv$sc))
+  expect_true(is.data.frame(scEnv$FileInfo))
+  expect_identical(scEnv$sc$cacheId, "abc")
+  ## scEnv$sc must be a data.frame so rbindlist downstream accepts it
+  expect_silent(data.table::rbindlist(list(scEnv$sc, scEnv$sc), fill = TRUE))
+})
+
+test_that(".installAsyncShownCache leaves a clean empty env for unsupported inputs", {
+  ## A bare atomic (string, numeric, NA) shouldn't poison scEnv. The contract
+  ## with the sync path is: scEnv$sc must be NULL or a data.frame/data.table.
+  pe <- new.env(parent = emptyenv())
+  reproducible:::.installAsyncShownCache(pe, "/p", "some string")
+
+  scEnv <- pe[["shownCache"]][["/p"]]
+  expect_true(is.environment(scEnv))
+  expect_null(scEnv$sc)
+  expect_null(scEnv$FileInfo)
+})
