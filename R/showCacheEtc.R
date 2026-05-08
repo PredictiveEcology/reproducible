@@ -514,27 +514,27 @@ setMethod(
             while(keepDoing) {
               allFilesLoaded <- lapplyFun(dd, function(fil) {
 
-                out <- loadFile(fil,
-                                cachePath = x, # in case it needs swapCacheFormat
-                                drv = drv, conn = conn, verbose = verbose)
-                # out <- try(loadFile(fil,
-                #                     # cacheId = cacheId,  # if don't need it, don't bother making it
-                #                     cachePath = x, # in case it needs swapCacheFormat
-                #                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
+                ## Wrap loadFile in try(): readRDS / qs_read can throw on
+                ## corrupt or wrong-format files (e.g. "unknown input format"
+                ## from readRDS when the .rds extension lies). The recovery
+                ## branch below expects out to be a try-error, so without
+                ## the wrap the error escapes the loop and the whole
+                ## showCache() call.
+                out <- try(loadFile(fil,
+                                    cachePath = x, # in case it needs swapCacheFormat
+                                    drv = drv, conn = conn, verbose = verbose),
+                           silent = TRUE)
                 if (is(out, "try-error")) {
-                  # browser()
                   cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
                                   basename(fil))
 
                   fileEx <- fileExt(fil)
                   fileExs <- setdiff(.cacheSaveFormats, fileEx)
                   for (fe in fileExs) {
-                    out <- loadFile(fil, format = fe,
-                                    cacheId = cacheId, cachePath = x, # in case it needs swapCacheFormat
-                                    drv = drv, conn = conn, verbose = verbose)
-                    # out <- try(loadFile(fil, format = fe,
-                    #                     cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
-                    #                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)
+                    out <- try(loadFile(fil, format = fe,
+                                        cacheId = cacheId, cachePath = x, # in case it needs swapCacheFormat
+                                        drv = drv, conn = conn, verbose = verbose),
+                               silent = TRUE)
                     if (!is(out, "try-error")) {
                       if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
                         optForUndo <- options("reproducible.qsFormat" = .qsFormat)
