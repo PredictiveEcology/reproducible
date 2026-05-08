@@ -198,7 +198,8 @@ narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
 
-\item{useCloud}{Logical. See Details.}
+\item{useCloud}{Logical (\code{TRUE} / \code{FALSE} / \code{NULL}) or one of \code{"pull"} /
+\code{"push"}. See Details.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
@@ -448,6 +449,18 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
 be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+
+Two character values are also accepted, intended for separating developer
+and user roles when sharing a cloud-cache folder:
+\itemize{
+\item \code{"push"} is equivalent to \code{TRUE} (developer role) -- bidirectional;
+downloads on a cloud hit, uploads on a miss.
+\item \code{"pull"} is read-only (user role) -- downloads on a cloud hit, but never
+uploads. If the local cache already has the object, the cloud is not
+consulted at all (the Google Drive listing is deferred until after the
+local lookup fails). When neither local nor cloud has the object, the
+call falls back to a normal local-only Cache run.
+}
 }
 
 \section{Object attributes}{

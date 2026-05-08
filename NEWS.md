@@ -1,3 +1,15 @@
+# reproducible (development version)
+
+* `Cache(useCloud = ...)` now accepts two character values, intended for
+  separating developer and user roles when sharing a cloud-cache folder:
+  `"push"` is equivalent to `TRUE` (developer role -- bidirectional;
+  downloads on a cloud hit, uploads on a miss); `"pull"` is read-only (user
+  role -- downloads on a cloud hit, never uploads). When `"pull"` is set
+  and the local cache already has the object, the Google Drive listing is
+  not fetched at all (the cloud is consulted only after a local miss). An
+  invalid character value now errors at the front door of `Cache()` rather
+  than silently being treated as `FALSE`.
+
 # reproducible 3.0.1
 
 ## bug fixes
