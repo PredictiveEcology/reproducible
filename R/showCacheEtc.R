@@ -1097,14 +1097,26 @@ collect_showCache_async <- function(
 }
 
 ## Install an async-collected showCache result into the per-cachePath env so
-## the synchronous showCache() path can read it via `scEnv$sc`. Keeps the
-## outer `shownCache` and inner per-cachePath slots as environments rather
-## than overwriting them with the result data.table.
+## the synchronous showCache() path can read it via `scEnv$sc` /
+## `scEnv$FileInfo`. The async child harvests the inner env from its own
+## pkgEnv (`pkgEnv_child[["shownCache"]][[cp]]`) and returns it, so the
+## value we receive is *itself* the per-cachePath env -- not a data.table.
+## Copy its bindings into the parent's env. If we receive a raw
+## data.frame/data.table/list (older child shapes), store it at $sc.
+## Anything else is treated as no-op (the env is left empty, which causes
+## the sync path to fall through to its full disk scan).
 .installAsyncShownCache <- function(pkgEnv_main, x, sc) {
   if (!is.environment(pkgEnv_main[["shownCache"]]))
     pkgEnv_main[["shownCache"]] <- new.env(parent = emptyenv())
   if (!is.environment(pkgEnv_main[["shownCache"]][[x]]))
     pkgEnv_main[["shownCache"]][[x]] <- new.env(parent = emptyenv())
-  pkgEnv_main[["shownCache"]][[x]]$sc <- sc
+  innerEnv <- pkgEnv_main[["shownCache"]][[x]]
+  if (is.environment(sc)) {
+    for (nm in ls(sc, all.names = TRUE)) {
+      assign(nm, get(nm, envir = sc, inherits = FALSE), envir = innerEnv)
+    }
+  } else if (is.data.frame(sc) || data.table::is.data.table(sc) || is.list(sc)) {
+    innerEnv$sc <- sc
+  }
   invisible(NULL)
 }
