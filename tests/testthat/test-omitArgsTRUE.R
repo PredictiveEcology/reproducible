@@ -39,6 +39,33 @@ test_that("omitArgs = TRUE drops every captured arg from the digest", {
                info = "Changing .cacheExtra invalidates the entry under omitArgs = TRUE")
 })
 
+test_that("omitArgs = TRUE still busts the cache when FUN's body changes", {
+  ## .FUN is the function VALUE (not just its name), so editing the body
+  ## should produce a new digest even though omitArgs = TRUE drops all the
+  ## captured args. This is the safety net that prevents stale results when
+  ## a developer changes their function under a fixed .cacheExtra.
+  skip_on_cran()
+
+  tmpCache <- file.path(tempdir(), basename(tempfile("rcache_omitTRUE_body_")))
+  dir.create(tmpCache, showWarnings = FALSE, recursive = TRUE)
+  withr::local_options(reproducible.cachePath  = tmpCache,
+                       reproducible.useMemoise = FALSE,
+                       reproducible.verbose    = 0)
+
+  f <- function(x) x * 2
+  v1 <- as.numeric(Cache(f, x = 1, cachePath = tmpCache,
+                         omitArgs = TRUE, .cacheExtra = "vTag",
+                         useCloud = FALSE))
+
+  ## Edit the function body; same .cacheExtra; expect a new value (cache miss)
+  f <- function(x) x * 100
+  v2 <- as.numeric(Cache(f, x = 1, cachePath = tmpCache,
+                         omitArgs = TRUE, .cacheExtra = "vTag",
+                         useCloud = FALSE))
+  expect_false(isTRUE(all.equal(v1, v2)),
+               info = "Editing FUN's body should bust the cache even under omitArgs = TRUE")
+})
+
 test_that("doDigestPrepare(omitArgs = TRUE) keeps only .FUN (and .cacheExtra if set)", {
   ## Direct unit test of the digest-prep helper. With omitArgs = TRUE we
   ## should retain only the special .FUN slot; .cacheExtra is appended after

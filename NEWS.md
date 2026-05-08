@@ -1,12 +1,13 @@
 # reproducible (development version)
 
 * `Cache(omitArgs = TRUE)` now drops every captured argument from the cache
-  digest, so the digest depends only on `FUN`'s name and `.cacheExtra`.
-  Useful when a developer wants the cache key to be insensitive to the
-  function's inputs and pin freshness via `.cacheExtra` (e.g. a quoted
-  reference to runtime state) instead of enumerating every input or every
-  argument to omit. Character-vector `omitArgs = c("a", "b")` still works
-  as before.
+  digest, so the digest depends only on `FUN` itself (the function value
+  -- including its body, so source edits still bust the cache) and
+  `.cacheExtra`. Useful when a developer wants the cache key to be
+  insensitive to the function's inputs and pin freshness via `.cacheExtra`
+  (e.g. a quoted reference to runtime state) instead of enumerating every
+  input or every argument to omit. Character-vector
+  `omitArgs = c("a", "b")` still works as before.
 * `Cache(useCloud = ...)` now accepts two character values, intended for
   separating developer and user roles when sharing a cloud-cache folder:
   `"push"` is equivalent to `TRUE` (developer role -- bidirectional;
