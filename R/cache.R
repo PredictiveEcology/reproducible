@@ -207,6 +207,17 @@ utils::globalVariables(c(
 #'   be `FALSE` or `TRUE`, respectively) so it can be turned on and off with
 #'   this option. NOTE: *This argument will not be passed into inner/nested Cache calls.*)
 #'
+#' Two character values are also accepted, intended for separating developer
+#' and user roles when sharing a cloud-cache folder:
+#'
+#' - `"push"` is equivalent to `TRUE` (developer role) -- bidirectional;
+#'   downloads on a cloud hit, uploads on a miss.
+#' - `"pull"` is read-only (user role) -- downloads on a cloud hit, but never
+#'   uploads. If the local cache already has the object, the cloud is not
+#'   consulted at all (the Google Drive listing is deferred until after the
+#'   local lookup fails). When neither local nor cloud has the object, the
+#'   call falls back to a normal local-only Cache run.
+#'
 #' @section Object attributes:
 #' Users should be cautioned that object attributes may not be preserved, especially
 #' in the case of objects that are file-backed, such as `Raster` or `SpatRaster` objects.
@@ -331,7 +342,8 @@ utils::globalVariables(c(
 #'
 #' @param useCache Logical, numeric or `"overwrite"` or `"devMode"`. See details.
 #'
-#' @param useCloud Logical. See Details.
+#' @param useCloud Logical (`TRUE` / `FALSE` / `NULL`) or one of `"pull"` /
+#'   `"push"`. See Details.
 #' @param cacheSaveFormat Character string: currently either `qs` or `rds`. Defaults to
 #'    `getOption("reproducible.cacheSaveFormat")`. `qs` may be faster but appears to have
 #'    narrower range of conditions that work; `rds` is safer, and may be slower.

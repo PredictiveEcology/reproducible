@@ -33,6 +33,8 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
   optionsSetForCache(drv = drv, conn = conn)
 
+  validateUseCloud(useCloud)
+
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
@@ -1483,8 +1485,20 @@ isDevMode <- function(useCache, userTags) {
   isTRUE(any(pmatch(table = useCache, "dev") %in% 1)) && !is.null(userTags)
 }
 
+## `useCloud` accepts: TRUE/FALSE/NULL, or one of "push"/"pull".
+##   - TRUE  / "push": developer role -- bidirectional. Download on cloud hit;
+##                     upload on miss.
+##   - "pull"        : user role -- read-only. Download on cloud hit; never
+##                     upload. If the local cache already has the object, the
+##                     cloud is not consulted at all (the gdriveLs fetch is
+##                     deferred until after the local check fails).
+##   - FALSE / NULL  : cloud disabled.
+## Legacy "^w"/"^r" prefix matching is retained for back-compat (e.g. "write",
+## "read", "readOnly") since the contract is otherwise narrow.
 cloudWrite <- function(useCloud) {
-  isTRUE(any(grepl("^w", useCloud) %in% 1)) || isTRUE(useCloud)
+  isTRUE(useCloud) ||
+    identical(useCloud, "push") ||
+    isTRUE(any(grepl("^w", useCloud) %in% 1))
 }
 
 cloudWriteOrRead <- function(useCloud) {
@@ -1492,11 +1506,25 @@ cloudWriteOrRead <- function(useCloud) {
 }
 
 cloudReadOnly <- function(useCloud) {
-  isTRUE(any(grepl("^r", useCloud) %in% 1))
+  identical(useCloud, "pull") ||
+    isTRUE(any(grepl("^r", useCloud) %in% 1))
 }
 
 cloudRead <- function(useCloud) {
-  cloudReadOnly(useCloud) || isTRUE(useCloud)
+  cloudReadOnly(useCloud) || isTRUE(useCloud) || identical(useCloud, "push")
+}
+
+## Validate the `useCloud` argument and return it unchanged. Errors on a
+## character value that is not "pull" or "push" (or a legacy ^w/^r prefix).
+validateUseCloud <- function(useCloud) {
+  if (is.null(useCloud) || isTRUE(useCloud) || isFALSE(useCloud))
+    return(invisible(useCloud))
+  if (is.character(useCloud) && length(useCloud) == 1L &&
+      (useCloud %in% c("pull", "push") ||
+       grepl("^[wr]", useCloud)))
+    return(invisible(useCloud))
+  stop("`useCloud` must be TRUE, FALSE, NULL, \"pull\", or \"push\"; got: ",
+       deparse(useCloud), call. = FALSE)
 }
 
 keyInGdriveLs <- function(cache_key, gdriveLs) {

@@ -198,7 +198,8 @@ narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
 
-\item{useCloud}{Logical. See Details.}
+\item{useCloud}{Logical (\code{TRUE} / \code{FALSE} / \code{NULL}) or one of \code{"pull"} /
+\code{"push"}. See Details.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
@@ -448,6 +449,18 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
 be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+
+Two character values are also accepted, intended for separating developer
+and user roles when sharing a cloud-cache folder:
+\itemize{
+\item \code{"push"} is equivalent to \code{TRUE} (developer role) -- bidirectional;
+downloads on a cloud hit, uploads on a miss.
+\item \code{"pull"} is read-only (user role) -- downloads on a cloud hit, but never
+uploads. If the local cache already has the object, the cloud is not
+consulted at all (the Google Drive listing is deferred until after the
+local lookup fails). When neither local nor cloud has the object, the
+call falls back to a normal local-only Cache run.
+}
 }
 
 \section{Object attributes}{
@@ -507,28 +520,22 @@ usingPipe2 <-
       eval() |>
       rnorm()} |>
     Cache()'
-if (getRversion() >= "4.1") {
-  a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
-}
-if (getRversion() >= "4.2") { # uses the _ placeholder; only available in R >= 4.2
-  a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
-}
+a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
+a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 
 length(unique(a)) == 1 #  all same
 
 ### Pipe -- have to use { } or else only final function is Cached
-if (getRversion() >= "4.1") {
-  b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
-  b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
-  b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
-  b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
-  b1a <- eval(parse(text = b1a))
-  b1b <- eval(parse(text = b1b))
-  b2a <- eval(parse(text = b2a))
-  b2b <- eval(parse(text = b2b))
-  all.equal(b1a, b1b) # Not TRUE because the sample is run first
-  all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
-}
+b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b1a <- eval(parse(text = b1a))
+b1b <- eval(parse(text = b1b))
+b2a <- eval(parse(text = b2a))
+b2b <- eval(parse(text = b2b))
+all.equal(b1a, b1b) # Not TRUE because the sample is run first
+all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
 
 #########################
 # Advanced examples
