@@ -832,9 +832,22 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
             res0 <- ll$res
             ll$res <- NULL
             proj0 <- terra::project(terra::rast(from), projectTo)
-            ll[[2L]] <- terra::rast(terra::ext(proj0),
-                                    crs = terra::crs(proj0),
-                                    resolution = res0)
+            # Snap extent to a multiple of res0 BEFORE constructing the
+            # target. Otherwise terra::rast(extent, resolution = ...) keeps
+            # the extent and adjusts resolution to fit exact ncol/nrow,
+            # producing res like 249.99999 — which fails strict-equality
+            # tests downstream.
+            e <- terra::ext(proj0)
+            r <- if (length(res0) == 1L) c(res0, res0) else res0
+            xmin <- floor(terra::xmin(e) / r[1L]) * r[1L]
+            xmax <- ceiling(terra::xmax(e) / r[1L]) * r[1L]
+            ymin <- floor(terra::ymin(e) / r[2L]) * r[2L]
+            ymax <- ceiling(terra::ymax(e) / r[2L]) * r[2L]
+            ll[[2L]] <- terra::rast(
+              xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+              crs = terra::crs(proj0),
+              resolution = res0
+            )
           }
           do.call(terra::project, ll)
         } else {
