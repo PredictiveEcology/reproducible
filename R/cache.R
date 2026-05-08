@@ -296,7 +296,11 @@ utils::globalVariables(c(
 #'
 #' @param compareRasterFileLength Being deprecated; use `length`.
 #'
-#' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
+#' @param omitArgs Optional. A character vector of argument names in `FUN` to
+#'   omit from the cache digest, or `TRUE` to omit *every* captured argument
+#'   (the digest is then based on `FUN`'s name and `.cacheExtra`). Useful when
+#'   the developer wants the cache to be insensitive to the function's inputs
+#'   and pin freshness via `.cacheExtra` instead.
 #'
 #' @param classOptions Optional list. This will pass into `.robustDigest` for
 #'        specific classes. Should be options that the `.robustDigest` knows what

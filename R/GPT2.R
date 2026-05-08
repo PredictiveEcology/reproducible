@@ -1710,8 +1710,13 @@ doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
 
   toDigest$.FUN <- attr(new_call, ".Cache")$method
-  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-  if (!is.null(omitArgs)) {
+  # Deal with omitArgs:
+  # - TRUE  => drop every captured arg; digest is based on .FUN (and .cacheExtra)
+  # - char  => drop the named args
+  # - NULL  => default, no change
+  if (isTRUE(omitArgs)) {
+    toDigest <- toDigest[names(toDigest) %in% ".FUN"]
+  } else if (is.character(omitArgs)) {
     if (any("FUN" %in% omitArgs))
       omitArgs <- c(dotFunTxt, omitArgs)
     toDigest[omitArgs] <- NULL
