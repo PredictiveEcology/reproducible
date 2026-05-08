@@ -156,7 +156,11 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 will be added to the Cache so that this entry in the Cache can be found using
 \code{userTags} e.g., via \code{\link[=showCache]{showCache()}}.}
 
-\item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
+\item{omitArgs}{Optional. A character vector of argument names in \code{FUN} to
+omit from the cache digest, or \code{TRUE} to omit \emph{every} captured argument
+(the digest is then based on \code{FUN}'s name and \code{.cacheExtra}). Useful when
+the developer wants the cache to be insensitive to the function's inputs
+and pin freshness via \code{.cacheExtra} instead.}
 
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
