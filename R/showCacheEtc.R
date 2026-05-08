@@ -456,6 +456,13 @@ setMethod(
       if (!exists(x, envir = pkgEnv[["shownCache"]]))
         pkgEnv[["shownCache"]][[x]] <- new.env()
 
+      ## Note: do NOT lazy-spawn from here. The async fork itself runs
+      ## showCache(); spawning again from inside the fork would recurse
+      ## (the fork's pkgEnv has no job entry yet because spawn_showCache_async
+      ## assigns the job AFTER mcparallel returns). Cache() is the lazy-spawn
+      ## site; direct showCache() callers can use prepopulateCacheAsync()
+      ## explicitly if they want a warm fork.
+
       # Non-blocking poll: if the async pre-load job has already finished,
       # harvest it; otherwise proceed synchronously.  Never block here — for
       # large caches the fork can take minutes, and blocking would defeat the
@@ -980,6 +987,49 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 
 # mcparallel is fork-based and not available on Windows
 # pkgEnv <- reproducible:::pkgEnv()  # internal environment for package objects [3](https://rdrr.io/cran/reproducible/man/pkgEnv.html)
+## Idempotent, all-guards-applied wrapper used by Cache() and showCache() to
+## kick off a background showCache scan for `x` the first time the path is
+## touched in a session. Cheap (~10us) when a job already exists -- safe to
+## call from hot paths.
+##
+## Skipped silently on Windows (no fork), when parallel isn't available, or
+## when `x` is NULL/non-character.
+.maybeSpawnShowCacheAsync <- function(x = getOption("reproducible.cachePath")) {
+  if (.Platform$OS.type == "windows") return(invisible(NULL))
+  if (is.null(x) || !is.character(x) || !nzchar(x[[1L]])) return(invisible(NULL))
+  if (!requireNamespace("parallel", quietly = TRUE)) return(invisible(NULL))
+  ## spawn_showCache_async is itself idempotent via its overwrite=FALSE guard
+  spawn_showCache_async(x[[1L]], silent = TRUE, overwrite = FALSE)
+}
+
+#' Pre-populate the in-memory `showCache` cache for a given `cachePath`
+#'
+#' Forks a background process that runs `showCache()` against `cachePath`;
+#' subsequent `showCache()` / `Cache()->showSimilar()` calls in the same R
+#' session can then harvest the result instead of re-scanning the cache
+#' directory synchronously. Useful for very large caches (tens of thousands
+#' of entries) where the cold first scan can take a minute or more.
+#'
+#' Idempotent: a second call with the same `cachePath` reuses the existing
+#' job. Skipped silently on Windows (forking-based) and when the `parallel`
+#' package isn't available.
+#'
+#' This helper is called automatically the first time `Cache()` or
+#' `showCache()` is invoked against a given `cachePath`, so most users do
+#' not need to call it explicitly. It is exported for workflows that want
+#' to kick off the spawn early (e.g. inside `setupProject()`) so the fork
+#' has more wall-clock time to complete before the first manual
+#' `showCache()` call.
+#'
+#' @param cachePath A character path. Defaults to
+#'   `getOption("reproducible.cachePath")`.
+#' @return Invisibly returns the spawn job handle, or `NULL` if the spawn
+#'   was skipped.
+#' @export
+prepopulateCacheAsync <- function(cachePath = getOption("reproducible.cachePath")) {
+  invisible(.maybeSpawnShowCacheAsync(cachePath))
+}
+
 spawn_showCache_async <- function(
     x = getOption("reproducible.cachePath"),
     silent = TRUE,

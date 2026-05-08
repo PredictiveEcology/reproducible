@@ -18,18 +18,15 @@
   toset <- !(names(opts.reproducible) %in% names(opts))
   if (any(toset)) options(opts.reproducible[toset])
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
-  
+
   .pkgEnv$runningOnMac <- isMac()
-  cp <- getOption("reproducible.cachePath")
-  if (!is.null(cp) && interactive() && !isWindows()) {
-    if (requireNamespace("parallel", quietly = TRUE)) {
-      # on tmux and possibly others; this next line stalls
-      # clear any existing ones
-      suppressMessages(try(parallel::mccollect(timeout = 0.5, wait = FALSE), silent = TRUE))
-      spawn_showCache_async(cp, silent = TRUE, overwrite = FALSE)  
-    }
-  }
-  
+  ## Note: showCache async pre-population is no longer fired here.
+  ## .onLoad runs before the user's real cachePath is set (e.g. by
+  ## SpaDES.project::setupProject()), so spawning here would target the
+  ## default tempdir() cachePath -- wasted work. Instead, the spawn fires
+  ## lazily on the first Cache() / showCache() call against any given
+  ## cachePath, where we know the path is the one the caller actually wants.
+
   invisible()
 }
 

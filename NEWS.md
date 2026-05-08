@@ -1,5 +1,27 @@
 # reproducible (development version)
 
+* `Cache()` now lazy-spawns the `showCache` async background scan against the
+  cachePath the call actually uses. Previously the spawn fired only at
+  `.onLoad` time, against whatever `getOption("reproducible.cachePath")`
+  happened to be -- typically the default `tempdir()/reproducible/cache`,
+  not the real path set later by the caller (e.g.
+  `SpaDES.project::setupProject()`). On large caches this caused the first
+  manual `showCache()` call in a session to do a full synchronous disk scan
+  (60+ seconds for ~35k cache entries) when it should have harvested an
+  already-warm async result. With the lazy spawn, the first `Cache()` call
+  in `simInit/spades` kicks off the fork, which then runs to completion in
+  parallel with the simulation; subsequent `showCache()` calls return in
+  ~1 second. The spawn helper is idempotent (~10 us per call). The legacy
+  `.onLoad` spawn is removed.
+* New exported helper `prepopulateCacheAsync(cachePath)` lets workflows
+  kick off the async scan explicitly (e.g. early in `setupProject()`) so
+  the fork has even more wall-clock time to complete.
+* The `useMemoise = FALSE` cleanup at the start of each `Cache()` call now
+  preserves the `shownCache` binding on the per-cachePath memoise env. It
+  used to wipe everything, which clobbered the async-spawn job table and
+  the in-memory `showCache` result -- so the lazy spawn would re-fire on
+  every `Cache()` call (defeating idempotence) and the in-memory cache
+  would never be reused.
 * `Cache(omitArgs = TRUE)` now drops every captured argument from the cache
   digest, so the digest depends only on `FUN` itself (the function value
   -- including its body, so source edits still bust the cache) and
