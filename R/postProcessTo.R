@@ -817,6 +817,20 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           ll <- list(from, projectTo)
           ll <- append(ll, list(overwrite = overwrite))
           ll <- addDotArgs(ll, terra::project, class(from), method, ...)
+          # Workaround for terra (>= ~1.9) regression: the shorthand
+          # `terra::project(x, char_crs, res = N)` recurses internally and
+          # forwards an unrecognized `wopt` set, producing
+          # `[write] unknown option(s): xscale,yscale`. When `projectTo` is
+          # a CRS (string or `crs` object) and `res = N` was passed via `...`,
+          # build the target raster ourselves: project a header-only
+          # SpatRaster to compute the output extent in the target CRS, then
+          # override its resolution and pass that as the target.
+          if (.isCRSany(projectTo) && "res" %in% names(ll)) {
+            res0 <- ll$res
+            ll$res <- NULL
+            proj0 <- terra::project(terra::rast(from), projectTo)
+            ll[[2L]] <- terra::rast(proj0, resolution = res0)
+          }
           do.call(terra::project, ll)
         } else {
           from
