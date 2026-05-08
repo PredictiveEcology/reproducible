@@ -824,12 +824,17 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           # a CRS (string or `crs` object) and `res = N` was passed via `...`,
           # build the target raster ourselves: project a header-only
           # SpatRaster to compute the output extent in the target CRS, then
-          # override its resolution and pass that as the target.
+          # construct a new raster from (extent, crs, resolution).
+          # Using `terra::rast(SpatRaster, resolution = ...)` is ambiguous
+          # against the existing nrow/ncol; explicit ext+crs+resolution is
+          # the documented constructor that always honors the resolution.
           if (.isCRSany(projectTo) && "res" %in% names(ll)) {
             res0 <- ll$res
             ll$res <- NULL
             proj0 <- terra::project(terra::rast(from), projectTo)
-            ll[[2L]] <- terra::rast(proj0, resolution = res0)
+            ll[[2L]] <- terra::rast(terra::ext(proj0),
+                                    crs = terra::crs(proj0),
+                                    resolution = res0)
           }
           do.call(terra::project, ll)
         } else {
