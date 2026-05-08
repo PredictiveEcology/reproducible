@@ -370,6 +370,7 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## which works correctly even when prepInputs is invoked via Cache's call chain.
   if (is.name(funCaptured))
     funCaptured <- fun
+  if (is.character(url) && length(url) == 0L) url <- NULL
   prepInputsAssertions(environment())
 
   runNormalPreProcess <- TRUE

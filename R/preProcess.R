@@ -234,6 +234,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     destinationPath <- getOption("reproducible.destinationPath", ".")
   destinationPath <- normPath(destinationPath)
 
+  # Treat a zero-length character `url` (e.g. `character()`) as no URL — the
+  # downstream guards check `is.null(ctx$url)`, and `grepl()` on length-0 input
+  # returns `logical(0)`, which crashes `if`.
+  if (is.character(url) && length(url) == 0L) url <- NULL
+
   if (!is.null(archive) && any(is.na(archive)) && all(!is.character(archive)))
     archive <- as.character(archive)
 
