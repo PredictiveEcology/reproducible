@@ -1082,14 +1082,29 @@ collect_showCache_async <- function(
     return(invisible(NULL))
   }
 
-  # Install recovered shownCache object into main session memoiseEnv location
-  # pkgEnv <- memoiseEnv(cachePath = x)
-  pkgEnv_main <- memoiseEnv(cachePath = x)
-  if (is.null(pkgEnv_main[["shownCache"]])) pkgEnv_main[["shownCache"]] <- list()
-  pkgEnv_main[["shownCache"]][[x]] <- sc
+  # Install recovered shownCache object into main session memoiseEnv location.
+  # The synchronous showCache() path expects pkgEnv[["shownCache"]][[x]] to be
+  # an environment with $FileInfo and $sc slots; previously this assigned `sc`
+  # directly at that key, replacing the env with an atomic data.table and then
+  # crashing the next sync call at `is.null(scEnv$FileInfo)` with
+  # "$ operator is invalid for atomic vectors".
+  .installAsyncShownCache(memoiseEnv(cachePath = x), x, sc)
 
   # Clear job handle after successful install
   rm(list = x, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
 
   invisible(sc)
+}
+
+## Install an async-collected showCache result into the per-cachePath env so
+## the synchronous showCache() path can read it via `scEnv$sc`. Keeps the
+## outer `shownCache` and inner per-cachePath slots as environments rather
+## than overwriting them with the result data.table.
+.installAsyncShownCache <- function(pkgEnv_main, x, sc) {
+  if (!is.environment(pkgEnv_main[["shownCache"]]))
+    pkgEnv_main[["shownCache"]] <- new.env(parent = emptyenv())
+  if (!is.environment(pkgEnv_main[["shownCache"]][[x]]))
+    pkgEnv_main[["shownCache"]][[x]] <- new.env(parent = emptyenv())
+  pkgEnv_main[["shownCache"]][[x]]$sc <- sc
+  invisible(NULL)
 }
