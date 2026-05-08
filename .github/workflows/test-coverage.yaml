@@ -10,6 +10,9 @@ on:
 
 name: test-coverage
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test-coverage:
     # Mirrors the recipe used by PredictiveEcology/SpaDES.tools, which is
