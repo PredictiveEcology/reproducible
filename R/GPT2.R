@@ -1588,7 +1588,9 @@ doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
 
   toDigest$.FUN <- attr(new_call, ".Cache")$method
   # Deal with omitArgs:
-  # - TRUE  => drop every captured arg; digest is based on .FUN (and .cacheExtra)
+  # - TRUE  => drop every captured arg; digest is based on .FUN (the actual
+  #            function value, body included, so source edits still bust the
+  #            cache) plus .cacheExtra
   # - char  => drop the named args
   # - NULL  => default, no change
   if (isTRUE(omitArgs)) {
