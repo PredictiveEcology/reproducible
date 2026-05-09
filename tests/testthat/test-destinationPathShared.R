@@ -700,6 +700,11 @@ test_that("B1: legacy reproducible.inputPaths still works (regression guard)", {
 # ===========================================================================
 
 test_that("I1+I2: Cache(prepInputs(...)) — cold uses destinationPathShared; warm is cache hit", {
+  # Cache(...) -> doSaveToCache -> wrapSaveToCache -> .wrap.default needs
+  # terra to wrap raster-shaped outputs. Without terra (nosuggests=true /
+  # _R_CHECK_DEPENDS_ONLY_=true matrix entry), it aborts with "Please
+  # install terra package". Skip then; full-Suggests entries still cover.
+  skip_if_not_installed("terra")
   testInit("digest")
   shared <- normPath(file.path(tmpdir, "shared"))
   dest   <- normPath(file.path(tmpdir, "dest"))
