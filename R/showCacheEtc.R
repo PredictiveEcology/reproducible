@@ -557,9 +557,18 @@ setMethod(
                   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
                   unlink(filesToRm)
+                  # Return NULL (not the try-error) so rbindlist(fill = TRUE)
+                  # below silently skips this entry. Letting the try-error
+                  # escape made rbindlist error with "Item N is not a list",
+                  # the catch handler didn't successfully retry, and the
+                  # whole showCache() call returned NULL — which broke
+                  # test-showCacheCorruptFile.R's NROW(out) > 0 invariant
+                  # (valid sibling entries should still be returned).
+                  return(NULL)
                 }
                 out
               })
+              allFilesLoaded <- Filter(Negate(is.null), allFilesLoaded)
 
 
               ret <- tryCatch(
