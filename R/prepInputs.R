@@ -715,8 +715,12 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
-  # fun = NA means "don't load anything" — skip all guessing and messaging
-  if (isTRUE(is.na(fun))) return(list(targetFilePath = targetFilePath, fun = fun))
+  # fun = NA means "don't load anything" — skip all guessing and messaging.
+  # Guard is.na() with is.atomic + length-1 so a user-supplied language object
+  # (e.g. `fun = sf::st_read(targetFile)`) doesn't trip "is.na() applied to
+  # non-(list or vector) of type 'language'".
+  if (is.atomic(fun) && length(fun) == 1L && isTRUE(is.na(fun)))
+    return(list(targetFilePath = targetFilePath, fun = fun))
   if (all(!is.na(targetFilePath))) {
     possibleFiles <- unique(c(targetFilePath, filesExtracted))
     whichPossFile <- possibleFiles %in% targetFilePath
