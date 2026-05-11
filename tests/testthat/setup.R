@@ -35,7 +35,9 @@ if (isNamespaceLoaded("googledrive"))
     gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
     if (nzchar(gauthEnv)) {
       if (file.exists(gauthEnv))
-        googledrive::drive_auth(path = gauthEnv)
+        ## see helper-allEqual.R: tolerate revoked / rotated service-account keys
+        tryCatch(googledrive::drive_auth(path = gauthEnv),
+                 error = function(e) invisible(NULL))
     }
   }
 

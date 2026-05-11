@@ -158,6 +158,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth)) {
+    if (isTRUE(skip_gauth))
+      skip("SKIP_GAUTH=true; skipping Google Drive tests")
     if (isNamespaceLoaded("googledrive"))
       if ((!googledrive::drive_has_token())) {
         if (!nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
@@ -165,9 +167,16 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
         }
         gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
         if (nzchar(gauthEnv)) {
-          if (file.exists(gauthEnv))
-            googledrive::drive_auth(path = gauthEnv)
-        # googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
+          if (file.exists(gauthEnv)) {
+            ## Service-account credentials can be revoked at Google's end
+            ## (key rotated, SA disabled, etc.). drive_auth() converts the
+            ## underlying HTTP 400 / invalid_grant into a generic "Can't get
+            ## Google credentials" abort, which turns every Drive-using test
+            ## into an ERROR instead of a SKIP. Swallow it so the
+            ## skip_if_no_token() below cleanly skips instead.
+            tryCatch(googledrive::drive_auth(path = gauthEnv),
+                     error = function(e) invisible(NULL))
+          }
         }
       }
 

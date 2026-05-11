@@ -18,8 +18,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2026-05-08
-Version: 3.0.0.9074
+Date: 2026-05-11
+Version: 3.0.0.9075
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
