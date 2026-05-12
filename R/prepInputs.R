@@ -427,6 +427,21 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     ##################################################################
     # Load object to R
     ##################################################################
+    # preProcess() returns out$fun = NULL when auto-guessing failed (e.g.
+    # ambiguous archive contents, .shp missing from alsoExtract). The
+    # download/extract layer is happy with that, but prepInputs() is the
+    # loader and a NULL fun would silently produce an un-loaded result —
+    # surprising and almost always a user error. If the caller explicitly
+    # opted out of loading (`fun = NA`), respect that; otherwise stop early
+    # with a message that points at the fix.
+    if (is.null(out$fun) && !isTRUE(is.na(funCaptured))) {
+      stop(
+        "prepInputs cannot determine which function to use to load the result. ",
+        "The file extension is ambiguous and no `fun` / `targetFile` was supplied. ",
+        "Either specify `targetFile` and/or `fun`, or pass `fun = NA` to skip loading.",
+        call. = FALSE
+      )
+    }
     x <- process(out,
                  funCaptured = funCaptured,
                  useCache = useCache, verbose = verbose, .callingEnv = .callingEnv, ...

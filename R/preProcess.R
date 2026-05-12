@@ -264,9 +264,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 # ---------------------------------------------------------------------------
 pp_resolve_files <- function(ctx) {
   targetFileGuess <- NULL
-  if (is.null(ctx$targetFile) || is.null(ctx$archive)) {
+  if (is.null(ctx[["targetFile"]]) || is.null(ctx$archive)) {
     targetFileGuess <- .guessAtFile(
-      url = ctx$url, archive = ctx$archive, targetFile = ctx$targetFile,
+      url = ctx$url, archive = ctx$archive, targetFile = ctx[["targetFile"]],
       destinationPath = ctx$destinationPath, verbose = ctx$verbose,
       team_drive = getTeamDrive(ctx$dots)
     )
@@ -275,19 +275,19 @@ pp_resolve_files <- function(ctx) {
   }
 
   ctx$targetFilePath <- getTargetFilePath(
-    ctx$targetFile, ctx$archive, targetFileGuess, ctx$verbose,
+    ctx[["targetFile"]], ctx$archive, targetFileGuess, ctx$verbose,
     ctx$destinationPath, ctx$alsoExtract, ctx$checkSumFilePath
   )
-  ctx$targetFile  <- makeRelative(ctx$targetFilePath, ctx$destinationPath)
-  ctx$alsoExtract <- guessAlsoExtract(ctx$targetFile, ctx$alsoExtract, ctx$checkSumFilePath)
+  ctx[["targetFile"]]  <- makeRelative(ctx$targetFilePath, ctx$destinationPath)
+  ctx$alsoExtract <- guessAlsoExtract(ctx[["targetFile"]], ctx$alsoExtract, ctx$checkSumFilePath)
 
   if (!dir.exists(ctx$destinationPath)) {
     if (isFile(ctx$destinationPath)) stop("destinationPath must be a directory")
     checkPath(ctx$destinationPath, create = TRUE)
   }
 
-  if (isTRUE(!is.na(ctx$targetFile)))
-    messagePreProcess("Preparing: ", ctx$targetFile, verbose = ctx$verbose)
+  if (isTRUE(!is.na(ctx[["targetFile"]])))
+    messagePreProcess("Preparing: ", ctx[["targetFile"]], verbose = ctx$verbose)
 
   ctx$archive <- setupArchive(ctx$archive, ctx$destinationPath)
   ctx
@@ -391,7 +391,7 @@ pp_purge <- function(ctx) {
   } else if (purge > 1L) {
     ctx$checkSums     <- .purge(
       checkSums = ctx$checkSums, purge = purge,
-      targetFile = ctx$targetFile, archive = ctx$archive,
+      targetFile = ctx[["targetFile"]], archive = ctx$archive,
       url = ctx$url, alsoExtract = ctx$alsoExtract,
       destinationPath = ctx$destinationPath
     )
@@ -406,7 +406,7 @@ pp_purge <- function(ctx) {
 # ---------------------------------------------------------------------------
 pp_resolve_needed_files <- function(ctx) {
   archiveOut    <- dealWithArchive(
-    ctx$archive, ctx$url, ctx$targetFile, ctx$checkSums, ctx$alsoExtract,
+    ctx$archive, ctx$url, ctx[["targetFile"]], ctx$checkSums, ctx$alsoExtract,
     ctx$destinationPath, getTeamDrive(ctx$dots), ctx$verbose
   )
   ctx$checkSums <- archiveOut$checkSums
@@ -422,7 +422,7 @@ pp_resolve_needed_files <- function(ctx) {
       ctx$alsoExtract <- .expandAlsoExtractPatterns(ctx$alsoExtract, fia)
   }
 
-  neededFiles <- c(ctx$targetFile, makeAbsolute(ctx$alsoExtract, ctx$destinationPath))
+  neededFiles <- c(ctx[["targetFile"]], makeAbsolute(ctx$alsoExtract, ctx$destinationPath))
   if (is.null(neededFiles)) neededFiles <- makeAbsolute(ctx$archive)
   if (any(is.na(neededFiles)))  neededFiles <- na.omit(neededFiles)
   neededFiles <- grep("similar$", neededFiles, value = TRUE, invert = TRUE)
@@ -441,7 +441,7 @@ pp_resolve_needed_files <- function(ctx) {
     neededFiles <- unique(c(neededFiles, filesInsideArchive))
   } else {
     outFromSimilar  <- .checkForSimilar(
-      neededFiles, ctx$alsoExtract, ctx$archive, ctx$targetFile,
+      neededFiles, ctx$alsoExtract, ctx$archive, ctx[["targetFile"]],
       destinationPath = ctx$destinationPath, ctx$checkSums,
       checkSumFilePath = ctx$checkSumFilePath, ctx$url, verbose = ctx$verboseCFS
     )
@@ -601,7 +601,7 @@ pp_remote_hash_check <- function(ctx) {
   if (haveSidecar &&
       !isTRUE(getOption("reproducible.checkRemoteHash", FALSE))) {
     messagePreProcess(
-      "Local file matches remote version (cached); skipping download: ",
+      "Skipping download; local file matches remote version (cached): ",
       .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
     )
     ctx$skipDownload <- TRUE
@@ -648,7 +648,7 @@ pp_remote_hash_check <- function(ctx) {
     if (!is.null(parsedSidecar) &&
         identical(parsedSidecar$hash, remoteMetadata$remoteHash)) {
       messagePreProcess(
-        "Local file matches remote version; skipping download: ",
+        "Skipping download; local file matches remote version: ",
         .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
       )
       ctx$skipDownload   <- TRUE
@@ -701,7 +701,7 @@ pp_remote_hash_check <- function(ctx) {
   )
 
   messagePreProcess(
-    "Local file matches remote version; skipping download: ",
+    "Skipping download; local file matches remote version: ",
     .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
   )
   ctx$skipDownload   <- TRUE
@@ -745,7 +745,7 @@ pp_download <- function(ctx) {
   dlArgs <- c(
     list(
       archive        = if (isTRUE(is.na(ctx$archive))) NULL else ctx$archive,
-      targetFile     = ctx$targetFile,
+      targetFile     = ctx[["targetFile"]],
       neededFiles    = ctx$neededFiles,
       destinationPath = ctx$destinationPath,
       quick          = ctx$quick,
@@ -770,7 +770,7 @@ pp_download <- function(ctx) {
   if (!isTRUE(ctx$skipDownload))
     downloadFileResult <- .fixNoFileExtension(
       downloadFileResult = downloadFileResult,
-      targetFile = ctx$targetFile, archive = ctx$archive,
+      targetFile = ctx[["targetFile"]], archive = ctx$archive,
       destinationPath = ctx$destinationPath, verbose = ctx$verbose
     )
 
@@ -789,7 +789,7 @@ pp_download <- function(ctx) {
 
   outFromSimilar  <- .checkForSimilar(
     neededFiles = ctx$neededFiles, alsoExtract = ctx$alsoExtract,
-    archive = ctx$archive, targetFile = ctx$targetFile,
+    archive = ctx$archive, targetFile = ctx[["targetFile"]],
     destinationPath = ctx$destinationPath, checkSums = ctx$checkSums,
     checkSumFilePath = ctx$checkSumFilePath, url = ctx$url,
     verbose = ctx$verboseCFS
@@ -799,7 +799,7 @@ pp_download <- function(ctx) {
   ctx$checkSums   <- outFromSimilar$checkSums
 
   if (length(ctx$neededFiles) > 1L)
-    ctx$alsoExtract <- setdiff(ctx$neededFiles, ctx$targetFile)
+    ctx$alsoExtract <- setdiff(ctx$neededFiles, ctx[["targetFile"]])
 
   ctx$filesToChecksum <- if (isTRUE(is.na(ctx$archive)) || is.null(ctx$archive)) {
     downloadFileResult$downloaded
@@ -891,12 +891,12 @@ pp_extract <- function(ctx) {
       alsoExtract = ctx$alsoExtract, archive = nestedArchive,
       neededFiles = nestedTargetFiles, destinationPath = ctx$destinationPath,
       checkSums = ctx$checkSums, checkSumFilePath = ctx$checkSumFilePath,
-      targetFile = ctx$targetFile, verbose = ctx$verboseCFS
+      targetFile = ctx[["targetFile"]], verbose = ctx$verboseCFS
     )
     neededFilesNested  <- outFromSimilar$neededFiles
     ctx$checkSums      <- outFromSimilar$checkSums
     alsoExtractNested  <- if (length(neededFilesNested) > 1L) {
-      setdiff(neededFilesNested, ctx$targetFile)
+      setdiff(neededFilesNested, ctx[["targetFile"]])
     } else {
       ctx$alsoExtract
     }
@@ -1000,15 +1000,15 @@ pp_finalize <- function(ctx) {
     ctx$targetFilePath, ctx$destinationPath,
     filesExtracted = ctx$filesExtr, ctx$fun, verbose = ctx$verbose
   )
-  ctx$targetFile     <- makeRelative(targetParams$targetFilePath, ctx$destinationPath)
+  ctx[["targetFile"]]     <- makeRelative(targetParams$targetFilePath, ctx$destinationPath)
   ctx$targetFilePath <- targetParams$targetFilePath
   ctx$funChar        <- targetParams$fun
 
   if (is.null(ctx$targetFilePath)) {
     ctx$targetFilePath <- if (!is.null(ctx$filesExtr)) ctx$filesExtr else ctx$downloadResult$downloaded
   }
-  if (is.null(ctx$targetFile) && !is.null(ctx$targetFilePath))
-    ctx$targetFile <- makeRelative(ctx$targetFilePath, ctx$destinationPath)
+  if (is.null(ctx[["targetFile"]]) && !is.null(ctx$targetFilePath))
+    ctx[["targetFile"]] <- makeRelative(ctx$targetFilePath, ctx$destinationPath)
 
   fun <- .extractFunction(ctx$funChar)
 
@@ -1055,7 +1055,7 @@ pp_finalize <- function(ctx) {
     }
   }
 
-  if (isTRUE(isDirectory(ctx$url, mustExist = FALSE)) && is.null(ctx$targetFile)) {
+  if (isTRUE(isDirectory(ctx$url, mustExist = FALSE)) && is.null(ctx[["targetFile"]])) {
     messagePrepInputs(
       "url pointed to a directory, but no `targetFile` specified; using targetFilePath:\n",
       paste0(ctx$downloadResult$downloaded, collapse = "\n")
@@ -2244,11 +2244,13 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
 .findRemoteHashSidecars <- function(filename, dirs) {
   if (is.null(filename) || length(filename) != 1L ||
       is.na(filename) || !nzchar(filename)) return(character())
-  prefix <- paste0(filename, "_")
+  # Sidecars are written as `.<basename>_<urlencoded>.hash` (hidden); use
+  # all.files = TRUE so the dotfile form is discoverable.
+  prefix <- paste0(".", filename, "_")
   out <- character()
   for (d in dirs) {
     if (!is.null(d) && nzchar(d) && dir.exists(d)) {
-      all <- list.files(d, full.names = FALSE)
+      all <- list.files(d, full.names = FALSE, all.files = TRUE)
       isSidecar <- startsWith(all, prefix) & endsWith(all, ".hash")
       sidecars <- file.path(d, all[isSidecar])
       if (length(sidecars))

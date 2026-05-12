@@ -423,12 +423,29 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       ))
       a <- future::future(
         {
-          googledrive::drive_auth(email = goe, cache = goc)
+          # Re-authenticate inside the future worker. Prefer a service-account
+          # JSON when one is configured (CI / GOOGLEDRIVE_AUTH path), otherwise
+          # fall back to the user-account email + cache used by the parent.
+          # Interactive auth (no email, no path) would silently hang the
+          # worker — pass the JSON path through globals when available.
+          if (nzchar(gauth_path) && file.exists(gauth_path)) {
+            try(googledrive::drive_auth(path = gauth_path), silent = TRUE)
+          } else {
+            googledrive::drive_auth(email = goe, cache = goc)
+          }
           retry(retries = 2, downloadCall)
         },
         globals = list(
-          goc = normalizePath(getOption("gargle_oauth_cache"), mustWork = FALSE),
+          # Guard against NULL: getOption("gargle_oauth_cache") defaults to
+          # NULL when unset, and normalizePath(NULL) errors with the cryptic
+          # `path.expand(path) : invalid 'path' argument` inside the future
+          # worker. Pass NULL through — gargle handles an absent cache.
+          goc = local({
+            v <- getOption("gargle_oauth_cache")
+            if (is.null(v) || !nzchar(v)) v else normalizePath(v, mustWork = FALSE)
+          }),
           goe = getOption("gargle_oauth_email"),
+          gauth_path = Sys.getenv("GOOGLEDRIVE_AUTH", ""),
           downloadCall = downloadCall,
           downloadFilename = downloadFilename,
           download_resumable_httr2 = download_resumable_httr2,

@@ -848,7 +848,10 @@ makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
   url_no_protocol <- sub("^https?://", "", url)
   # Replace all slashes with underscores
   urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
-  remoteHashFile <- file.path(destinationPath, paste0(urlWithUnderscores, ".hash"))
+  # Hide the sidecar with a leading "." so it doesn't show up in dir() listings
+  # (e.g. test patterns like `dir(tmpdir, pattern = "Shapefile")` would otherwise
+  # match `Shapefile1.zip_drive.google.com_..._.hash` and inflate file counts).
+  remoteHashFile <- file.path(destinationPath, paste0(".", urlWithUnderscores, ".hash"))
   if (isTRUE(write) && !file.exists(remoteHashFile)) {
     if (is.null(algorithm) || is.na(algorithm) || !nzchar(algorithm)) {
       # Legacy callers: write hash-only line.
