@@ -1,5 +1,5 @@
 utils::globalVariables(c(
-  "goe", "goc"
+  "goe", "goc", "gauth_path"
 ))
 
 #' A wrapper around a set of downloading functions
