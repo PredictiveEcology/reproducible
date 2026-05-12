@@ -1123,28 +1123,32 @@ test_that("upsertChecksumsRow: preserves other-algorithm rows for same file", {
   lines <- gsub("/tmp/Rtmp[A-Za-z0-9]+", "<tmpdir>", lines)
   lines <- gsub("file://[^ ]+", "<file-url>", lines)
   lines <- gsub("file[A-Za-z0-9]{6,}", "<tmp>", lines)
-  ## Rejoin a line into its predecessor when it's a soft-wrap continuation —
-  ## i.e. starts with leading whitespace and the previous line wasn't blank.
-  ## A single space replaces the line-break + indent so the canonical form
-  ## is one logical message per line, regardless of how messagePreProcess
-  ## decided to wrap on this run.
-  if (length(lines) > 1L) {
-    out <- character(0)
-    for (ln in lines) {
-      if (length(out) && nzchar(out[length(out)]) &&
-          grepl("^\\s+\\S", ln)) {
-        out[length(out)] <- paste0(out[length(out)], " ", sub("^\\s+", "", ln))
-      } else {
-        out <- c(out, ln)
-      }
-    }
-    lines <- out
-  }
-  ## Collapse runs of whitespace within a line (the join above can leave
-  ## double spaces; reflow can leave any number of spaces between tokens).
+  ## Collapse all whitespace runs (including leading) to single spaces and
+  ## trim. messagePreProcess emits varying indentation between runs (depends
+  ## on getOption("width") and continuation-line wrapping), and the line
+  ## boundaries themselves shift too — making the snapshot inherently
+  ## fragile if we keep either. Once each line is whitespace-canonical,
+  ## stripping line-leading whitespace lets the diff compare semantics.
   lines <- gsub("[[:space:]]+", " ", lines)
+  lines <- sub("^[[:space:]]+", "", lines)
   lines <- sub("[[:space:]]+$", "", lines)
+  ## Drop blank lines so a stray "\n\n" doesn't shift the snapshot.
+  lines <- lines[nzchar(lines)]
   lines
+}
+
+## Plant a remote-hash sidecar that `.findRemoteHashSidecars` will discover
+## by its `.<filename>_*.hash` prefix. We bypass `makeRemoteHashFile()` here
+## on purpose: that helper derives the suffix from the source URL, which
+## under R CMD check can produce paths whose `file(con, "w")` fails for
+## reasons unrelated to what these tests are exercising. The lookup logic
+## only inspects the prefix/suffix and the file contents, so any matching
+## name works.
+.plantSidecar <- function(destDir, filename, algorithm, hash, tag = "synthetic") {
+  stopifnot(dir.exists(destDir))
+  sc <- file.path(destDir, paste0(".", filename, "_", tag, ".hash"))
+  writeLines(paste0(algorithm, ":", hash), sc)
+  sc
 }
 
 test_that("C5: deleted local file + stale sidecar + file in destinationPathShared → relink, no download", {
@@ -1158,11 +1162,9 @@ test_that("C5: deleted local file + stale sidecar + file in destinationPathShare
   fixShared <- makeFixture(shared, "foo.csv")             # same content/hash
   writeChecksumsFor(shared, fixShared)
 
-  # Plant a sidecar in `dest` that records the (correct) hash, but leave
-  # `dest/foo.csv` itself absent — the user manually deleted it.
-  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
-  sc <- mk(fixSrc$url, dest, "foo.csv", fixShared$hash,
-           algorithm = "xxhash64", write = TRUE)
+  # Plant a sidecar that records the (correct) hash, but leave dest/foo.csv
+  # itself absent — the user manually deleted it.
+  sc <- .plantSidecar(dest, "foo.csv", "xxhash64", fixShared$hash)
   expect_true(file.exists(sc))
   expect_false(file.exists(file.path(dest, "foo.csv")))
 
@@ -1196,9 +1198,7 @@ test_that("C6: deleted local file + stale sidecar + nothing in shared → downlo
 
   # Stale sidecar with a hash that has NOTHING to do with current content —
   # simulates the file having drifted (or just an old run) and being deleted.
-  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
-  sc <- mk(fixSrc$url, dest, "foo.csv", strrep("d", 16L),
-           algorithm = "xxhash64", write = TRUE)
+  sc <- .plantSidecar(dest, "foo.csv", "xxhash64", strrep("d", 16L))
   expect_true(file.exists(sc))
   expect_false(file.exists(file.path(dest, "foo.csv")))
 

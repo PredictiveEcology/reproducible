@@ -20,6 +20,10 @@
       Running `preProcess`
       Preparing: foo.csv
       ...downloading...
-      Downloading <file-url> ...
-       Appending checksums to CHECKSUMS.txt. If you see this message repeatedly, you can specify targetFile (and optionally alsoExtract) so it knows what to look for.
+      Downloading
+      <file-url>
+      ...
+      Appending checksums to CHECKSUMS.txt. If you see this message repeatedly, you
+      can specify targetFile (and optionally alsoExtract) so it knows what to look
+      for.
 
