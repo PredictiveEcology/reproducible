@@ -1150,6 +1150,13 @@ test_that("upsertChecksumsRow: preserves other-algorithm rows for same file", {
 }
 
 test_that("C5: deleted local file + stale sidecar + file in destinationPathShared → relink, no download", {
+  ## Under nosuggests R CMD check (`_R_CHECK_DEPENDS_ONLY_=true`), reproducible
+  ## emits a one-time "install httr2 and try again" hint via `preProcess()`
+  ## that we don't expect in the snapshot. The test is exercising the
+  ## prepInputs sidecar logic, which already depends on Suggests packages
+  ## (digest, terra). Easier to skip the whole pair under nosuggests than
+  ## to scrub the hint from .snapTransform.
+  skip_if_not_installed("httr2")
   testInit("digest")
   ## Force a wide print width so testthat's snapshot of the `Code` block
   ## (the deparsed expression) doesn't reflow between an 80-col local TTY
@@ -1192,6 +1199,7 @@ test_that("C5: deleted local file + stale sidecar + file in destinationPathShare
 })
 
 test_that("C6: deleted local file + stale sidecar + nothing in shared → download proceeds", {
+  skip_if_not_installed("httr2")     # see C5 for rationale
   testInit("digest")
   withr::local_options(width = 200)  # see C5 for rationale
   dest <- normPath(file.path(tmpdir, "dest"))
