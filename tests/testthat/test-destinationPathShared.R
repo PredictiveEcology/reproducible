@@ -1116,25 +1116,23 @@ test_that("upsertChecksumsRow: preserves other-algorithm rows for same file", {
 # messagePreProcess reflows the same message into a different number of
 # lines (terminal width, indent style, etc.).
 .snapTransform <- function(lines) {
-  ## testthat may pass either pre-split lines or whole messages with embedded
-  ## "\n". Pre-split unconditionally so the rest of this transform sees one
-  ## logical line per element.
-  lines <- unlist(strsplit(as.character(lines), "\n", fixed = TRUE), use.names = FALSE)
-  lines <- gsub("/tmp/Rtmp[A-Za-z0-9]+", "<tmpdir>", lines)
-  lines <- gsub("file://[^ ]+", "<file-url>", lines)
-  lines <- gsub("file[A-Za-z0-9]{6,}", "<tmp>", lines)
-  ## Collapse all whitespace runs (including leading) to single spaces and
-  ## trim. messagePreProcess emits varying indentation between runs (depends
-  ## on getOption("width") and continuation-line wrapping), and the line
-  ## boundaries themselves shift too — making the snapshot inherently
-  ## fragile if we keep either. Once each line is whitespace-canonical,
-  ## stripping line-leading whitespace lets the diff compare semantics.
-  lines <- gsub("[[:space:]]+", " ", lines)
-  lines <- sub("^[[:space:]]+", "", lines)
-  lines <- sub("[[:space:]]+$", "", lines)
-  ## Drop blank lines so a stray "\n\n" doesn't shift the snapshot.
-  lines <- lines[nzchar(lines)]
-  lines
+  ## testthat is called once per captured Message/Code block. We collapse the
+  ## entire block into ONE line: `messagePreProcess` wraps its output to
+  ## `getOption("width")`, and the line boundaries (and indentation of
+  ## continuation lines) shift between environments — for the same logical
+  ## message, an 80-col tty produces a different line count than a 120-col
+  ## tty. Erasing both newlines and run-of-whitespace inside the block
+  ## removes that variability while keeping the semantics ("Running
+  ## preProcess Preparing: foo.csv ...downloading... Downloading <file-url>
+  ## ... Appending checksums to ...") intact.
+  joined <- paste(as.character(lines), collapse = " ")
+  joined <- gsub("/tmp/Rtmp[A-Za-z0-9]+", "<tmpdir>", joined)
+  joined <- gsub("file://[^ ]+", "<file-url>", joined)
+  joined <- gsub("file[A-Za-z0-9]{6,}", "<tmp>", joined)
+  joined <- gsub("[[:space:]]+", " ", joined)
+  joined <- sub("^[[:space:]]+", "", joined)
+  joined <- sub("[[:space:]]+$", "", joined)
+  joined
 }
 
 ## Plant a remote-hash sidecar that `.findRemoteHashSidecars` will discover
@@ -1153,6 +1151,11 @@ test_that("upsertChecksumsRow: preserves other-algorithm rows for same file", {
 
 test_that("C5: deleted local file + stale sidecar + file in destinationPathShared → relink, no download", {
   testInit("digest")
+  ## Force a wide print width so testthat's snapshot of the `Code` block
+  ## (the deparsed expression) doesn't reflow between an 80-col local TTY
+  ## and a 200-col CI runner — `expect_snapshot()`'s `transform` argument
+  ## only touches captured OUTPUT, not the rendered code line.
+  withr::local_options(width = 200)
   shared <- normPath(file.path(tmpdir, "shared"))
   dest   <- normPath(file.path(tmpdir, "dest"))
   src    <- normPath(file.path(tmpdir, "src"))
@@ -1190,6 +1193,7 @@ test_that("C5: deleted local file + stale sidecar + file in destinationPathShare
 
 test_that("C6: deleted local file + stale sidecar + nothing in shared → download proceeds", {
   testInit("digest")
+  withr::local_options(width = 200)  # see C5 for rationale
   dest <- normPath(file.path(tmpdir, "dest"))
   src  <- normPath(file.path(tmpdir, "src"))
   for (d in c(dest, src)) dir.create(d, recursive = TRUE)
