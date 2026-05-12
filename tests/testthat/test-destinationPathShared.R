@@ -1086,3 +1086,136 @@ test_that("upsertChecksumsRow: preserves other-algorithm rows for same file", {
   algos <- sort(rows$algorithm[rows$file == basename(fx$path)])
   expect_identical(algos, c("md5", "xxhash64"))
 })
+
+
+# ===========================================================================
+# §5.6  Stale sidecar with locally-deleted file
+#
+# User scenario: a previous prepInputs() wrote a .hash sidecar in
+# destinationPath and the file is later removed by hand. The sidecar is left
+# behind. Two sub-cases matter:
+#
+#   C5: a fresh copy of the file is still in destinationPathShared. The next
+#       prepInputs() should re-materialise the file (hardlink) from shared
+#       *without* a network round-trip — the sidecar's recorded hash is the
+#       authority that lets us trust the shared copy.
+#
+#   C6: the file is gone everywhere (no shared copy). The next prepInputs()
+#       must fall through to a real download. The stale sidecar's recorded
+#       hash is now meaningless — we cannot trust it because there is no
+#       on-disk file to verify it against.
+#
+# Snapshots (rather than regex pattern matching) lock down the user-visible
+# messages so a refactor of the message text can't silently break the
+# documented contract — `testthat::snapshot_accept()` makes the intent
+# explicit when wording is updated on purpose.
+# ===========================================================================
+
+# Scrub volatile tmpdir paths so the snapshot is stable across runs, and
+# normalize continuation-line wrapping so the snapshot doesn't break when
+# messagePreProcess reflows the same message into a different number of
+# lines (terminal width, indent style, etc.).
+.snapTransform <- function(lines) {
+  ## testthat may pass either pre-split lines or whole messages with embedded
+  ## "\n". Pre-split unconditionally so the rest of this transform sees one
+  ## logical line per element.
+  lines <- unlist(strsplit(as.character(lines), "\n", fixed = TRUE), use.names = FALSE)
+  lines <- gsub("/tmp/Rtmp[A-Za-z0-9]+", "<tmpdir>", lines)
+  lines <- gsub("file://[^ ]+", "<file-url>", lines)
+  lines <- gsub("file[A-Za-z0-9]{6,}", "<tmp>", lines)
+  ## Rejoin a line into its predecessor when it's a soft-wrap continuation —
+  ## i.e. starts with leading whitespace and the previous line wasn't blank.
+  ## A single space replaces the line-break + indent so the canonical form
+  ## is one logical message per line, regardless of how messagePreProcess
+  ## decided to wrap on this run.
+  if (length(lines) > 1L) {
+    out <- character(0)
+    for (ln in lines) {
+      if (length(out) && nzchar(out[length(out)]) &&
+          grepl("^\\s+\\S", ln)) {
+        out[length(out)] <- paste0(out[length(out)], " ", sub("^\\s+", "", ln))
+      } else {
+        out <- c(out, ln)
+      }
+    }
+    lines <- out
+  }
+  ## Collapse runs of whitespace within a line (the join above can leave
+  ## double spaces; reflow can leave any number of spaces between tokens).
+  lines <- gsub("[[:space:]]+", " ", lines)
+  lines <- sub("[[:space:]]+$", "", lines)
+  lines
+}
+
+test_that("C5: deleted local file + stale sidecar + file in destinationPathShared → relink, no download", {
+  testInit("digest")
+  shared <- normPath(file.path(tmpdir, "shared"))
+  dest   <- normPath(file.path(tmpdir, "dest"))
+  src    <- normPath(file.path(tmpdir, "src"))
+  for (d in c(shared, dest, src)) dir.create(d, recursive = TRUE)
+
+  fixSrc    <- makeFixture(src,    "foo.csv")
+  fixShared <- makeFixture(shared, "foo.csv")             # same content/hash
+  writeChecksumsFor(shared, fixShared)
+
+  # Plant a sidecar in `dest` that records the (correct) hash, but leave
+  # `dest/foo.csv` itself absent — the user manually deleted it.
+  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
+  sc <- mk(fixSrc$url, dest, "foo.csv", fixShared$hash,
+           algorithm = "xxhash64", write = TRUE)
+  expect_true(file.exists(sc))
+  expect_false(file.exists(file.path(dest, "foo.csv")))
+
+  withr::local_options(list(reproducible.inputPaths = shared))
+
+  testthat::local_edition(3)
+  expect_snapshot(
+    {
+      invisible(preProcess(url = fixSrc$url, targetFile = "foo.csv",
+                           destinationPath = dest, fun = NA, verbose = 1))
+    },
+    transform = .snapTransform
+  )
+
+  # The destination should now have the file back, and (POSIX) it should
+  # share an inode with the shared copy — i.e. it was hardlinked, not copied
+  # via a fresh download.
+  expect_true(file.exists(file.path(dest, "foo.csv")))
+  skip_on_os("windows")
+  expect_true(isTRUE(sameInode(file.path(dest, "foo.csv"), fixShared$path)),
+              info = "C5: should hardlink from destinationPathShared, not re-download")
+})
+
+test_that("C6: deleted local file + stale sidecar + nothing in shared → download proceeds", {
+  testInit("digest")
+  dest <- normPath(file.path(tmpdir, "dest"))
+  src  <- normPath(file.path(tmpdir, "src"))
+  for (d in c(dest, src)) dir.create(d, recursive = TRUE)
+
+  fixSrc <- makeFixture(src, "foo.csv")
+
+  # Stale sidecar with a hash that has NOTHING to do with current content —
+  # simulates the file having drifted (or just an old run) and being deleted.
+  mk <- getFromNamespace("makeRemoteHashFile", "reproducible")
+  sc <- mk(fixSrc$url, dest, "foo.csv", strrep("d", 16L),
+           algorithm = "xxhash64", write = TRUE)
+  expect_true(file.exists(sc))
+  expect_false(file.exists(file.path(dest, "foo.csv")))
+
+  withr::local_options(list(
+    reproducible.inputPaths            = NULL,
+    reproducible.destinationPathShared = NULL
+  ))
+
+  testthat::local_edition(3)
+  expect_snapshot(
+    {
+      invisible(preProcess(url = fixSrc$url, targetFile = "foo.csv",
+                           destinationPath = dest, fun = NA, verbose = 1))
+    },
+    transform = .snapTransform
+  )
+
+  # The file should now exist locally (downloaded from `file://src/foo.csv`).
+  expect_true(file.exists(file.path(dest, "foo.csv")))
+})

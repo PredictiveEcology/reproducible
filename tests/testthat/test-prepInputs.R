@@ -670,6 +670,11 @@ test_that("preProcess doesn't work", {
     )
 
     unlink(dir(tmpdir, full.names = TRUE))
+    ## Without a `targetFile` and with an incomplete `alsoExtract` (no .shp),
+    ## `fun` cannot be guessed. preProcess() (the download/extract layer) is
+    ## fine with a NULL fun — but prepInputs() is the loader and must refuse
+    ## a call it cannot fulfil. (Commit 67edb6e8 dropped the stop() from the
+    ## preProcess layer; prepInputs reinstates it just before process().)
     expect_error({
       mess <- capture_messages({
         warns <- capture_warnings({
@@ -1220,6 +1225,21 @@ test_that("prepInputs(dlFun = ...) ignores pre-existing files in destinationPath
 
 test_that("prepInputs when fun = NA", {
   skip_on_cran()
+
+  ## Probe the GADM host with a short timeout. The test below calls
+  ## geodata::gadm(), which talks to geodata.ucdavis.edu — when that endpoint
+  ## is slow/unreachable (SSL hiccups, DNS, packet drops) geodata's internal
+  ## retry loop can stall the test for minutes. Bail out cleanly instead.
+  skip_if_not(.requireNamespace("httr2"), "httr2 not available for probe")
+  gadmReachable <- tryCatch({
+    httr2::request("https://geodata.ucdavis.edu/") |>
+      httr2::req_method("HEAD") |>
+      httr2::req_timeout(5) |>
+      httr2::req_error(is_error = function(resp) FALSE) |>
+      httr2::req_perform()
+    TRUE
+  }, error = function(e) FALSE)
+  skip_if_not(isTRUE(gadmReachable), "geodata.ucdavis.edu unreachable")
 
   testInit(
     c("sf", "terra"),

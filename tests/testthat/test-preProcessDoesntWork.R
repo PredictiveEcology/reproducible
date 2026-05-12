@@ -51,6 +51,13 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(grepl("appendChecksumsTable", errMsg))
   withr::deferred_run()
 
+  # This sub-block exercises the interactive-prompt branch of dlErrorHandling
+  # (`isInteractive() && getOption("reproducible.interactiveOnDownloadFail")`).
+  # Line 27 left the option at FALSE for the preceding sub-block — re-enable
+  # it here so the AND-gate actually fires the prompt path, otherwise the
+  # mocked `.readline` is never reached and the error message lacks the
+  # "Download failed" tail this assertion checks for.
+  withr::local_options(reproducible.interactiveOnDownloadFail = TRUE)
   testthat::with_mocked_bindings(
     isInteractive = function() {
       TRUE
