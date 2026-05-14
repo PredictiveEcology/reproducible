@@ -2102,12 +2102,9 @@ test_that("cacheChaining", {
         expect_equivalent(length(grep("Skipping digest", mess$`3`)), 4)
       }
 
-      # Basically, 2 of the 3 MUST be faster to digest
-      if (dfIndex == 1)
-        if (interactive()) # but this will be unreliable because of the sample(1e6) above is fast to digest;
-          #  to confirm this, set the N to 1e7
-          # expect_true(sum(sc$`1`$tagValue < sc$`2`$tagValue) >= 2)
-      # print(sc)
+      # Basically, 2 of the 3 MUST be faster to digest — unreliable because
+      # sample(1e6) is fast to digest; to confirm, set N to 1e7 and uncomment:
+      #   expect_true(sum(sc$`1`$tagValue < sc$`2`$tagValue) >= 2)
 
       # cacheChaining shouldn't change anything; they should be the same
       expect_equivalent(arb$`TRUE`, arb$`FALSE`)

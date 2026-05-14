@@ -320,7 +320,6 @@ test_that("interactive prepInputs", {
 test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(isInteractive())
 
   testInit(
     "terra",

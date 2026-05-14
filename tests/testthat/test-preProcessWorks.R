@@ -440,25 +440,25 @@ test_that("just google id not url", {
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
+  skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("future")
   skip_if_not_installed("googledrive")
 
-  if (interactive()) {
-    testInit(
-      c("terra", "future"),
-      needGoogleDriveAuth = TRUE,
-      needInternet = TRUE,
-      opts = list("reproducible.futurePlan" = "multisession")
-    )
-    noisyOutput <- capture.output({
-      ccc <- testthat::capture_output({
-        smallRT <- preProcess(
-          url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN"
-        )
-      })
+  testInit(
+    c("terra", "future"),
+    needGoogleDriveAuth = TRUE,
+    needInternet = TRUE,
+    opts = list("reproducible.futurePlan" = "multisession")
+  )
+  noisyOutput <- capture.output({
+    ccc <- testthat::capture_output({
+      smallRT <- skip_on_transient_http(preProcess(
+        url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN"
+      ))
     })
-    expect_true(is(smallRT, "list"))
-  }
+  })
+  expect_true(is(smallRT, "list"))
 })
 
 test_that("lightweight tests for preProcess code coverage", {

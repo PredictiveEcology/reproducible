@@ -254,19 +254,17 @@ test_that("test debugCache arg", {
   ))
   expect_error(writeFuture(1, "sdf", cachePath = "sdfd", userTags = ""))
 
-  if (interactive()) {
-    try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
-    warn <- capture_warnings(
-      bMess <- capture_output({
-        aMess <- capture_messages({
-          aa <- Cache(fnCacheHelper, 1, verbose = 4, cachePath = tmpCache, cacheRepo2 = tmpCache)
-        })
+  try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
+  warn <- capture_warnings(
+    bMess <- capture_output({
+      aMess <- capture_messages({
+        aa <- Cache(fnCacheHelper, 1, verbose = 4, cachePath = tmpCache, cacheRepo2 = tmpCache)
       })
-    )
-    # warn has 'package:reproducible' may not be available when loading, not relevant
-    expect_true(any(grepl("fnCacheHelper", aMess))) # TODO: fix this;
-    expect_true(any(grepl("The hashing details", aMess)))
-  }
+    })
+  )
+  # warn has 'package:reproducible' may not be available when loading, not relevant
+  expect_true(any(grepl("fnCacheHelper", aMess)))
+  expect_true(any(grepl("The hashing details", aMess)))
 })
 
 test_that("test warnings from cached functions", {
