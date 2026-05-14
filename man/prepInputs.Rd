@@ -53,15 +53,22 @@ is expecting an archive directly.}
 \code{"similar"} will extract all files with the same filename without
 file extension as \code{targetFile}. \code{NA} will extract nothing other
 than \code{targetFile}. A character string of specific file names will cause
-only those to be extracted. See table in \code{\link[=preProcess]{preProcess()}}.}
+only those to be extracted. Each element may also be a regular expression:
+if an element does not match any archive member literally (by relative path
+or basename), it is passed to \code{grep()} against the archive's file list and
+all matching members are extracted. For example,
+\code{alsoExtract = "CMD_sm|CMD_sp"} extracts every file whose name contains
+\code{CMD_sm} or \code{CMD_sp}. See table in \code{\link[=preProcess]{preProcess()}}.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-\code{options("reproducible.inputPaths")} to one or more local file paths to
+\code{options("reproducible.destinationPathShared")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-\code{NULL} meaning do not search locally.}
+\code{NULL} meaning do not search locally. The previous name
+\code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
+alias.}
 
 \item{fun}{Optional. If specified, this will attempt to load whatever
 file was downloaded during \code{preProcess} via \code{dlFun}. This can be either a
@@ -77,13 +84,11 @@ as the file path to the file to load. See details and examples below.}
 \code{\link[=Cache]{Cache()}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
 
-\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
-\code{CHECKSUMS.txt} file and
-\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-\code{CHECKSUMS.txt} file. Other options, see details.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
+Other options, see details.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
@@ -240,8 +245,9 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 \examples{
 \donttest{
 if (requireNamespace("terra", quietly = TRUE) &&
-  requireNamespace("sf", quietly = TRUE)) {
+  requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
+  withr::local_dir(withr::local_tempdir())
   # Make a dummy study area map -- user would supply this normally
   coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
     .Dim = c(5L, 2L)
@@ -339,6 +345,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
       unlink(dPath)
     }
   }
+  withr::deferred_run()
 }
 }
 

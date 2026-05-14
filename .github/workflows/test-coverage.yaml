@@ -10,32 +10,80 @@ on:
 
 name: test-coverage
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test-coverage:
-    if: "!contains(github.event.commits[0].message, '[skip-ci]')"
-    runs-on: macOS-latest
+    # Mirrors the recipe used by PredictiveEcology/SpaDES.tools, which is
+    # currently green on test-coverage. The previous macOS-latest run was
+    # failing inside covr's R CMD check sub-process with an opaque
+    # "Failure in <path>/test-all.Rout.fail", in a way that R-CMD-check on
+    # the same image does not reproduce.
+    runs-on: ubuntu-latest
     env:
+      GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       NOT_CRAN: true
+      R_PKG_INSTALL_RETRIES: 3
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
 
-      - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
+      # Stock Noble apt; ubuntugis-unstable PPA dropped — see the rationale
+      # in R-CMD-check.yaml.
+      - name: Install spatial deps (Linux, stock Noble)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -f -y || true
+          sudo apt-get install -y --fix-missing \
+            libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev
 
       - uses: r-lib/actions/setup-r@v2
         with:
+          extra-repositories: 'https://predictiveecology.r-universe.dev/'
           Ncpus: 2
           use-public-rspm: false
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          pak-version: stable
           extra-packages: |
             any::covr
             rspatial/geodata
 
-      - name: Test coverage
-        run: covr::codecov()
+      - id: covr
+        name: Test coverage
+        continue-on-error: true
+        # Wrap covr in tryCatch so the per-session tempdir's
+        # `test-all.Rout.fail` is dumped to the GHA log _before_ R exits and
+        # the tempdir is cleaned up. Without this, a covr failure surfaces
+        # only as an opaque "Failure in <path>/test-all.Rout.fail" with the
+        # actual failing test names and tracebacks lost.
+        run: |
+          res <- tryCatch(
+            covr::codecov(token = Sys.getenv("CODECOV_TOKEN")),
+            error = function(e) e
+          )
+          if (inherits(res, "error")) {
+            files <- list.files(
+              tempdir(), pattern = "test-all\\.Rout\\.fail$",
+              recursive = TRUE, full.names = TRUE
+            )
+            for (f in files) {
+              cat("==========================================\n")
+              cat("=== ", f, " ===\n", sep = "")
+              cat("==========================================\n")
+              cat(readLines(f, warn = FALSE), sep = "\n")
+              cat("\n")
+            }
+            stop(res)
+          }
         shell: Rscript {0}
+
+      - if: steps.covr.outcome == 'failure'
+        name: Re-fail the job
+        run: exit 1

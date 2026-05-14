@@ -16,6 +16,7 @@ CacheGeo(
   overwrite = getOption("reproducible.overwrite"),
   action = c("nothing", "update", "replace", "append"),
   bufferOK = FALSE,
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 }
@@ -37,9 +38,11 @@ that has a geometry column (which can then be converted to \code{sf} with \code{
 and save the file that comes from \code{url} and is also where the function
 will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-\code{options("reproducible.inputPaths")} to one or more local file paths to
+\code{options("reproducible.destinationPathShared")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-\code{NULL} meaning do not search locally.}
+\code{NULL} meaning do not search locally. The previous name
+\code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
+alias.}
 
 \item{useCloud}{A logical.}
 
@@ -48,10 +51,9 @@ url to a folder where the \code{targetFile} will be read from or written to, or
 2) a \code{googledrive} id or 3) an absolute path to a (possibly non-existent yet)
 folder on your Google drive.}
 
-\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing
-\code{CHECKSUMS.txt} file and
-\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire
-\code{CHECKSUMS.txt} file. Other options, see details.}
+\item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
+\code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
+Other options, see details.}
 
 \item{useCache}{Passed to \code{Cache} in various places.
 Defaults to \code{getOption("reproducible.useCache", 2L)} in \code{prepInputs}, and
@@ -63,8 +65,7 @@ its nested \verb{*Input} functions (e.g., \code{cropInputs}, \code{projectInputs
 mean internal caching is more time consuming. We recommend caching the full
 \code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
-\item{overwrite}{Logical. Should downloading and all the other actions occur
-even if they pass the checksums or the files are all there.}
+\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
 
 \item{action}{A character string, with one of c("nothing", "update",
 "replace", "append"). Partial matching is used ("n" is sufficient).
@@ -78,6 +79,12 @@ i.e., "read only". \code{append} will add the spatial elements in domain to
 within the \code{targetFile} spatial object, and if it returns \code{FALSE}, then the function
 will create a larger object, buffered by 2.5\% of the extent of the object. If
 \code{FALSE}, then it will be strict about whether the \code{domain} is within the \code{targetFile}.}
+
+\item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
+1 showing more messaging, 2 being more messaging, etc.
+Default is 1. Above 3 will output much more information about the internals of
+Caching, which may help diagnose Caching challenges. Can set globally with an
+option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{...}{All named objects that are needed for FUN, including the function itself,
 if it is not in a package.}

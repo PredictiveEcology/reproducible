@@ -51,6 +51,13 @@ test_that("preProcess fails if user provides non-existing file", {
   expect_true(grepl("appendChecksumsTable", errMsg))
   withr::deferred_run()
 
+  # This sub-block exercises the interactive-prompt branch of dlErrorHandling
+  # (`isInteractive() && getOption("reproducible.interactiveOnDownloadFail")`).
+  # Line 27 left the option at FALSE for the preceding sub-block — re-enable
+  # it here so the AND-gate actually fires the prompt path, otherwise the
+  # mocked `.readline` is never reached and the error message lacks the
+  # "Download failed" tail this assertion checks for.
+  withr::local_options(reproducible.interactiveOnDownloadFail = TRUE)
   testthat::with_mocked_bindings(
     isInteractive = function() {
       TRUE
@@ -128,9 +135,11 @@ test_that("preProcess fails if user provides a non .zip/.tar as archive", {
     })
   })
   testthat::expect_is(object = pre, class = "list")
+  oo <- capture.output(type = "message",
   testthat::expect_error({
     ras <- reproducible::preProcess(archive = pre$targetFilePath)
   })
+  )
 })
 
 test_that("preProcess fails if user provides non-existing file", {
@@ -147,7 +156,7 @@ test_that("preProcess fails if user provides non-existing file", {
   })
 })
 
-test_that("preProcess fails if user provides a directory as a targetFile", {
+test_that("preProcess does not load when fun cannot be guessed", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   co <- capture.output({
@@ -156,9 +165,15 @@ test_that("preProcess fails if user provides a directory as a targetFile", {
     })
   })
   testthat::expect_is(object = pre, class = "list")
-  testthat::expect_error({
-    ras <- reproducible::preProcess(targetFile = tmpdir)
+  # Passing a directory as targetFile: no recognised extension means fun
+  # cannot be guessed. preProcess does not load the object, so this should
+  # succeed quietly with funChar = NULL rather than erroring.
+  co <- capture.output({
+    co <- capture.output(type = "message", {
+      ras <- reproducible::preProcess(targetFile = tmpdir)
+    })
   })
+  expect_null(ras$funChar)
 })
 
 ## 2022-11-03 this no longer fails on Ubuntu 20.04

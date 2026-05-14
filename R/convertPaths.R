@@ -115,11 +115,14 @@ setMethod(
         fns <- NULL
       }
       fns <- allowMultipleFNs(allowMultiple, fns)
-    } else if (inherits(obj, "SpatRaster")) {
+    } else if (.isSpatRaster(obj)) {
       if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
       }
       fns <- terra::sources(obj)
+      if (any(fileExt(fns) %in% "vrt"))
+        fns <- c(fns, terra::vrt_tiles(obj))
+
       fns <- allowMultipleFNs(allowMultiple, fns)
     } else {
       fns <- NULL

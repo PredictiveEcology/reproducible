@@ -13,7 +13,7 @@ file.}
 \item{fileToRemove}{The filename to remove from the \code{checksumFile}}
 }
 \value{
-NULL. Run for its side effect, namely, and file removed from the CHECKSUMS.txt
+NULL. Run for its side effect, namely, and file removed from the \file{CHECKSUMS.txt}
 file.
 }
 \description{

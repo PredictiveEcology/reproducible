@@ -188,7 +188,9 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
     }))
     if (i %in% 1) {
       dtFile <- outs[[1]]$local_path # grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
-      dt <- loadFile(dtFile, cacheSaveFormat = fileExt(dtFile))
+      dt <- loadFile(dtFile, cacheSaveFormat = fileExt(dtFile),
+                     cacheId = outputHash, cachePath = cachePath, # in case it needs swapCacheFormat
+                     drv = drv, conn = conn, verbose = verbose)
       fromDisk <- extractFromCache(dt, elem = "fromDisk") %in% "TRUE"
       if (all(!fromDisk)) break
       localFilenames <- Filenames(dt)
@@ -385,7 +387,7 @@ isOrHasRaster <- function(obj) {
   } else if (is.list(obj)) {
     lapply(obj, function(x) isOrHasRaster(x))
   } else {
-    is(obj, "Raster") || is(obj, "SpatRaster")
+    is(obj, "Raster") || .isSpatRaster(obj)
   }
   return(rasters)
 }

@@ -18,8 +18,8 @@ SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.ra
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
-Date: 2025-07-14
-Version: 2.1.2.9060
+Date: 2026-05-14
+Version: 3.0.0.9087
 Authors@R: 
     c(person(given = "Eliot J B",
              family = "McIntire",
@@ -54,29 +54,29 @@ Imports:
     cli,
     data.table (>= 1.10.4),
     digest,
-    filelock,
+    filelock (>= 1.0.3),
     fpCompare,
     fs,
     lobstr,
     methods,
     stats,
     tools,
-    utils,
-    withr
+    utils
 Suggests:
     archive,
     covr,
-    curl,
+    curl (>= 7.0.0),
     DBI,
     future,
     geodata,
     glue,
     googledrive,
     httr,
-    httr2,
+    httr2 (>= 1.2.1),
     knitr,
     parallel,
-    qs,
+    parallelly,
+    qs2,
     raster (>= 3.5-15),
     RCurl (>= 1.95-4.8),
     rlang,
@@ -87,7 +87,8 @@ Suggests:
     sf,
     sp (>= 1.4-2),
     terra (>= 1.7-20),
-    testthat
+    testthat,
+    withr
 Encoding: UTF-8
 Language: en-CA
 License: GPL-3
@@ -95,7 +96,7 @@ VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+Config/roxygen2/version: 8.0.0
 Collate: 
     'DBI.R'
     'messages.R'
@@ -110,6 +111,7 @@ Collate:
     'convertPaths.R'
     'copy.R'
     'download.R'
+    'downloadTileAndUpload.R'
     'exportedMethods.R'
     'gis.R'
     'helpers.R'
@@ -123,6 +125,7 @@ Collate:
     'postProcessTo.R'
     'preProcess.R'
     'prepInputs.R'
+    'prepInputsCOG.R'
     'reproducible-deprecated.R'
     'reproducible-package.R'
     'search.R'

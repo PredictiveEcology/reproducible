@@ -135,7 +135,7 @@ setMethod(
                                           verbose = verbose)
         }
       }
-    } else if (inherits(object, "SpatRaster")) {
+    } else if (.isSpatRaster(object)) {
       fns <- Filenames(object, allowMultiple = FALSE)
       nz <- nzchar(fns)
       if (any(nz)) {

@@ -65,9 +65,9 @@ objSize.default <- function(x, quick = FALSE, ...) {
       out2 <- objSize(FNs, quick = FALSE)
     }
   }
-  if (is(x, "SpatRaster") || is(x, "SpatVector")) {
+  if (.isSpat(x)) {
     if (.requireNamespace("terra")) {
-      if (is(x, "SpatVector")) { # too slow for large SpatVectors
+      if (inherits(x, "SpatVector")) { # too slow for large SpatVectors
         x <- list(terra::geom(x), terra::values(x))
       } # approximate
       else {
@@ -112,7 +112,7 @@ objSize.list <- function(x, quick = FALSE, recursive = FALSE, ...) {
 #' @importFrom lobstr obj_size
 objSize.Path <- function(x, quick = FALSE, ...) {
   if (quick) {
-    os <- .objSizeWithTry(x)
+    os <- .objSizeWithTry(x, FALSE)
   } else {
     os <- file.size(x)
   }
@@ -173,16 +173,26 @@ objSizeSession <- function(sumLevel = Inf, enclosingEnvs = TRUE, .prevEnvirs = l
 #' @export
 #' @importFrom lobstr obj_size
 #' @inheritParams objSize
-.objSizeWithTry <- function(x) {
+#' @param useTry Logical. If `TRUE`, the default, then it will use `try`. Can optionally
+#'   avoid this if set to `FALSE`. The `try` takes sufficient extra compute time
+#'   that it is worth avoiding it if possible.
+#' @return The size of an object, using `lobstr::obj_size` or `object.size` if the
+#'   first fails
+.objSizeWithTry <- function(x, useTry = TRUE) {
   for (i in 1:2) {
-    out <- try(obj_size(x), silent = TRUE)
-    if (is(out, "try-error")) {
+    if (isTRUE(useTry)) {
+      out <- try(obj_size(x), silent = TRUE)
+    } else {
+      out <- obj_size(x)
+    }
+
+    if (inherits(out, "try-error")) {
       if (identical(i, 1L)) next
     } else {
       break
     }
     out <- try(length(serialize(x, NULL)), silent = TRUE)
-    if (is(out, "try-error")) {
+    if (inherits(out, "try-error")) {
       out <- object.size(x)
     }
     class(out) <- "lobstr_bytes"

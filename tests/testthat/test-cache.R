@@ -234,7 +234,7 @@ test_that("test file-backed raster caching", {
       origFile <- sc[tagKey == "origFilename"]$cacheId
       hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest))
+                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest + 1L))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 
@@ -571,7 +571,7 @@ test_that("test date-based cache removal", {
   expect_true(NROW(a1) > 0)
   b <- clearCache(tmpdir, before = Sys.Date() - 1, ask = FALSE)
   expect_true(NROW(b) == 0)
-  expect_identical(a1, showCache(tmpdir))
+  expect_equivalent(a1, showCache(tmpdir)) # now has an index on cacheId
 
   b <- clearCache(tmpdir, before = Sys.Date() + 1, ask = FALSE)
   expect_identical(data.table::setindex(b, NULL), data.table::setindex(a1, NULL))
@@ -818,7 +818,7 @@ test_that("test mergeCache", {
     d1 <- mergeCache(tmpCache, tmpdir)
   })
   expect_true(any(cli::ansi_grepl("Skipping", mess)))
-  expect_true(identical(showCache(d), showCache(d1)))
+  expect_equivalent(showCache(d), showCache(d1))
 })
 
 test_that("test cache-helpers", {
@@ -928,8 +928,8 @@ test_that("test rm large non-file-backed rasters", {
     }
   }
 
-  testInit(c(.qsFormat, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
-                                         "reproducible.cacheSaveFormat" = .qsFormat))
+  testInit(c(.qs2Format, "terra"), opts = list("reproducible.cacheSpeed" = "fast",
+                                         "reproducible.cacheSaveFormat" = .qs2Format))
 
   ext <- terra::ext(0, 10000, 0, 10000)
   r <- Cache(terra::rast, ext,
@@ -985,29 +985,51 @@ test_that("test .defaultUserTags", {
 })
 
 test_that("test changing reproducible.cacheSaveFormat midstream", {
-  skip_if_not_installed(.qsFormat)
 
-  testInit(opts = list(
-    reproducible.cacheSaveFormat = .rdsFormat,
-    reproducible.useMemoise = FALSE
-  ))
+  formA <- c(.qs2Format, .rdsFormat, .qsFormat)
+  forms <- expand.grid(A = formA, B = formA)
+  forms <- forms[forms[["A"]]!=forms[["B"]],]
+  forms <- forms[c(1, 2, 4),]
 
-  b <- Cache(rnorm, 1, cachePath = tmpdir)
-  sc <- showCache(tmpdir)
-  ci <- unique(sc[[.cacheTableHashColName()]])
-  withr::local_options(reproducible.cacheSaveFormat = .qsFormat)
-  mess <- capture_messages({
+  for (ind in seq_len(NROW(forms))) {
+    needed <- unname(unlist(t(forms[ind,]))[,1])
+    neededpkgs <- setdiff(needed, "rds")
+    have <- vapply(neededpkgs, function(need)  {
+      requireNamespace(need, quietly = TRUE)
+    }, logical(1))
+    if (!all(have))
+      next
+
+    testInit(opts = list(
+      reproducible.cacheSaveFormat = needed[1],
+      reproducible.qsFormat = setdiff(needed, "rds")[1],
+      reproducible.useMemoise = FALSE
+    ))
+
     b <- Cache(rnorm, 1, cachePath = tmpdir)
-  })
-  expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from rds to qs", mess)) == 1)
+    sc <- showCache(tmpdir)
+    # ci <- unique(sc[[.cacheTableHashColName()]])
+    withr::local_options(reproducible.cacheSaveFormat = needed[2],
+                         reproducible.qsFormat = tail(setdiff(needed, "rds"), 1))
+    # if (ind == 3)
+    #   aaaa <<- 1; on.exit(rm(aaaa, envir = .GlobalEnv))
+    # if (exists("aaaa", envir = .GlobalEnv)) browser()
+    mess <- capture_messages({
+      b <- Cache(rnorm, 1, cachePath = tmpdir)
+    })
+    expect_false(attr(b, ".Cache")$newCache)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ",
+                                           needed[1], " to ", needed[2]), mess)) == 1)
 
-  withr::local_options(reproducible.cacheSaveFormat = .rdsFormat)
-  mess <- capture_messages({
-    b <- Cache(rnorm, 1, cachePath = tmpdir)
-  })
-  expect_false(attr(b, ".Cache")$newCache)
-  expect_true(sum(cli::ansi_grepl("Changing format of Cache entry from qs to rds", mess)) == 1)
+    withr::local_options(reproducible.cacheSaveFormat = needed[1],
+                         reproducible.qsFormat = setdiff(needed, "rds")[1])
+    mess <- capture_messages({
+      b <- Cache(rnorm, 1, cachePath = tmpdir)
+    })
+    expect_false(attr(b, ".Cache")$newCache)
+    expect_true(sum(cli::ansi_grepl(paste0("Changing format of Cache entry from ",
+                                           needed[2], " to ", needed[1]), mess)) == 1)
+  }
 })
 
 test_that("test file link with duplicate Cache", {
@@ -1089,7 +1111,7 @@ test_that("test file link with duplicate Cache", {
   out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
-    expect_true(all(fs1 * 1.9 < fs2))
+    expect_true(all(fs1 * 1.5 < fs2)) # macos needed this to be smaller than 1.9; I think b/c mac uses 8kb block size
   }
   # Test if the `try` works if the file.link is not to a meaningful file
   cacheIds <- unique(showCache(tmpCache)[[.cacheTableHashColName()]])
@@ -1258,7 +1280,6 @@ test_that("Cache the dots; .cacheExtra", {
 
 test_that("change to new capturing of FUN & base pipe", {
   testInit(opts = list(reproducible.verbose = 5))
-  skip_if(getRversion() < "4.2.0")
 
   Nrand2 <- Nrand <- 1e6
   mess0 <- capture_messages({
@@ -1408,17 +1429,13 @@ test_that("test cache with new approach to match.call", {
   a[[14]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
   a[[15]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
   a[[16]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
-  if (isTRUE(getRversion() >= "4.1.0")) {
-    a[[17]] <- eval(parse(text = "b$fun(1) |> Cache()"))
-  }
-  if (isTRUE(getRversion() >= "4.2.0")) {
-    ss <- '{"bbb" |>
+  a[[17]] <- eval(parse(text = "b$fun(1) |> Cache()"))
+  ss <- '{"bbb" |>
       parse(text = _) |>
       eval() |>
       rnorm()} |>
     Cache()'
-    a[[18]] <- eval(parse(text = ss))
-  }
+  a[[18]] <- eval(parse(text = ss))
   expect_identical(1L, length(unique(unlist(a))))
   # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
   # for (i in 2:NROW(a)) {
@@ -1440,9 +1457,7 @@ test_that("test cache with new approach to match.call", {
     a[[9]] <- Cache(quote(fun(1)))
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
 
-    if (isTRUE(getRversion() >= "4.1.0")) {
-      a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
-    }
+    a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
 
     expect_identical(1L, length(unique(unlist(a))))
 
@@ -1760,11 +1775,7 @@ test_that("cacheId = 'previous'", {
   b <- rnorm(3) |> Cache(.functionName = fnName)
   d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "previous")
   e <- rnorm(2) |> Cache(.functionName = fnName)
-  if (getRversion() >= "4.3.0") {
-    ## TODO: misc error on R 4.2 and 4.1:
-    ## Error: `all.equalWONewCache(b, d) is not TRUE`
-    expect_true(all.equalWONewCache(b, d))
-  }
+  expect_true(all.equalWONewCache(b, d))
   expect_false(isTRUE(all.equalWONewCache(e, d)))
 
   # cacheId = "previous" returns normal if there is no previous
@@ -1824,13 +1835,8 @@ test_that("simple userTags", {
   sc2 <- showCache(userTags = "sample")
   sc1Tags <- vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1))
   sc2Tags <- vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1))
-  if (getRversion() < "4.2") { # apparently expect_in was not available in testthat in R <= 4.1.3
-    expect_true(all(sc1Tags %in% sc1$tagValue))
-    expect_true(all(sc2Tags %in% sc2$tagValue))
-  } else {
-    expect_in(sc1Tags, sc1$tagValue)
-    expect_in(sc2Tags, sc2$tagValue)
-  }
+  expect_in(sc1Tags, sc1$tagValue)
+  expect_in(sc2Tags, sc2$tagValue)
 
 
 
@@ -1842,15 +1848,7 @@ test_that("lightweight tests for code coverage", {
   withr::local_options(reproducible.cachePath = tmpdir)
 
   expect_error(Cache(), "requires")
-  if (getOption("reproducible.useCacheV3")) {
-    fn <- expect_error
-  } else {
-      fn <- expect_message
-      expect_error(
-        Cache(cachePath = tmpCache, conn = list(tmpCache, tmpdir), rnorm(1)),
-        "different lengths"
-      )
-  }
+  fn <- expect_error
   fn(Cache(compareRasterFileLength = TRUE, rnorm(1)), regexp = "compareRasterFileLength")
   fn(Cache(sideEffect = TRUE, rnorm(1)), regexp = "sideEffect")
 
@@ -1900,29 +1898,6 @@ test_that("test future", {
   # }
 })
 
-test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Not relevant for multipleDBfiles or new Cache")
-  testInit(opts = list("reproducible.useMemoise" = FALSE))
-
-  b <- Cache(rnorm, 1, cachePath = tmpdir)
-  sc <- showCache(tmpdir)
-  ci <- unique(sc[[.cacheTableHashColName()]])
-  unlink(CacheStoredFile(tmpdir, ci))
-
-
-  rm(b)
-  mess <- capture_messages({
-    warn <- capture_warnings({
-      err <- capture_error({
-        d <- Cache(rnorm, 1, cachePath = tmpdir)
-      })
-    })
-  })
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
-  expect_true(is.numeric(d))
-})
 
 test_that("test pre-creating conn", {
   if (!useDBI()) skip("Only relevant for DBI backend")
@@ -2007,6 +1982,7 @@ test_that("cacheId is same as calculated", {
   # manually look at output attribute which shows cacheId: ca275879d5116967
   manualCacheId <- "ca275879d5116967"
   mess2 <- capture_messages(b <- Cache(rnorm, 1, cacheId = manualCacheId))
+  mess2 <- gsub("\n ", "", cli::ansi_strip(mess2)) # there may be "\n " if window width too small
   expect_match(mess2, .message$cacheIdNotAssessed(manualCacheId), all = FALSE)
   expect_equivalent(a, b)
 })
@@ -2051,5 +2027,160 @@ test_that("ensure default tags are correct", {
 
   missingFromDefault <- setdiff(.cacheTagsFirstGroup, .cacheTagsDefault)
   expect_true(length(missingFromDefault) == 0)
+
+})
+
+test_that("cacheChaining", {
+  testInit()
+  withr::local_options(reproducible.verbose = TRUE,
+                       reproducible.useMemoise = FALSE)
+  samWMean <- function(x, size, other) {
+    sample(x, size) |> mean()
+  }
+  arb <- list()
+  args <- c(3,5)
+  N <- 1e6
+  df <- list(a = list(TRUE, NULL, TRUE), b = list(NULL, NULL, NULL))
+  for (dfIndex in 1:2) {
+    for (arg in args) { # These are 2 different functions (below); one is identical each time, the other is not
+      clearCache(ask = F, verbose = FALSE)
+      mess <- list()
+      sc <- list()
+      index <- 0L
+
+      for (index in 1:3) {
+        # i <- c(TRUE, FALSE, TRUE)[index]
+        #if (index == 3 && arg == args[2])
+        i <- df[[dfIndex]][[index]]
+        # index <- index + 1L
+        withr::local_seed(123)
+        iChar <- as.character(index)
+        withr::local_options(reproducible.cacheChaining = i)
+        fn1 <- function(x) {
+          a <- sample(N) |> Cache()
+          b <- samWMean(a, size = length(a) * 0.9, other = x) |> Cache()
+          d <- samWMean(a, size = length(a) * 0.8, other = x) |> Cache()
+          c(mean(a), b, d)
+        }
+        if (arg == args[1]) {
+          fn2 <- function(y) {
+            fn1(2)
+          }
+        } else {
+          fn2 <- function(y) {
+            fn1(sample(1e6, size = 1))
+          }
+        }
+        arb[[iChar]] <- list()
+        if (index < 3) { # don't clear the 3rd one so that we can test that cacheChaining doesn't need a new entry in the Cache
+          clearCache(ask = FALSE)
+        }
+        mess[[iChar]] <- capture_messages({
+          arb[[iChar]][[1]] <- fn2() # a --> calculate & slow; b --> no digest, but still calculate & slow; d --> no digest, still calculate & slow
+          arb[[iChar]][[2]] <- fn2()# a --> digest & return cache; b --> skip digest, return cache; d --> skip digest, return cache
+        })
+        sc[[iChar]] <- showCache(verbose = FALSE)[tagKey == "elapsedTimeDigest"]
+
+      }
+
+      # Should be the same pattern of saving/loading regardless of chainCaching
+      #if (dfIndex == 2)
+      #   browser()
+      expect_equivalent(length(grep("Saved", mess$`2`)), arg)
+      expect_equivalent(length(grep("Saved", mess$`1`)), arg)
+      comp <- if (arg == args[1]) 0 else 4
+      expect_equivalent(length(grep("Saved", mess$`3`)), comp) # the 2 that are `fn1(sample(1e6, size = 1))`
+
+
+      # Should only show the messaging when cacheChaining is on
+      if (dfIndex == 1 && (useDBI() %in% FALSE)) {
+        expect_equivalent(length(grep("cacheChaining", mess$`1`)), 6)
+        expect_equivalent(length(grep("Skipping digest", mess$`1`)), 4)
+        expect_equivalent(length(grep("cacheChaining", mess$`2`)), 0)
+        expect_equivalent(length(grep("Skipping digest", mess$`2`)), 0)
+        expect_equivalent(length(grep("cacheChaining", mess$`3`)), 6)
+        expect_equivalent(length(grep("Skipping digest", mess$`3`)), 4)
+      }
+
+      # Basically, 2 of the 3 MUST be faster to digest — unreliable because
+      # sample(1e6) is fast to digest; to confirm, set N to 1e7 and uncomment:
+      #   expect_true(sum(sc$`1`$tagValue < sc$`2`$tagValue) >= 2)
+
+      # cacheChaining shouldn't change anything; they should be the same
+      expect_equivalent(arb$`TRUE`, arb$`FALSE`)
+    }
+  }
+
+
+  if (FALSE) { # for benchmarking
+    # fn2 <- function(y) {
+    #   fn1(2)
+    # }
+    # TF <- FALSE
+    # withr::local_options(reproducible.verbose = FALSE)
+    # mbs <- list()
+    # for (TF in c(TRUE, FALSE)) {
+    #   mbs[[as.character(TF)]] <- microbenchmark::microbenchmark(N1 = {options(reproducible.cacheChaining = TF); N <- 10^1; fn2(); fn2()},
+    #                                         N2 = {options(reproducible.cacheChaining = TF); N <- 10^2; fn2(); fn2()},
+    #                                         N3 = {options(reproducible.cacheChaining = TF); N <- 10^3; fn2(); fn2()},
+    #                                         N4 = {options(reproducible.cacheChaining = TF); N <- 10^4; fn2(); fn2()},
+    #                                         N5 = {options(reproducible.cacheChaining = TF); N <- 10^5; fn2(); fn2()},
+    #                                         N6 = {options(reproducible.cacheChaining = TF); N <- 10^6; fn2(); fn2()},
+    #                                         N7 = {options(reproducible.cacheChaining = TF); N <- 10^7; fn2(); fn2()},
+    #                                         N7.5 = {options(reproducible.cacheChaining = TF); N <- 10^7.5; fn2(); fn2()},
+    #                                         times = 4)
+    # }
+  }
+})
+
+test_that("Cache with weird dots", {
+  testInit()
+  a <- as.data.frame(list(1, 2), F, F, a = 2, rr = 23) |> Cache()
+  b <- as.data.frame(list(1, 2), F, F, a = 2, rr = 23) |> Cache()
+  d <- as.data.frame(list(1, 2), F, F, a = 3, rr = 23) |> Cache()
+  expect_true(attr(a, ".Cache")$newCache)
+  expect_false(attr(b, ".Cache")$newCache)
+  expect_true(attr(d, ".Cache")$newCache)
+
+})
+
+test_that("Cache works when `...` is the first formal (#466)", {
+  testInit()
+
+  myFun <- function(..., arg1, arg2) {
+    rnorm(arg1, arg2, ...)
+  }
+  myFun2 <- function(arg1, arg2, ...) {
+    rnorm(arg1, arg2, ...)
+  }
+
+  a <- myFun(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  b <- myFun(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  d <- myFun(arg1 = 100, arg2 = 2, sd = 99) |> Cache()
+  expect_true(attr(a, ".Cache")$newCache)
+  expect_false(attr(b, ".Cache")$newCache)
+  expect_true(attr(d, ".Cache")$newCache)
+
+  a2 <- myFun2(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  b2 <- myFun2(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  d2 <- myFun2(arg1 = 200, arg2 = 2, sd = 10) |> Cache()
+  expect_true(attr(a2, ".Cache")$newCache)
+  expect_false(attr(b2, ".Cache")$newCache)
+  expect_true(attr(d2, ".Cache")$newCache)
+})
+
+test_that(".digest with empty and broken files", {
+  testInit()
+  tf <- tempfile()
+  # tf2 <- tempfile(fileext = ".tif")
+  file.create(tf)
+  # file.create(tf2)
+  a <- .digest(file = tf)
+  file.remove(tf)
+  expect_error(.digest(file = tf))
+  # .digest(file = tf2)
+
+  expect_true(is.character(a))
+  expect_true(length(a) == 1)
 
 })

@@ -1,6 +1,9 @@
-if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly = TRUE)) {
+if (requireNamespace("terra", quietly = TRUE) &&
+    requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
-  od <- setwd(tempdir2())
+  withr::local_dir(withr::local_tempdir())
+  withr::local_options(reproducible.inputPaths = NULL)
+  # od <- setwd(tempdir2())
   # download a (spatial) file from remote url (which often is an archive) load into R
   # need 3 files for this example; 1 from remote, 2 local
   dPath <- file.path(tempdir2())
@@ -12,7 +15,6 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   # 1 step for each layer
   # 1st step -- get study area
   studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
-
   # 2nd step: make the input data layer like the studyArea map
   # Test only relevant if connected to internet -- so using try just in case
   elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
@@ -29,7 +31,15 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
     Checksums(dPath, write = TRUE, files = tf)
     elevOrig <- terra::rast(tf)
     studyAreaCrs <- terra::crs(studyArea)
-    elevForStudy2 <- terra::project(elevOrig, studyAreaCrs, res = 250) |>
+    # Build an explicit target raster (same CRS as studyArea, res = 250) and
+    # project to it. Avoids the recursive `terra::project(x, char_crs, res = N)`
+    # shorthand that recent terra (~1.9) regressed with
+    # `[write] unknown option(s): xscale,yscale`.
+    elevTarget <- terra::project(terra::rast(elevOrig), studyAreaCrs)
+    elevTarget <- terra::rast(terra::ext(elevTarget),
+                              crs = terra::crs(elevTarget),
+                              resolution = 250)
+    elevForStudy2 <- terra::project(elevOrig, elevTarget) |>
       terra::mask(studyArea2) |>
       terra::crop(studyArea2)
 
@@ -37,16 +47,19 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
   }
 
   # sf class
-  studyAreaSmall <- prepInputs(localFileLuxSm)
-  studyAreas <- list()
-  studyAreas[["orig"]] <- prepInputs(localFileLux)
-  studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
-  studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
-  studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+  if (requireNamespace("sf", quietly = TRUE)) {
+    studyAreaSmall <- prepInputs(localFileLuxSm, fun = "sf::st_read")
+    studyAreas <- list()
+    studyAreas[["orig"]] <- prepInputs(localFileLux)
+    studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
+    studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
+    studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
+  }
 
   # SpatVector-- note: doesn't matter what class the "to" object is, only the "from"
   studyAreas <- list()
-  studyAreas[["orig"]] <- prepInputs(localFileLux, fun = "terra::vect")
+  studyAreaSmall <- prepInputs(localFileLuxSm)
+  studyAreas[["orig"]] <- prepInputs(localFileLux)
   studyAreas[["reprojected"]] <- projectTo(studyAreas[["orig"]], studyAreaSmall)
   studyAreas[["cropped"]] <- suppressWarnings(cropTo(studyAreas[["orig"]], studyAreaSmall))
   studyAreas[["masked"]] <- suppressWarnings(maskTo(studyAreas[["orig"]], studyAreaSmall))
@@ -55,5 +68,6 @@ if (requireNamespace("terra", quietly = TRUE) && requireNamespace("sf", quietly 
     out <- lapply(studyAreas, function(x) terra::plot(x))
   }
 
-  setwd(od)
+  withr::deferred_run()
+  # setwd(od)
 }

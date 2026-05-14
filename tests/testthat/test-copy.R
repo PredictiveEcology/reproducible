@@ -22,7 +22,7 @@ test_that("test Copy", {
 
   # same content
   expect_true(all(unlist(lapply(seq_along(li), function(i) {
-    if (is(li[[i]], "SpatRaster")) {
+    if (.isSpatRaster(li[[i]])) {
       all.equal(values2(li[[i]]), values2(li2[[i]]))
     } else {
       all.equal(li[[i]], li2[[i]])
@@ -47,7 +47,7 @@ test_that("test Copy", {
   li2 <- Copy(li, tmpdir)
 
   expect_true(all(unlist(lapply(names(li), function(i) {
-    if (is(li[[i]], "SpatRaster")) {
+    if (.isSpatRaster(li[[i]])) {
       all.equal(li[[i]][], li2[[i]][])
     } else {
       all.equal(li[[i]], li2[[i]])
@@ -75,7 +75,7 @@ test_that("test Copy", {
   liEnv2 <- Copy(liEnv, tmpdir)
 
   expect_true(all(unlist(lapply(names(liEnv[["env"]]), function(i) {
-    if (is(li[[i]], "SpatRaster")) {
+    if (.isSpatRaster(li[[i]])) {
       all.equal(liEnv[["env"]][[i]][], liEnv2[["env"]][[i]][])
     } else {
       all.equal(liEnv[["env"]][[i]], liEnv2[["env"]][[i]])

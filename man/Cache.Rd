@@ -14,6 +14,7 @@ Cache(
   .objects = NULL,
   .cacheExtra = NULL,
   .functionName = NULL,
+  .cacheChaining = getOption("reproducible.cacheChaining", NULL),
   outputObjects = NULL,
   algo = "xxhash64",
   cachePath = NULL,
@@ -42,6 +43,7 @@ cache2(
   .objects = NULL,
   .cacheExtra = NULL,
   .functionName = NULL,
+  .cacheChaining = getOption("reproducible.cacheChaining", NULL),
   outputObjects = NULL,
   algo = "xxhash64",
   cachePath = NULL,
@@ -118,6 +120,23 @@ more control and understanding for debugging.}
 than the actual function name (e.g., "rnorm") which will be used for messaging. This
 can be useful when the actual function is not helpful for a user, such as \code{do.call}.}
 
+\item{.cacheChaining}{A logical or a the name of a function. If \code{TRUE}, then
+the current \code{Cache} call will evaluate the function "outside" the \code{Cache} call
+(via \code{sys.function(-1)}) and
+attach the \code{digest} of that outer function to the entry for this \code{Cache} call. This
+will then be used by any subsequent \code{Cache} call within the same function.
+If the outer function is unchanged, and there is one or more objects that had
+been returned by a previous \code{Cache} call,
+then those objects will not be digested; rather their \code{cacheId} tag will be used
+in place of a new \code{digest}. This \emph{should} cause no change in Caching outcomes,
+and it should be faster in cases where there are several \code{Cache} calls within
+the same function. If \code{FALSE} (current default), then this feature is
+not used. If set to \code{NULL} (i.e., unset, the current default), then it will
+not use cache chaining, but it will attach more information to the Cache entries
+for each \code{cacheId}, as well as new entries for \code{"surroundingFunction"} digest,
+so that if a user switches to \code{.cacheChaining = TRUE}, then it will be able
+to begin using cache chaining without needing to rerun the calls again. Can be set by an \code{option}.}
+
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
@@ -137,7 +156,13 @@ Default is \code{getOption("reproducible.length")}, which is set to \code{Inf}.}
 will be added to the Cache so that this entry in the Cache can be found using
 \code{userTags} e.g., via \code{\link[=showCache]{showCache()}}.}
 
-\item{omitArgs}{Optional character string of arguments in the FUN to omit from the digest.}
+\item{omitArgs}{Optional. A character vector of argument names in \code{FUN} to
+omit from the cache digest, or \code{TRUE} to omit \emph{every} captured argument
+(the digest is then based on \code{FUN} itself -- including its body, so a
+meaningful edit to the function source still busts the cache -- and on
+\code{.cacheExtra}). Useful when the developer wants the cache to be
+insensitive to the function's inputs and pin freshness via \code{.cacheExtra}
+instead.}
 
 \item{classOptions}{Optional list. This will pass into \code{.robustDigest} for
 specific classes. Should be options that the \code{.robustDigest} knows what
@@ -174,12 +199,13 @@ where \code{Cache} is not correctly detecting unchanged inputs. This will guaran
 the object will be identical each time; this may be useful in operational code.}
 
 \item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
-\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
-narrower range of conditions that work; \code{rds} is safer, but slower.}
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
 
-\item{useCloud}{Logical. See Details.}
+\item{useCloud}{Logical (\code{TRUE} / \code{FALSE} / \code{NULL}) or one of \code{"pull"} /
+\code{"push"}. See Details.}
 
 \item{cloudFolderID}{A googledrive dribble of a folder, e.g., using \code{drive_mkdir()}.
 If left as \code{NULL}, the function will create a cloud folder with name from last
@@ -429,6 +455,18 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 \code{getOption("reproducible.useCloud", TRUE)} (if the default behaviour should
 be \code{FALSE} or \code{TRUE}, respectively) so it can be turned on and off with
 this option. NOTE: \emph{This argument will not be passed into inner/nested Cache calls.})
+
+Two character values are also accepted, intended for separating developer
+and user roles when sharing a cloud-cache folder:
+\itemize{
+\item \code{"push"} is equivalent to \code{TRUE} (developer role) -- bidirectional;
+downloads on a cloud hit, uploads on a miss.
+\item \code{"pull"} is read-only (user role) -- downloads on a cloud hit, but never
+uploads. If the local cache already has the object, the cloud is not
+consulted at all (the Google Drive listing is deferred until after the
+local lookup fails). When neither local nor cloud has the object, the
+call falls back to a normal local-only Cache run.
+}
 }
 
 \section{Object attributes}{
@@ -488,28 +526,22 @@ usingPipe2 <-
       eval() |>
       rnorm()} |>
     Cache()'
-if (getRversion() >= "4.1") {
-  a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
-}
-if (getRversion() >= "4.2") { # uses the _ placeholder; only available in R >= 4.2
-  a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
-}
+a[[9]] <- eval(parse(text = usingPipe1)) # recovers cached copy
+a[[18]] <- eval(parse(text = usingPipe2)) # recovers cached copy
 
 length(unique(a)) == 1 #  all same
 
 ### Pipe -- have to use { } or else only final function is Cached
-if (getRversion() >= "4.1") {
-  b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
-  b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
-  b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
-  b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
-  b1a <- eval(parse(text = b1a))
-  b1b <- eval(parse(text = b1b))
-  b2a <- eval(parse(text = b2a))
-  b2b <- eval(parse(text = b2b))
-  all.equal(b1a, b1b) # Not TRUE because the sample is run first
-  all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
-}
+b1a <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b1b <- 'sample(1e5, 1) |> rnorm() |> Cache()'
+b2a <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b2b <- '{sample(1e5, 1) |> rnorm()} |> Cache()'
+b1a <- eval(parse(text = b1a))
+b1b <- eval(parse(text = b1b))
+b2a <- eval(parse(text = b2a))
+b2b <- eval(parse(text = b2b))
+all.equal(b1a, b1b) # Not TRUE because the sample is run first
+all.equal(b2a, b2b) # TRUE because of {  }, sample is not run
 
 #########################
 # Advanced examples

@@ -1,4 +1,5 @@
 ## install separately; keep this order to avoid conflicts
+# update.packages(ask = FALSE)
 # pak::pkg_install(c("fs", "rprojroot"))
 # pak::pkg_install("HenrikBengtsson/revdepcheck.extras")
 # pak::pkg_install("r-lib/revdepcheck")

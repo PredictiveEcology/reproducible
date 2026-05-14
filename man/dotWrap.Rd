@@ -9,60 +9,64 @@
 \alias{.unwrap}
 \alias{.unwrap.environment}
 \alias{.unwrap.list}
+\alias{.unwrap.PackedSpatExtent2}
+\alias{.unwrap.PackedSpatVector2}
+\alias{.unwrap.data.table}
+\alias{.unwrap.PackedSpatVector}
 \title{Deal with class for saving to and loading from Cache or Disk}
 \usage{
 .wrap(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{list}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{environment}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.wrap}{default}(
   obj,
-  cachePath,
+  cachePath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
-  cacheId,
+  cacheId = NULL,
   ...
 )
 
 \method{.unwrap}{default}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -70,8 +74,8 @@
 
 .unwrap(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -79,8 +83,8 @@
 
 \method{.unwrap}{environment}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -88,8 +92,44 @@
 
 \method{.unwrap}{list}(
   obj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatExtent2}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatVector2}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{data.table}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
+  drv = getDrv(getOption("reproducible.drv", NULL)),
+  conn = getOption("reproducible.conn", NULL),
+  ...
+)
+
+\method{.unwrap}{PackedSpatVector}(
+  obj,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   ...
@@ -117,7 +157,8 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}
 
-\item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.}
+\item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.
+Default is \code{NULL}.}
 
 \item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
 }

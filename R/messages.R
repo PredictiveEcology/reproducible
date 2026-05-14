@@ -10,6 +10,9 @@
 
 .message$SkipDownload <- "Skipping download of url; local copy already exists and passes checksums"
 
+.message$stopNeedArchive <- function(archive)
+  paste0("Please install.packages('archive') to extract files from \n", archive)
+
 .message$Greps <- list(
   studyArea_Spatial = "The \\'studyArea\\' provided is not a Spatial\\* object.",
   rasterToMatch_Raster = "The \\'rasterToMatch\\' provided is not a Raster\\* object.",
@@ -24,6 +27,7 @@
 
 .message$cacheGeoDomainContained <- "Spatial domain is contained within the url; returning the object"
 .message$cacheGeoDomainNotContained <- "Domain is not contained within the targetFile; running FUN"
+.message$cacheGeoNoRemoteExists <- "No remote targetFile exists; starting to build a new one"
 
 .message$LoadedCacheResult <- function(src = 1) {
   srcPoss <- c("Cached", "Memoised")
@@ -215,7 +219,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
   if (isTRUE(verboseLevel <= verbose)) {
 
-    if (getOption("reproducible.useCli", TRUE)) {
+    # if (getOption("reproducible.useCli", TRUE)) {
       mess <- paste0(..., collapse = "")
       # if (grepl("cacheIdInCache", mess)) browser()
       indentNum <- indent
@@ -224,7 +228,10 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
           indentNum <- cli::ansi_nchar(indent)
       if (is.null(indent)) indentNum <- 0
 
+      # browser()
+      # mess <- ansi_trimws_pureR(mess, "both")
       mess <- cli::ansi_trimws(mess, which = c("both"))
+      # if (!all(mess2 == mess)) browser()
       if (any(grepl(.spaceTmpChar, mess)))
         mess <- gsub(.spaceTmpChar, " ", mess)
       hasSlashN <- any(grepl("\n", mess)) # faster than gregexpr that needs to count in the string
@@ -239,7 +246,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
         fn <- cliCol(colour)
         hasSlashN2 <- gregexpr("\n", mess)[[1]]
         if (sum(hasSlashN2 > 0)) {
-          mess <- paste0(fn(strsplit(mess, split = "\n")[[1]]), collapse = "\n")
+          mess <- paste0(fn(unlist(strsplit(mess, split = "\n"))), collapse = "\n")
         } else {
           # fn <- get(paste0("col_", colour), envir = asNamespace('cli'))
           mess <- fn(mess) # add the colour
@@ -248,81 +255,80 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
       message(mess)
 
-    } else {
-
-      needCli <- FALSE
-      if (!is.null(colour)) {
-        if (is.character(colour)) {
-          needCli <- TRUE
-        }
-      }
-      mess <- paste0(..., collapse = "")
-      if (!is.null(indent)) {
-        mess <- paste0(indent, mess)
-      }
-
-      # do line wrap with hanging indent
-      maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
-      chars <- nchar(mess)
-      if (chars > maxLineLngth) {
-        splitOnSlashN <- strsplit(mess, "\n")
-        newMess <- lapply(splitOnSlashN, function(m) {
-          anyOneLine <- any(nchar(m) > maxLineLngth)
-          if (anyOneLine) {
-            messSplit <- strsplit(mess, split = " ")
-            remainingChars <- chars
-            messBuild <- character()
-            while (remainingChars > maxLineLngth) {
-              whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
-              # if (isTRUE(any(grepl("...because of", mess)))) browser()
-              if (anyNA(whNewLine)) browser()
-
-              keepInd <- 1:whNewLine
-              newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
-              messBuild <- c(messBuild, newMess)
-              if (is.null(indent)) {
-                # if it starts with a space -- that is the indent that is needed
-                if (startsWith(newMess, " ")) {
-                  indent <<- sub("^( +).+", "\\1", newMess)
-                  if (grepl("^ +\\.\\.\\.", newMess)) {
-                    indent <<- paste0(indent, " ")
-                  }
-                } else {
-                  indent <<- ""
-                }
-
-              }
-              messSplit[[1]] <- messSplit[[1]][-keepInd]
-              remainingChars <- remainingChars - nchar(newMess) - 1
-              hangingIndent <<- TRUE
-            }
-            newMess <- paste(messSplit[[1]], collapse = " ")
-            m <- c(messBuild, newMess)
-          }
-          m
-        })
-        mess <- unlist(newMess)
-        mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
-      }
-      hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
-      if (any(grepl("\n", mess))) {
-        mess <- gsub("\n *", paste0("\n", hi), mess)
-      }
-      if (any(grepl(.spaceTmpChar, mess)))
-        mess <- gsub(.spaceTmpChar, " ", mess)
-      if (needCli && requireNamespace("cli", quietly = TRUE)) {
-        mess <- lapply(strsplit(mess, "\n"), function(m)
-          paste0(cliCol(colour)(m)))[[1]]
-        mess <- .addSlashNToAllButFinalElement(mess)
-        message(mess, appendLF = appendLF)
-      } else {
-        if (needCli && !isTRUE(.pkgEnv$.checkedCli) && !.requireNamespace("cli")) {
-          message("To add colours to messages, install.packages('cli')", appendLF = appendLF)
-          .pkgEnv$.checkedCli <- TRUE
-        }
-        message(mess, appendLF = appendLF)
-      }
-    }
+    # } else {
+    #
+    #   needCli <- FALSE
+    #   if (!is.null(colour)) {
+    #     if (is.character(colour)) {
+    #       needCli <- TRUE
+    #     }
+    #   }
+    #   mess <- paste0(..., collapse = "")
+    #   if (!is.null(indent)) {
+    #     mess <- paste0(indent, mess)
+    #   }
+    #
+    #   # do line wrap with hanging indent
+    #   maxLineLngth <- getOption("width") - 10 # 10 is a "buffer" for Rstudio miscalculations
+    #   chars <- nchar(mess)
+    #   if (chars > maxLineLngth) {
+    #     splitOnSlashN <- strsplit(mess, "\n")
+    #     newMess <- lapply(splitOnSlashN, function(m) {
+    #       anyOneLine <- any(nchar(m) > maxLineLngth)
+    #       if (anyOneLine) {
+    #         messSplit <- strsplit(mess, split = " ")
+    #         remainingChars <- chars
+    #         messBuild <- character()
+    #         while (remainingChars > maxLineLngth) {
+    #           whNewLine <- which(cumsum(nchar(messSplit[[1]]) + 1) >= maxLineLngth)[1] - 1
+    #           if (anyNA(whNewLine)) browser()
+    #
+    #           keepInd <- 1:whNewLine
+    #           newMess <- paste(messSplit[[1]][keepInd], collapse = " ")
+    #           messBuild <- c(messBuild, newMess)
+    #           if (is.null(indent)) {
+    #             # if it starts with a space -- that is the indent that is needed
+    #             if (startsWith(newMess, " ")) {
+    #               indent <<- sub("^( +).+", "\\1", newMess)
+    #               if (grepl("^ +\\.\\.\\.", newMess)) {
+    #                 indent <<- paste0(indent, " ")
+    #               }
+    #             } else {
+    #               indent <<- ""
+    #             }
+    #
+    #           }
+    #           messSplit[[1]] <- messSplit[[1]][-keepInd]
+    #           remainingChars <- remainingChars - nchar(newMess) - 1
+    #           hangingIndent <<- TRUE
+    #         }
+    #         newMess <- paste(messSplit[[1]], collapse = " ")
+    #         m <- c(messBuild, newMess)
+    #       }
+    #       m
+    #     })
+    #     mess <- unlist(newMess)
+    #     mess <- paste0(.addSlashNToAllButFinalElement(mess), collapse = "")
+    #   }
+    #   hi <- if (isTRUE(hangingIndent)) paste0(indent, .message$BecauseOfA) else indent
+    #   if (any(grepl("\n", mess))) {
+    #     mess <- gsub("\n *", paste0("\n", hi), mess)
+    #   }
+    #   if (any(grepl(.spaceTmpChar, mess)))
+    #     mess <- gsub(.spaceTmpChar, " ", mess)
+    #   if (needCli && requireNamespace("cli", quietly = TRUE)) {
+    #     mess <- lapply(strsplit(mess, "\n"), function(m)
+    #       paste0(cliCol(colour)(m)))[[1]]
+    #     mess <- .addSlashNToAllButFinalElement(mess)
+    #     message(mess, appendLF = appendLF)
+    #   } else {
+    #     if (needCli && !isTRUE(.pkgEnv$.checkedCli) && !.requireNamespace("cli")) {
+    #       message("To add colours to messages, install.packages('cli')", appendLF = appendLF)
+    #       .pkgEnv$.checkedCli <- TRUE
+    #     }
+    #     message(mess, appendLF = appendLF)
+    #   }
+    # }
   }
 
 }
@@ -375,7 +381,6 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 .message$IndentDefault <- 1
 
-#' @importFrom withr defer
 .message$FileLinkUsed <- function(ftL, fts, verbose) {
   messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
   messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
@@ -445,7 +450,7 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$IndentUpdate <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- paste0(.message$PreProcessIndent, val)
-  withr::defer(
+  on.exit2(# withr::defer(
     envir = envir,
     expr =
       {
@@ -454,11 +459,17 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
   )
 }
 
-#' @importFrom withr deferred_clear
 .message$IndentRevert <- function(nchar = .message$IndentDefault, envir = parent.frame(), ns = "reproducible") {
   val <- paste0(rep(" ", nchar), collapse = "")
   .message$PreProcessIndent <- gsub(paste0(val, "$"), "", .message$PreProcessIndent)
-  withr::deferred_clear(envir = envir)
+  # browser()
+
+  # Base R equivalent of withr::deferred_clear(envir = envir)
+  if (!is.null(attr(envir, "handlers"))) {
+    attr(envir, "handlers") <- NULL   # or set to list(), see note below
+  }
+
+  # withr::deferred_clear(envir = envir)
 }
 
 .spaceTmpChar <- "spAcE"
@@ -501,6 +512,16 @@ cliCol <- function(col) {
     col <- paste0("col_", col)
   getFromNamespace(col, asNamespace("cli"))
 }
+# cliCol <- function(col) {
+#   if (!startsWith(col, "col_")) {
+#     repNS <- asNamespace("reproducible")
+#     if (exists(col, envir = repNS))
+#       return(get(col, envir = repNS))
+#     col <- paste0("col_", col)
+#   }
+#   getFromNamespace(col, asNamespace("cli"))
+#
+# }
 
 paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
   for (r in rows) {
@@ -536,3 +557,56 @@ isAre <- function (l, v) {
 
 
 .txtPreDigest <- "preDigest"
+
+.message$BecauseOfLossOfColumn <- function(targetFileWithDP) {
+  paste0("Because of loss of column, resaving the same object as an RDS ",
+         "file at: \n", targetFileWithDP, "\nIt will have to be loaded with
+                    `readRDS('",targetFileWithDP,"') |> sf::st_as_sf()`")
+}
+
+.message$dashes <- "----------------------"
+
+.message$NoPrefix <- "._noPrefix"
+
+# colr <- function(..., digit = 32) paste0("\033[", digit, "m", paste0(...), "\033[39m")
+# purple <- function(...) colr(..., digit = "38;5;129m")
+# black <- function(...) colr(..., digit = 30)
+# green2 <- function(...) colr(..., digit = 38)
+# cyan <- function(...) colr(..., digit = 29)
+# red <- function(...) colr(..., digit = 31)
+# green <- function(...) colr(..., digit = 32)
+# yellow <- function(...) colr(..., digit = 33)
+# blue <- function(...) colr(..., digit = 34)
+# turquoise <- function(...) colr(..., digit = 36)
+# greyLight <- function(...) colr(..., digit = 90)
+
+
+# cli::ansi_trimws is too slow. This is a copilot rewrite
+# ansi_trimws_pureR <- function(x, which = c("both", "left", "right")) {
+#   if (!is.character(x)) x <- as.character(x)
+#   which <- match.arg(which)
+#
+#   # Ensure UTF-8
+#   x <- enc2utf8(x)
+#   if (!length(x)) return(x)
+#
+#   # Regex to remove ANSI escape sequences
+#   ansi_regex <- "\033\\[[0-9;]*[A-Za-z]"
+#
+#   # Strip ANSI for whitespace detection
+#   xs <- gsub(ansi_regex, "", x, perl = TRUE)
+#   nxs <- nchar(xs)
+#
+#   # Compute left/right trims
+#   sl <- if (which %in% c("both", "left")) nxs - nchar(sub("^\\s+", "", xs)) else integer(length(x))
+#   rl <- if (which %in% c("both", "right")) nxs - nchar(sub("\\s+$", "", xs)) else integer(length(x))
+#
+#   # Vectorized substring
+#   if (any(sl > 0L | rl > 0L)) {
+#     start <- 1L + sl
+#     end <- nchar(x) - rl
+#     x <- substring(x, start, end)
+#   }
+#
+#   x
+# }

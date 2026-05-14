@@ -41,7 +41,7 @@ rmFromCache(
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
-  verbose,
+  verbose = getOption("reproducible.verbose"),
   ...
 )
 
@@ -57,7 +57,8 @@ CacheStoredFile(
   cachePath = getOption("reproducible.cachePath"),
   cacheId,
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-  obj = NULL
+  obj = NULL,
+  readOnly = FALSE
 )
 
 CacheDBTableName(
@@ -98,8 +99,8 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 the \code{cacheId} being loaded or selected}
 
 \item{cacheSaveFormat}{The text string representing the file extension used normally by
-different save formats; currently only \code{"rds"} or \code{"qs"}. Defaults
-to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
+different save formats; currently only \code{"rds"} or \code{"qs"} (which now uses \code{qs2} package.
+Defaults to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{.functionName}{Optional. Used for messaging when this function is called from \code{Cache}}
 
@@ -115,6 +116,12 @@ to \code{getOption("reproducible.cacheSaveFormat", "rds")}}
 
 \item{obj}{The optional object that is of interest; it may have an attribute "saveRawFile"
 that would be important.}
+
+\item{readOnly}{Logical. Only relevant during transition from \code{qs} to \code{qs2}.
+Essentially, during transition, \code{qs} objects can be read, but not saved.
+If \code{TRUE} then the \code{CacheStoredFile} can return a \code{.qs} file; if \code{FALSE},
+then this will not be able to return \code{qs}; instead it will return \code{qs2}
+files.}
 
 \item{create}{Logical. Currently only affects non \pkg{RSQLite} default drivers.
 If \code{TRUE} and there is no Cache database, the function will create one.}

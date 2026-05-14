@@ -26,18 +26,33 @@ The following options are likely of interest to most users:
 \item{\code{ask}}{
 Default: \code{TRUE}. Used in \code{\link[=clearCache]{clearCache()}} and \code{\link[=keepCache]{keepCache()}}.
 }
+\item{\code{cacheChaining}}{
+Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}} in the \code{.cacheChaining} argument.
+}
 \item{\code{cachePath}}{
 Default: \code{.reproducibleTempCacheDir}. Used in \code{\link[=Cache]{Cache()}} and many others.
 The default path for repositories if not passed as an argument.
 }
 \item{\code{cacheSaveFormat}}{
-Default: \code{"rds"}. What save format to use; currently, \code{"qs"} or \code{"rds"}.
+Default: \code{"rds"}. What save format to use; currently, \code{"qs"} (which will use
+\code{qs2} package as of \code{reproducible} version ">= 2.1.3"), \code{"qs2"}, or \code{"rds"}.
 }
 \item{\code{cacheSpeed}}{
 Default \code{"slow"}. One of \code{"slow"} or \code{"fast"} (1 or 2).
 \code{"slow"} uses \code{digest::digest} internally, which is transferable across operating
 systems, but much slower than \verb{digest::digest(algo = "spooky)}.
 So, if all caching is happening on a single machine, \code{"fast"} would be a good setting.
+}
+\item{\code{checkRemoteHash}}{
+Default: \code{FALSE}. Used in \code{\link[=preProcess]{preProcess()}} / \code{\link[=prepInputs]{prepInputs()}}. Controls whether
+\code{pp_remote_hash_check} re-contacts the remote source (e.g. Google Drive,
+HTTP HEAD) when a \code{.hash} sidecar from a previous successful match
+already exists in \code{destinationPath}. With the default (\code{FALSE}), the
+sidecar is trusted and the remote check is skipped — typically saving
+1–2 s per file when the cluster cache is warm. Set to \code{TRUE} to force a
+remote round-trip on every call (the pre-3.0.0.9050 behaviour); use
+this if the upstream file may change and you need to detect that.
+Removing the \verb{<file>_*.hash} sidecar also forces a re-check.
 }
 \item{\code{conn}}{
 Default: \code{NULL}. Sets a specific connection to a database, e.g.,
@@ -64,19 +79,18 @@ They may, however, be very effective in speeding up some things, specifically,
 uploading cached elements via \code{googledrive} in \code{cloudCache}.
 }
 \item{\code{gdalwarp}}{
-Default: \code{FALSE}. Experimental. During \code{postProcessTo} the standard approach
-is to use \code{terra} functions directly, with several strategic uses of \code{sf}. However,
-in the special case when \code{from} is a \code{SpatRaster} or \code{Raster}, \code{maskTo} is a
-\code{SpatVector} or \code{SFC_POLYGON} and \code{projectTo} is a \code{SpatRaster} or \code{Raster}, setting
-this option to \code{TRUE} will use \code{sf::gdal_utils("warp")}. In many test cases,
-this is much faster than the \code{terra} sequence. The resulting \code{SpatRaster} is
-not identical, but it is very similar.
+\strong{Deprecated — do not use.} Default: \code{FALSE}. This option previously
+switched \code{postProcessTo} to use \code{sf::gdal_utils("warp")} for a specific
+combination of raster/vector inputs. It is no longer needed: current
+versions of \code{terra} handle this case well and produce equivalent results
+without the GDAL detour. The option is retained only for backwards
+compatibility and will be removed in a future release.
 }
 \item{\code{gdalwarpThreads}}{
-Default: \code{2}. This will set \verb{-wo NUM_THREADS=} to this number. Default is now \code{2}, meaning
-\code{gdalwarp} will use 2 threads with \code{gdalProject}. To turn off threading, set to \code{0}, \code{1} or \code{NA}.
+\strong{Deprecated — do not use} (see \code{gdalwarp} above). Default: \code{2}.
+Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
-\item{\code{inputPaths}}{
+\item{\code{destinationPathShared}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
 file to this location, with a hardlink (via \code{file.link}) to the file created in the
@@ -86,10 +100,40 @@ modularity (by placing downloaded objects in their \code{destinationPath}, but a
 re-downloading the same (perhaps large) file over and over for each project.
 Because the files are hardlinks, there is no extra space taken up by the apparently
 duplicated files.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPaths`; the old
+name is still accepted and will continue to work, but `reproducible.destinationPathShared` is
+preferred going forward (it matches the [prepInputs()] naming family).
+}\if{html}{\out{</div>}}
+
+}
+\item{\code{destinationPathSharedRecursive}}{
+Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
+Should \code{reproducible.destinationPathShared} be searched recursively for existence of a file?
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{**Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
+the old name is still accepted but `reproducible.destinationPathSharedRecursive` is preferred.
+}\if{html}{\out{</div>}}
+
+}
+\item{\code{inputPaths}}{
+\strong{Deprecated} — use \code{reproducible.destinationPathShared} instead.
+Retained for backwards compatibility; if set and \code{reproducible.destinationPathShared} is \code{NULL},
+the value of \code{reproducible.inputPaths} is used automatically.
 }
 \item{\code{inputPathsRecursive}}{
-Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
-Should the \code{reproducible.inputPaths} be searched recursively for existence of a file?
+\strong{Deprecated} — use \code{reproducible.destinationPathSharedRecursive} instead.
+Retained for backwards compatibility.
+}
+\item{\code{leaveOnDisk}}{
+Default: \code{TRUE}. Used in \code{\link[=postProcess]{postProcess()}}.
+When there is a \code{SpatRaster} object, should \code{postProcess} force any file-backed object,
+to use the file-based, memory-safe tools within \code{terra} (by temporarily setting
+\code{terraOption(memfrac = 0)}. Alternatively, if this is set to \code{FALSE},
+then \code{postProcess} will let \code{terra} decide on its own based on its internal
+cues (largely based on \code{memfrac}, \code{maxmem} \code{terraOptions}). This will be ignored,
+however, if the user has set the \code{terraOptions} away from its default of \code{0.5}. The default
+increases predictability of whether the returned object is on disk or in memory.
 }
 \item{\code{memoisePersist}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}.

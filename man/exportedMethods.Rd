@@ -55,8 +55,8 @@
 .cacheMessageObjectToRetrieve(
   functionName,
   fullCacheTableForObj,
-  cachePath,
-  cacheId,
+  cachePath = getOption("reproducible.cachePath"),
+  cacheId = NULL,
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   verbose
 )
@@ -81,9 +81,9 @@
   verbose = getOption("reproducible.verbose", 1)
 )
 
-.prepareOutput(object, cachePath, ...)
+.prepareOutput(object, cachePath = getOption("reproducible.cachePath"), ...)
 
-\S4method{.prepareOutput}{ANY}(object, cachePath, ...)
+\S4method{.prepareOutput}{ANY}(object, cachePath = getOption("reproducible.cachePath"), ...)
 
 .addChangedAttr(object, preDigest, origArguments, ...)
 
@@ -139,8 +139,8 @@ where \code{Cache} is not correctly detecting unchanged inputs. This will guaran
 the object will be identical each time; this may be useful in operational code.}
 
 \item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
-\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
-narrower range of conditions that work; \code{rds} is safer, but slower.}
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{outputObjects}{Optional character vector indicating which objects to
 return. This is only relevant for list, environment (or similar) objects}

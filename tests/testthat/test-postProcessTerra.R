@@ -4,7 +4,7 @@ test_that("testing terra", {
     needGoogleDriveAuth = FALSE,
     opts = list(
       reproducible.useMemoise = FALSE,
-      reproducible.cacheSaveFormat = .qsFormat,
+      reproducible.cacheSaveFormat = .qs2Format,
       "rgdal_show_exportToProj4_warnings" = "none"
     )
   )
@@ -43,24 +43,24 @@ test_that("testing terra", {
   b <- Cache(fn, list(r, r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
   expect_true(is(b[[1]], "list"))
-  expect_true(is(b[[1]][[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]][[1]]))
 
   # Single nest
   b <- Cache(fn, r, cachePath = tmpCache)
   expect_true(is(b, "list"))
-  expect_true(is(b[[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]]))
 
   # mixed nest
   b <- Cache(fn, list(r[[1]], r1), cachePath = tmpCache)
   expect_true(is(b, "list"))
-  expect_true(is(b[[1]], "SpatRaster"))
-  expect_true(is(b[[2]][[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]]))
+  expect_true(.isSpatRaster(b[[2]][[1]]))
 
   # mix memory and disk
   b <- Cache(fn, list(r[[1]], r1, rmem), cachePath = tmpCache)
   expect_true(is(b, "list"))
-  expect_true(is(b[[1]], "SpatRaster"))
-  expect_true(is(b[[2]][[1]], "SpatRaster"))
+  expect_true(.isSpatRaster(b[[1]]))
+  expect_true(.isSpatRaster(b[[2]][[1]]))
   expect_true(terra::inMemory(b[[3]][[1]]))
   expect_true(!terra::inMemory(b[[2]][[1]]))
   expect_true(!terra::inMemory(b[[1]]))
@@ -175,13 +175,6 @@ test_that("testing terra", {
   # v2 <- is.valid(v2)
 
   terra::crs(v2) <- terra::crs(v)
-  # v2 <- terra::makeValid(v2)
-  if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
-    t10 <- try(postProcessTo(xVect, v2))
-    ## Error : TopologyException: Input geom 1 is invalid:
-    ##  Self-intersection at 6.0905735768254896 49.981782482072084
-    expect_true(!is(t10, "try-error"))
-  }
 
   # Projection --> BAD BUG HERE ... CAN"T REPRODUCE ALWAYS --> use sf for testing Dec 9, 2022
   if (FALSE) {
@@ -191,10 +184,47 @@ test_that("testing terra", {
   }
 
   if (.requireNamespace("sf")) {
+    utmWKT <- paste0('PROJCRS["ED50 / UTM zone 28N",
+    BASEGEOGCRS["ED50",
+        DATUM["European Datum 1950",
+            ELLIPSOID["International 1924",6378388,297,
+                LENGTHUNIT["metre",1]]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433]],
+        ID["EPSG",4230]],
+    CONVERSION["UTM zone 28N",
+        METHOD["Transverse Mercator",
+            ID["EPSG",9807]],
+        PARAMETER["Latitude of natural origin",0,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8801]],
+        PARAMETER["Longitude of natural origin",-15,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8802]],
+        PARAMETER["Scale factor at natural origin",0.9996,
+            SCALEUNIT["unity",1],
+            ID["EPSG",8805]],
+        PARAMETER["False easting",500000,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",east,
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",north,
+            ORDER[2],
+            LENGTHUNIT["metre",1]],
+    USAGE[
+        SCOPE["Engineering survey, topographic mapping."],
+        AREA["Europe - between 18°W and 12°W - Ireland offshore."],
+        BBOX[48.43,-16.1,56.57,-12]],
+    ID["EPSG",23028]]')
     # utm <- sf::st_crs("epsg:23028")#$wkt
-    utm <- terra::crs("epsg:23028") # $wkt
 
-    vsfutm <- sf::st_transform(vsf, utm)
+    vsfutm <- sf::st_transform(vsf, utmWKT)
     vutm <- terra::vect(vsfutm)
     res100 <- 100
     rutm <- terra::rast(vutm, resolution = res100)
@@ -205,7 +235,7 @@ test_that("testing terra", {
     expect_true(terra::same.crs(vsfInUTMviaCRS, rutm))
 
     # from is sf, to is SpatRast --> skip maskTo
-    if (getRversion() >= "4.1" && isWindows()) {
+    if (isWindows()) {
       vsfInUTMviaSpatRast <-
         suppressWarningsSpecific(
           falseWarnings = "attribute variables are assumed",
@@ -245,17 +275,6 @@ test_that("testing terra", {
       }
     }
 
-    # if (Sys.info()["user"] %in% "emcintir") {
-    #   env <- new.env(parent = emptyenv())
-    #   suppressWarnings(
-    #     b <- lapply(ls(), function(xx) if (isSpat(get(xx))) try(assign(xx, envir = env, terra::wrap(get(xx)))))
-    #   )
-    #   save(list = ls(envir = env), envir = env, file = "~/tmp2.rda")
-    #   # load(file = "~/tmp2.rda")
-    #   # env <- environment()
-    #   # b <- lapply(ls(), function(xx) if (is(get(xx, env), "PackedSpatRaster") || is(get(xx, env), "PackedSpatVector")) try(assign(xx, envir = env, terra::unwrap(get(xx)))))
-    # }
-
     t11 <- postProcessTo(elevRas, vutm)
     expect_true(terra::same.crs(t11, vutm))
 
@@ -269,30 +288,18 @@ test_that("testing terra", {
     expect_false(terra::same.crs(t12, vutm))
 
     # projection with errors
-    if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
-      utm <- terra::crs("epsg:23028") # This is same as above, but terra way
-      if (getRversion() < "4.3.0") { # this same error crashes the session in R 4.3.0 when it is R-devel
-        vutmErrors <- terra::project(v2, utm)
-        mess <- capture_messages({
-          t13a <- postProcessTo(xVect, vutmErrors)
-        })
-        ## Error : TopologyException: Input geom 1 is invalid:
-        ##  Self-intersection at 6095858.7074040668 6626138.068126983
-        expect_true(sum(grepl("error", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
-        expect_true(sum(grepl("fixed", mess)) %in% 1:2) # not sure why crop does not throw error in R >= 4.2
-        expect_true(is(t13a, "SpatVector"))
-      } else {
-        v2 <- terra::makeValid(v2)
-        vutmErrors <- terra::project(v2, utm)
-      }
+    if (isWindows()) { # bug in older `terra` that is not going to be fixed here
+      # utm <- terra::crs("epsg:23028") # This is same as above, but terra way
+      v2 <- terra::makeValid(v2)
+      vutmErrors <- terra::project(v2, utmWKT)
 
-      # Switch from qs to rds with Cache
-      if (requireNamespace(.qsFormat)) {
-        opts <- options(reproducible.cacheSaveFormat = .qsFormat)
+      # Switch from qs2 to rds with Cache
+      if (requireNamespace(.qs2Format)) {
+        opts <- options(reproducible.cacheSaveFormat = .qs2Format)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
         opts <- options(reproducible.cacheSaveFormat = .rdsFormat)
         t13a <- Cache(postProcessTo(xVect, vutmErrors))
-        opts <- options(reproducible.cacheSaveFormat = .qsFormat)
+        opts <- options(reproducible.cacheSaveFormat = .qs2Format)
         t13b <- Cache(postProcessTo(xVect, vutmErrors))
         expect_equal(t13a, t13b)
         # a <- try(ncol(t13a), silent = TRUE)
@@ -309,7 +316,7 @@ test_that("testing terra", {
     expect_true(terra::same.crs(t14, xVect2))
     expect_false(terra::same.crs(t14, vutm))
 
-    if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
+    if (isWindows()) { # bug in older `terra` that is not going to be fixed here
       suppressWarningsSpecific(
         falseWarnings = "attribute variables",
         t14SF <- postProcessTo(xVect2SF, vutmSF, projectTo = NA)
@@ -323,7 +330,7 @@ test_that("testing terra", {
     expect_false(terra::same.crs(t15, xVect2))
     expect_true(terra::same.crs(t15, vutm))
 
-    if (getRversion() >= "4.1" && isWindows()) { # bug in older `terra` that is not going to be fixed here
+    if (isWindows()) { # bug in older `terra` that is not going to be fixed here
       suppressWarningsSpecific(
         falseWarnings = "attribute variables",
         t15SF <- postProcessTo(xVect2SF, vutmSF, maskTo = NA)
@@ -442,10 +449,10 @@ test_that("testing terra", {
       t20MaskedByRas <- maskTo(t20, ras1SmallAll)
       t20ProjectedByRas <- projectTo(t20, ras1SmallAll)
       t20AllByRas <- postProcessTo(t20, ras1SmallAll) # only does terra::rast 1x
-      expect_true(is(t20AllByRas, "SpatRaster"))
-      expect_true(is(t20CroppedByRas, "SpatRaster"))
-      expect_true(is(t20MaskedByRas, "SpatRaster"))
-      expect_true(is(t20ProjectedByRas, "SpatRaster"))
+      expect_true(.isSpatRaster(t20AllByRas))
+      expect_true(.isSpatRaster(t20CroppedByRas))
+      expect_true(.isSpatRaster(t20MaskedByRas))
+      expect_true(.isSpatRaster(t20ProjectedByRas))
       expect_equal(terra::res(t20ProjectedByRas), terra::res(ras1SmallAll))
       expect_equal(terra::res(t20AllByRas), terra::res(ras1SmallAll))
       expect_equal(terra::ext(t20AllByRas), terra::ext(ras1SmallAll))
@@ -461,9 +468,9 @@ test_that("testing terra", {
 
       # The below was slightly off because RasterLayer was not exactly same as t20 proj
       spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
-      expect_true( #  these are off b/c of projection probably
-        abs(sum(!is.na(values2(spatRas1SmallAll))) -
-          sum(!is.na(values2(t20MaskedByRas)))) <= 0
+      expect_equal( #  these are off b/c of projection probably
+        sum(!is.na(values2(spatRas1SmallAll))),
+        sum(!is.na(values2(t20MaskedByRas)))
       )
 
       if (FALSE) {

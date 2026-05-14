@@ -1,3 +1,64 @@
+utils::globalVariables(c("X", "Y"))
+
+checkNameHasGeom <- function(existingObj) {
+  hasGeomNamedCol <- names(existingObj) %in% "geom"
+  if (any(hasGeomNamedCol)) {
+    browser()
+    names(existingObj)[hasGeomNamedCol] <- "geometry"
+  }
+  existingObj
+}
+
+extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj, verbose = TRUE) {
+  wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
+  if (isTRUE(all(wh %in% FALSE)) && isTRUE(bufferOK)) {
+    diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
+      round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
+    buff <- diffs * 0.025
+    meanBuff <- mean(buff)
+    meanBuffKm <- round(meanBuff/1e3, 1)
+    message("domain is not within existing object; trying a 2.5% (", meanBuffKm, "km) buffer")
+    existingObjSF_wider <- sf::st_buffer(existingObjSF, dist = meanBuff)
+    wh <- sf::st_within(domain, existingObjSF_wider, sparse = FALSE)
+  }
+  wh1 <- apply(wh, 1, any)
+  wh2 <- apply(wh, 2, any) # This is "are the several domains inside the several existingObjSF"
+  # length of existingObjSF
+  domainExisted <- all(wh1)
+  if (domainExisted) {
+
+    # THIS IS "PULL OUT INDIVIDUAL SF POLYGON FROM THE MANY"
+    if (isTRUE(verbose)) {
+      if (isTRUE(bufferOK)) # the message will be previously given
+        message("domain is within the buffered object; returning the existing parameters")
+      else
+        message(.message$cacheGeoDomainContained)
+    }
+    existingObj <- existingObj[wh2, ]
+    existingObjSF <- existingObjSF[wh2, ]
+  }
+  if (all(wh1 %in% FALSE)) {
+    existingObj <- NULL
+    existingObjSF <- NULL
+  }
+  list(existingObj = existingObj, existingObjSF = existingObjSF, domainExisted = domainExisted)
+}
+
+
+#  from https://github.com/zhukovyuri/SUNGEO/blob/master/R/update_bbox.R
+update_bbox <- function(sfobj){
+  # Manually calculate bounds from coordinates
+  new_bb <- data.table::as.data.table(sf::st_coordinates(sfobj))[,c(min(X),min(Y),max(X),max(Y))]
+  # Rename columns
+  names(new_bb) <- c("xmin", "ymin", "xmax", "ymax")
+  # Change object class
+  attr(new_bb, "class") <- "bbox"
+  # Assign to bbox slot of sfobj
+  attr(sf::st_geometry(sfobj), "bbox") <- new_bb
+
+  return(sfobj)
+}
+
 #' Cache-like function for spatial domains
 #'
 #' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
@@ -120,7 +181,7 @@ CacheGeo <- function(targetFile = NULL,
                      purge = FALSE, useCache = getOption("reproducible.useCache"),
                      overwrite = getOption("reproducible.overwrite"),
                      action = c("nothing", "update", "replace", "append"),
-                     bufferOK = FALSE,
+                     bufferOK = FALSE, verbose = getOption("reproducible.verbose"),
                      ...) {
   objExisted <- TRUE
   if (is.null(targetFile)) {
@@ -129,12 +190,12 @@ CacheGeo <- function(targetFile = NULL,
 
   if (!missing(targetFile)) {
     if (!isAbsolutePath(targetFile)) {
-      targetFile <- file.path(destinationPath, targetFile)
+      targetFileWithDP <- file.path(destinationPath, targetFile)
     }
   } else {
     stop("Either targetFile must be supplied")
   }
-  if (!file.exists(targetFile)) {
+  if (!file.exists(targetFileWithDP)) {
     objExisted <- FALSE
   }
   domainExisted <- objExisted # !missing(domain) # objExisted
@@ -160,17 +221,17 @@ CacheGeo <- function(targetFile = NULL,
     if (!folderExists) {
       cloudFolderID <- googledrive::drive_mkdir(cloudFolderID)
     }
-    # objsInGD <- googledrive::drive_ls(cloudFolderID)
     objID <- objsInGD[objsInGD$name %in% basename2(targetFile), ]
 
     if (NROW(objID)) urlThisTargetFile <- objID$drive_resource[[1]]$webViewLink
 
     objExisted <- if (NROW(objID)) TRUE else FALSE
     if (is.null(targetFile)) {
-      targetFile <- file.path(destinationPath, objID$name)
+      targetFile <- objID$name
+      targetFileWithDP <- file.path(destinationPath, objID$name)
     }
-    if (file.exists(targetFile) && NROW(objID)) {
-      md5Checksum <- digest::digest(file = targetFile)
+    if (file.exists(targetFileWithDP) && NROW(objID)) {
+      md5Checksum <- digest::digest(file = targetFileWithDP)
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
       cacheExtra <- objID$drive_resource[[1]]$md5Checksum
     }
@@ -178,64 +239,69 @@ CacheGeo <- function(targetFile = NULL,
 
   if (isTRUE(objExisted)) {
 
-    existingObj <- prepInputs(
+    aa <- quote(prepInputs(
       targetFile = asPath(targetFile),
       url = urlThisTargetFile,
       destinationPath = destinationPath, # domain = domain,
-      useCache = useCache,
-      # purge = 7, # It isn't relevant if the file is different than the Checksums
+      useCache = FALSE,
+      purge = purge, # It isn't relevant if the file is different than the Checksums
       overwrite = overwrite
-    ) |> Cache(.cacheExtra = cacheExtra) # cacheExtra is the md5Checksum on GDrive
+    ))
+    for (attempt in 1:2) {
+      # There were cases where the Cache recovered, but the file was not there.
+      existingObj <- eval(aa) |>
+        Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
+      if (file.exists(targetFileWithDP))
+        break
+      else
+        clearCache(cacheId = cacheId(existingObj), ask = FALSE)
+    }
+
+    existingObjOrig <- existingObj
 
     cn <- colnames(existingObj)
     # Assumption that data.frame should be data.table
-    existingObj <- lapply(existingObj, function(x) if (is.data.frame(x[[1]])) I(list(as.data.table(x[[1]]))) else x) |>
-      as.data.table(fill = TRUE)
+    if (is(existingObj, "list")) {
+      existingObj <- lapply(existingObj, function(x) if (is.data.frame(x[[1]])) I(list(as.data.table(x[[1]]))) else x) |>
+        as.data.table(fill = TRUE) |> as.data.frame()
+    } else {
+      if (!is(existingObj, "data.frame"))
+        existingObj <- as.data.frame(existingObj)
+    }
     colnames(existingObj) <- cn
 
-    # existingObjSF <- if (is(df, "sf")) df else sf::st_as_sf(df)
-
+    newCRS <- unique(existingObj[["crs"]])[[1]]
+    if (length(newCRS) > 1)
+      stop("The file on googledrive has more than one crs; currently this is not allowed.",
+           " You can try rebuilding the data.frame with a single crs, assigned as a list column ",
+           "in the data.frame")
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
     existingObjSF <- existingObjSF[!sf::st_is_empty(existingObjSF),] #for some reason some have empty geometries...
 
+    existingObjSF <- update_bbox(existingObjSF)
+    if (!is.null(newCRS))
+      suppressWarnings(sf::st_crs(existingObjSF) <- newCRS)
+    existingObjSFOrig <- existingObjSF
     if (!missing(domain)) {
       #must be sf for st_within
       if (!inherits(domain, "sf")) domain <- sf::st_as_sf(domain)
       #must have same crs for st_within
       existingObjSF <- sf::st_transform(existingObjSF, sf::st_crs(domain))
 
-      wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
-      if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
-        diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
-          round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
-        buff <- diffs * 0.025
-        meanBuff <- mean(buff)
-        meanBuffKm <- round(meanBuff/1e3, 1)
-        message("domain is not within existing object; trying a 2.5% (", meanBuffKm, "km) buffer")
-        existingObjSF_wider <- sf::st_buffer(existingObjSF, dist = meanBuff)
-        wh <- sf::st_within(domain, existingObjSF_wider, sparse = FALSE)
-      }
-      wh1 <- apply(wh, 1, any)
-      wh2 <- apply(wh, 2, any) # This is "are the several domains inside the several existingObjSF"
-      # length of existingObjSF
-      domainExisted <- all(wh1)
-      if (domainExisted) {
-        if (isTRUE(bufferOK)) # the message will be previously given
-          message("domain is within the buffered object; returning the existing parameters")
-        else
-          message(.message$cacheGeoDomainContained)
-        existingObj <- existingObj[wh2, ]
-      }
-      if (all(wh1 %in% FALSE)) {
-        existingObj <- NULL
-      }
+      outs <- extractPolygonIfWithin(domain, existingObjSF, bufferOK, existingObj)
+      list2env(outs, envir = environment()) # existingObjSF, existingObj, domainExisted
     } else {
       domainExisted <- TRUE
       message("Spatial domain is missing; returning entire spatial domain")
     }
   }
+  msgActionIsNothing <- "action was 'nothing'; nothing done"
   if ( (isFALSE(objExisted) || isFALSE(domainExisted) ) && !missing(FUN)) {
-    message(.message$cacheGeoDomainNotContained)
+    if (isFALSE(objExisted)) {
+      message(.message$cacheGeoNoRemoteExists)
+    } else {
+      message(.message$cacheGeoDomainNotContained)
+    }
     FUNcaptured <- substitute(FUN)
     env <- environment()
     list2env(list(...), envir = env) # need the ... to be "here"
@@ -246,23 +312,46 @@ CacheGeo <- function(targetFile = NULL,
     }
   } else {
     if (isFALSE(objExisted)) {
-      message("targetFile does not exist")
+      message("targetFile (", targetFile,") does not exist")
       existingObj <- NULL
     }
     if (isFALSE(domainExisted))
-      message("domain does not exist in targetFile")
-    if (missing(FUN) && isFALSE(domainExisted))
-      message("FUN is missing; no evaluation possible")
+      message("domain does not exist in targetFile (", targetFile, ")")
+    if (missing(FUN) && isFALSE(domainExisted)) {
+      if (!action %in% "nothing")
+        message("FUN is missing; no evaluation possible")
+      if (action %in% "nothing")
+        message(msgActionIsNothing)
+    }
+
+
 
   }
-  msgActionIsNothing <- "action was 'nothing'; nothing done"
   if (isFALSE(domainExisted)) {
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
         # .gpkg seems to change geometry to "geom"
         existingObjSF <- checkNameHasGeom(existingObjSF)
+        if (!any(is(sf::st_geometry(newObjSF), "sfc_MULTIPOLYGON"))) {
+          newObjSF <- sf::st_cast(newObjSF, "MULTIPOLYGON")
+        }
+        # newObj <- sf::st_cast(newObj, "MULTIPOLYGON")
+        if (!is(sf::st_geometry(newObj$geometry), "MULTIPOLYGON"))
+          newObj$geometry <- sf::st_cast(newObj$geometry, "MULTIPOLYGON")
+        if (!is(sf::st_geometry(existingObjOrig$geometry), "MULTIPOLYGON"))
+          existingObjOrig$geometry <- sf::st_cast(existingObjOrig$geometry, "MULTIPOLYGON")
+
+        # THE APPEND LINE
         existingObj <- as.data.frame(rbindlist(
-          list(as.data.table(existingObjSF), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
+          list(as.data.table(existingObjOrig), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
+        existingObjSF <- sf::st_as_sf(existingObj)
+
+        if (sf::st_crs(domain) != sf::st_crs(existingObjSF)) {
+          domain <- sf::st_transform(domain, sf::st_crs(existingObjSF))
+        }
+        outs <- extractPolygonIfWithin(domain, existingObjSF, bufferOK, existingObj)
+        list2env(outs) # existingObjSF, existingObj, domainExisted
+
         # existingObj <- rbind(existingObj, newObj)
         if (any(duplicated(existingObj))) {
           existingObj <- unique(existingObj)
@@ -270,14 +359,45 @@ CacheGeo <- function(targetFile = NULL,
       }
     }
     if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
-      if (!isAbsolutePath(targetFile)) {
-        targetFile <- file.path(destinationPath, targetFile)
+      if (!isAbsolutePath(targetFileWithDP)) {
+        targetFileWithDP <- file.path(destinationPath, targetFile)
       }
       # if (is(existingObj, "sf")) existingObj <- as.data.frame(existingObj)
-      if (identical("rds", fs::path_ext(targetFile)))  {
-        saveRDS(existingObj, file = targetFile)
-      } else {
-        writeTo(existingObj, writeTo = targetFile, overwrite = TRUE, append = TRUE)
+
+      # Put it in order
+      if (!is.null(existingObj[["polygonID"]])) {
+        # if it has 2 sets of dots, like "4.2.1"
+        if (isTRUE(any(grepl("\\..+\\.", existingObj$polygonID)))) {
+          polygonIDforSorting <- as.package_version(existingObj$polygonID)
+        } else {
+          suppressWarnings(polygonIDforSorting <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID)))
+          if (isTRUE(any(is.na(polygonIDforSorting))))
+            polygonIDforSorting <- existingObj$polygonID
+        }
+        ord <- order(polygonIDforSorting)
+        existingObj <- existingObj[ord, ]
+        rownames(existingObj) <- seq_len(NROW(existingObj))
+      }
+      ## end of putting it in order
+
+      for (attempt in 1:2) {
+        if (identical("rds", fs::path_ext(targetFileWithDP)) || identical(attempt, 2L))  {
+          saveRDS(existingObj, file = targetFileWithDP)
+          break
+        } else {
+          warns <- character()
+          withCallingHandlers(
+            writeTo(existingObj, writeTo = targetFileWithDP,
+                    overwrite = TRUE, append = TRUE),
+            warning = function(w) {
+              warns <<- w$message
+            }
+          )
+          if (!any(grepl("Dropping column", warns))) break
+          targetFileWithDP <- gsub(fileExt(targetFileWithDP), "rds", targetFileWithDP)
+          warning(.message$BecauseOfLossOfColumn(targetFileWithDP))
+
+        }
       }
     } else {
       if (!missing(FUN)) {
@@ -288,20 +408,23 @@ CacheGeo <- function(targetFile = NULL,
   }
   # Cloud
   if (isTRUE(useCloud) || !is.null(cloudFolderID)) {
-    if (!isAbsolutePath(targetFile)) targetFile <- file.path(destinationPath, targetFile)
+    if (!isAbsolutePath(targetFile)) targetFileWithDP <- file.path(destinationPath, targetFile)
     if (NROW(objID)) {
-      md5Checksum <- digest::digest(file = targetFile)
+      md5Checksum <- digest::digest(file = targetFileWithDP)
       alreadyOnRemote <- identical(objID$drive_resource[[1]]$md5Checksum, md5Checksum)
     }
     if (!alreadyOnRemote) {
-      msgSkippingUpload <- "skipping googledrive upload;"
       if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
+        if (!dir.exists(tempdir())) {
+          dir.create(tempdir(), recursive = TRUE)
+        }
         out <- googledrive::drive_put(
-          media = targetFile,
+          media = targetFileWithDP,
           path = googledrive::as_id(cloudFolderID)
         )
         attr(existingObj, "id") <- out
       } else {
+        msgSkippingUpload <- "skipping googledrive upload;"
         message(msgSkippingUpload)
         message(msgActionIsNothing)
       }
@@ -309,13 +432,30 @@ CacheGeo <- function(targetFile = NULL,
     }
   }
 
-  existingObj
+  if (exists("existingObjOrig", inherits = FALSE)) {
+    messageColoured("To get the full object from googledrive, which looks like this:\n")
+    useOrig <- (NROW(existingObj) < NROW(existingObjOrig))
+    objLooksLike <- if (useOrig) existingObjOrig else existingObj
+    if (verbose > 0) {
+      cat(cli::col_yellow(capture.output(objLooksLike)), sep = "\n")
+      messageColoured("... run the following:\n")
+      enn <- environment()
+      ll <- lapply(aa, function(x) eval(x, envir = enn))
+      coo <- capture.output(as.call(append(list(quote(prepInputs)), ll[-1])))#, sep = "\n")
+      cat(cli::col_yellow(coo), sep = "\n")
+    }
+  }
+
+
+  if (!exists("existingObjSF")) {
+    if (is.null(existingObj)) {
+      existingObjSF <- existingObj
+    } else {
+      existingObjSF <- sf::st_as_sf(existingObj)
+    }
+  }
+
+
+  existingObjSF
 }
 
-checkNameHasGeom <- function(existingObj) {
-  hasGeomNamedCol <- names(existingObj) %in% "geom"
-  if (any(hasGeomNamedCol)) {
-    names(existingObj)[hasGeomNamedCol] <- "geometry"
-  }
-  existingObj
-}

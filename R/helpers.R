@@ -409,7 +409,7 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
     id <- dir.exists(pathnames)
     id[id] <- file.info(pathnames[id])$isdir
   } else {
-    if (isGoogleID(pathnames)) {
+    if (isGoogleID(pathnames) || isGoogleDriveURL(pathnames)) {
       id <- isGoogleDriveDirectory(pathnames)
     } else {
       id <- grepl("/$|\\\\$", pathnames)
@@ -420,7 +420,22 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
 }
 
 isGoogleDriveDirectory <- function(url) {
-  grepl("folders", url)
+  isFold <- grepl("folders", url)
+  if (isFold %in% FALSE && is(url, "drive_id")) {
+    # second check if it is just a google id
+    driveMeta <- googledrive::drive_get(url)
+    isFold <- isGoogleDriveDirectoryFromTibble(driveMeta)
+  }
+  isFold
+}
+
+isGoogleDriveDirectoryFromTibble <- function(tib) {
+  if (tib$drive_resource[[1]]$mimeType == "application/vnd.google-apps.folder") {
+    isFold <- TRUE
+  } else {
+    isFold <- FALSE
+  }
+  isFold
 }
 
 isFile <- function(pathnames) {
@@ -483,6 +498,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
     rbind(
       c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
       c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
+      c(.qs2Format, "qs2::qs_read", "qs2::qs_save", .qs2Format),
       cbind(
         c("asc", "grd", "tif"), griddedFile, griddedFileSave,
         rasterType(rasterRead = griddedFile)
@@ -496,7 +512,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
   sfCanRead <- c("bna","csv", "e00", "gdb", "geojson", "gml", "gmt", "gpkg", "gps",
     "gtm", "gxt", "jml", "map", "mdb", "nc", "ods", "osm", "pbf", "shp", "sqlite",
-    "vdv", "xls", "xlsx" )
+    "vdv")#, "xls", "xlsx" )
   sfFun <- shpFile
   sfSaveFun <- shpFileSave
   type = "sf"
@@ -509,13 +525,6 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   df
 }
 
-#' @importFrom utils packageDescription
-.isDevelVersion <- function() {
-  length(strsplit(packageDescription("reproducible")$Version, "\\.")[[1]]) > 3
-}
-
-#' A helper to `getOption("reproducible.rasterRead")`
-#'
 #' A helper to `getOption("reproducible.rasterRead")`
 #' @export
 #' @param ... Passed to the function parsed and evaluated from
@@ -530,13 +539,21 @@ rasterRead <- function(...) {
 
 rasterType <- function(nlayers = 1,
                        rasterRead = getOption("reproducible.rasterRead", "terra::rast")) {
+  # This does not have to fail if `raster` is not installed because this function may be
+  #    called with .fileExtsKnown(), even if no gridded object is being used
   if (is.character(rasterRead)) {
-    rasterRead <- if (.requireNamespace("terra") || .requireNamespace("raster")) {
-      eval(parse(text = rasterRead))
+    if (identical("terra::rast", rasterRead)) {
+      if (.requireNamespace("terra")) rasterRead <- eval(parse(text = rasterRead)) else ""
+    }
+    if (identical("raster::raster", rasterRead) ||
+        identical("raster::stack", rasterRead) ||
+        identical("raster::brick", rasterRead)) {
+      rasterRead <- if (.requireNamespace("raster")) eval(parse(text = rasterRead)) else ""
     } else {
       ""
     }
   }
+
   if (!is.character(rasterRead)) {
     rasterRead <- if (identical(rasterRead, terra::rast)) {
       "SpatRaster"
@@ -565,13 +582,22 @@ vectorType <- function(vectorRead = getOption("reproducible.shapefileRead", "sf:
     }
   }
   if (!is.character(vectorRead)) {
-    vectorRead <- if (identical(vectorRead, terra::vect)) {
+    isTerra <- try(.requireNamespace("terra"), silent = TRUE)
+    isTerra2 <- if (isTRUE(isTerra)) identical(vectorRead, terra::vect) else FALSE
+    isSF <- try(.requireNamespace("sf"), silent = TRUE)
+    isSF2 <- if (isTRUE(isSF)) identical(vectorRead, sf::st_read) else FALSE
+
+    vectorRead <- if (isTerra2) {
+      if (isTerra %in% FALSE) .requireNamespace("terra", stopOnFALSE = TRUE)
       "SpatVector"
     } else if (needRasterPkg) {
       .requireNamespace("raster", stopOnFALSE = TRUE)
       "SpatialPolygons"
-    } else {
+    } else if (isTRUE(isSF2)) {
+      if (isSF %in% FALSE) .requireNamespace("sf", stopOnFALSE = TRUE)
       "sf"
+    } else {
+      stop("No vector read options available (")
     }
   }
   vectorRead
@@ -624,13 +650,6 @@ milliseconds <- function(time = Sys.time()) {
   tt <- as.numeric(time)
   rnd <- round(tt, -5)
   (tt - rnd) * 1000
-}
-
-cat2file <- function(..., file) {
-  if (missing(file)) {
-    file <- "~/log.txt"
-  }
-  cat(..., file = file)
 }
 
 layerNamesDelimiter <- "_%%_"
@@ -695,3 +714,94 @@ cacheId <- function(obj) {
   else
     NULL
 }
+
+#' Count Active Threads Based on CPU Usage
+#'
+#' This function counts the number of active system processes (threads) that
+#' match a given pattern and exceed a specified minimum CPU usage threshold. It
+#' works on Unix-like systems (e.g., Linux, macOS) and does not support Windows.
+#'
+#' @param pattern A character string used to filter process lines. Only
+#'   processes whose command line matches this pattern will be considered.
+#'   Default is `""` (matches all).
+#' @param minCPU A numeric value specifying the minimum CPU usage (in percent)
+#'   for a process to be considered active. Default is `50`.
+#'
+#' @return An integer representing the number of active threads matching the
+#'   pattern and exceeding the CPU usage threshold. Returns `NULL` with a
+#'   message if run on Windows.
+#'
+#' @examples
+#' \dontrun{
+#'   detectActiveCores(pattern = "R", minCPU = 30)
+#' }
+#'
+#' @note This function uses the `ps -ef` system command and regular expressions
+#'   to parse CPU usage. It may not be portable across all Unix variants.
+#'
+#' @export
+detectActiveCores <- function(pattern = "", minCPU = 50) {
+  if (!identical(.Platform$OS.type, "windows")) {
+    a0 <- system("ps -ef", intern = TRUE)[-1]
+    a4 <- grep(pattern, a0, value = TRUE)
+    a5 <- gsub("^.*[[:digit:]]* [[:digit:]]* ([[:digit:]]{1,3}) .*$",
+               "\\1", a4)
+    sum(as.numeric(a5) > minCPU)
+  } else {
+    message("Does not work on Windows")
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Backwards-compatible accessors for the destinationPathShared / inputPaths option pair.
+# The canonical names are reproducible.destinationPathShared and
+# reproducible.destinationPathSharedRecursive (matching the prepInputs naming family).
+# The old names (reproducible.inputPaths, reproducible.inputPathsRecursive) are
+# still accepted: if the new name is NULL but the old name is set, the old value
+# is used and a one-time deprecation message is emitted.
+# ---------------------------------------------------------------------------
+
+# One-shot per-session deprecation messaging. `.pkgEnv$.deprecMsgEmitted`
+# accumulates the option names whose deprecation message has already fired,
+# so subsequent calls in the same R session stay silent regardless of how
+# many times the getter is invoked from inside the preProcess pipeline.
+.deprecMsgOnce <- function(optName, replacementName) {
+  emitted <- .pkgEnv$.deprecMsgEmitted
+  if (is.null(emitted)) emitted <- character()
+  if (optName %in% emitted) return(invisible())
+  message("Option '", optName, "' is deprecated; ",
+          "please use '", replacementName, "' instead.")
+  .pkgEnv$.deprecMsgEmitted <- c(emitted, optName)
+  invisible()
+}
+
+#' @keywords internal
+.getDestinationPathShared <- function() {
+  newVal <- getOption("reproducible.destinationPathShared", NULL)
+  if (!is.null(newVal)) return(newVal)
+  oldVal <- getOption("reproducible.inputPaths", NULL)
+  if (!is.null(oldVal))
+    .deprecMsgOnce("reproducible.inputPaths",
+                   "reproducible.destinationPathShared")
+  oldVal
+}
+
+#' @keywords internal
+.getDestinationPathSharedRecursive <- function() {
+  newVal <- getOption("reproducible.destinationPathSharedRecursive", NULL)
+  if (!is.null(newVal)) return(newVal)
+  oldVal <- getOption("reproducible.inputPathsRecursive", NULL)
+  if (!is.null(oldVal))
+    .deprecMsgOnce("reproducible.inputPathsRecursive",
+                   "reproducible.destinationPathSharedRecursive")
+  # Default is FALSE when neither is set
+  if (is.null(oldVal)) FALSE else oldVal
+}
+
+# Deprecated wrappers — to be removed in a future release; preserved only so
+# any out-of-tree code that referenced the previous (branch-only) names still
+# resolves until callers can be updated.
+#' @keywords internal
+.getDataPath <- function() .getDestinationPathShared()
+#' @keywords internal
+.getDataPathRecursive <- function() .getDestinationPathSharedRecursive()

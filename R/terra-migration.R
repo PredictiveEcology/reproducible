@@ -80,7 +80,7 @@ values2 <- function(x, ...) {
   if (is(x, "Raster")) {
     raster::values(x, ...)
   } else {
-    if (is(x, "SpatRaster")) {
+    if (.isSpatRaster(x)) {
       terra::values(x, ..., mat = nlayers2(x) > 1)
     } else {
       terra::values(x, ...)

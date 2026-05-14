@@ -21,8 +21,8 @@ saveToCache(
 This is optional if \code{Cache} is used inside a SpaDES module.}
 
 \item{cacheSaveFormat}{Character string: currently either \code{qs} or \code{rds}. Defaults to
-\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} is faster but appears to have
-narrower range of conditions that work; \code{rds} is safer, but slower.}
+\code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
+narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
 \item{drv}{If using a database backend, \code{drv} must be an object that
 inherits from \code{DBIDriver} (e.g., \code{RSQLite::SQLite}).}

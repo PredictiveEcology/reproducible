@@ -4,12 +4,33 @@
 \alias{loadFile}
 \title{Load a file from the cache}
 \usage{
-loadFile(file, ...)
+loadFile(
+  file,
+  cacheId,
+  cachePath,
+  drv,
+  conn,
+  verbose = getOption("reproducible.verbose"),
+  ...
+)
 }
 \arguments{
-\item{file}{character specifying the path to the file}
+\item{file}{\code{character(1)} specifying the path to the file to load.}
 
-\item{...}{Allows \code{format} for backward compatibility}
+\item{cacheId}{\code{character(1)} the unique cache identifier of the object.}
+
+\item{cachePath}{\code{character(1)} path to the cache directory.}
+
+\item{drv}{A DBI driver object (e.g., \code{RSQLite::SQLite()}). Used when
+the cache format needs to be swapped.}
+
+\item{conn}{A DBI connection object. If \code{NULL}, a new connection is
+created internally as needed.}
+
+\item{verbose}{\code{integer} or \code{logical}. If \verb{> 0} or \code{TRUE}, print
+informational messages. Defaults to \code{getOption("reproducible.verbose")}.}
+
+\item{...}{Allows \code{format} for backward compatibility.}
 }
 \value{
 the object loaded from \code{file}

@@ -10,7 +10,7 @@ listNamed(...)
 \item{...}{Any elements to add to a list, as in \code{base::list}}
 }
 \description{
-This is a convenience wrapper around \verb{newList <- list(a = 1); names(newList) <- "a"}.
+This is a convenience wrapper around \verb{a <- 1; newList <- list(a); names(newList) <- "a"}.
 }
 \details{
 This will return a named list, where names are the object names, captured
