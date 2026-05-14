@@ -738,6 +738,17 @@ extractFromArchive <- function(archive,
   if (is.atomic(fun) && length(fun) == 1L && isTRUE(is.na(fun)))
     return(list(targetFilePath = targetFilePath, fun = fun))
   if (all(!is.na(targetFilePath))) {
+    # Drop OS-injected archive metadata from auto-discovered candidates so they aren't
+    # picked when no targetFile is specified. Covers macOS (__MACOSX/*, ._* AppleDouble,
+    # .DS_Store) and Windows (Thumbs.db, desktop.ini). If the user explicitly named such
+    # a file via targetFilePath, it is preserved via the union below.
+    if (length(filesExtracted)) {
+      bn <- basename(filesExtracted)
+      isOSMeta <- grepl("(^|/)__MACOSX(/|$)", filesExtracted) |
+        startsWith(bn, "._") |
+        bn %in% c(".DS_Store", "Thumbs.db", "desktop.ini")
+      filesExtracted <- filesExtracted[!isOSMeta]
+    }
     possibleFiles <- unique(c(targetFilePath, filesExtracted))
     whichPossFile <- possibleFiles %in% targetFilePath
     if (isTRUE(any(whichPossFile))) {
