@@ -35,7 +35,14 @@
 
 * `preProcess` now skips downloading when a local copy already exists and
   matches the remote version, even if it was never recorded in `CHECKSUMS.txt`
-  for the current `destinationPath`. The new `pp_remote_hash_check` stage fetches
+  for the current `destinationPath`. There is also a new `<cacheId>.hash` file
+  placed alongside the cached repository files, that is a simpler mechanism than
+  the `CHECKSUMS.txt`, i.e., one file, one hash. This was implemented because there
+  were too many edge cases that were difficult to handle when there is a single
+  `CHECKSUMS.txt` file. Nevertheless, the `CHECKSUMS.txt` file is still used if 
+  it is present, and the `<>..hash` file is absent, so a user can manually
+  place a known `CHECKSUMS.txt` file into a directory as "the canonical version".
+  The new `pp_remote_hash_check` stage fetches
   remote metadata (ETag / content-length for HTTP; md5Checksum / size for Google
   Drive) and compares against the local file. A stored `.hash` file is checked
   first; if absent, file-size equality is used as a fast proxy and the hash is
@@ -66,6 +73,9 @@
 * New exported helper `prepopulateCacheAsync(cachePath)` lets workflows
   kick off the async scan explicitly (e.g. early in `setupProject()`) so
   the fork has even more wall-clock time to complete.
+  
+* Lots of new unit tests for new features, and to cover edge cases that were slipping
+  through.
 
 ## bug fixes
 
