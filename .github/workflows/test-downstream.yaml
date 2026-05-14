@@ -58,18 +58,19 @@ jobs:
         run: install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
         shell: Rscript {0}
 
-      - name: Install NLMR from GitHub (not on CRAN, needed by SpaDES.core Suggests)
-        run: pak::pak("ropensci/NLMR", ask = FALSE)
-        shell: Rscript {0}
-
-      - name: Install Require from GitHub development (fix for setLinuxBinaryRepo; remove once Require is on CRAN)
-        run: pak::pak("PredictiveEcology/Require@development", ask = FALSE)
-        shell: Rscript {0}
-
+      # Single pak::pak() call resolves all refs together. Multiple sequential
+      # pak invocations can leave pak's internal library in an inconsistent
+      # state (e.g. half-installed R6 -> `lazy-load database ... is corrupt`
+      # when the next call uses R6 via zip::unzip_process). One resolve avoids
+      # that intermediate state. `ropensci/NLMR` is needed by SpaDES.core
+      # Suggests; `PredictiveEcology/Require@development` is the dev-version
+      # fix for setLinuxBinaryRepo (drop once Require is on CRAN).
       - name: Install dependencies
         run: |
           pak::pak(
-            c("local::reproducible", "local::SpaDES.core", "local::SpaDES.project",
+            c("ropensci/NLMR",
+              "PredictiveEcology/Require@development",
+              "local::reproducible", "local::SpaDES.core", "local::SpaDES.project",
               "any::rcmdcheck", "any::knitr", "any::rmarkdown"),
             dependencies = TRUE,
             ask = FALSE
