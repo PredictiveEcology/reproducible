@@ -2144,6 +2144,31 @@ test_that("Cache with weird dots", {
 
 })
 
+test_that("Cache works when `...` is the first formal (#466)", {
+  testInit()
+
+  myFun <- function(..., arg1, arg2) {
+    rnorm(arg1, arg2, ...)
+  }
+  myFun2 <- function(arg1, arg2, ...) {
+    rnorm(arg1, arg2, ...)
+  }
+
+  a <- myFun(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  b <- myFun(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  d <- myFun(arg1 = 100, arg2 = 2, sd = 99) |> Cache()
+  expect_true(attr(a, ".Cache")$newCache)
+  expect_false(attr(b, ".Cache")$newCache)
+  expect_true(attr(d, ".Cache")$newCache)
+
+  a2 <- myFun2(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  b2 <- myFun2(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  d2 <- myFun2(arg1 = 200, arg2 = 2, sd = 10) |> Cache()
+  expect_true(attr(a2, ".Cache")$newCache)
+  expect_false(attr(b2, ".Cache")$newCache)
+  expect_true(attr(d2, ".Cache")$newCache)
+})
+
 test_that(".digest with empty and broken files", {
   testInit()
   tf <- tempfile()
