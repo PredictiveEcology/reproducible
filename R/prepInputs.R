@@ -147,15 +147,22 @@ utils::globalVariables(c(
 #'   `"similar"` will extract all files with the same filename without
 #'   file extension as `targetFile`. `NA` will extract nothing other
 #'   than `targetFile`. A character string of specific file names will cause
-#'   only those to be extracted. See table in [preProcess()].
+#'   only those to be extracted. Each element may also be a regular expression:
+#'   if an element does not match any archive member literally (by relative path
+#'   or basename), it is passed to `grep()` against the archive's file list and
+#'   all matching members are extracted. For example,
+#'   `alsoExtract = "CMD_sm|CMD_sp"` extracts every file whose name contains
+#'   `CMD_sm` or `CMD_sp`. See table in [preProcess()].
 #'
 #' @param destinationPath Character string of a directory in which to download
 #'   and save the file that comes from `url` and is also where the function
 #'   will look for `archive` or `targetFile`. NOTE (still experimental):
 #'   To prevent repeated downloads in different locations, the user can also set
-#'   `options("reproducible.inputPaths")` to one or more local file paths to
+#'   `options("reproducible.destinationPathShared")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is
-#'   `NULL` meaning do not search locally.
+#'   `NULL` meaning do not search locally. The previous name
+#'   `options("reproducible.inputPaths")` is still accepted as a backwards-compatible
+#'   alias.
 #'
 #' @param fun Optional. If specified, this will attempt to load whatever
 #'   file was downloaded during `preProcess` via `dlFun`. This can be either a
@@ -357,11 +364,33 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     )
   }
   funCaptured <- substitute(fun)
+  ## When fun is a bare variable name (e.g. fun = myFun), substitute() captures
+  ## the symbol rather than the value. Force the R promise directly: this resolves
+  ## the symbol in the frame where the promise was created (the caller's frame),
+  ## which works correctly even when prepInputs is invoked via Cache's call chain.
+  if (is.name(funCaptured))
+    funCaptured <- fun
+  if (is.character(url) && length(url) == 0L) url <- NULL
   prepInputsAssertions(environment())
 
-  rpiut <- getOption("reproducible.prepInputsUrlTiles")
   runNormalPreProcess <- TRUE
-  if (!(isNULLorNA(rpiut) || rpiut %in% FALSE) && (
+
+  # COG fast-path: triggered when url is HTTP(S), a spatial subsetting arg is
+  # present, and the remote file is confirmed as a Cloud Optimized GeoTiff.
+  if (isTRUE(getOption("reproducible.useCOG", TRUE)) &&
+      !is.null(url) && !isNULLorNA(url) &&
+      grepl("^https?://", url) &&
+      (!is.null(list(...)$to) || !is.null(list(...)$cropTo) || !is.null(list(...)$maskTo))) {
+    x_cog <- prepInputsCOG(url = url, verbose = verbose, ...)
+    if (!identical(x_cog, "NULL")) {
+      x <- x_cog
+      runNormalPreProcess <- FALSE
+    }
+  }
+
+  rpiut <- getOption("reproducible.prepInputsUrlTiles")
+  if (runNormalPreProcess &&
+      !(isNULLorNA(rpiut) || rpiut %in% FALSE) && (
     !is.null(list(...)$to) || !is.null(list(...)$cropTo) || !is.null(list(...)$maskTo)
   )) {
     if (!is.null(url) && isGoogleDriveDirectory(rpiut)) {
@@ -399,6 +428,21 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     ##################################################################
     # Load object to R
     ##################################################################
+    # preProcess() returns out$fun = NULL when auto-guessing failed (e.g.
+    # ambiguous archive contents, .shp missing from alsoExtract). The
+    # download/extract layer is happy with that, but prepInputs() is the
+    # loader and a NULL fun would silently produce an un-loaded result —
+    # surprising and almost always a user error. If the caller explicitly
+    # opted out of loading (`fun = NA`), respect that; otherwise stop early
+    # with a message that points at the fix.
+    if (is.null(out$fun) && !isTRUE(is.na(funCaptured))) {
+      stop(
+        "prepInputs cannot determine which function to use to load the result. ",
+        "The file extension is ambiguous and no `fun` / `targetFile` was supplied. ",
+        "Either specify `targetFile` and/or `fun`, or pass `fun = NA` to skip loading.",
+        call. = FALSE
+      )
+    }
     x <- process(out,
                  funCaptured = funCaptured,
                  useCache = useCache, verbose = verbose, .callingEnv = .callingEnv, ...
@@ -514,11 +558,6 @@ extractFromArchive <- function(archive,
           neededFiles <- checkRelative(neededFiles, absolutePrefix = destinationPath, filesInArchive)
           neededFilesRel <- makeRelative(neededFiles, destinationPath) # neededFiles may have been changed
           neededFiles <- makeAbsolute(neededFiles, destinationPath)
-          result <- if (NROW(checkSums)) {
-            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
-          } else {
-            logical(0)
-          }
           # need to re-Checksums because
           checkSums <- .checkSumsUpdate(
             destinationPath = destinationPath,
@@ -526,6 +565,14 @@ extractFromArchive <- function(archive,
             checkSums = checkSums,
             checkSumFilePath = checkSumFilePath
           )
+          # Compute result AFTER the update so it reflects current disk state.
+          # Previously computed before .checkSumsUpdate, so files just extracted
+          # would show NROW(result) == 0, forcing a spurious re-extraction attempt.
+          result <- if (NROW(checkSums)) {
+            checkSums[checkSums$expectedFile %in% neededFilesRel, ]$result
+          } else {
+            logical(0)
+          }
 
           # isOK will have "directories" so it will be longer than neededFiles
           isOK <- if (!is.null(checkSums)) {
@@ -684,7 +731,24 @@ extractFromArchive <- function(archive,
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
                                  filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
+  # fun = NA means "don't load anything" — skip all guessing and messaging.
+  # Guard is.na() with is.atomic + length-1 so a user-supplied language object
+  # (e.g. `fun = sf::st_read(targetFile)`) doesn't trip "is.na() applied to
+  # non-(list or vector) of type 'language'".
+  if (is.atomic(fun) && length(fun) == 1L && isTRUE(is.na(fun)))
+    return(list(targetFilePath = targetFilePath, fun = fun))
   if (all(!is.na(targetFilePath))) {
+    # Drop OS-injected archive metadata from auto-discovered candidates so they aren't
+    # picked when no targetFile is specified. Covers macOS (__MACOSX/*, ._* AppleDouble,
+    # .DS_Store) and Windows (Thumbs.db, desktop.ini). If the user explicitly named such
+    # a file via targetFilePath, it is preserved via the union below.
+    if (length(filesExtracted)) {
+      bn <- basename(filesExtracted)
+      isOSMeta <- grepl("(^|/)__MACOSX(/|$)", filesExtracted) |
+        startsWith(bn, "._") |
+        bn %in% c(".DS_Store", "Thumbs.db", "desktop.ini")
+      filesExtracted <- filesExtracted[!isOSMeta]
+    }
     possibleFiles <- unique(c(targetFilePath, filesExtracted))
     whichPossFile <- possibleFiles %in% targetFilePath
     if (isTRUE(any(whichPossFile))) {
@@ -736,7 +800,10 @@ extractFromArchive <- function(archive,
           )
         }
       }
-      if (length(fun) == 0) stop("Can't guess at which function to use to read in the object; please supply 'fun'")
+      # If we can't guess `fun`, leave it NULL. preProcess() does not load the
+      # object, so this is fine when called directly. prepInputs()'s process()
+      # already handles a NULL fun gracefully by returning targetFilePath.
+      if (length(fun) == 0) fun <- NULL
     }
     if (is.null(targetFilePath) || length(targetFilePath) == 0) {
       secondPartOfMess <- if (any(isShapefile)) {
@@ -1146,7 +1213,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     )
   })
 
-  rip <- getOption("reproducible.inputPaths")
+  rip <- .getDestinationPathShared()
   checkSumFilePaths <- if (!is.null(rip)) {
     unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
   } else {
@@ -1181,7 +1248,15 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 
       if (length(archive) > 0) {
         if (file.exists(archive[1])) {
-          needSystemCall <- needSystemCall || file.size(archive[1]) > 2e9
+          fsArch <- file.size(archive[1])
+          if (fsArch <= 10) {
+            # corrupted
+            unlink(archive[1])
+            message("archive (", archive[1], ") appears corrupted; deleting it; ",
+                    "you may have to manually delete it and the copy in `reproducible.destinationPathShared` if using ")
+            return(NULL)
+          }
+          needSystemCall <- needSystemCall || fsArch > 2e9
         }
       }
 
@@ -1207,7 +1282,16 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
               filesInArchive <- filesInArchive[filesInArchive$Length != 0, ]$Name
             } else if ("path" %in% nams) {
               # from archive::archive
-              filesInArchive <- filesInArchive[filesInArchive$size != 0, ]$path
+              # Some zip files (e.g. Deflate64) cause archive::archive() to
+              # report size = 0 for every entry even though the archive is valid
+              # and non-empty.  Detect this and keep all paths rather than
+              # incorrectly filtering everything out.
+              allZeroSize <- all(filesInArchive$size == 0L) && file.size(archive[1]) > 0
+              filesInArchive <- if (allZeroSize) {
+                filesInArchive$path
+              } else {
+                filesInArchive[filesInArchive$size != 0, ]$path
+              }
             } else {
               # untar & archive::archive
               filesInArchive
@@ -1701,12 +1785,23 @@ readCheckSumFilePath <- function(checkSumFilePath, destinationPath, filesToCheck
   cs
 }
 
-extractFileNOTtoChecksum <- function(cs, destinationPath, filesToChecksum) {
+extractFileNOTtoChecksum <- function(cs, destinationPath, filesToChecksum,
+                                     algorithms = NULL) {
   setDT(cs)
-  cs[!makeRelative(file, destinationPath) %in%
-       makeRelative(filesToChecksum, destinationPath)]
-  setDF(cs)
-  cs
+  files <- makeRelative(filesToChecksum, destinationPath)
+  if (is.null(algorithms) || all(is.na(algorithms)) ||
+      is.null(cs$algorithm)) {
+    # Backward-compat: drop rows for any file we're updating, regardless of
+    # algorithm. Used when caller doesn't know which algorithm it's writing.
+    out <- cs[!(makeRelative(file, destinationPath) %in% files)]
+  } else {
+    # Multi-algorithm: only drop rows where (file, algorithm) is being
+    # upserted. Rows recording other algorithms for the same file are kept.
+    out <- cs[!(makeRelative(file, destinationPath) %in% files &
+                  algorithm %in% algorithms)]
+  }
+  setDF(out)
+  out
 }
 
 
@@ -1718,8 +1813,17 @@ appendChecksumsTableWithCS <- function(append, checkSumFilePath, destinationPath
     if (is.null(cs)) {
       append <- FALSE
     } else {
-      # a checksums file already existed, need to keep some of it
-      nonCurrentFiles <- extractFileNOTtoChecksum(cs, destinationPath, filesToChecksum)
+      # a checksums file already existed, need to keep some of it.
+      # Restrict the drop to (file, algorithm) pairs we're writing so other
+      # algorithms recorded for the same file (e.g. an md5 row written by
+      # pp_remote_hash_check) are preserved alongside the xxhash64 row this
+      # call is producing.
+      currAlgo <- if (!is.null(currentFiles$algorithm.x)) {
+        unique(currentFiles$algorithm.x)
+      } else NULL
+      nonCurrentFiles <- extractFileNOTtoChecksum(
+        cs, destinationPath, filesToChecksum, algorithms = currAlgo
+      )
     }
   }
 

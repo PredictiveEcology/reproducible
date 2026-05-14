@@ -1,5 +1,5 @@
 utils::globalVariables(c(
-  "goe", "goc"
+  "goe", "goc", "gauth_path"
 ))
 
 #' A wrapper around a set of downloading functions
@@ -249,10 +249,10 @@ downloadFile <- function(archive, targetFile, neededFiles,
                     normPath(fileToDownload),
                     "')\n",
                     "      then rerun this current function call.\n",
-                    if (!is.null(getOption("reproducible.inputPaths"))) {
-                      obj <- dir(getOption("reproducible.inputPaths"), full.names = TRUE, pattern = basename(fileToDownload))
+                    if (!is.null(.getDestinationPathShared())) {
+                      obj <- dir(.getDestinationPathShared(), full.names = TRUE, pattern = basename(fileToDownload))
                       if (length(obj)) {
-                        paste0(" 2b) The copy of the file in getOption('reproducible.inputPaths')",
+                        paste0(" 2b) The copy of the file in getOption('reproducible.destinationPathShared')",
                                " may have been changed or corrupted -- run:\n",
                                "      file.remove(c('",
                                paste(normPath(obj), collapse = "', '"),
@@ -423,12 +423,29 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       ))
       a <- future::future(
         {
-          googledrive::drive_auth(email = goe, cache = goc)
+          # Re-authenticate inside the future worker. Prefer a service-account
+          # JSON when one is configured (CI / GOOGLEDRIVE_AUTH path), otherwise
+          # fall back to the user-account email + cache used by the parent.
+          # Interactive auth (no email, no path) would silently hang the
+          # worker — pass the JSON path through globals when available.
+          if (nzchar(gauth_path) && file.exists(gauth_path)) {
+            try(googledrive::drive_auth(path = gauth_path), silent = TRUE)
+          } else {
+            googledrive::drive_auth(email = goe, cache = goc)
+          }
           retry(retries = 2, downloadCall)
         },
         globals = list(
-          goc = getOption("gargle_oauth_cache"),
+          # Guard against NULL: getOption("gargle_oauth_cache") defaults to
+          # NULL when unset, and normalizePath(NULL) errors with the cryptic
+          # `path.expand(path) : invalid 'path' argument` inside the future
+          # worker. Pass NULL through — gargle handles an absent cache.
+          goc = local({
+            v <- getOption("gargle_oauth_cache")
+            if (is.null(v) || !nzchar(v)) v else normalizePath(v, mustWork = FALSE)
+          }),
           goe = getOption("gargle_oauth_email"),
+          gauth_path = Sys.getenv("GOOGLEDRIVE_AUTH", ""),
           downloadCall = downloadCall,
           downloadFilename = downloadFilename,
           download_resumable_httr2 = download_resumable_httr2,
@@ -517,13 +534,19 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   if (.requireNamespace("httr2") && .requireNamespace("curl")) {
     for (i in 1:2) {
-      req <- httr2::request(url)
+      totalTimeout <- getOption("reproducible.timeout", 1200)
+      req <- httr2::request(url) |>
+        httr2::req_timeout(totalTimeout) |>
+        httr2::req_options(connecttimeout = totalTimeout)
       if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
         req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
       if (verbose > 0) {
         # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
-        reqProgress <- get("req_progress", envir = asNamespace("httr2"))
-        req <- req |> reqProgress()
+        # Also wrap in tryCatch: cli's app$styles can be NULL/NA in parallel/non-interactive contexts
+        req <- tryCatch({
+          reqProgress <- get("req_progress", envir = asNamespace("httr2"))
+          req |> reqProgress()
+        }, error = function(e) req)
       }
 
       resp <- req |> httr2::req_url_query() |>
@@ -620,7 +643,15 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
         args <- args[!names(args) %in% forms]
         if (noTargetFile) {
-          fileInfo <- file.info(dir(destinationPath, full.names = TRUE))
+          # Must mirror the `recursive = TRUE` snapshot below; otherwise files
+          # that were already in subdirectories of destinationPath (e.g. files
+          # extracted there by an earlier prepInputs() call into the same
+          # `reproducible.inputPaths` stash) are absent from the "before" set
+          # and the setdiff() at the post-dlFun snapshot incorrectly classifies
+          # them as newly created. They then propagate as `downloadResults$destFile`
+          # and trip "already exists at <stash path>" in the desiredPath check.
+          fileInfo <- file.info(dir(destinationPath, recursive = TRUE,
+                                    full.names = TRUE))
         }
 
         if (is.call(dlFun)) {
@@ -688,8 +719,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       }
 
       if (is.null(out) && !is.null(url)) { # if url is NULL and out is NULL; means dlFun did all the work
-        isGID <- all(isTRUE(grepl("^[A-Za-z0-9_-]{33}$", url)), # Has 33 characters as letters, numbers or - or _
-                     isTRUE(!grepl("\\.[^\\.]+$", url))) # doesn't have an extension --> GDrive ID's as url
+        isGID <- isGoogleDriveURL(url) || isGoogleID(url)
         if (any(isGID, grepl("d.+.google.com", url))) {
           if (!requireNamespace("googledrive", quietly = TRUE)) {
             stop(.message$RequireNamespaceFn("googledrive", "to use google drive files"))
@@ -903,29 +933,41 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     on.exit(options(opts))
   }
 
+  # Cache the drive_get / drive_ls result indefinitely. The Cache key
+  # includes the URL/ID, so each distinct file pays one API hit ever per
+  # cachePath; subsequent calls (in-memory or on-disk) are near-instant.
+  # Without this, .guessAtFile (and therefore the very first phase of
+  # pp_resolve_files) hits the Google Drive API on every call, ~1-2 s of
+  # latency that the sidecar fast-path further down the pipeline cannot
+  # recover.
+  #
+  # Do NOT wrap the inner call in `quote(...)`: Cache's digest treats a
+  # `quote(...)` expression as opaque text and never resolves the `url`
+  # symbol against the calling frame, so every URL collides on the same
+  # cache key and the first-cached fileAttr is returned for every later
+  # URL. retry() captures its `expr` argument with substitute() and works
+  # the same way whether or not it's wrapped in quote().
   # if (is.null(archive) || is.na(archive)) {
   if (isTRUE(isDirectory(url, FALSE))) {
-    if (packageVersion("googledrive") < "2.0.0") {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
-                                                                  shared_drive = team_drive
-      )))
-    } else {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_ls(googledrive::as_id(url),
-                                                                 shared_drive = team_drive
-      )))
-    }
+    fileAttr <- Cache(
+      retry(retries = 1, googledrive::drive_ls(googledrive::as_id(url),
+                                               shared_drive = team_drive)),
+      verbose = FALSE
+    )
   } else {
     if (packageVersion("googledrive") < "2.0.0") {
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                                  team_drive = team_drive
-      )))
+      fileAttr <- Cache(
+        retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
+                                                  team_drive = team_drive)),
+        verbose = FALSE
+      )
     } else {
-
-      fileAttr <- retry(retries = 1, quote(googledrive::drive_get(googledrive::as_id(url),
-                                                                  shared_drive = team_drive
-      )))
+      fileAttr <- Cache(
+        retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
+                                                  shared_drive = team_drive)),
+        verbose = FALSE
+      )
     }
-
   }
 
   fileSize <- sapply(fileAttr$drive_resource, function(x) x$size)
@@ -1190,12 +1232,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     file_id <- gdriveDetails$id
     fileSize <- as.numeric(gdriveDetails$drive_resource[[1]]$size)
     file_name <- googledriveIDtoDownloadURL(file_id)
-    token <- googledrive::drive_token()
-    if (googledrive::drive_has_token()) {
-      bearer <- token$auth_token$credentials$access_token
-    } else {
-      stop("no googledrive token discovered; run drive_auth() to authenticate.")
-    }
+    bearer <- .get_fresh_gd_bearer()  # refresh token via gargle before use
   } else {
     if (is.null(fileSize)) {
       fileSize <- getRemoteFileSize(isGD, url)
@@ -1205,48 +1242,71 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
   if ( (isGD &&  (.Platform$OS.type == "windows")) || nzchar(Sys.which("curl")) %in% FALSE ||
       fileSize < 1e9) { # i.e., < 1GB can just use the simpler httr2 progress
     ## Google Drive download using httr2 (no resume support)
-    req <- httr2::request(file_name)
-    if (isGD) {
-      req <- req |> httr2::req_auth_bearer_token(bearer)
-    }
-    req <- req |> httr2::req_progress()
-
+    ## Retry once on 401: the token may have expired mid-session; refresh and retry.
     con <- file(local_path_expanded, open = "wb")
     on.exit(try(close(con), silent = TRUE), add = TRUE)
 
-    tryCatch({
-      resp <- httr2::req_perform(req)
-      body <- httr2::resp_body_raw(resp)
-      writeBin(body, con)
-      completed <- TRUE
-    }, error = function(e) {
-      stop("Google Drive download failed: ", e$message)
-    })
+    for (.attempt in 1:2) {
+      req <- httr2::request(file_name)
+      if (isGD) req <- req |> httr2::req_auth_bearer_token(bearer)
+      req <- tryCatch(req |> httr2::req_progress(), error = function(e) req)
+
+      err <- tryCatch({
+        resp <- httr2::req_perform(req)
+        body <- httr2::resp_body_raw(resp)
+        writeBin(body, con)
+        completed <- TRUE
+        NULL
+      }, error = function(e) e)
+
+      if (is.null(err)) break  # success
+
+      is401 <- inherits(err, "httr2_http_401") ||
+        grepl("401", conditionMessage(err), fixed = TRUE)
+      if (.attempt < 2L && is401 && isGD) {
+        messagePreProcess("Google Drive token expired (HTTP 401); refreshing and retrying...",
+                          verbose = verbose)
+        bearer <- .get_fresh_gd_bearer(force_refresh = TRUE)
+      } else {
+        stop("Google Drive download failed: ", conditionMessage(err))
+      }
+    }
 
   } else {
     if (.Platform$OS.type != "windows" && nzchar(Sys.which("curl"))) {
       # Use download.file with curl on Linux/macOS
       method <- "curl"
-      if (isGD) {
-        extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
-      } else {
+      if (!isGD) {
         extra_args <- "-C -"
         messagePreProcess("Using 'curl' with resume support on Linux/macOS.", verbose = verbose)
       }
 
-      tryCatch({
-        utils::download.file(
-          url = file_name,
-          destfile = local_path_expanded,
-          method = method,
-          quiet = verbose < 1,
-          extra = extra_args
-        )
-        completed <- TRUE
-        # message("Download completed using download.file with curl.")
-      }, error = function(e) {
-        stop("Non-Google Drive download failed: ", e$message)
-      })
+      for (.attempt in 1:2) {
+        if (isGD)
+          extra_args <- paste("-L -H", shQuote(paste("Authorization: Bearer", bearer)))
+        err <- tryCatch({
+          utils::download.file(
+            url = file_name,
+            destfile = local_path_expanded,
+            method = method,
+            quiet = verbose < 1,
+            extra = extra_args
+          )
+          completed <- TRUE
+          NULL
+        }, error = function(e) e)
+
+        if (is.null(err)) break
+
+        is401 <- grepl("401", conditionMessage(err), fixed = TRUE)
+        if (.attempt < 2L && is401 && isGD) {
+          messagePreProcess("Google Drive token expired (HTTP 401); refreshing and retrying...",
+                            verbose = verbose)
+          bearer <- .get_fresh_gd_bearer(force_refresh = TRUE)
+        } else {
+          stop("Non-Google Drive download failed: ", conditionMessage(err))
+        }
+      }
 
     } # else {
       # # Use httr2 for non-Google Drive downloads on Windows or if curl is unavailable
@@ -1304,6 +1364,18 @@ messageAboutFilesize <- function(fileSize, verbose, msgMiddle = " on Google Driv
 
 googledriveIDtoDownloadURL <- function(id) {
   paste0("https://www.googleapis.com/drive/v3/files/", id, "?alt=media")
+}
+
+## Fetch a Google Drive bearer token.  When force_refresh = TRUE, trigger
+## gargle's auto-refresh by making a lightweight drive_user() API call through
+## httr — this is the safe way to refresh without calling Token2.0$refresh()
+## directly (which writes to the gargle cache and can fail on read-only mounts).
+.get_fresh_gd_bearer <- function(force_refresh = FALSE) {
+  if (!googledrive::drive_has_token())
+    stop("no googledrive token discovered; run drive_auth() to authenticate.")
+  if (force_refresh)
+    tryCatch(googledrive::drive_user(), error = function(e) NULL)
+  googledrive::drive_token()$auth_token$credentials$access_token
 }
 
 googledriveIDtoHumanURL <- function(id) {

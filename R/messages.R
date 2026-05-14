@@ -27,6 +27,7 @@
 
 .message$cacheGeoDomainContained <- "Spatial domain is contained within the url; returning the object"
 .message$cacheGeoDomainNotContained <- "Domain is not contained within the targetFile; running FUN"
+.message$cacheGeoNoRemoteExists <- "No remote targetFile exists; starting to build a new one"
 
 .message$LoadedCacheResult <- function(src = 1) {
   srcPoss <- c("Cached", "Memoised")

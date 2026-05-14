@@ -468,9 +468,9 @@ test_that("testing terra", {
 
       # The below was slightly off because RasterLayer was not exactly same as t20 proj
       spatRas1SmallAll <- projectTo(terra::rast(ras1SmallAll), t20)
-      expect_true( #  these are off b/c of projection probably
-        abs(sum(!is.na(values2(spatRas1SmallAll))) -
-          sum(!is.na(values2(t20MaskedByRas)))) <= 0
+      expect_equal( #  these are off b/c of projection probably
+        sum(!is.na(values2(spatRas1SmallAll))),
+        sum(!is.na(values2(t20MaskedByRas)))
       )
 
       if (FALSE) {

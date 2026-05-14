@@ -15,28 +15,108 @@ skip_if_service_account <- function() {
                         message =  "Using service account")
 }
 
-skip_if_service_account_releaseVer_NotLinux <- function() {
-  ## service accounts cannot upload to standard drive folders (no quota)
+## Run `expr` and convert transient upstream HTTP/network errors into a skip
+## so flaky CDN behaviour (e.g. GitHub raw returning 5xx during a request)
+## does not surface as a test FAIL. Non-transient errors propagate unchanged.
+## Evaluated in the caller's frame so any assignments inside `expr` are
+## visible to the rest of the test.
+.transientNetworkPattern <- paste(
+  "HTTP 5\\d\\d", "Bad Gateway", "Service Unavailable", "Gateway Timeout",
+  "Could(?:n't| not) resolve host", "Empty reply from server",
+  "Timeout was reached", "Operation timed out",
+  "Connection reset by peer", "Connection refused",
+  "TLS connect error", "SSL connect error",
+  "Recv failure", "Resolving timed out",
+  sep = "|"
+)
 
-  skip <- FALSE
-  # unexported from testthat:::on_ci and testthat:::env_var_is_true
-  on_ci <- isTRUE(as.logical(Sys.getenv("CI", "false")))
-  if (!interactive() || on_ci)
-    if (grepl("gserviceaccount", googledrive::drive_user()$emailAddress)) {
-      if ((Sys.info()[["sysname"]] != "Linux")) {
-        skip <- TRUE
-      }
-      if (Sys.getenv("R_VERSION_LABEL") != "release") {
-        skip <- TRUE
-      }
+skip_on_transient_http <- function(expr) {
+  expr <- substitute(expr)
+  pf <- parent.frame()
+  result <- tryCatch(eval(expr, envir = pf), error = identity)
+  if (!inherits(result, "error")) return(invisible(result))
+  msg <- paste(conditionMessage(result), collapse = "\n")
+  if (grepl(.transientNetworkPattern, msg, perl = TRUE)) {
+    testthat::skip(paste0("transient upstream HTTP/network error: ",
+                          substring(msg, 1L, 240L)))
+  }
+  stop(result)
+}
+
+## Run `expr` and skip if any GDAL streaming-failure warning is emitted
+## (truncated TIFF tile reads, IReadBlock failures, etc., or HTTP 5xx mid-
+## stream). Returns the result of `expr` so the caller can chain assertions
+## on it. Non-transient warnings are re-emitted so they remain visible in
+## test output instead of being silently muffled.
+.transientStreamPattern <- paste(
+  "TIFFFillTile", "TIFFReadEncodedTile", "IReadBlock failed",
+  "GDAL error", "HTTP 5\\d\\d", "Bad Gateway",
+  "Service Unavailable", "Gateway Timeout",
+  sep = "|"
+)
+
+## Warnings we know are harmless installation/config noise from GDAL/PROJ —
+## emitted by terra/sf on systems where the PROJ database isn't on the
+## default search path, but don't affect the result of operations that
+## don't actually need CRS transforms. Muffled silently (no test skip,
+## no re-emit) so they stop polluting CI output.
+.benignGDALPattern <- paste(
+  "PROJ: file is not a database",
+  sep = "|"
+)
+
+skip_if_transient_stream_warnings <- function(expr) {
+  expr <- substitute(expr)
+  pf <- parent.frame()
+  warns <- character()
+  result <- withCallingHandlers(
+    eval(expr, envir = pf),
+    warning = function(w) {
+      warns <<- c(warns, conditionMessage(w))
+      invokeRestart("muffleWarning")
     }
+  )
+  if (any(grepl(.transientStreamPattern, warns, perl = TRUE))) {
+    testthat::skip(paste0("transient upstream streaming failure: ",
+                          substring(paste(warns, collapse = "; "), 1L, 240L)))
+  }
+  warns <- warns[!grepl(.benignGDALPattern, warns, perl = TRUE)]
+  for (w in warns) warning(w, call. = FALSE)
+  invisible(result)
+}
+
+skip_if_service_account_releaseVer_NotLinux <- function() {
+  ## Service accounts (e.g. eliot-githubauthentication@...gserviceaccount.com)
+  ## have no Drive quota on user-owned folders, so they cannot complete the
+  ## upload-and-roundtrip path these tests exercise. We gate those tests on:
+  ##   (a) we're actually running unattended (CI or R CMD check non-interactive)
+  ##       AND the token currently in use IS a service account, AND
+  ##   (b) the runner is not the supported Linux/release combination.
+  ##
+  ## R_VERSION_LABEL is a CI-only signal the team's runners set to declare
+  ## "I am a release R job". A local R CMD check won't have it set, and
+  ## absence MUST NOT trigger a skip — only an explicit non-"release" value
+  ## should. Without this guard, every local `R CMD check` against a stored
+  ## service-account token skipped these tests for no good reason.
+
+  on_ci    <- isTRUE(as.logical(Sys.getenv("CI", "false")))
+  isAuto   <- !interactive() || on_ci
+  isSA     <- isAuto && grepl(
+                "gserviceaccount",
+                googledrive::drive_user()$emailAddress)
+  notLinux <- Sys.info()[["sysname"]] != "Linux"
+  verLabel <- Sys.getenv("R_VERSION_LABEL")
+  notRelease <- nzchar(verLabel) && verLabel != "release"
+
+  skip <- isSA && (notLinux || notRelease)
+
   if (requireNamespace("covr", quietly = TRUE) && covr::in_covr()) {
     skip <- FALSE
   }
-  testthat::skip_if(skip,
-                    paste("Skipping: If GoogleService Account, only Linux current R will run"))
-
-
+  testthat::skip_if(
+    skip,
+    "Service-account token + non-Linux or non-release R: skipping Drive upload tests"
+  )
 }
 
 ## puts tmpdir, tmpCache, tmpfile (can be vectorized with length >1 tmpFileExt),
@@ -99,6 +179,8 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
   skip_gauth <- identical(Sys.getenv("SKIP_GAUTH"), "true") # only set in setup.R for covr
   if (isTRUE(needGoogleDriveAuth)) {
+    if (isTRUE(skip_gauth))
+      skip("SKIP_GAUTH=true; skipping Google Drive tests")
     if (isNamespaceLoaded("googledrive"))
       if ((!googledrive::drive_has_token())) {
         if (!nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
@@ -106,9 +188,16 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
         }
         gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
         if (nzchar(gauthEnv)) {
-          if (file.exists(gauthEnv))
-            googledrive::drive_auth(path = gauthEnv)
-        # googledrive::drive_auth(path = Sys.getenv("GOOGLEDRIVE_AUTH"))
+          if (file.exists(gauthEnv)) {
+            ## Service-account credentials can be revoked at Google's end
+            ## (key rotated, SA disabled, etc.). drive_auth() converts the
+            ## underlying HTTP 400 / invalid_grant into a generic "Can't get
+            ## Google credentials" abort, which turns every Drive-using test
+            ## into an ERROR instead of a SKIP. Swallow it so the
+            ## skip_if_no_token() below cleanly skips instead.
+            tryCatch(googledrive::drive_auth(path = gauthEnv),
+                     error = function(e) invisible(NULL))
+          }
         }
       }
 
@@ -118,6 +207,14 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
   out <- list()
 
   withr::local_options("reproducible.ask" = ask, .local_envir = pf)
+  ## Never block test runs waiting on `Type y if you have attempted a manual
+  ## download...` — downloadFile() prompts when isInteractive() && this option
+  ## is TRUE (its default). Override here for all tests that go through
+  ## testInit(); individual tests can still re-enable via `opts`.
+  withr::local_options(
+    "reproducible.interactiveOnDownloadFail" = FALSE,
+    .local_envir = pf
+  )
   if (!missing(verbose)) {
     withr::local_options("reproducible.verbose" = verbose, .local_envir = pf)
   }
@@ -163,6 +260,18 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
 
 runTest <- function(prod, class, numFiles, mess, expectedMess, filePattern, tmpdir, test) {
   files <- dir(tmpdir, pattern = filePattern, full.names = TRUE)
+  if (length(files) != numFiles) {
+    ## Use message() so the dump survives capture.output({...}) wrappers in the
+    ## test body (capture.output redirects stdout, not stderr).
+    message(sprintf(
+      "[runTest] pattern=%s expected=%d got=%d tmpdir=%s",
+      filePattern, numFiles, length(files), tmpdir
+    ))
+    message("  matching:    ", paste(basename(files), collapse = ", "))
+    others <- setdiff(dir(tmpdir), basename(files))
+    if (length(others))
+      message("  also in dir: ", paste(others, collapse = ", "))
+  }
   expect_true(length(files) == numFiles)
   expect_true(inherits(test, class))
   # messagePrepInputs(mess)

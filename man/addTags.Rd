@@ -12,7 +12,8 @@
   tagValue = character(),
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 
 .updateTagsRepo(
@@ -23,7 +24,8 @@
   add = TRUE,
   cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   drv = getDrv(getOption("reproducible.drv", NULL)),
-  conn = getOption("reproducible.conn", NULL)
+  conn = getOption("reproducible.conn", NULL),
+  verbose = getOption("reproducible.verbose")
 )
 }
 \arguments{
@@ -45,6 +47,9 @@ Format used for saving cache files. Defaults to \code{getOption("reproducible.ca
 \item{drv}{A DBI driver object. Defaults to \code{getDrv(getOption("reproducible.drv", NULL))}.}
 
 \item{conn}{A DBI connection object. If \code{NULL}, a new connection is created internally.}
+
+\item{verbose}{\code{integer} or \code{logical}. If \verb{> 0} or \code{TRUE}, print informational messages.
+Defaults to \code{getOption("reproducible.verbose")}.}
 
 \item{add}{\code{logical(1)}
 If \code{TRUE}, adds the tag if it does not exist. Defaults to \code{TRUE}.}

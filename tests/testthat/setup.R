@@ -2,6 +2,13 @@ library(data.table)
 
 origDTthreads <- setDTthreads(2)
 
+## Detect "this is a local dev run, not CI/CRAN" so we can flip a few
+## opt-in switches on by default. CRAN/CI already skip via skip_on_cran() /
+## skip_on_ci(); the runLargeFileTests gate is in addition to those for
+## tests that need the 20–30 minute integration path.
+onCI   <- isTRUE(as.logical(Sys.getenv("CI", "false")))
+onCRAN <- !nzchar(Sys.getenv("NOT_CRAN")) &&
+          !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 wantMoreTests <- isInteractive() || Sys.info()[["user"]] %in% c("emcintir")
 
 if (wantMoreTests) { # this is for covr::package_coverage
@@ -10,11 +17,16 @@ if (wantMoreTests) { # this is for covr::package_coverage
 }
 
 opts <- options(
-  reproducible.runLargeFileTests = FALSE, # Set to TRUE to run the 2 long tests -- 20 minutes
+  ## Default: run the multi-minute large-file tests when this is a local
+  ## (non-CI, non-CRAN) dev run. User can override either way:
+  ##   options(reproducible.runLargeFileTests = TRUE  / FALSE)
+  reproducible.runLargeFileTests = isTRUE(
+    getOption("reproducible.runLargeFileTests", wantMoreTests && !onCI && !onCRAN)
+  ),
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
-  reproducible.useCacheV3 = TRUE#,
+  reproducible.useCacheV3 = !isFALSE(getOption("reproducible.useCacheV3"))#,
   #reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
 )
 
@@ -35,7 +47,9 @@ if (isNamespaceLoaded("googledrive"))
     gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
     if (nzchar(gauthEnv)) {
       if (file.exists(gauthEnv))
-        googledrive::drive_auth(path = gauthEnv)
+        ## see helper-allEqual.R: tolerate revoked / rotated service-account keys
+        tryCatch(googledrive::drive_auth(path = gauthEnv),
+                 error = function(e) invisible(NULL))
     }
   }
 

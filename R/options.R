@@ -38,6 +38,17 @@
 #'     systems, but much slower than `digest::digest(algo = "spooky)`.
 #'     So, if all caching is happening on a single machine, `"fast"` would be a good setting.
 #'   }
+#'   \item{`checkRemoteHash`}{
+#'     Default: `FALSE`. Used in [preProcess()] / [prepInputs()]. Controls whether
+#'     `pp_remote_hash_check` re-contacts the remote source (e.g. Google Drive,
+#'     HTTP HEAD) when a `.hash` sidecar from a previous successful match
+#'     already exists in `destinationPath`. With the default (`FALSE`), the
+#'     sidecar is trusted and the remote check is skipped — typically saving
+#'     1–2 s per file when the cluster cache is warm. Set to `TRUE` to force a
+#'     remote round-trip on every call (the pre-3.0.0.9050 behaviour); use
+#'     this if the upstream file may change and you need to detect that.
+#'     Removing the `<file>_*.hash` sidecar also forces a re-check.
+#'   }
 #'   \item{`conn`}{
 #'     Default: `NULL`. Sets a specific connection to a database, e.g.,
 #'     `dbConnect(drv = RSQLite::SQLite())` or `dbConnect(drv = RPostgres::Postgres()`.
@@ -63,19 +74,18 @@
 #'     uploading cached elements via `googledrive` in `cloudCache`.
 #'   }
 #'   \item{`gdalwarp`}{
-#'     Default: `FALSE`. Experimental. During `postProcessTo` the standard approach
-#'     is to use `terra` functions directly, with several strategic uses of `sf`. However,
-#'     in the special case when `from` is a `SpatRaster` or `Raster`, `maskTo` is a
-#'     `SpatVector` or `SFC_POLYGON` and `projectTo` is a `SpatRaster` or `Raster`, setting
-#'     this option to `TRUE` will use `sf::gdal_utils("warp")`. In many test cases,
-#'     this is much faster than the `terra` sequence. The resulting `SpatRaster` is
-#'     not identical, but it is very similar.
+#'     **Deprecated — do not use.** Default: `FALSE`. This option previously
+#'     switched `postProcessTo` to use `sf::gdal_utils("warp")` for a specific
+#'     combination of raster/vector inputs. It is no longer needed: current
+#'     versions of `terra` handle this case well and produce equivalent results
+#'     without the GDAL detour. The option is retained only for backwards
+#'     compatibility and will be removed in a future release.
 #'   }
 #'   \item{`gdalwarpThreads`}{
-#'     Default: `2`. This will set `-wo NUM_THREADS=` to this number. Default is now `2`, meaning
-#'     `gdalwarp` will use 2 threads with `gdalProject`. To turn off threading, set to `0`, `1` or `NA`.
+#'     **Deprecated — do not use** (see `gdalwarp` above). Default: `2`.
+#'     Previously set `-wo NUM_THREADS=` for `gdalProject`.
 #'   }
-#'   \item{`inputPaths`}{
+#'   \item{`destinationPathShared`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
 #'     file to this location, with a hardlink (via `file.link`) to the file created in the
@@ -85,10 +95,26 @@
 #'     re-downloading the same (perhaps large) file over and over for each project.
 #'     Because the files are hardlinks, there is no extra space taken up by the apparently
 #'     duplicated files.
+#'
+#'     **Note:** the previous name for this option was `reproducible.inputPaths`; the old
+#'     name is still accepted and will continue to work, but `reproducible.destinationPathShared` is
+#'     preferred going forward (it matches the [prepInputs()] naming family).
+#'   }
+#'   \item{`destinationPathSharedRecursive`}{
+#'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
+#'     Should `reproducible.destinationPathShared` be searched recursively for existence of a file?
+#'
+#'     **Note:** the previous name for this option was `reproducible.inputPathsRecursive`;
+#'     the old name is still accepted but `reproducible.destinationPathSharedRecursive` is preferred.
+#'   }
+#'   \item{`inputPaths`}{
+#'     **Deprecated** — use `reproducible.destinationPathShared` instead.
+#'     Retained for backwards compatibility; if set and `reproducible.destinationPathShared` is `NULL`,
+#'     the value of `reproducible.inputPaths` is used automatically.
 #'   }
 #'   \item{`inputPathsRecursive`}{
-#'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
-#'     Should the `reproducible.inputPaths` be searched recursively for existence of a file?
+#'     **Deprecated** — use `reproducible.destinationPathSharedRecursive` instead.
+#'     Retained for backwards compatibility.
 #'   }
 #'   \item{`leaveOnDisk`}{
 #'     Default: `TRUE`. Used in [postProcess()].
@@ -268,6 +294,7 @@ reproducibleOptions <- function() {
   list( # nolint
     reproducible.ask = TRUE,
     reproducible.cacheChaining = FALSE,
+    reproducible.checkRemoteHash = FALSE,
     reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
     reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",
@@ -279,8 +306,10 @@ reproducibleOptions <- function() {
     reproducible.gdalwarp = FALSE,
     reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
-    reproducible.inputPaths = NULL,
-    reproducible.inputPathsRecursive = FALSE,
+    reproducible.destinationPathShared = NULL,
+    reproducible.destinationPathSharedRecursive = FALSE,
+    reproducible.inputPaths = NULL,           # deprecated alias for reproducible.destinationPathShared
+    reproducible.inputPathsRecursive = FALSE, # deprecated alias for reproducible.destinationPathSharedRecursive
     reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
     reproducible.memoisePersist = FALSE,
@@ -302,6 +331,7 @@ reproducibleOptions <- function() {
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.testCharacterAsFile = FALSE,
     reproducible.timeout = 1200,
+    reproducible.useCOG = TRUE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCacheV3 = TRUE, # override Cache function
     reproducible.useCloud = FALSE, #

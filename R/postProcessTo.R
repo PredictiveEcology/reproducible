@@ -817,6 +817,38 @@ projectTo <- function(from, projectTo, overwrite = FALSE,
           ll <- list(from, projectTo)
           ll <- append(ll, list(overwrite = overwrite))
           ll <- addDotArgs(ll, terra::project, class(from), method, ...)
+          # Workaround for terra (>= ~1.9) regression: the shorthand
+          # `terra::project(x, char_crs, res = N)` recurses internally and
+          # forwards an unrecognized `wopt` set, producing
+          # `[write] unknown option(s): xscale,yscale`. When `projectTo` is
+          # a CRS (string or `crs` object) and `res = N` was passed via `...`,
+          # build the target raster ourselves: project a header-only
+          # SpatRaster to compute the output extent in the target CRS, then
+          # construct a new raster from (extent, crs, resolution).
+          # Using `terra::rast(SpatRaster, resolution = ...)` is ambiguous
+          # against the existing nrow/ncol; explicit ext+crs+resolution is
+          # the documented constructor that always honors the resolution.
+          if (.isCRSany(projectTo) && "res" %in% names(ll)) {
+            res0 <- ll$res
+            ll$res <- NULL
+            proj0 <- terra::project(terra::rast(from), projectTo)
+            # Snap extent to a multiple of res0 BEFORE constructing the
+            # target. Otherwise terra::rast(extent, resolution = ...) keeps
+            # the extent and adjusts resolution to fit exact ncol/nrow,
+            # producing res like 249.99999 — which fails strict-equality
+            # tests downstream.
+            e <- terra::ext(proj0)
+            r <- if (length(res0) == 1L) c(res0, res0) else res0
+            xmin <- floor(terra::xmin(e) / r[1L]) * r[1L]
+            xmax <- ceiling(terra::xmax(e) / r[1L]) * r[1L]
+            ymin <- floor(terra::ymin(e) / r[2L]) * r[2L]
+            ymax <- ceiling(terra::ymax(e) / r[2L]) * r[2L]
+            ll[[2L]] <- terra::rast(
+              xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+              crs = terra::crs(proj0),
+              resolution = res0
+            )
+          }
           do.call(terra::project, ll)
         } else {
           from
@@ -944,7 +976,7 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
 
       # This is only needed if crop happens before a projection... need to cells beyond edges so projection is accurate
       if (needBuffer) {
-        if (.isGridded(from) || .isGridded(cropTo)) {
+        # if (.isGridded(from) || .isGridded(cropTo)) {
           if (.isGridded(from)) {
             res <- terra::res(from)
           } else if (.isGridded(cropTo)) {
@@ -958,8 +990,16 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
           extFrom <- terra::ext(from)
           extOrder <- c("xmin", "ymin", "xmax", "ymax")
           extNum <- extFrom[][extOrder]
-          if (isTRUE(suppressWarnings(terra::is.lonlat(ext)))) { # warning is about "crs not defined"
-            extTmp2 <- terra::extend(extTmp, 0.1) # hard code 0.1 lat/long, as long as it isn't past the from extent
+
+          if (!exists("res", inherits = FALSE) || isTRUE(suppressWarnings(terra::is.lonlat(ext)))) {
+            # No gridded object (both vectors) OR lonlat CRS: scale buffer with extent size, cap at extFrom.
+            # Scaling ensures large polygons at high latitudes get sufficient buffer (original fix from da48ec76).
+            # Capping ensures we skip the pre-crop when the buffer reaches the raster edge (no-op crop).
+            ranges <- c(abs(terra::xmin(extTmp) - terra::xmax(extTmp)),
+                        abs(terra::ymin(extTmp) - terra::ymax(extTmp)))
+            extendBy <- min(0.2, max(0.05, (max(ranges) - 20)/20 * 0.5))
+            extendBy <- max(ranges) * extendBy
+            extTmp2 <- terra::extend(extTmp, extendBy)
             exts <- c(
               xmin = max(terra::xmin(extTmp2), terra::xmin(extFrom)),
               ymin = max(terra::ymin(extTmp2), terra::ymin(extFrom)),
@@ -972,15 +1012,15 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
               terra::ext(xy = TRUE, exts)
             }
           } else {
-            ext <- terra::extend(extTmp, res[1] * 2)
+            ext <- terra::extend(extTmp, res[1] * 15)
           }
 
           exts <- ext[][extOrder]
           # This won't work if the the ext is tight with the from i.e., if they are the same;
           #   test and skip cropping with needBuffer =TRUE if it is too tight
-          if (isTRUE(any(extNum == exts)))
+          if (isTRUE(any(extNum == exts)) && .isGridded(from))
             return(from)
-        }
+        # }
       }
 
       attempt <- 1

@@ -1,0 +1,108 @@
+on:
+  push:
+    branches:
+      - master
+      - development
+  pull_request:
+    branches:
+      - master
+      - development
+
+name: test-downstream
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-downstream:
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
+      NOT_CRAN: true
+      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+      R_PKG_INSTALL_RETRIES: 3
+
+    steps:
+      - name: Checkout reproducible
+        uses: actions/checkout@v4
+        with:
+          path: reproducible
+
+      - name: Checkout SpaDES.core
+        uses: actions/checkout@v4
+        with:
+          repository: PredictiveEcology/SpaDES.core
+          path: SpaDES.core
+
+      - name: Checkout SpaDES.project
+        uses: actions/checkout@v4
+        with:
+          repository: PredictiveEcology/SpaDES.project
+          ref: development
+          path: SpaDES.project
+
+      # Stock Noble apt; ubuntugis-unstable PPA dropped — see the rationale
+      # in R-CMD-check.yaml.
+      - name: Install spatial deps (Linux, stock Noble)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -f -y || true
+          sudo apt-get install -y --fix-missing \
+            libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          Ncpus: 2
+          use-public-rspm: true
+
+      - name: Install pak
+        run: install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
+        shell: Rscript {0}
+
+      # Single pak::pak() call resolves all refs together. Multiple sequential
+      # pak invocations can leave pak's internal library in an inconsistent
+      # state (e.g. half-installed R6 -> `lazy-load database ... is corrupt`
+      # when the next call uses R6 via zip::unzip_process). One resolve avoids
+      # that intermediate state. `ropensci/NLMR` is needed by SpaDES.core
+      # Suggests; `PredictiveEcology/Require@development` is the dev-version
+      # fix for setLinuxBinaryRepo (drop once Require is on CRAN).
+      - name: Install dependencies
+        run: |
+          pak::pak(
+            c("ropensci/NLMR",
+              "PredictiveEcology/Require@development",
+              "local::reproducible", "local::SpaDES.core", "local::SpaDES.project",
+              "any::rcmdcheck", "any::knitr", "any::rmarkdown"),
+            dependencies = TRUE,
+            ask = FALSE
+          )
+        shell: Rscript {0}
+
+      - name: Check SpaDES.core
+        run: |
+          rcmdcheck::rcmdcheck(
+            "SpaDES.core",
+            args = c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest"),
+            error_on = "error",
+            check_dir = "check"
+          )
+        shell: Rscript {0}
+
+      # Drop --run-dontrun for SpaDES.project: its own R-CMD-check.yaml uses
+      # the default (no --run-dontrun), and a \dontrun example like
+      # `experiment3` deliberately requires a `global.R` script in the working
+      # directory that the example does not (and should not) create. Forcing
+      # \dontrun blocks here means we are stricter than the upstream
+      # repository's own check, and we hit a contrived failure that has
+      # nothing to do with reproducible.
+      - name: Check SpaDES.project
+        run: |
+          rcmdcheck::rcmdcheck(
+            "SpaDES.project",
+            args = c("--no-manual", "--as-cran", "--run-donttest"),
+            error_on = "error",
+            check_dir = "check"
+          )
+        shell: Rscript {0}

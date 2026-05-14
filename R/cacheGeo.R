@@ -11,7 +11,7 @@ checkNameHasGeom <- function(existingObj) {
 
 extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj, verbose = TRUE) {
   wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
-  if (isTRUE(wh %in% FALSE) && isTRUE(bufferOK)) {
+  if (isTRUE(all(wh %in% FALSE)) && isTRUE(bufferOK)) {
     diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
       round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
     buff <- diffs * 0.025
@@ -247,8 +247,15 @@ CacheGeo <- function(targetFile = NULL,
       purge = purge, # It isn't relevant if the file is different than the Checksums
       overwrite = overwrite
     ))
-    existingObj <- eval(aa) |>
-      Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
+    for (attempt in 1:2) {
+      # There were cases where the Cache recovered, but the file was not there.
+      existingObj <- eval(aa) |>
+        Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
+      if (file.exists(targetFileWithDP)) 
+        break
+      else
+        clearCache(cacheId = cacheId(existingObj), ask = FALSE)
+    }
 
     existingObjOrig <- existingObj
 
@@ -288,7 +295,11 @@ CacheGeo <- function(targetFile = NULL,
   }
   msgActionIsNothing <- "action was 'nothing'; nothing done"
   if ( (isFALSE(objExisted) || isFALSE(domainExisted) ) && !missing(FUN)) {
-    message(.message$cacheGeoDomainNotContained)
+    if (isFALSE(objExisted)) {
+      message(.message$cacheGeoNoRemoteExists)
+    } else {
+      message(.message$cacheGeoDomainNotContained)
+    }
     FUNcaptured <- substitute(FUN)
     env <- environment()
     list2env(list(...), envir = env) # need the ... to be "here"
@@ -353,9 +364,17 @@ CacheGeo <- function(targetFile = NULL,
 
       # Put it in order
       if (!is.null(existingObj[["polygonID"]])) {
-        polygonIDnum <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID))
-        ord <- order(polygonIDnum)
-        existingObj <- existingObj[ord,]
+        # if it has 2 sets of dots, like "4.2.1"
+        if (isTRUE(any(grepl("\\..+\\.", existingObj$polygonID)))) {
+          polygonIDforSorting <- as.package_version(existingObj$polygonID)
+        } else {
+          suppressWarnings(polygonIDforSorting <- as.numeric(gsub("(\\..)\\.", "\\1", existingObj$polygonID)))
+          if (isTRUE(any(is.na(polygonIDforSorting))))
+            polygonIDforSorting <- existingObj$polygonID
+        }
+        ord <- order(polygonIDforSorting)
+        existingObj <- existingObj[ord, ]
+        rownames(existingObj) <- seq_len(NROW(existingObj))
       }
       ## end of putting it in order
 
@@ -394,6 +413,9 @@ CacheGeo <- function(targetFile = NULL,
     }
     if (!alreadyOnRemote) {
       if (!any(grepl("^n", action[1], ignore.case = TRUE))) {
+        if (!dir.exists(tempdir())) {
+          dir.create(tempdir(), recursive = TRUE)
+        }
         out <- googledrive::drive_put(
           media = targetFileWithDP,
           path = googledrive::as_id(cloudFolderID)

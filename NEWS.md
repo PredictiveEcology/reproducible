@@ -1,6 +1,201 @@
+# reproducible (development version)
+
+
 # reproducible 3.0.1
 
-* during download from googledrive, if httr2 is not installed, now does not fail (#456)
+## new features
+
+* `prepInputsCOG`: new fast-path inside `prepInputs` for remote tiled GeoTiff
+  files (including Cloud Optimized GeoTiffs). When the `url` is HTTP(S) and at
+  least one of `to`, `cropTo`, or `maskTo` is supplied, only the spatial window
+  of interest is fetched via GDAL's `/vsicurl/` — no full-file download. The
+  windowed `SpatRaster` is returned to the normal `postProcess` pipeline for
+  crop/mask/write. The fast-path can be disabled with
+  `options(reproducible.useCOG = FALSE)`.
+
+## enhancements
+
+* The options `reproducible.inputPaths` and `reproducible.inputPathsRecursive`
+  have been renamed to `reproducible.destinationPathShared` and
+  `reproducible.destinationPathSharedRecursive` respectively (matching the `prepInputs`
+  naming family). The old names remain fully functional as backwards-compatible
+  aliases: if `reproducible.destinationPathShared` is `NULL` and `reproducible.inputPaths`
+  is set, the old value is used automatically (with a deprecation message).
+  Update your code by replacing `options(reproducible.inputPaths = ...)` with
+  `options(reproducible.destinationPathShared = ...)` at your convenience.
+
+* `alsoExtract` in `prepInputs`/`preProcess` now accepts regex patterns in
+  addition to exact filenames. For example,
+  `alsoExtract = "CMD_sm|CMD_sp"` will extract all archive members whose
+  name matches that regular expression. The expansion is performed against the
+  archive's file listing using `grep()`: if an element is a literal match it is
+  kept as-is; otherwise it is treated as a pattern. Special sentinel values
+  (`"similar"`, `"none"`, `NA`) are not affected. The expansion happens before
+  file extraction whether or not the archive was already present before the call.
+
+* `preProcess` now skips downloading when a local copy already exists and
+  matches the remote version, even if it was never recorded in `CHECKSUMS.txt`
+  for the current `destinationPath`. The new `pp_remote_hash_check` stage fetches
+  remote metadata (ETag / content-length for HTTP; md5Checksum / size for Google
+  Drive) and compares against the local file. A stored `.hash` file is checked
+  first; if absent, file-size equality is used as a fast proxy and the hash is
+  persisted for future runs. This fixes the common cluster pattern where an archive
+  lives in `options("reproducible.inputPaths")` but has not yet been checksummed
+  for the current run-specific `destinationPath`.
+
+  **Design note — two-layer caching strategy:** The remote hash check and the
+  local `CHECKSUMS.txt` are complementary, not competing. Remote metadata (ETags,
+  `content-length`, Google Drive `md5Checksum`) solves the *bootstrapping* problem
+  — confirming a file is correct before it has ever been checksummed locally.
+  `CHECKSUMS.txt` then takes over for all subsequent runs: it requires no network
+  round-trip, works on compute nodes without internet access, and is
+  content-addressable (survives URL changes). Note that HTTP ETags are *not*
+  universally content-hash-based — many servers derive them from inode + mtime,
+  making cross-server or post-migration comparisons unreliable — so the remote
+  check is intentionally a best-effort shortcut rather than a replacement for the
+  local checksum record.
+
+* `showCache` (when useDBI = FALSE) now has lazy memory caching. This is relevant
+  for very large caches (e.g., >10,000 entries). 
+  `Cache()` now lazy-spawns the `showCache` async background scan against the
+  cachePath the call actually uses. With the lazy spawn, the first `Cache()` call
+  in `simInit/spades` kicks off the fork, which then runs to completion in
+  parallel with the simulation; subsequent `showCache()` calls return in
+  ~1 second. The spawn helper is idempotent (~10 us per call). 
+  
+* New exported helper `prepopulateCacheAsync(cachePath)` lets workflows
+  kick off the async scan explicitly (e.g. early in `setupProject()`) so
+  the fork has even more wall-clock time to complete.
+
+## bug fixes
+
+* `Cache(omitArgs = TRUE)` now drops every captured argument from the cache
+  digest, so the digest depends only on `FUN` itself (the function value
+  -- including its body, so source edits still bust the cache) and
+  `.cacheExtra`. Useful when a developer wants the cache key to be
+  insensitive to the function's inputs and pin freshness via `.cacheExtra`
+  (e.g. a quoted reference to runtime state) instead of enumerating every
+  input or every argument to omit. Character-vector
+  `omitArgs = c("a", "b")` still works as before.
+
+* `downloadRemote`: the "before" snapshot of `destinationPath`
+  taken before evaluating `dlFun` now uses `recursive = TRUE` to match the
+  "after" snapshot. Previously, the non-recursive snapshot omitted files
+  that were already present in subdirectories of `destinationPath`, so the
+  `setdiff()` of after vs. before classified those pre-existing subdirectory
+  files as newly created. They then propagated as `downloadResults$destFile`,
+  triggered the "already exists at <path>. Use overwrite = TRUE?" stop later
+  in the function, and surfaced as a confusing error mentioning unrelated
+  stashed files (e.g. shapefile pieces extracted by an earlier `prepInputs`
+  call into the same `reproducible.inputPaths`/`reproducible.destinationPathShared`).
+  
+* `Cache(useCloud = ...)` now accepts two character values, intended for
+  separating developer and user roles when sharing a cloud-cache folder:
+  `"push"` is equivalent to `TRUE` (developer role -- bidirectional;
+  downloads on a cloud hit, uploads on a miss); `"pull"` is read-only (user
+  role -- downloads on a cloud hit, never uploads). When `"pull"` is set
+  and the local cache already has the object, the Google Drive listing is
+  not fetched at all (the cloud is consulted only after a local miss). An
+  invalid character value now errors at the front door of `Cache()` rather
+  than silently being treated as `FALSE`.
+  
+* `prepInputs`/`.guessAtTargetAndFun`: no longer auto-selects OS-injected archive
+  metadata when `targetFile` is unspecified. Previously, a Mac-created zip
+  containing both `foo.shp` and `__MACOSX/._foo.shp` could pick the
+  AppleDouble copy and fail to load. Filtering covers macOS (`__MACOSX/*`,
+  `._*` AppleDouble, `.DS_Store`) and Windows (`Thumbs.db`, `desktop.ini`).
+  An explicit `targetFile` pointing at one of these is still honored.
+
+* `pp_remote_hash_check`: now skips URLs that are not `http://` or `https://`.
+  Previously, `file://` URLs would attempt a HEAD-style metadata fetch and then
+  call `makeRemoteHashFile`, whose URL-to-filename mapping only strips the
+  `https?://` prefix; on Windows the resulting `.hash` filename retained `file:`
+  and the drive-letter colon, which is not a legal Windows path character.
+
+* `prepInputs`/`preProcess`: when called with `dlFun` only (no `url`,
+  `targetFile`, or `archive`), the file produced by `dlFun` is now treated as
+  the source of truth. Previously, `runChecksums` would still scan
+  `getOption("reproducible.inputPaths")` and, with no canonical filename to
+  look up, `Checksums()` listed every file in the stash and matched any of
+  them against the stash's `CHECKSUMS.txt`. A non-empty match silently
+  redirected `destinationPath` to the stash and caused `prepInputs` to load
+  an unrelated file (e.g., a previously stashed shapefile instead of the
+  GADM `.rds` produced by `geodata::gadm()`).
+
+* `prepInputs`/`preProcess`: `dlFun = pkg::fn(args)` (a function call passed
+  directly, without `quote()`-wrapping) is once again kept as a deferred call
+  object instead of being eagerly evaluated. The previous fix for
+  `dlFun = if (cond) fn else NULL` broke this canonical usage by forcing the
+  lazy promise for *all* non-`quote()` expressions. The new logic keeps
+  function-call expressions (`fn(args)`, `pkg::fn(args)`, `pkg:::fn(args)`)
+  deferred while still evaluating control-flow expressions and bare symbols.
+
+* `prepInputsCOG` now requires a GeoTiff-style URL extension (`.tif`, `.tiff`,
+  `.cog`, `.gtiff`) before attempting a `/vsicurl/` read. Previously, any
+  HTTP(S) URL combined with a spatial subsetting argument would trigger the
+  fast-path, producing a confusing `GDAL Error 4 ... not recognized as being
+  in a supported file format` warning when the URL pointed to an archive
+  (e.g. `.zip`, `.tar.gz`).
+
+* `lockFile` now uses `checkPath(..., create = TRUE)` instead of a silent
+  `dir.create(..., showWarnings = FALSE)` when creating the lock-file directory,
+  so a missing or unwritable cache directory (e.g., on a network filesystem)
+  produces a clear error rather than a confusing `filelock` failure.
+
+* Fix `.listFilesInArchive` incorrectly returning an empty file list for zip
+  archives where `archive::archive()` reports `size = 0` for every entry
+  (a known metadata-reading issue with certain compression variants such as
+  Deflate64). When all reported sizes are zero but the archive file itself is
+  non-empty, all paths are now included rather than being filtered out.
+
+* Fix spurious "More than one possible files to load" message (and "Picking the
+  last one") printed by `preProcess` even when `fun = NA`. When the user
+  explicitly passes `fun = NA` (meaning: do not load the file into R),
+  `.guessAtTargetAndFun` now returns immediately without inspecting or
+  messaging about the extracted file list.
+  
+* Fix `pp_remote_hash_check` incorrectly treating a direct `.tif` (or other
+  non-archive) download as an archive when the remote hash matched. The stage
+  was unconditionally setting `ctx$archive <- localFile`, which caused
+  downstream `pp_extract` to run `7z`/`unzip` on the plain raster file.
+  Fix: only set `ctx$archive` when `.isArchive(localFile)` is non-NULL.
+  
+* Fix spurious `preProcess could not extract the files from the archive` error
+  when files were already present on disk (e.g. extracted earlier in the same
+  call or found via `reproducible.inputPaths`). In `extractFromArchive`, `result`
+  was computed from the checkSums table *before* `.checkSumsUpdate()` was called,
+  so freshly-extracted files had no prior entry and `NROW(result) == 0` forced the
+  re-extraction branch even though `all(isOK)` was TRUE. Fix: compute `result`
+  after `.checkSumsUpdate()` so it reflects current disk state. The error was
+  non-fatal (caught by the surrounding `try()`) but printed an alarming message
+  and wasted effort attempting a zero-file extraction.
+  
+* Fix `Google Drive download failed: HTTP 401 Unauthorized` error that occurred
+  mid-session when downloading multiple tiles via `prepInputsWithTiles`. The raw
+  `access_token` string extracted from the `gargle`/`googledrive` token expired
+  (1-hour TTL) while tiles were being downloaded. Fix: force a gargle token
+  refresh (via `Token2.0$refresh()`) before each `download_resumable_httr2` call,
+  and retry once on 401 with a fresh token for both the httr2 and curl code paths.
+  
+* Fix `object 'fun' not found` error when `Cache(prepInputs, ..., fun = fun, ...)` is called
+  with `fun` as a local variable name. `substitute(fun)` captured the symbol rather than
+  the value; the symbol was then evaluated in the wrong frame (Cache's internal frame, not the
+  user's). Fix: force the R promise directly (`funCaptured <- fun`) so resolution happens in
+  the frame where the promise was created (the user's frame), regardless of call depth.
+  
+* Fix `filelock::lock()` "Permission denied" error under high parallelism (30+ workers).
+  Three root causes: (1) deleting the `.lock` file after `unlock()` broke mutex correctness —
+  workers blocked on `fcntl(F_SETLKW)` held the old inode's lock while a fresh caller
+  created a new inode and acquired its own "lock" simultaneously; (2) stale `.lock` files
+  owned by root (from a prior sudo/root run) caused `EACCES` at `open(O_RDWR|O_CREAT)`;
+  (3) the `tryCatch` matched on "Permission denied" which is locale-dependent (varies with
+  `LC_MESSAGES`) — now matches on "Cannot open lock file" (filelock's fixed C-level prefix).
+  Fix: stop deleting lock files after release; wrap `filelock::lock()` in `tryCatch` with
+  a 5-attempt retry loop; match on the locale-independent error prefix.
+  
+* `postProcess`: when 2 large polygon datasets were provded (from and to), the pre-cropping step
+  failed as the buffer was not applied. This has been fixed and the buffer now scales with
+  the size of the polygons.
 
 # reproducible 3.0.0
 
