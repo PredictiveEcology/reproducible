@@ -251,7 +251,7 @@ CacheGeo <- function(targetFile = NULL,
       # There were cases where the Cache recovered, but the file was not there.
       existingObj <- eval(aa) |>
         Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
-      if (file.exists(targetFileWithDP)) 
+      if (file.exists(targetFileWithDP))
         break
       else
         clearCache(cacheId = cacheId(existingObj), ask = FALSE)
@@ -263,7 +263,7 @@ CacheGeo <- function(targetFile = NULL,
     # Assumption that data.frame should be data.table
     if (is(existingObj, "list")) {
       existingObj <- lapply(existingObj, function(x) if (is.data.frame(x[[1]])) I(list(as.data.table(x[[1]]))) else x) |>
-        as.data.frame()
+        as.data.table(fill = TRUE) |> as.data.frame()
     } else {
       if (!is(existingObj, "data.frame"))
         existingObj <- as.data.frame(existingObj)
@@ -276,6 +276,8 @@ CacheGeo <- function(targetFile = NULL,
            " You can try rebuilding the data.frame with a single crs, assigned as a list column ",
            "in the data.frame")
     existingObjSF <- if (is(existingObj, "sf")) existingObj else sf::st_as_sf(existingObj)
+    existingObjSF <- existingObjSF[!sf::st_is_empty(existingObjSF),] #for some reason some have empty geometries...
+
     existingObjSF <- update_bbox(existingObjSF)
     if (!is.null(newCRS))
       suppressWarnings(sf::st_crs(existingObjSF) <- newCRS)
