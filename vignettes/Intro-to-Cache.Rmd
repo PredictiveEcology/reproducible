@@ -226,22 +226,29 @@ ras <- terra::rast(terra::ext(0, 5, 0, 5),
 )
 
 rasCRS <- terra::crs(ras)
+# Build an explicit target raster (same CRS, coarser resolution).
+# Avoids the `terra::project(x, char_crs, res = N)` shorthand which
+# recurses internally and forwards an unrecognized `wopt` set on
+# recent terra versions, producing
+# `[write] unknown option(s): xscale,yscale`.
+rasTarget <- terra::rast(terra::ext(ras), crs = rasCRS, resolution = 5)
+
 # A slow operation, like GIS operation
 notCached <- suppressWarnings(
   # project raster generates warnings when run non-interactively
-  terra::project(ras, rasCRS, res = 5)
+  terra::project(ras, rasTarget)
 )
 
 cached <- suppressWarnings(
   # project raster generates warnings when run non-interactively
   # using quote works also
-  terra::project(ras, rasCRS, res = 5) |> Cache(cachePath = tmpDir)
+  terra::project(ras, rasTarget) |> Cache(cachePath = tmpDir)
 )
 
 # second time is much faster
 reRun <- suppressWarnings(
   # project raster generates warnings when run non-interactively
-  terra::project(ras, rasCRS, res = 5) |> Cache(cachePath = tmpDir)
+  terra::project(ras, rasTarget) |> Cache(cachePath = tmpDir)
 )
 
 # recovered cached version is same as non-cached version
