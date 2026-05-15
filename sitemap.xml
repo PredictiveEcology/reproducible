@@ -35,6 +35,7 @@
 <url><loc>https://reproducible.predictiveecology.org/reference/digest.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/dlGeneric.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/dlGoogle.html</loc></url>
+<url><loc>https://reproducible.predictiveecology.org/reference/dot-expandAlsoExtractPatterns.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/dot-file.move.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/dot-formalsNotInCurrentDots.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/dot-isMemoised.html</loc></url>
@@ -77,8 +78,10 @@
 <url><loc>https://reproducible.predictiveecology.org/reference/preProcess.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/prefix.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/prepInputs.html</loc></url>
+<url><loc>https://reproducible.predictiveecology.org/reference/prepInputsCOG.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/prepInputsWithTiles.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/prepareFileBackedRaster.html</loc></url>
+<url><loc>https://reproducible.predictiveecology.org/reference/prepopulateCacheAsync.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/purge.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/purgeChecksums.html</loc></url>
 <url><loc>https://reproducible.predictiveecology.org/reference/rasterRead.html</loc></url>

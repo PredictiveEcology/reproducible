@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0</span>
       </span>
     </div>
 
@@ -129,7 +129,12 @@ is expecting an archive directly.</p></dd>
 <code>"similar"</code> will extract all files with the same filename without
 file extension as <code>targetFile</code>. <code>NA</code> will extract nothing other
 than <code>targetFile</code>. A character string of specific file names will cause
-only those to be extracted. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
+only those to be extracted. Each element may also be a regular expression:
+if an element does not match any archive member literally (by relative path
+or basename), it is passed to <code><a href="https://rdrr.io/r/base/grep.html" class="external-link">grep()</a></code> against the archive's file list and
+all matching members are extracted. For example,
+<code>alsoExtract = "CMD_sm|CMD_sp"</code> extracts every file whose name contains
+<code>CMD_sm</code> or <code>CMD_sp</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
 <dt id="arg-destinationpath">destinationPath<a class="anchor" aria-label="anchor" href="#arg-destinationpath"></a></dt>
@@ -137,9 +142,11 @@ only those to be extracted. See table in <code><a href="preProcess.html">preProc
 and save the file that comes from <code>url</code> and is also where the function
 will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-<code>options("reproducible.inputPaths")</code> to one or more local file paths to
+<code>options("reproducible.destinationPathShared")</code> to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-<code>NULL</code> meaning do not search locally.</p></dd>
+<code>NULL</code> meaning do not search locally. The previous name
+<code>options("reproducible.inputPaths")</code> is still accepted as a backwards-compatible
+alias.</p></dd>
 
 
 <dt id="arg-fun">fun<a class="anchor" aria-label="anchor" href="#arg-fun"></a></dt>
@@ -456,20 +463,19 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running </span><span style="color: #BB0000;">prepInputs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /tmp/Rtmp04qlGM/reproducible/9RpQDL6v/prepInputs2.shp</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Preparing: /tmp/RtmpCQAC94/reproducible/9RpQDL6v/prepInputs2.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/reproducible/9RpQDL6v/prepInputs2.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/reproducible/9RpQDL6v/prepInputs2.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00329 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00332 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00131 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0013 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00977 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0261 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.01 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0266 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running </span><span style="color: #BB0000;">prepInputs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `preProcess`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">...downloading...</span></span>
@@ -477,7 +483,7 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">No targetFile supplied. Checksumming all files in archive</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">From:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/ecozone_shp.zip  </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/ecozone_shp.zip  </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Extracting</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                   files</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                  &lt;char&gt;</span></span>
@@ -495,14 +501,14 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    options('reproducible.shapefileRead' = 'raster::shapefile')</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile was not specified. Trying sf::st_read on</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp. If that is not correct,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp. If that is not correct,</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    please specify a different targetFile and/or fun.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Reading layer `ecozones' from data source </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp' using driver `ESRI Shapefile'</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   `/tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp' using driver `ESRI Shapefile'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 25 features and 7 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: POLYGON</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
@@ -516,7 +522,7 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">alsoExtract is unspecified; assuming that all files must be extracted</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">No targetFile supplied. Checksumming all files in archive</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">From:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/ecozone_shp.zip  </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/ecozone_shp.zip  </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Extracting</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                   files</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                  &lt;char&gt;</span></span>
@@ -534,11 +540,11 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    options('reproducible.shapefileRead' = 'raster::shapefile')</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">  targetFile was not specified. Trying sf::st_read on</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp. If that is not correct,</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    /tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp. If that is not correct,</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    please specify a different targetFile and/or fun.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">sf::st_read</span><span style="color: #0000BB;">, c25dbb4dcd7f84e8.rds) ...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">sf::st_read</span><span style="color: #0000BB;"> call</span></span>
@@ -556,7 +562,7 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Ecozones/ecozones.sbx</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Ecozones/ecozones.shx</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">From:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/ecozone_shp.zip  </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/ecozone_shp.zip  </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Extracting</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                   files</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                  &lt;char&gt;</span></span>
@@ -572,7 +578,7 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">    look for.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
@@ -590,7 +596,7 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Ecozones/ecozones.sbx</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Ecozones/ecozones.shx</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">From:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/ecozone_shp.zip  </span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/ecozone_shp.zip  </span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Extracting</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                   files</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">                  &lt;char&gt;</span></span>
@@ -606,19 +612,19 @@ If the <code>CHECKSUMS.txt</code> is not correct, use this argument to remove it
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">     to look for.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `process` (i.e., loading file into R)</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">targetFile located at:</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/Rtmp04qlGM/ecozones/Ecozones/ecozones.shp</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">/tmp/RtmpCQAC94/ecozones/Ecozones/ecozones.shp</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Loading object into R</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0461 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0454 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00829 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00918 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0183 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0359 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">writing...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0181 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.13 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 9e696ef891088b87.rds; fn: </span><span style="color: #BB0000;">prepInputs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0182 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.127 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 6fb825b5c7c6bcfd.rds; fn: </span><span style="color: #BB0000;">prepInputs</span></span>
 <span class="r-plt img"><img src="prepInputs-1.png" alt="" width="700" height="433"></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Ran 2/2 deferred expressions</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

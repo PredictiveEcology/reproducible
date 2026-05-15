@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0</span>
       </span>
     </div>
 
@@ -85,9 +85,11 @@
 and save the file that comes from <code>url</code> and is also where the function
 will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-<code>options("reproducible.inputPaths")</code> to one or more local file paths to
+<code>options("reproducible.destinationPathShared")</code> to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-<code>NULL</code> meaning do not search locally.</p></dd>
+<code>NULL</code> meaning do not search locally. The previous name
+<code>options("reproducible.inputPaths")</code> is still accepted as a backwards-compatible
+alias.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

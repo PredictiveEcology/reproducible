@@ -25,7 +25,7 @@ user."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0</span>
       </span>
     </div>
 
@@ -130,9 +130,11 @@ See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 and save the file that comes from <code>url</code> and is also where the function
 will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
 To prevent repeated downloads in different locations, the user can also set
-<code>options("reproducible.inputPaths")</code> to one or more local file paths to
+<code>options("reproducible.destinationPathShared")</code> to one or more local file paths to
 search for the file before attempting to download. Default for that option is
-<code>NULL</code> meaning do not search locally.</p></dd>
+<code>NULL</code> meaning do not search locally. The previous name
+<code>options("reproducible.inputPaths")</code> is still accepted as a backwards-compatible
+alias.</p></dd>
 
 
 <dt id="arg-quick">quick<a class="anchor" aria-label="anchor" href="#arg-quick"></a></dt>
@@ -188,7 +190,12 @@ if it exists.</p></dd>
 <code>"similar"</code> will extract all files with the same filename without
 file extension as <code>targetFile</code>. <code>NA</code> will extract nothing other
 than <code>targetFile</code>. A character string of specific file names will cause
-only those to be extracted. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
+only those to be extracted. Each element may also be a regular expression:
+if an element does not match any archive member literally (by relative path
+or basename), it is passed to <code><a href="https://rdrr.io/r/base/grep.html" class="external-link">grep()</a></code> against the archive's file list and
+all matching members are extracted. For example,
+<code>alsoExtract = "CMD_sm|CMD_sp"</code> extracts every file whose name contains
+<code>CMD_sm</code> or <code>CMD_sp</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

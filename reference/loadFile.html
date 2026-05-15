@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0</span>
       </span>
     </div>
 
@@ -69,7 +69,15 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">loadFile</span><span class="op">(</span><span class="va">file</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">loadFile</span><span class="op">(</span></span>
+<span>  <span class="va">file</span>,</span>
+<span>  <span class="va">cacheId</span>,</span>
+<span>  <span class="va">cachePath</span>,</span>
+<span>  <span class="va">drv</span>,</span>
+<span>  <span class="va">conn</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -77,11 +85,34 @@
 
 
 <dl><dt id="arg-file">file<a class="anchor" aria-label="anchor" href="#arg-file"></a></dt>
-<dd><p>character specifying the path to the file</p></dd>
+<dd><p><code>character(1)</code> specifying the path to the file to load.</p></dd>
+
+
+<dt id="arg-cacheid">cacheId<a class="anchor" aria-label="anchor" href="#arg-cacheid"></a></dt>
+<dd><p><code>character(1)</code> the unique cache identifier of the object.</p></dd>
+
+
+<dt id="arg-cachepath">cachePath<a class="anchor" aria-label="anchor" href="#arg-cachepath"></a></dt>
+<dd><p><code>character(1)</code> path to the cache directory.</p></dd>
+
+
+<dt id="arg-drv">drv<a class="anchor" aria-label="anchor" href="#arg-drv"></a></dt>
+<dd><p>A DBI driver object (e.g., <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">RSQLite::SQLite()</a></code>). Used when
+the cache format needs to be swapped.</p></dd>
+
+
+<dt id="arg-conn">conn<a class="anchor" aria-label="anchor" href="#arg-conn"></a></dt>
+<dd><p>A DBI connection object. If <code>NULL</code>, a new connection is
+created internally as needed.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p><code>integer</code> or <code>logical</code>. If <code>&gt; 0</code> or <code>TRUE</code>, print
+informational messages. Defaults to <code>getOption("reproducible.verbose")</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Allows <code>format</code> for backward compatibility</p></dd>
+<dd><p>Allows <code>format</code> for backward compatibility.</p></dd>
 
 </dl></div>
     <div id="value">

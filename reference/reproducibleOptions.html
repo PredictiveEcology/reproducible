@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0</span>
       </span>
     </div>
 
@@ -107,6 +107,17 @@ The default path for repositories if not passed as an argument.</p></dd>
 systems, but much slower than <code>digest::digest(algo = "spooky)</code>.
 So, if all caching is happening on a single machine, <code>"fast"</code> would be a good setting.</p></dd>
 
+<dt><code>checkRemoteHash</code></dt>
+<dd><p>Default: <code>FALSE</code>. Used in <code><a href="preProcess.html">preProcess()</a></code> / <code><a href="prepInputs.html">prepInputs()</a></code>. Controls whether
+<code>pp_remote_hash_check</code> re-contacts the remote source (e.g. Google Drive,
+HTTP HEAD) when a <code>.hash</code> sidecar from a previous successful match
+already exists in <code>destinationPath</code>. With the default (<code>FALSE</code>), the
+sidecar is trusted and the remote check is skipped — typically saving
+1–2 s per file when the cluster cache is warm. Set to <code>TRUE</code> to force a
+remote round-trip on every call (the pre-3.0.0.9050 behaviour); use
+this if the upstream file may change and you need to detect that.
+Removing the <code>&lt;file&gt;_*.hash</code> sidecar also forces a re-check.</p></dd>
+
 <dt><code>conn</code></dt>
 <dd><p>Default: <code>NULL</code>. Sets a specific connection to a database, e.g.,
 <code>dbConnect(drv = RSQLite::SQLite())</code> or <code>dbConnect(drv = RPostgres::Postgres()</code>.
@@ -132,19 +143,18 @@ They may, however, be very effective in speeding up some things, specifically,
 uploading cached elements via <code>googledrive</code> in <code>cloudCache</code>.</p></dd>
 
 <dt><code>gdalwarp</code></dt>
-<dd><p>Default: <code>FALSE</code>. Experimental. During <code>postProcessTo</code> the standard approach
-is to use <code>terra</code> functions directly, with several strategic uses of <code>sf</code>. However,
-in the special case when <code>from</code> is a <code>SpatRaster</code> or <code>Raster</code>, <code>maskTo</code> is a
-<code>SpatVector</code> or <code>SFC_POLYGON</code> and <code>projectTo</code> is a <code>SpatRaster</code> or <code>Raster</code>, setting
-this option to <code>TRUE</code> will use <code>sf::gdal_utils("warp")</code>. In many test cases,
-this is much faster than the <code>terra</code> sequence. The resulting <code>SpatRaster</code> is
-not identical, but it is very similar.</p></dd>
+<dd><p><strong>Deprecated — do not use.</strong> Default: <code>FALSE</code>. This option previously
+switched <code>postProcessTo</code> to use <code>sf::gdal_utils("warp")</code> for a specific
+combination of raster/vector inputs. It is no longer needed: current
+versions of <code>terra</code> handle this case well and produce equivalent results
+without the GDAL detour. The option is retained only for backwards
+compatibility and will be removed in a future release.</p></dd>
 
 <dt><code>gdalwarpThreads</code></dt>
-<dd><p>Default: <code>2</code>. This will set <code>-wo NUM_THREADS=</code> to this number. Default is now <code>2</code>, meaning
-<code>gdalwarp</code> will use 2 threads with <code>gdalProject</code>. To turn off threading, set to <code>0</code>, <code>1</code> or <code>NA</code>.</p></dd>
+<dd><p><strong>Deprecated — do not use</strong> (see <code>gdalwarp</code> above). Default: <code>2</code>.
+Previously set <code>-wo NUM_THREADS=</code> for <code>gdalProject</code>.</p></dd>
 
-<dt><code>inputPaths</code></dt>
+<dt><code>destinationPathShared</code></dt>
 <dd><p>Default: <code>NULL</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
 If set to a path, this will cause these functions to save their downloaded and preprocessed
 file to this location, with a hardlink (via <code>file.link</code>) to the file created in the
@@ -153,11 +163,25 @@ This can be used so that individual projects that use common data sets can maint
 modularity (by placing downloaded objects in their <code>destinationPath</code>, but also minimize
 re-downloading the same (perhaps large) file over and over for each project.
 Because the files are hardlinks, there is no extra space taken up by the apparently
-duplicated files.</p></dd>
+duplicated files.</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">**</span>Note<span class="sc">:</span><span class="er">**</span> the previous name <span class="cf">for</span> this option was <span class="st">`</span><span class="at">reproducible.inputPaths</span><span class="st">`</span>; the old</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>name is still accepted and will continue to work, but <span class="st">`</span><span class="at">reproducible.destinationPathShared</span><span class="st">`</span> is</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>preferred going <span class="fu">forward</span> (it matches the [<span class="fu">prepInputs</span>()] naming family).</span></code></pre><p></p></div></dd>
+
+<dt><code>destinationPathSharedRecursive</code></dt>
+<dd><p>Default: <code>FALSE</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
+Should <code>reproducible.destinationPathShared</code> be searched recursively for existence of a file?</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">**</span>Note<span class="sc">:</span><span class="er">**</span> the previous name <span class="cf">for</span> this option was <span class="st">`</span><span class="at">reproducible.inputPathsRecursive</span><span class="st">`</span>;</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>the old name is still accepted but <span class="st">`</span><span class="at">reproducible.destinationPathSharedRecursive</span><span class="st">`</span> is preferred.</span></code></pre><p></p></div></dd>
+
+<dt><code>inputPaths</code></dt>
+<dd><p><strong>Deprecated</strong> — use <code>reproducible.destinationPathShared</code> instead.
+Retained for backwards compatibility; if set and <code>reproducible.destinationPathShared</code> is <code>NULL</code>,
+the value of <code>reproducible.inputPaths</code> is used automatically.</p></dd>
 
 <dt><code>inputPathsRecursive</code></dt>
-<dd><p>Default: <code>FALSE</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
-Should the <code>reproducible.inputPaths</code> be searched recursively for existence of a file?</p></dd>
+<dd><p><strong>Deprecated</strong> — use <code>reproducible.destinationPathSharedRecursive</code> instead.
+Retained for backwards compatibility.</p></dd>
 
 <dt><code>leaveOnDisk</code></dt>
 <dd><p>Default: <code>TRUE</code>. Used in <code><a href="postProcess.html">postProcess()</a></code>.

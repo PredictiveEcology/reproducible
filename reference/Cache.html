@@ -31,7 +31,7 @@ will recover the object from RAM and is normally much faster (at the expense of 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0</span>
       </span>
     </div>
 
@@ -266,7 +266,13 @@ will be added to the Cache so that this entry in the Cache can be found using
 
 
 <dt id="arg-omitargs">omitArgs<a class="anchor" aria-label="anchor" href="#arg-omitargs"></a></dt>
-<dd><p>Optional character string of arguments in the FUN to omit from the digest.</p></dd>
+<dd><p>Optional. A character vector of argument names in <code>FUN</code> to
+omit from the cache digest, or <code>TRUE</code> to omit <em>every</em> captured argument
+(the digest is then based on <code>FUN</code> itself – including its body, so a
+meaningful edit to the function source still busts the cache – and on
+<code>.cacheExtra</code>). Useful when the developer wants the cache to be
+insensitive to the function's inputs and pin freshness via <code>.cacheExtra</code>
+instead.</p></dd>
 
 
 <dt id="arg-classoptions">classOptions<a class="anchor" aria-label="anchor" href="#arg-classoptions"></a></dt>
@@ -324,7 +330,8 @@ narrower range of conditions that work; <code>rds</code> is safer, and may be sl
 
 
 <dt id="arg-usecloud">useCloud<a class="anchor" aria-label="anchor" href="#arg-usecloud"></a></dt>
-<dd><p>Logical. See Details.</p></dd>
+<dd><p>Logical (<code>TRUE</code> / <code>FALSE</code> / <code>NULL</code>) or one of <code>"pull"</code> /
+<code>"push"</code>. See Details.</p></dd>
 
 
 <dt id="arg-cloudfolderid">cloudFolderID<a class="anchor" aria-label="anchor" href="#arg-cloudfolderid"></a></dt>
@@ -572,7 +579,15 @@ cloud folder gets large. If a user wishes to keep "high-level" control, set this
 <code>getOption("reproducible.useCloud", TRUE)</code> (if the default behaviour should
 be <code>FALSE</code> or <code>TRUE</code>, respectively) so it can be turned on and off with
 this option. NOTE: <em>This argument will not be passed into inner/nested Cache calls.</em>)</p>
-    </div>
+<p>Two character values are also accepted, intended for separating developer
+and user roles when sharing a cloud-cache folder:</p><ul><li><p><code>"push"</code> is equivalent to <code>TRUE</code> (developer role) – bidirectional;
+downloads on a cloud hit, uploads on a miss.</p></li>
+<li><p><code>"pull"</code> is read-only (user role) – downloads on a cloud hit, but never
+uploads. If the local cache already has the object, the cloud is not
+consulted at all (the Google Drive listing is deferred until after the
+local lookup fails). When neither local nor cloud has the object, the
+call falls back to a normal local-only Cache run.</p></li>
+</ul></div>
     <div id="object-attributes">
     <h2>Object attributes</h2>
 
@@ -709,16 +724,12 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-in"><span><span class="st">      eval() |&gt;</span></span></span>
 <span class="r-in"><span><span class="st">      rnorm()} |&gt;</span></span></span>
 <span class="r-in"><span><span class="st">    Cache()'</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.1"</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">a</span><span class="op">[[</span><span class="fl">9</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">usingPipe1</span><span class="op">)</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">9</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">usingPipe1</span><span class="op">)</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">$</span><span style="color: #0000BB;">, ca275879d5116967.rds) ...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">$</span><span style="color: #0000BB;"> call</span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.2"</span><span class="op">)</span> <span class="op">{</span> <span class="co"># uses the _ placeholder; only available in R &gt;= 4.2</span></span></span>
-<span class="r-in"><span>  <span class="va">a</span><span class="op">[[</span><span class="fl">18</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">usingPipe2</span><span class="op">)</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="va">a</span><span class="op">[[</span><span class="fl">18</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">usingPipe2</span><span class="op">)</span><span class="op">)</span> <span class="co"># recovers cached copy</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> There is an `eval` call in a chain of calls for Cache; </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   eval is evaluated before Cache which may be undesired. </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   Perhaps use `do.call` if the evaluation should not occur prior to Cache</span>
@@ -731,31 +742,31 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">### Pipe -- have to use { } or else only final function is Cached</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/numeric_version.html" class="external-link">getRversion</a></span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"4.1"</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">b1a</span> <span class="op">&lt;-</span> <span class="st">'sample(1e5, 1) |&gt; rnorm() |&gt; Cache()'</span></span></span>
-<span class="r-in"><span>  <span class="va">b1b</span> <span class="op">&lt;-</span> <span class="st">'sample(1e5, 1) |&gt; rnorm() |&gt; Cache()'</span></span></span>
-<span class="r-in"><span>  <span class="va">b2a</span> <span class="op">&lt;-</span> <span class="st">'{sample(1e5, 1) |&gt; rnorm()} |&gt; Cache()'</span></span></span>
-<span class="r-in"><span>  <span class="va">b2b</span> <span class="op">&lt;-</span> <span class="st">'{sample(1e5, 1) |&gt; rnorm()} |&gt; Cache()'</span></span></span>
-<span class="r-in"><span>  <span class="va">b1a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b1a</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">b1b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b1b</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">b2a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b2a</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">b2b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b2b</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">b1a</span>, <span class="va">b1b</span><span class="op">)</span> <span class="co"># Not TRUE because the sample is run first</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">b2a</span>, <span class="va">b2b</span><span class="op">)</span> <span class="co"># TRUE because of {  }, sample is not run</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="va">b1a</span> <span class="op">&lt;-</span> <span class="st">'sample(1e5, 1) |&gt; rnorm() |&gt; Cache()'</span></span></span>
+<span class="r-in"><span><span class="va">b1b</span> <span class="op">&lt;-</span> <span class="st">'sample(1e5, 1) |&gt; rnorm() |&gt; Cache()'</span></span></span>
+<span class="r-in"><span><span class="va">b2a</span> <span class="op">&lt;-</span> <span class="st">'{sample(1e5, 1) |&gt; rnorm()} |&gt; Cache()'</span></span></span>
+<span class="r-in"><span><span class="va">b2b</span> <span class="op">&lt;-</span> <span class="st">'{sample(1e5, 1) |&gt; rnorm()} |&gt; Cache()'</span></span></span>
+<span class="r-in"><span><span class="va">b1a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b1a</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 72bf1c853b8a84d4.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-in"><span><span class="va">b1b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b1b</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: 1b1ed95a5a47bfc4.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-in"><span><span class="va">b2a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b2a</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Saved! Cache file: fd995d3fc9a1ad45.rds; fn: </span><span style="color: #BB0000;">rnorm</span></span>
+<span class="r-in"><span><span class="va">b2b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">parse</a></span><span class="op">(</span>text <span class="op">=</span> <span class="va">b2b</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, fd995d3fc9a1ad45.rds) ...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;"> call</span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">b1a</span>, <span class="va">b1b</span><span class="op">)</span> <span class="co"># Not TRUE because the sample is run first</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Attributes: &lt; Component “tags”: 1 string mismatch &gt;"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Numeric: lengths (30566, 20863) differ"             </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">b2a</span>, <span class="va">b2b</span><span class="op">)</span> <span class="co"># TRUE because of {  }, sample is not run</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Attributes: &lt; Component “.Cache”: Component “newCache”: 1 element mismatch &gt;"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#########################</span></span></span>
@@ -921,31 +932,31 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1: de10a5200e4aff1d            function           centralTendency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  2: de10a5200e4aff1d            userTags              thisIsUnique</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  3: de10a5200e4aff1d            userTags              reallyUnique</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: de10a5200e4aff1d            accessed 2026-05-12 18:07:27.33896</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: de10a5200e4aff1d            accessed 2026-05-15 22:11:38.42216</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  5: de10a5200e4aff1d             inCloud                     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: de10a5200e4aff1d   elapsedTimeDigest          0.001265526 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: de10a5200e4aff1d   elapsedTimeDigest          0.005675793 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  7: de10a5200e4aff1d           preDigest     .FUN:3df5c81377ae4909</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  8: de10a5200e4aff1d           preDigest        x:e4aa8de28dc6c1bb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  9: de10a5200e4aff1d               class                   numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10: de10a5200e4aff1d         object.size                        56</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11: de10a5200e4aff1d            fromDisk                     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12: de10a5200e4aff1d          resultHash                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: de10a5200e4aff1d elapsedTimeFirstRun            0.1719062 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2026-05-12 18:07:27.512045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2026-05-12 18:07:27.512045</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: de10a5200e4aff1d elapsedTimeFirstRun           0.01884556 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   createdDate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                        &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2026-05-15 22:11:38.44282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2026-05-15 22:11:38.44282</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># During development, we often redefine function internals</span></span></span>
 <span class="r-in"><span><span class="va">centralTendency</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -981,31 +992,31 @@ e.g., <code><a href="CacheHelpers.html">rmFromCache()</a></code>, <code><a href=
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1: d03daaa68c73e7e9            function           centralTendency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  2: d03daaa68c73e7e9            userTags              thisIsUnique</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  3: d03daaa68c73e7e9            userTags              reallyUnique</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: d03daaa68c73e7e9            accessed 2026-05-12 18:07:27.52459</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: d03daaa68c73e7e9            accessed 2026-05-15 22:11:38.51184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  5: d03daaa68c73e7e9             inCloud                     FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: d03daaa68c73e7e9   elapsedTimeDigest           0.00130558 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: d03daaa68c73e7e9   elapsedTimeDigest          0.005686283 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  7: d03daaa68c73e7e9           preDigest     .FUN:88d14fe75c352ad5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  8: d03daaa68c73e7e9           preDigest        x:e4aa8de28dc6c1bb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  9: d03daaa68c73e7e9               class                   numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10: d03daaa68c73e7e9         object.size                        56</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11: d03daaa68c73e7e9            fromDisk                     FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12: d03daaa68c73e7e9          resultHash                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: d03daaa68c73e7e9 elapsedTimeFirstRun            0.0281291 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: d03daaa68c73e7e9 elapsedTimeFirstRun           0.06720734 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2026-05-12 18:07:27.553704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2026-05-12 18:07:27.553704</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2026-05-15 22:11:38.580058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2026-05-15 22:11:38.580058</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># If it finds it by cacheID, doesn't matter what the userTags are</span></span></span>
 <span class="r-in"><span><span class="va">ranNumsD</span> <span class="op">&lt;-</span> <span class="fu">Cache</span><span class="op">(</span><span class="va">centralTendency</span>, <span class="va">funnyData</span>, cachePath <span class="op">=</span> <span class="va">tmpDir</span>, userTags <span class="op">=</span> <span class="st">"thisIsUnique"</span><span class="op">)</span></span></span>
