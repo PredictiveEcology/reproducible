@@ -1,7 +1,4 @@
-# reproducible (development version)
-
-
-# reproducible 3.0.1
+# reproducible 3.1.0
 
 ## new features
 
@@ -203,7 +200,7 @@
   Fix: stop deleting lock files after release; wrap `filelock::lock()` in `tryCatch` with
   a 5-attempt retry loop; match on the locale-independent error prefix.
   
-* `postProcess`: when 2 large polygon datasets were provded (from and to), the pre-cropping step
+* `postProcess`: when 2 large polygon datasets were provided (from and to), the pre-cropping step
   failed as the buffer was not applied. This has been fixed and the buffer now scales with
   the size of the polygons.
 
