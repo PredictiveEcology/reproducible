@@ -52,13 +52,13 @@ dominated by a remote download, which has been moved into `\donttest{}`.
 
 ## Downstream dependencies
 
+The three reverse dependencies on CRAN (SpaDES, SpaDES.core, SpaDES.tools)
+are all maintained by the same maintainer.
+
 ## revdepcheck results
 
-We checked the reverse dependencies on CRAN, comparing R CMD check results
-across the CRAN and dev versions of this package.
+We checked 3 reverse dependencies, comparing R CMD check results across the
+CRAN and dev versions of this package.
 
  * We saw 0 new problems
- * We failed to check 2 packages
-
-We will submit updated versions of SpaDES.core and SpaDES.tools immediately
-upon acceptance of this package.
+ * We failed to check 0 packages
