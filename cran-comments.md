@@ -44,6 +44,12 @@ expected to break existing code.
 There are no errors or warnings. There is one NOTE related to the author,
 Eliot McIntire.
 
+## Resubmission
+
+This is a resubmission. The previous submission produced a NOTE for the
+`postProcess` example exceeding the 5s elapsed-time limit; the timing was
+dominated by a remote download, which has been moved into `\donttest{}`.
+
 ## Downstream dependencies
 
 ## revdepcheck results

@@ -117,13 +117,15 @@ if (requireNamespace("terra", quietly = TRUE) &&
   # 1 step for each layer
   # 1st step -- get study area
   studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
-  # 2nd step: make the input data layer like the studyArea map
-  # Test only relevant if connected to internet -- so using try just in case
-  elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
-                                 destinationPath = dPath, useCache = FALSE))
 
-  # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
   \donttest{
+    # 2nd step: make the input data layer like the studyArea map
+    # Requires internet -- so using try just in case, and kept out of the
+    # timed examples (CRAN does not run \donttest)
+    elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
+                                   destinationPath = dPath, useCache = FALSE))
+
+    # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
     dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
     file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
     studyArea2 <- terra::vect(localFileLuxSm)
