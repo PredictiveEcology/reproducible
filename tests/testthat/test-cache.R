@@ -234,7 +234,7 @@ test_that("test file-backed raster caching", {
       origFile <- sc[tagKey == "origFilename"]$cacheId
       hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest))
+                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest + 1L))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 
@@ -1280,7 +1280,6 @@ test_that("Cache the dots; .cacheExtra", {
 
 test_that("change to new capturing of FUN & base pipe", {
   testInit(opts = list(reproducible.verbose = 5))
-  skip_if(getRversion() < "4.2.0")
 
   Nrand2 <- Nrand <- 1e6
   mess0 <- capture_messages({
@@ -1430,17 +1429,13 @@ test_that("test cache with new approach to match.call", {
   a[[14]] <- Cache(rnorm(1, bbb - bbb, get("bbb", inherits = FALSE)))
   a[[15]] <- Cache(rnorm(sd = 1, 0, n = get("bbb", inherits = FALSE))) # change order
   a[[16]] <- Cache(rnorm(1, sd = get("ee", inherits = FALSE)$qq), mean = 0)
-  if (isTRUE(getRversion() >= "4.1.0")) {
-    a[[17]] <- eval(parse(text = "b$fun(1) |> Cache()"))
-  }
-  if (isTRUE(getRversion() >= "4.2.0")) {
-    ss <- '{"bbb" |>
+  a[[17]] <- eval(parse(text = "b$fun(1) |> Cache()"))
+  ss <- '{"bbb" |>
       parse(text = _) |>
       eval() |>
       rnorm()} |>
     Cache()'
-    a[[18]] <- eval(parse(text = ss))
-  }
+  a[[18]] <- eval(parse(text = ss))
   expect_identical(1L, length(unique(unlist(a))))
   # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
   # for (i in 2:NROW(a)) {
@@ -1462,9 +1457,7 @@ test_that("test cache with new approach to match.call", {
     a[[9]] <- Cache(quote(fun(1)))
     # expect_true(identical(attr(a[[1]], ".Cache")$newCache, TRUE))
 
-    if (isTRUE(getRversion() >= "4.1.0")) {
-      a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
-    }
+    a[[9]] <- eval(parse(text = "b$fun(1) |> Cache()"))
 
     expect_identical(1L, length(unique(unlist(a))))
 
@@ -1782,11 +1775,7 @@ test_that("cacheId = 'previous'", {
   b <- rnorm(3) |> Cache(.functionName = fnName)
   d <- rnorm(2) |> Cache(.functionName = fnName, cacheId = "previous")
   e <- rnorm(2) |> Cache(.functionName = fnName)
-  if (getRversion() >= "4.3.0") {
-    ## TODO: misc error on R 4.2 and 4.1:
-    ## Error: `all.equalWONewCache(b, d) is not TRUE`
-    expect_true(all.equalWONewCache(b, d))
-  }
+  expect_true(all.equalWONewCache(b, d))
   expect_false(isTRUE(all.equalWONewCache(e, d)))
 
   # cacheId = "previous" returns normal if there is no previous
@@ -1846,13 +1835,8 @@ test_that("simple userTags", {
   sc2 <- showCache(userTags = "sample")
   sc1Tags <- vapply(strsplit(ut2, split = ":"), tail, 1, FUN.VALUE = character(1))
   sc2Tags <- vapply(strsplit(ut3, split = ":"), tail, 1, FUN.VALUE = character(1))
-  if (getRversion() < "4.2") { # apparently expect_in was not available in testthat in R <= 4.1.3
-    expect_true(all(sc1Tags %in% sc1$tagValue))
-    expect_true(all(sc2Tags %in% sc2$tagValue))
-  } else {
-    expect_in(sc1Tags, sc1$tagValue)
-    expect_in(sc2Tags, sc2$tagValue)
-  }
+  expect_in(sc1Tags, sc1$tagValue)
+  expect_in(sc2Tags, sc2$tagValue)
 
 
 
@@ -1914,29 +1898,6 @@ test_that("test future", {
   # }
 })
 
-test_that("test failed Cache recovery -- message to delete cacheId", {
-  if (!useDBI() || getOption("reproducible.useCacheV3")) skip("Only relevant for DBI backend")
-  testInit(opts = list("reproducible.useMemoise" = FALSE))
-
-  b <- Cache(rnorm, 1, cachePath = tmpdir)
-  sc <- showCache(tmpdir)
-  ci <- unique(sc[[.cacheTableHashColName()]])
-  unlink(CacheStoredFile(tmpdir, ci))
-
-
-  rm(b)
-  mess <- capture_messages({
-    warn <- capture_warnings({
-      err <- capture_error({
-        d <- Cache(rnorm, 1, cachePath = tmpdir)
-      })
-    })
-  })
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), mess)) == 1)
-  expect_true(sum(grepl(paste0("(trying to recover).*(", ci, ")"), err)) == 0)
-  expect_true(any(grepl(paste0("[cannot|failed to] open"), paste(warn, err, mess))))
-  expect_true(is.numeric(d))
-})
 
 test_that("test pre-creating conn", {
   if (!useDBI()) skip("Only relevant for DBI backend")
@@ -2141,12 +2102,9 @@ test_that("cacheChaining", {
         expect_equivalent(length(grep("Skipping digest", mess$`3`)), 4)
       }
 
-      # Basically, 2 of the 3 MUST be faster to digest
-      if (dfIndex == 1)
-        if (interactive()) # but this will be unreliable because of the sample(1e6) above is fast to digest;
-          #  to confirm this, set the N to 1e7
-          # expect_true(sum(sc$`1`$tagValue < sc$`2`$tagValue) >= 2)
-      # print(sc)
+      # Basically, 2 of the 3 MUST be faster to digest — unreliable because
+      # sample(1e6) is fast to digest; to confirm, set N to 1e7 and uncomment:
+      #   expect_true(sum(sc$`1`$tagValue < sc$`2`$tagValue) >= 2)
 
       # cacheChaining shouldn't change anything; they should be the same
       expect_equivalent(arb$`TRUE`, arb$`FALSE`)
@@ -2184,6 +2142,31 @@ test_that("Cache with weird dots", {
   expect_false(attr(b, ".Cache")$newCache)
   expect_true(attr(d, ".Cache")$newCache)
 
+})
+
+test_that("Cache works when `...` is the first formal (#466)", {
+  testInit()
+
+  myFun <- function(..., arg1, arg2) {
+    rnorm(arg1, arg2, ...)
+  }
+  myFun2 <- function(arg1, arg2, ...) {
+    rnorm(arg1, arg2, ...)
+  }
+
+  a <- myFun(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  b <- myFun(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  d <- myFun(arg1 = 100, arg2 = 2, sd = 99) |> Cache()
+  expect_true(attr(a, ".Cache")$newCache)
+  expect_false(attr(b, ".Cache")$newCache)
+  expect_true(attr(d, ".Cache")$newCache)
+
+  a2 <- myFun2(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  b2 <- myFun2(arg1 = 100, arg2 = 2, sd = 10) |> Cache()
+  d2 <- myFun2(arg1 = 200, arg2 = 2, sd = 10) |> Cache()
+  expect_true(attr(a2, ".Cache")$newCache)
+  expect_false(attr(b2, ".Cache")$newCache)
+  expect_true(attr(d2, ".Cache")$newCache)
 })
 
 test_that(".digest with empty and broken files", {

@@ -37,12 +37,14 @@ test_that("prepInputs doesn't work (part 1)", {
     expect_true(is(shpEcozone, vectorType()))
 
     # test sf::st_read vs "sf::st_read" -- sf::st_read didn't work before Oc 29, 2024
-    out <- prepInputs(
-      targetFile = "Ecozones/ecozones.shp",
-      destinationPath = dPath,
-      fun = sf::st_read
-    )
-    expect_is(out, "sf")
+    if (.requireNamespace("sf")) {
+      out <- prepInputs(
+        targetFile = "Ecozones/ecozones.shp",
+        destinationPath = dPath,
+        fun = sf::st_read
+      )
+      expect_is(out, "sf")
+    }
 
     # Robust to partial file deletions:
     unlink(dir(dPath, full.names = TRUE)[1:3])
@@ -318,7 +320,6 @@ test_that("interactive prepInputs", {
 test_that("preProcess doesn't work", {
   skip_on_cran()
   skip_on_ci()
-  skip_if_not(isInteractive())
 
   testInit(
     "terra",
@@ -668,6 +669,11 @@ test_that("preProcess doesn't work", {
     )
 
     unlink(dir(tmpdir, full.names = TRUE))
+    ## Without a `targetFile` and with an incomplete `alsoExtract` (no .shp),
+    ## `fun` cannot be guessed. preProcess() (the download/extract layer) is
+    ## fine with a NULL fun — but prepInputs() is the loader and must refuse
+    ## a call it cannot fulfil. (Commit 67edb6e8 dropped the stop() from the
+    ## preProcess layer; prepInputs reinstates it just before process().)
     expect_error({
       mess <- capture_messages({
         warns <- capture_warnings({
@@ -1129,9 +1135,110 @@ test_that("preProcess doesn't work", {
   })
 })
 
+test_that(".resolveDlFunCaptured handles all dlFun forms without eager eval", {
+  cap <- function(dlFun) reproducible:::.resolveDlFunCaptured(substitute(dlFun), dlFun)
+
+  # Symbol -> resolves to the function value
+  myFn <- function() 42
+  expect_true(is.function(cap(myFn)))
+
+  # NULL literal -> NULL
+  expect_null(cap(NULL))
+
+  # quote(fn(...)) -> unwraps to inner call
+  q <- cap(quote(myFn(x = 1)))
+  expect_true(is.call(q))
+  expect_identical(deparse(q), "myFn(x = 1)")
+
+  # pkg::fn(args) -> kept as a deferred call; side effect must NOT fire
+  ran <- FALSE
+  fakePkg <- list(fakeFn = function(...) { ran <<- TRUE; "value" })
+  attach(fakePkg, name = "fakePkg", warn.conflicts = FALSE)
+  on.exit(detach("fakePkg"), add = TRUE)
+  d <- cap(fakePkg::fakeFn(country = "LUX"))
+  expect_false(ran)
+  expect_true(is.call(d))
+
+  # bare fn(args) -> kept as a deferred call; side effect must NOT fire
+  ran2 <- FALSE
+  side <- function() { ran2 <<- TRUE; 7 }
+  d2 <- cap(side())
+  expect_false(ran2)
+  expect_true(is.call(d2))
+
+  # Control-flow expression -> evaluated (e.g., if/else)
+  useFn <- TRUE
+  expect_true(is.function(cap(if (useFn) myFn else NULL)))
+})
+
+test_that("prepInputs(dlFun = ...) ignores pre-existing files in destinationPath subdirs", {
+  # Regression test for a bug where downloadRemote()'s noTargetFile branch
+  # took the "before dlFun" snapshot of destinationPath with
+  # `dir(destinationPath, full.names = TRUE)` (non-recursive) and the "after
+  # dlFun" snapshot with `dir(..., recursive = TRUE, full.names = TRUE)`.
+  # The setdiff() of those mismatched listings classified files that were
+  # already present in subdirectories of destinationPath as "newly created
+  # by dlFun". They then propagated as `downloadResults$destFile` and tripped
+  # a spurious "already exists at ..." stop later in the function.
+  #
+  # Real-world trigger: a user sets `reproducible.inputPaths` to a shared
+  # data stash, then calls `prepInputs(url = some_archive.zip, ...)` whose
+  # archive payload extracts into a subdirectory of the stash. A subsequent
+  # `prepInputs(dlFun = some_function(...))` for an unrelated dataset would
+  # fail with an error mentioning the previous archive's stashed files.
+  testInit(
+    opts = list(
+      reproducible.interactiveOnDownloadFail = FALSE,
+      reproducible.inputPaths = NULL,
+      reproducible.overwrite = FALSE
+    )
+  )
+
+  destPath <- file.path(tmpdir, "destSubdir")
+  dir.create(destPath, recursive = TRUE)
+  preExistingDir <- file.path(destPath, "preExisting")
+  dir.create(preExistingDir)
+  # Two files whose basenames collide between the subdir and top-level.
+  # The collision is what makes the bug surface as an "already exists"
+  # stop; without it, the buggy code still mis-identifies the subdir file
+  # as new but the desiredPath check happens to pass.
+  writeLines("subdir-content",   file.path(preExistingDir, "junk.txt"))
+  writeLines("toplevel-content", file.path(destPath, "junk.txt"))
+
+  # dlFun returns a small in-memory object; no network, no side effects on
+  # destinationPath. The bug manifests purely from the snapshot logic.
+  res <- expect_no_error(
+    prepInputs(
+      destinationPath = destPath,
+      dlFun = function() data.frame(x = 1:3)
+    )
+  )
+
+  # Sanity: prepInputs returned the dlFun's value, and the pre-existing
+  # files are untouched.
+  expect_s3_class(res, "data.frame")
+  expect_identical(res$x, 1:3)
+  expect_identical(readLines(file.path(preExistingDir, "junk.txt")), "subdir-content")
+  expect_identical(readLines(file.path(destPath, "junk.txt")), "toplevel-content")
+})
+
 test_that("prepInputs when fun = NA", {
   skip_on_cran()
-  skip_if_not(getRversion() > "3.3.0")
+
+  ## Probe the GADM host with a short timeout. The test below calls
+  ## geodata::gadm(), which talks to geodata.ucdavis.edu — when that endpoint
+  ## is slow/unreachable (SSL hiccups, DNS, packet drops) geodata's internal
+  ## retry loop can stall the test for minutes. Bail out cleanly instead.
+  skip_if_not(.requireNamespace("httr2"), "httr2 not available for probe")
+  gadmReachable <- tryCatch({
+    httr2::request("https://geodata.ucdavis.edu/") |>
+      httr2::req_method("HEAD") |>
+      httr2::req_timeout(5) |>
+      httr2::req_error(is_error = function(resp) FALSE) |>
+      httr2::req_perform()
+    TRUE
+  }, error = function(e) FALSE)
+  skip_if_not(isTRUE(gadmReachable), "geodata.ucdavis.edu unreachable")
 
   testInit(
     c("sf", "terra"),
@@ -1597,7 +1704,6 @@ test_that("lightweight tests 2 for code coverage", {
 test_that("options inputPaths", {
   skip_on_cran()
   skip_if_not_installed("geodata")
-  skip_if_not(getRversion() > "4.1.3") ## geodata::gadm seems to time out on R <= 4.1.3
 
   testInit(
     c("terra", "geodata"),
@@ -1608,9 +1714,6 @@ test_that("options inputPaths", {
   f <- formals3(prepInputs)
   getDataFn <- getDataFn # not exported from reproducible; can access here, not in the dlFun
 
-  if (getRversion() <= "3.3.0") {
-    skip("Doesn't work on R 3.3.0")
-  } # Not sure why this fails on 3.3.0
   withr::local_options("reproducible.inputPaths" = NULL)
   withr::local_options("reproducible.inputPathsRecursive" = FALSE)
 
@@ -1928,7 +2031,7 @@ test_that("rasters aren't properly resampled", {
     )
   }) # about "raster layer has integer values"
 
-  if (getRversion() >= "4.1" || !isWindows()) {
+  if (!isWindows()) {
     expect_true(dataType2(out2) %in% c("INT2S")) # because of "bilinear", it can become negative
 
     rrr1 <- terra::rast(terra::ext(0, 20, 0, 20), resolution = 1, vals = runif(400, 0, 1))
@@ -2028,6 +2131,8 @@ test_that("rasters aren't properly resampled", {
 
 test_that("test prepInputs url when a directory", {
   skip_on_cran()
+  skip_if_not_installed("httr")
+  skip_if_not_installed("curl")
 
   testInit("terra", opts = list(reproducible.inputPaths = NULL, reproducible.overwrite = TRUE))
   withr::local_options(destinationPath = tmpdir)
@@ -2114,4 +2219,35 @@ test_that("test prepInputs with zip file with hidden files", {
   expect_false(file.exists(file = theFile))
   b <- prepInputs(targetFile = theFile, archive = zipFilename, fun = NA)
   expect_true(file.exists(file = theFile))
+})
+
+test_that(".guessAtTargetAndFun ignores OS archive metadata when auto-picking", {
+  testInit()
+  # When no targetFile is specified, OS-injected metadata files must not be
+  # auto-selected: macOS __MACOSX/*, ._ AppleDouble, .DS_Store; Windows Thumbs.db,
+  # desktop.ini.
+  filesExtracted <- c(
+    "data/clean_NMC_20kmBuff.shp",
+    "data/__MACOSX/._clean_NMC_20kmBuff.shp",
+    "data/._clean_NMC_20kmBuff.shp",
+    "data/.DS_Store",
+    "data/Thumbs.db",
+    "data/desktop.ini"
+  )
+  out <- .guessAtTargetAndFun(
+    targetFilePath = NULL,
+    filesExtracted = filesExtracted,
+    fun = NULL,
+    verbose = 0
+  )
+  expect_identical(out$targetFilePath, "data/clean_NMC_20kmBuff.shp")
+
+  # If the user explicitly asks for an otherwise-filtered path, honor it.
+  out2 <- .guessAtTargetAndFun(
+    targetFilePath = "data/__MACOSX/._clean_NMC_20kmBuff.shp",
+    filesExtracted = filesExtracted,
+    fun = "readLines",
+    verbose = 0
+  )
+  expect_identical(out2$targetFilePath, "data/__MACOSX/._clean_NMC_20kmBuff.shp")
 })

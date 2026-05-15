@@ -751,3 +751,57 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
     message("Does not work on Windows")
   }
 }
+
+# ---------------------------------------------------------------------------
+# Backwards-compatible accessors for the destinationPathShared / inputPaths option pair.
+# The canonical names are reproducible.destinationPathShared and
+# reproducible.destinationPathSharedRecursive (matching the prepInputs naming family).
+# The old names (reproducible.inputPaths, reproducible.inputPathsRecursive) are
+# still accepted: if the new name is NULL but the old name is set, the old value
+# is used and a one-time deprecation message is emitted.
+# ---------------------------------------------------------------------------
+
+# One-shot per-session deprecation messaging. `.pkgEnv$.deprecMsgEmitted`
+# accumulates the option names whose deprecation message has already fired,
+# so subsequent calls in the same R session stay silent regardless of how
+# many times the getter is invoked from inside the preProcess pipeline.
+.deprecMsgOnce <- function(optName, replacementName) {
+  emitted <- .pkgEnv$.deprecMsgEmitted
+  if (is.null(emitted)) emitted <- character()
+  if (optName %in% emitted) return(invisible())
+  message("Option '", optName, "' is deprecated; ",
+          "please use '", replacementName, "' instead.")
+  .pkgEnv$.deprecMsgEmitted <- c(emitted, optName)
+  invisible()
+}
+
+#' @keywords internal
+.getDestinationPathShared <- function() {
+  newVal <- getOption("reproducible.destinationPathShared", NULL)
+  if (!is.null(newVal)) return(newVal)
+  oldVal <- getOption("reproducible.inputPaths", NULL)
+  if (!is.null(oldVal))
+    .deprecMsgOnce("reproducible.inputPaths",
+                   "reproducible.destinationPathShared")
+  oldVal
+}
+
+#' @keywords internal
+.getDestinationPathSharedRecursive <- function() {
+  newVal <- getOption("reproducible.destinationPathSharedRecursive", NULL)
+  if (!is.null(newVal)) return(newVal)
+  oldVal <- getOption("reproducible.inputPathsRecursive", NULL)
+  if (!is.null(oldVal))
+    .deprecMsgOnce("reproducible.inputPathsRecursive",
+                   "reproducible.destinationPathSharedRecursive")
+  # Default is FALSE when neither is set
+  if (is.null(oldVal)) FALSE else oldVal
+}
+
+# Deprecated wrappers — to be removed in a future release; preserved only so
+# any out-of-tree code that referenced the previous (branch-only) names still
+# resolves until callers can be updated.
+#' @keywords internal
+.getDataPath <- function() .getDestinationPathShared()
+#' @keywords internal
+.getDataPathRecursive <- function() .getDestinationPathSharedRecursive()

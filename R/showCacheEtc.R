@@ -455,16 +455,29 @@ setMethod(
         pkgEnv[["shownCache"]] <- new.env()
       if (!exists(x, envir = pkgEnv[["shownCache"]]))
         pkgEnv[["shownCache"]][[x]] <- new.env()
+
+      ## Note: do NOT lazy-spawn from here. The async fork itself runs
+      ## showCache(); spawning again from inside the fork would recurse
+      ## (the fork's pkgEnv has no job entry yet because spawn_showCache_async
+      ## assigns the job AFTER mcparallel returns). Cache() is the lazy-spawn
+      ## site; direct showCache() callers can use prepopulateCacheAsync()
+      ## explicitly if they want a warm fork.
+
+      # Non-blocking poll: if the async pre-load job has already finished,
+      # harvest it; otherwise proceed synchronously.  Never block here — for
+      # large caches the fork can take minutes, and blocking would defeat the
+      # purpose of having the incremental-update mechanism below.
+      collect_showCache_async(x, wait = FALSE, timeout = 0)
       scEnv <- pkgEnv[["shownCache"]][[x]]
+
       # periodically, a cache entry is corrupt; this while, tryCatch will remove the corrupt file and restart
       objsDT <- list()
       while(is(objsDT, "list")) {
         # filOutside <- character()
-        objsDT <- tryCatch(
+        objsDT <- tryCatch2(
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
-              # filOutside <<- fil
-              showCacheFast(fil, cachePath = x, # cacheSaveFormat = cacheSaveFormat,
+              showCacheFast(fil, cachePath = x,
                             drv = drv, conn = conn)
             }))
           } else {
@@ -474,24 +487,50 @@ setMethod(
             )
             lapplyFun <- lapply
             curFileInfo <- file.info(dd) |> setDT(keep.rownames = "filename")
+
+            # Compare only on stable, content-relevant columns.
+            # Joining on all file.info columns (including atime) caused every
+            # file to appear "new" on every call because loadFile() updates atime.
+            stableCols <- c("filename", "mtime", "size")
+
             if (is.null(scEnv$FileInfo)) {
               newOnes <- curFileInfo
             } else {
-              newOnes <- curFileInfo[!scEnv$FileInfo, on = colnames(curFileInfo)]
-              removeOnes <- scEnv$FileInfo[!curFileInfo, on = colnames(curFileInfo)]
+              newOnes  <- curFileInfo[!scEnv$FileInfo,  on = stableCols]
+              removeOnes <- scEnv$FileInfo[!curFileInfo, on = "filename"]
               if (NROW(removeOnes)) {
-                scEnv$FileInfo <- scEnv$FileInfo[!removeOnes, on = colnames(curFileInfo)]
+                scEnv$FileInfo <- scEnv$FileInfo[!removeOnes, on = "filename"]
                 cis <- filePathSansExt(filePathSansExt(basename(removeOnes$filename)))
                 scEnv$sc <- scEnv$sc[!cacheId %in% cis]
               }
             }
             dd <- newOnes[["filename"]]
+            ddOrig <- dd
+            # If a file's mtime changed (e.g. a cache hit rewrote the accessed
+            # tag), it appears in newOnes even though it still exists.  Without
+            # this purge, the old entry and the freshly-loaded one would both be
+            # present in scEnv$sc, causing duplicate cacheIds and a cartesian
+            # join error in the userTags filter below.
+            if (!is.null(scEnv$sc) && length(dd) > 0) {
+              cisToRemove <- filePathSansExt(filePathSansExt(basename(dd)))
+              scEnv$sc <- scEnv$sc[!cacheId %in% cisToRemove]
+            }
             scEnv$FileInfo <- curFileInfo
 
             keepDoing <- TRUE
             while(keepDoing) {
-              ret <- tryCatch(rbindlist(fill = TRUE, lapplyFun(dd, function(fil) {
-                out <- try(loadFile(fil), silent = TRUE)#, cacheSaveFormat = cacheSaveFormat))
+              allFilesLoaded <- lapplyFun(dd, function(fil) {
+
+                ## Wrap loadFile in try(): readRDS / qs_read can throw on
+                ## corrupt or wrong-format files (e.g. "unknown input format"
+                ## from readRDS when the .rds extension lies). The recovery
+                ## branch below expects out to be a try-error, so without
+                ## the wrap the error escapes the loop and the whole
+                ## showCache() call.
+                out <- try(loadFile(fil,
+                                    cachePath = x, # in case it needs swapCacheFormat
+                                    drv = drv, conn = conn, verbose = verbose),
+                           silent = TRUE)
                 if (is(out, "try-error")) {
                   cacheId <- gsub(paste0(CacheDBFileSingleExt()), "",
                                   basename(fil))
@@ -499,7 +538,10 @@ setMethod(
                   fileEx <- fileExt(fil)
                   fileExs <- setdiff(.cacheSaveFormats, fileEx)
                   for (fe in fileExs) {
-                    out <- try(loadFile(fil, format = fe), silent = TRUE)
+                    out <- try(loadFile(fil, format = fe,
+                                        cacheId = cacheId, cachePath = x, # in case it needs swapCacheFormat
+                                        drv = drv, conn = conn, verbose = verbose),
+                               silent = TRUE)
                     if (!is(out, "try-error")) {
                       if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
                         optForUndo <- options("reproducible.qsFormat" = .qsFormat)
@@ -510,23 +552,41 @@ setMethod(
                       return(out)
                     }
                   }
+                  # browser()
                   filesToRm <- dir(dirname(fil), pattern = cacheId, full.names = TRUE)
                   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
                                verbose = getOption("reproducible.verbose"))
                   unlink(filesToRm)
+                  # Return NULL (not the try-error) so rbindlist(fill = TRUE)
+                  # below silently skips this entry. Letting the try-error
+                  # escape made rbindlist error with "Item N is not a list",
+                  # the catch handler didn't successfully retry, and the
+                  # whole showCache() call returned NULL — which broke
+                  # test-showCacheCorruptFile.R's NROW(out) > 0 invariant
+                  # (valid sibling entries should still be returned).
+                  return(NULL)
                 }
                 out
+              })
+              allFilesLoaded <- Filter(Negate(is.null), allFilesLoaded)
 
-              })), error = function(err) {
+
+              ret <- tryCatch(
+
+                rbindlist(fill = TRUE, allFilesLoaded), error = function(err) {
                 if (any(grepl("Item .+ is not a", err$message))) {
                   toDel <- gsub("Item ([[:digit:]]+) of.+", "\\1", err$message) |> as.numeric()
                   unlink(dd[toDel])
                   dd <- dd[-toDel]
                 }
-                next
+                # browser()
+                if (any(grepl("use qs::qread", err$message))) {
+                  swapCacheFileFormat()
+                }
+                # next
               })
-              if (is(ret, "try-error"))
-                browser()
+              #if (is(ret, "try-error"))
+              #  browser()
               keepDoing <- FALSE
             }
 
@@ -906,7 +966,7 @@ isTRUEorForce <- function(cond) {
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                           dtFile, strict = TRUE, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                          drv, conn) {
+                          drv, conn, verbose = getOption("reproducible.verbose")) {
 
   if (missing(dtFile)) {
     # dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
@@ -919,7 +979,9 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   if (fe || isFALSE(strict)) {
     dtFile <- if (any(fe)) dtFile[fe][1] else character()
     if (length(dtFile)) {
-      sc <- loadFile(dtFile) # , cacheSaveFormat = cacheSaveFormat)
+      sc <- loadFile(dtFile,
+                     cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                     drv = drv, conn = conn, verbose = verbose) # , cacheSaveFormat = cacheSaveFormat)
     } else {
       sc <- showCache(cachePath, userTags = cacheId, drv = drv, conn = conn, verbose = FALSE)[cacheId %in% cacheId]
     }
@@ -928,3 +990,192 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
 }
 
 sortedOrRegexp <- c("sorted", "regexp", "ask")
+
+
+
+
+# mcparallel is fork-based and not available on Windows
+# pkgEnv <- reproducible:::pkgEnv()  # internal environment for package objects [3](https://rdrr.io/cran/reproducible/man/pkgEnv.html)
+## Idempotent, all-guards-applied wrapper used by Cache() and showCache() to
+## kick off a background showCache scan for `x` the first time the path is
+## touched in a session. Cheap (~10us) when a job already exists -- safe to
+## call from hot paths.
+##
+## Skipped silently on Windows (no fork), when parallel isn't available, or
+## when `x` is NULL/non-character.
+.maybeSpawnShowCacheAsync <- function(x = getOption("reproducible.cachePath")) {
+  if (.Platform$OS.type == "windows") return(invisible(NULL))
+  if (is.null(x) || !is.character(x) || !nzchar(x[[1L]])) return(invisible(NULL))
+  if (!requireNamespace("parallel", quietly = TRUE)) return(invisible(NULL))
+  ## spawn_showCache_async is itself idempotent via its overwrite=FALSE guard
+  spawn_showCache_async(x[[1L]], silent = TRUE, overwrite = FALSE)
+}
+
+#' Pre-populate the in-memory `showCache` cache for a given `cachePath`
+#'
+#' Forks a background process that runs `showCache()` against `cachePath`;
+#' subsequent `showCache()` / `Cache()->showSimilar()` calls in the same R
+#' session can then harvest the result instead of re-scanning the cache
+#' directory synchronously. Useful for very large caches (tens of thousands
+#' of entries) where the cold first scan can take a minute or more.
+#'
+#' Idempotent: a second call with the same `cachePath` reuses the existing
+#' job. Skipped silently on Windows (forking-based) and when the `parallel`
+#' package isn't available.
+#'
+#' This helper is called automatically the first time `Cache()` or
+#' `showCache()` is invoked against a given `cachePath`, so most users do
+#' not need to call it explicitly. It is exported for workflows that want
+#' to kick off the spawn early (e.g. inside `setupProject()`) so the fork
+#' has more wall-clock time to complete before the first manual
+#' `showCache()` call.
+#'
+#' @param cachePath A character path. Defaults to
+#'   `getOption("reproducible.cachePath")`.
+#' @return Invisibly returns the spawn job handle, or `NULL` if the spawn
+#'   was skipped.
+#' @export
+prepopulateCacheAsync <- function(cachePath = getOption("reproducible.cachePath")) {
+  invisible(.maybeSpawnShowCacheAsync(cachePath))
+}
+
+spawn_showCache_async <- function(
+    x = getOption("reproducible.cachePath"),
+    silent = TRUE,
+    overwrite = FALSE
+) {
+  if (.Platform$OS.type == "windows") {
+    return(NULL)
+  }
+
+  # Internal env for package state
+  pkgEnv <- memoiseEnv(cachePath = x)
+  if (!exists("shownCache", envir = pkgEnv))
+    pkgEnv[["shownCache"]] <- new.env()
+  if (!exists(x, envir = pkgEnv[["shownCache"]]))
+    pkgEnv[["shownCache"]][[x]] <- new.env()
+
+  if (is.null(pkgEnv[["shownCache"]]$shownCache_jobs)) pkgEnv[["shownCache"]]$shownCache_jobs <- new.env(parent = emptyenv())
+
+  # If job exists and not overwriting, reuse it
+  if (!overwrite && exists(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)) {
+    return(invisible(get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)))
+  }
+
+  # Capture the function objects in the *parent*.
+  # This avoids any namespace loading inside the fork.
+  ns <- asNamespace("reproducible")
+  showCache_fun  <- get("showCache", envir = ns)
+  memoiseEnv_fun <- get("memoiseEnv", envir = ns)
+
+  # Build fork expression with injected function objects
+  expr <- substitute({
+    data.table::setDTthreads(1L)
+    options(reproducible.nThreads = 1L)
+    
+    # Run slow call (side effects stay in child; we return the memoised object)
+    SHOWCACHE(cp, drv = NULL, conn = NULL)
+    
+    # Harvest the memoised object created by showCache
+    pkgEnv_child <- MEMOISEENV(cachePath = cp)
+    sc <- pkgEnv_child[["shownCache"]][[cp]]
+
+    # mcparallel/mccollect: NULL should not be returned (reserved as error signal) [1](https://www.r-bloggers.com/2023/06/dofuture-a-better-foreach-parallelization-operator-than-dopar/)
+    if (is.null(sc)) {
+      structure(list(error = "shownCache was NULL in child", cachePath = cp),
+                class = "shownCache_error")
+    } else {
+      sc
+    }
+  }, list(
+    cp = x,
+    SHOWCACHE = showCache_fun,
+    MEMOISEENV = memoiseEnv_fun
+  ))
+
+  job <- parallel::mcparallel(expr, name = paste0("showCache:", x), silent = silent)  # [1](https://www.r-bloggers.com/2023/06/dofuture-a-better-foreach-parallelization-operator-than-dopar/)
+  assign(x, job, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
+
+  invisible(job)
+}
+
+
+collect_showCache_async <- function(
+    x = getOption("reproducible.cachePath"),
+    wait = FALSE,
+    timeout = 10
+) {
+  if (.Platform$OS.type == "windows") {
+    return(NULL)
+    # stop("parallel::mccollect is not available on Windows (forking backend).")
+  }
+
+  pkgEnv <- memoiseEnv(cachePath = x)
+  if (!exists("shownCache", envir = pkgEnv))
+    pkgEnv[["shownCache"]] <- new.env()
+  if (!exists(x, envir = pkgEnv[["shownCache"]]))
+    pkgEnv[["shownCache"]][[x]] <- new.env()
+  if (is.null(pkgEnv[["shownCache"]]$shownCache_jobs) || !exists(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)) {
+    return(invisible(NULL))  # nothing spawned for this cachePath
+  }
+
+  job <- get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)
+
+  
+  # The warning occurs if the pid has already be deleted e.g., manually
+  suppressWarnings(
+    # Poll or wait for results
+    res_list <- parallel::mccollect(job, wait = wait, timeout = timeout)  # collect async results [1](https://www.rdocumentation.org/packages/parallel/versions/3.4.1/topics/mcparallel)[2](https://stat.ethz.ch/R-manual/R-devel/library/parallel/html/mcparallel.html)
+  )
+
+  # If still running, mccollect returns NULL (per docs)
+  if (is.null(res_list)) {
+    return(invisible(NULL))
+  }
+
+  # Extract result (single job => first element)
+  sc <- res_list[[1]]
+
+  # If child reported an internal NULL issue, propagate as an error
+  if (inherits(sc, "shownCache_error")) {
+    return(invisible(NULL))
+  }
+
+  # Install recovered shownCache object into main session memoiseEnv location.
+  # The synchronous showCache() path expects pkgEnv[["shownCache"]][[x]] to be
+  # an environment with $FileInfo and $sc slots; previously this assigned `sc`
+  # directly at that key, replacing the env with an atomic data.table and then
+  # crashing the next sync call at `is.null(scEnv$FileInfo)` with
+  # "$ operator is invalid for atomic vectors".
+  .installAsyncShownCache(memoiseEnv(cachePath = x), x, sc)
+
+  # Clear job handle after successful install
+  rm(list = x, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
+
+  invisible(sc)
+}
+
+## Install an async-collected showCache result into the per-cachePath env so
+## the synchronous showCache() path can read it via `scEnv$sc` /
+## `scEnv$FileInfo`. The async child harvests the inner env from its own
+## pkgEnv (`pkgEnv_child[["shownCache"]][[cp]]`) and returns it, so the
+## value we receive is *itself* the per-cachePath env -- not a data.table.
+## Copy its bindings into the parent's env. If we receive a raw
+## data.frame/data.table/list (older child shapes), store it at $sc.
+## Anything else is treated as no-op (the env is left empty, which causes
+## the sync path to fall through to its full disk scan).
+.installAsyncShownCache <- function(pkgEnv_main, x, sc) {
+  if (!is.environment(pkgEnv_main[["shownCache"]]))
+    pkgEnv_main[["shownCache"]] <- new.env(parent = emptyenv())
+  if (!is.environment(pkgEnv_main[["shownCache"]][[x]]))
+    pkgEnv_main[["shownCache"]][[x]] <- new.env(parent = emptyenv())
+  innerEnv <- pkgEnv_main[["shownCache"]][[x]]
+  if (is.environment(sc)) {
+    for (nm in ls(sc, all.names = TRUE)) {
+      assign(nm, get(nm, envir = sc, inherits = FALSE), envir = innerEnv)
+    }
+  } else if (is.data.frame(sc) || data.table::is.data.table(sc) || is.list(sc)) {
+    innerEnv$sc <- sc
+  }
+  invisible(NULL)
+}

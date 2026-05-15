@@ -388,7 +388,7 @@ nextNumericName <- function(string) {
 }
 
 list2envAttempts <- function(x, envir) {
-  attempt <- try(list2env(x, envir), silent = TRUE)
+  attempt <- try(list2env(x, envir), silent = TRUE) # must be try; i.e., must always be `try`
   output <- NULL
   if (is(attempt, "try-error")) {
     attempt <- try(list2env(x, envir@.xData), silent = TRUE)
@@ -518,7 +518,7 @@ wrapSpatVector <- function(obj) {
 
 
   # stWrapSpecial <- system.time(
-    obj <- list(
+  obj <- list(
     geometry = terra::geom(obj),                      # matrix of coordinates
     attributes = as.data.frame(obj),           # attribute table
     crs = terra::crs(obj),                             # coordinate reference system

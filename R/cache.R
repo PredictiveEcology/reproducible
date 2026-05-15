@@ -207,6 +207,17 @@ utils::globalVariables(c(
 #'   be `FALSE` or `TRUE`, respectively) so it can be turned on and off with
 #'   this option. NOTE: *This argument will not be passed into inner/nested Cache calls.*)
 #'
+#' Two character values are also accepted, intended for separating developer
+#' and user roles when sharing a cloud-cache folder:
+#'
+#' - `"push"` is equivalent to `TRUE` (developer role) -- bidirectional;
+#'   downloads on a cloud hit, uploads on a miss.
+#' - `"pull"` is read-only (user role) -- downloads on a cloud hit, but never
+#'   uploads. If the local cache already has the object, the cloud is not
+#'   consulted at all (the Google Drive listing is deferred until after the
+#'   local lookup fails). When neither local nor cloud has the object, the
+#'   call falls back to a normal local-only Cache run.
+#'
 #' @section Object attributes:
 #' Users should be cautioned that object attributes may not be preserved, especially
 #' in the case of objects that are file-backed, such as `Raster` or `SpatRaster` objects.
@@ -285,7 +296,13 @@ utils::globalVariables(c(
 #'
 #' @param compareRasterFileLength Being deprecated; use `length`.
 #'
-#' @param omitArgs Optional character string of arguments in the FUN to omit from the digest.
+#' @param omitArgs Optional. A character vector of argument names in `FUN` to
+#'   omit from the cache digest, or `TRUE` to omit *every* captured argument
+#'   (the digest is then based on `FUN` itself -- including its body, so a
+#'   meaningful edit to the function source still busts the cache -- and on
+#'   `.cacheExtra`). Useful when the developer wants the cache to be
+#'   insensitive to the function's inputs and pin freshness via `.cacheExtra`
+#'   instead.
 #'
 #' @param classOptions Optional list. This will pass into `.robustDigest` for
 #'        specific classes. Should be options that the `.robustDigest` knows what
@@ -331,7 +348,8 @@ utils::globalVariables(c(
 #'
 #' @param useCache Logical, numeric or `"overwrite"` or `"devMode"`. See details.
 #'
-#' @param useCloud Logical. See Details.
+#' @param useCloud Logical (`TRUE` / `FALSE` / `NULL`) or one of `"pull"` /
+#'   `"push"`. See Details.
 #' @param cacheSaveFormat Character string: currently either `qs` or `rds`. Defaults to
 #'    `getOption("reproducible.cacheSaveFormat")`. `qs` may be faster but appears to have
 #'    narrower range of conditions that work; `rds` is safer, and may be slower.
@@ -605,6 +623,7 @@ recursiveEvalNamesOnly <- function(args, envir = parent.frame(), outer = TRUE, r
         args[[1]] <- getMethodAll(args, envir)
       }
     } else {
+      # paths$inputPath comes here to be evaluated to its path
       args <- eval(args, envir)
     }
   } else {
@@ -1371,7 +1390,7 @@ evalTheFun <- function(FUNcaptured, isCapturedFUN, matchedCall, envir = parent.f
   out
 }
 
-searchInRepos <- function(cachePaths, outputHash, drv, conn) {
+searchInRepos <- function(cachePaths, outputHash, drv, conn, verbose = getOption("reproducible.verbose")) {
   dbTabNam <- NULL
   tries <- 1
   while (tries <= length(cachePaths)) {
@@ -1420,7 +1439,9 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn) {
         }
 
         isInRepo <- if (!is.null(dtFile)) {
-          loadFile(dtFile)
+          loadFile(dtFile,
+                   cacheId = outputHash, cachePath = repo, # in case it needs swapCacheFormat
+                   drv = drv, conn = conn, verbose = verbose)
         } else {
           NULL
         }
@@ -1517,65 +1538,29 @@ addCacheAttr <- function(output, .CacheIsNew, outputHash, FUN) {
 
 .objectSizeMinForBig <- 5e6
 
-# getFromCacheWithCacheIdPrevious <- function(.functionName, verbose, tagKey, inRepos) {
-#   sc <- showCache(fun = .functionName, verbose = -2)
-#   if (NROW(sc)) {
-#     messageCache("cacheId is 'previous' meaning it will recover the most recent ",
-#                  "cache item (accessed) that matches on .functionName: ",
-#                  .messageFunctionFn(.functionName), "\nPlease ensure ",
-#                  "the function name is precise enough for this behaviour", verbose = verbose)
-#     outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
-#     outputHash <- outputHashNew$cacheId[1]
-#     inRepos$isInRepo <- outputHashNew[1, ]
-#     inRepos$fullCacheTableForObj <- showCacheFast(cacheId = outputHash)
-#   }
-# }
-
 cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName,
                                 verbose) {
   sc <- NULL
   if (!is.null(cacheId)) {
     if  (identical(cacheId, "previous")) {
       sc <- getPreviousEntryInCache(.functionName, cacheId, verbose)
-      # sc <- showCache(fun = .functionName, verbose = -2)
-      # if (NROW(sc)) {
-      #   messageCache("cacheId is 'previous' meaning it will recover the most recent ",
-      #                "cache item (accessed) that matches on .functionName: ",
-      #                .messageFunctionFn(.functionName), "\nPlease ensure ",
-      #                "the function name is precise enough for this behaviour", verbose = verbose)
-      #   outputHashNew <- data.table::setorderv(sc[tagKey == "accessed"], "tagValue", order = -1L)
-      #   outputHash <- outputHashNew$cacheId[1]
-      #   sc <- sc[cacheId %in% outputHash, ]
-      #   attr(sc, "cacheId") <- outputHash
-      #   # sc <- showCacheFast(cacheId = outputHash)
-      # } else {
-      #   sc <- NULL
-      # }
     } else {
       outputHashManual <- cacheId
       sc <- list(1)
-      # calculatedCacheId can be NULL to save time; doesn't calculate the digest
       if (identical(outputHashManual, calculatedCacheId)) {
         messageCache(.message$cacheIdSameTxt, verbose = verbose)
-        # sc <- showCache(userTags = cacheId, verbose = verbose -1)
       } else {
-        # sc <- showCache(userTags = sc, verbose = verbose -1)
         if (!is.null(calculatedCacheId)) {
           messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
-          # if (NROW(sc))
-          # isInRepo <- sc[1,]
         } else {
           messageCache(.message$cacheIdNotAssessed(cacheId), verbose = verbose)
         }
       }
       attr(sc, "cacheId") <- cacheId
-      # outputHash <- outputHashManual
       if (NROW(sc) == 0)
         sc <- NULL
 
     }
-
-    # sc <- inRepos$fullCacheTableForObj
   }
 
   sc

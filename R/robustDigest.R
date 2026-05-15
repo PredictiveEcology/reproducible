@@ -173,7 +173,11 @@ setMethod(
         ) # don't include object@data -- these are volatile
         forDig <- list(out, dig)
       } else {
-        forDig <- terra::wrap(object)
+        warns <- withCallingHandlers(forDig <- terra::wrap(object),
+                                     warning = function(w) {
+                                       if (isTRUE(any(grepl("raster has no values", w[[1]]))))
+                                         invokeRestart("muffleWarning")
+                                     })
       }
     } else if (inherits(object, "SpatVector")) {
       if (!requireNamespace("terra", quietly = TRUE)) {
@@ -556,19 +560,18 @@ basenames3 <- function(object, nParentDirs) {
     } else if (cacheSpeed == "slow") {
       cacheSpeed <- 1L
     }
-    out <- if (cacheSpeed == 1) {
+    if (cacheSpeed == 1) {
       if (length(x) == 1) {
         if (is.atomic(x))
           if (isTRUE(is.na(x)))
             x <- NA # make all NAs (NA_real_, NA, NA_character_ equal
       }
-      digest::digest(x, algo = algo)
     } else if (cacheSpeed == 2) {
-      digest::digest(x, algo = "spooky")
+      algo <- "spooky"
     } else {
       stop("options('reproducible.cacheSpeed') must be 1, 2, 'slow' or 'fast'")
     }
-    out
+    out <- digest::digest(x, algo = algo)
   }
   out
 }

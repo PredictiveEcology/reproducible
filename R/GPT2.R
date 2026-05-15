@@ -33,6 +33,13 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   # Sets useDBI(TRUE) if a user has supplied a drv or conn
   optionsSetForCache(drv = drv, conn = conn)
 
+  validateUseCloud(useCloud)
+
+  ## Lazy showCache async pre-populate: idempotent, ~10us when already spawned.
+  ## See R/showCacheEtc.R::.maybeSpawnShowCacheAsync. Targets the cachePath
+  ## actually being used (not the default at .onLoad time).
+  .maybeSpawnShowCacheAsync(cachePath)
+
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)
 
@@ -69,7 +76,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (is.null(cacheId) || is.na(cacheId)) {
     cacheChainDetails <- cacheChainingSetup(.cacheChaining, callList, omitArgs, verbose)
     toDigest <- doDigestPrepare(callList$new_call, cacheChainDetails$omitArgs, .cacheExtra)
-    keyFull <- try(doDigest(toDigest, callList$.functionName, .objects,
+    keyFull <- try2(doDigest(toDigest, callList$.functionName, .objects,
                             length, algo, quick, classOptions, times$CacheDigestStart,
                             verbose = verbose))
     if (is(keyFull, "try-error")) {
@@ -351,7 +358,6 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
     args <- as.list(matched_call)[-1]
     args <- evaluate_args(args, envir = .callingEnv)
   }
-
   combined_args <- combine_clean_args(func, args, .objects = NULL, .callingEnv)
 
   # Check for arguments that are in both Cache and the FUN
@@ -365,14 +371,13 @@ convertCallToCommonFormat <- function(call, usesDots, isSquiggly, .callingEnv) {
   attr(matched_call, ".Cache")$method <- func
   attr(matched_call, ".Cache")$.functionName <- .functionName
 
-
   return(matched_call)
 }
 
 evaluate_args <- function(args, envir) {
   lapply(args, function(arg) {
     if (is.call(arg)) {
-      arg <- tryCatch(eval(arg, envir = envir), error = function(err) {
+      arg <- tryCatch(eval(arg, envir = envir), error = function(err) { # can't be tryCatch2 --> this must always be a tryCatch
         # If it's a call that cannot be evaluated, evaluate recursively
         fail <- "fail"
         newPossArgMinus1 <- tryCatch(evaluate_args(as.list(arg[-1]), envir), error = function(err) {
@@ -534,9 +539,13 @@ check_and_get_memoised_copy <- function(detailed_key, cachePaths, functionName, 
       return(output)
     }
   } else {
-    # If useMemoise gets turned off, it needs to be emptied or there will be stale entries
+    # If useMemoise gets turned off, it needs to be emptied or there will be stale entries.
+    # Preserve the "shownCache" binding -- it holds the showCache memoised
+    # data.table and the async-spawn job table; both are independent of
+    # useMemoise and clearing them would defeat the lazy async pre-populate
+    # mechanism (jobs would be re-spawned on every Cache() call).
     me <- memoiseEnv(cachePaths[[1]])
-    le <- ls(me)
+    le <- setdiff(ls(me), "shownCache")
     if (length(le))
       rm(list = le, envir = me)
   }
@@ -586,7 +595,11 @@ undoDoCall <- function(call, .callingEnv) {
 
 # Helper function to get function defaults
 get_function_defaults <- function(func) {
-  formals_list <- formals(func)
+  if (is.primitive(func)) {
+    formals_list <- formals(args(list))
+  } else {
+    formals_list <- formals(func)
+  }
   return(as.list(formals_list))
 }
 
@@ -601,25 +614,55 @@ reorder_arguments <- function(formals, args) {
     args <- append(args2, args[[which(areDots)]])
   }
 
+  if (FALSE) {
+    # areDots <- names(args) %in% "..."
+    namesOfArgs <- names(args) %in% "..."
+    areDots <- any(names(formals) %in% "...") || any(namesOfArgs)
+    if (any(areDots)) {
+      if (length(namesOfArgs)) {
+        args2 <- args
+        for (wh in which(namesOfArgs)) {
+          args2[[wh]] <- NULL
+          args <- append(args2, args[[which(namesOfArgs)]])
+        }
 
-  combined_args <- modifyList(formals, args, keep.null = TRUE)
-  areDots <- names(combined_args) %in% "..."
-  if (any(areDots)) {
+      } else {
+        # these are unnamed args in the dots
+      }
+    }
 
-    argPlaceInsert <- which(!names(args) %in% names(formals))
 
-    needArgs <- !names(args) %in% names(combined_args)
-    combined_args[areDots] <- NULL
-    combined_args <- append(combined_args, args[needArgs])
-    areDots2 <- names(formals) %in% "..."
-    whNotDots <- which(!areDots2)
-    whDots <- which(areDots2)
-    first <- if (whDots > 1) seq(whDots - 1) else numeric()
-    anySeconds <- !whDots > whNotDots
-    second <- if (any(anySeconds)) whNotDots[anySeconds] else numeric()
-    ordered_args <- c(combined_args[first], args[argPlaceInsert], formals[second])
+  }
+
+  if (length(formals) == 1 && all(names(formals) %in% "...")) {
+    # This is case of things like `list`, `file.path`
+    ordered_args <- args
   } else {
-    ordered_args <- combined_args[union(names(formals), names(combined_args))]
+    # This will remove unnamed elements; which isn't right
+    combined_args <- modifyList(formals, args, keep.null = TRUE)
+    emptyNams <- names(args) %in% ""
+    if (any(emptyNams)) {
+      combined_args <- append(combined_args, args[emptyNams])
+    }
+    areDots <- names(combined_args) %in% "..."
+    if (any(areDots)) {
+
+      # argPlaceInsert <- which(!names(args) %in% names(formals))
+
+      # needArgs <- !names(args) %in% names(combined_args)
+      combined_args[areDots] <- NULL
+      ordered_args <- combined_args
+      # combined_args <- append(combined_args, args[needArgs])
+      # areDots2 <- names(formals) %in% "..."
+      # whNotDots <- which(!areDots2)
+      # whDots <- which(areDots2)
+      # first <- if (whDots > 1) seq(whDots - 1) else numeric()
+      # anySeconds <- !whDots > whNotDots
+      # second <- if (any(anySeconds)) whNotDots[anySeconds] else numeric()
+      # ordered_args <- c(args[argPlaceInsert], formals[second])
+    } else {
+      ordered_args <- combined_args[union(names(formals), names(combined_args))]
+    }
   }
   # Preserve the order of the formals
 
@@ -781,7 +824,7 @@ userTagsListToDT <- function(cache_key, userTagsList) {
   theChars <- vapply(userTagsList, function(x) is.character(x) | is.logical(x), logical(1))
   if (any(!theChars)) {
     for (tc in which(!theChars))
-      userTagsList[[tc]] <- tryCatch(format(userTagsList[[tc]]), error = function(u) as.character())
+      userTagsList[[tc]] <- tryCatch2(format(userTagsList[[tc]]), error = function(u) as.character())
   }
   userTagsList <- utils::stack(userTagsList)
   metadataDT(cacheId = cache_key, tagKey = userTagsList$ind, tagValue = userTagsList$values)
@@ -864,48 +907,119 @@ callIsQuote <- function(call) {
 }
 
 releaseLockFile <- function(locked) {
-  lockFile <- locked[[2]]
   filelock::unlock(locked)
-  if (file.exists(lockFile)) {
-    unlink(lockFile)
-  }
+  ## Do NOT delete the lock file: the fcntl lock is what protects the critical
+  ## section, not the file's existence.  Deleting and recreating the file under
+  ## concurrent load creates two bugs:
+  ##   1. Workers that were blocked on fcntl(F_SETLKW) already have the old inode
+  ##      open; a fresh caller that arrives after the delete creates a *new* inode
+  ##      at the same path — both callers hold a "lock" on different inodes and
+  ##      the critical section is no longer protected.
+  ##   2. If a prior run was executed as root (or another user), a stale .lock file
+  ##      with wrong ownership is left behind; the next caller gets EACCES at
+  ##      open(O_RDWR|O_CREAT) — "Permission denied".
+  ## Leaving the (empty) .lock file in place is safe and correct.
 }
 
+#' @importFrom stats runif
 lockFile <- function(cachePath, cache_key,
                      envir   = parent.frame(),
                      verbose = getOption("reproducible.verbose")) {
   if (!useDBI()) {
     csd <- CacheStorageDir(cachePath)
-    if (!any(dir.exists(csd))) lapply(csd, dir.create, showWarnings = FALSE, recursive = TRUE)
+    checkPath(csd, create = TRUE)
 
     lock_path <- file.path(csd, paste0(cache_key, suffixLockFile()))
-    first <- TRUE
-    locked <- NULL
 
-    # Try repeatedly, but with bounded waits and backoff
+    ## Three outcomes from filelock::lock:
+    ##   NULL   — contention; sleep 2.5 s and retry
+    ##   EMFILE — process near fd limit from other sources; gc + small sleep
+    ##   EACCES — stale file owned by another user; remove and retry
+    ##   other  — unexpected; re-throw immediately
+    ##
+    ## Note: PredictiveEcology/filelock >= 1.0.3.9001 fixes a bug in the
+    ## upstream package where every failed non-blocking attempt leaked one fd
+    ## (close()/CloseHandle() missing on the NULL return path in C).
+
+    locked          <- NULL
+    waiting         <- FALSE
+    emfile_attempts <- 0L
+
     repeat {
-      ## If you still want a time cap on the *attempt*, make it transient and reset:
-      setTimeLimit(elapsed = 3, transient = TRUE)
-      locked <- filelock::lock(lock_path, timeout = 2500)   # ~2.5 s wait, returns NULL on timeout
-      setTimeLimit(elapsed = Inf, transient = TRUE)
+      locked <- tryCatch(
+        filelock::lock(lock_path, timeout = 0L),
+        error = function(e) {
+          msg <- conditionMessage(e)
+          if (!grepl("Cannot open lock file", msg, fixed = TRUE)) stop(e)
 
-      if (!is.null(locked)) break  # acquired
+          if (grepl("Too many open files", msg, fixed = TRUE)) {
+            emfile_attempts <<- emfile_attempts + 1L
+            if (emfile_attempts > 10L)
+              stop("Persistent 'Too many open files' acquiring lock: ", lock_path,
+                   "\nRaise ulimit -n or report a filelock fd-leak bug",
+                   call. = FALSE)
+            gc(FALSE)
+            Sys.sleep(runif(1L, 0.1, 0.3) * emfile_attempts)
+            return(NULL)
+          }
 
-      if (isTRUE(first)) {
-        first <- FALSE
+          ## EACCES or similar — remove stale file and retry
+          removed <- suppressWarnings(file.remove(lock_path))
+          if (!isTRUE(removed))
+            stop("Cannot open lock file and cannot remove it.\n",
+                 "Manually delete (may need sudo): ", lock_path, "\n",
+                 "Original error: ", msg, call. = FALSE)
+          messageCache("Lock file not accessible; removed and retrying",
+                       verbose = verbose + 1)
+          dir.create(csd, showWarnings = FALSE, recursive = TRUE)
+          return(NULL)
+        }
+      )
+
+      if (!is.null(locked)) break
+
+      if (!waiting) {
+        waiting <- TRUE
         messageCache(
-          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting... ",
-          "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+          "The cache file (", lock_path, ") is locked due to a concurrent process; waiting...",
+          "\nTo diagnose the holding process (works on Linux/macOS):",
+          "\n  system(\"fuser '", lock_path, "'\")",
+          "\n  system(\"lsof '", lock_path, "'\")",
+          "\nOn a network filesystem (NFS/CIFS), unlink() will NOT remove the file while",
+          "\na process holds it open -- kill the holding process first, then the lock releases.",
+          "\nIf no process is found (stale lock on a local filesystem), then delete the lockfile:",
+          "\n  unlink('", lock_path, "', force = TRUE)",
           verbose = verbose + 2
         )
       }
-      Sys.sleep(0.25)  # backoff
+
+      Sys.sleep(2.5)
     }
 
-    if (!first) {
+    if (waiting)
       messageCache("  ... ", lock_path, " released, continuing ... ", verbose = verbose + 2)
-    }
 
+    # on.exit(filelock::unlock(locked), add = TRUE)
+    #
+    # # Try repeatedly, but with bounded waits and backoff
+    # repeat {
+    #   ## If you still want a time cap on the *attempt*, make it transient and reset:
+    #   setTimeLimit(elapsed = 3, transient = TRUE)
+    #   locked <- filelock::lock(lock_path, timeout = 250000)   # ~2.5 s wait, returns NULL on timeout
+    #   setTimeLimit(elapsed = Inf, transient = TRUE)
+    #
+    #   if (!is.null(locked)) break  # acquired
+    #
+    #   if (isTRUE(first)) {
+    #     first <- FALSE
+    #     messageCache(
+    #       "The cache file (", lock_path, ") is locked due to a concurrent process; waiting... ",
+    #       "\nIf there is no concurrent process (i.e., no parallelism), delete that lockfile",
+    #       verbose = verbose + 2
+    #     )
+    #   }
+    #   Sys.sleep(0.25)  # backoff
+    # }
     # Ensure release when the *outer* scope exits
     on.exit2(releaseLockFile(locked), envir = envir)
     locked
@@ -918,7 +1032,9 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                         # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
-  shownCache <- showCache(cachePath, Function = .functionName, userTags = userTags,
+  shownCacheUserTags <- showCache(cachePath, Function = .functionName, userTags = userTags,
+                          verbose = verbose - 2)
+  shownCache <- showCache(cachePath, Function = .functionName, # userTags = userTags,
                           verbose = verbose - 2)
   # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, dotFunTxt)]$tagValue
   # shownCache <- shownCache[tagKey %in% "preDigest" & tagValue %in% functionByDigest]
@@ -935,7 +1051,7 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
       )
     }
 
-    rmTagKeys <- "otherFunction|elapsedTime|accessed"
+    rmTagKeys <- "otherFunction|elapsedTime|accessed|module:|eventType:|eventTime:|outerFunction:"
     shownCache <- shownCache[grep(x = tagKey, rmTagKeys, invert = TRUE)]
     metadataSmall <- metadata[grep(x = tagKey, rmTagKeys, invert = TRUE)]
     # Can only compare on tagKeys that are *not yet* in the metadata; e.g., object.size may
@@ -1067,13 +1183,16 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
       }
 
       if (isDevMode(useCache, userTags)) {
-        messageCache("------ devMode -------", verbose = verbose)
-        messageCache("Previous call(s) exist in the cache with identical userTags (",
-                     paste0(userTags, collapse = ", "), ")", verbose = verbose)
-        messageCache("This call to cache will replace entry with cacheId(s): ",
-                     paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
-        cacheIdsToClear <- unique(names(simi))
-        clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
+        # Only replace entries that actually matched on userTags (not just function name)
+        cacheIdsToClear <- intersect(unique(names(simi)), unique(shownCacheUserTags$cacheId))
+        if (length(cacheIdsToClear)) {
+          messageCache("------ devMode -------", verbose = verbose)
+          messageCache("Previous call(s) exist in the cache with identical userTags (",
+                       paste0(userTags, collapse = ", "), ")", verbose = verbose)
+          messageCache("This call to cache will replace entry with cacheId(s): ",
+                       paste0(simi[["cacheId"]], collapse = ", "), verbose = verbose)
+          clearCache(cachePath, cacheId = cacheIdsToClear, ask = FALSE,  drv = drv, conn = conn, verbose = verbose - 2)
+        }
       }
       nShow <- min(numSmallest, 5)
       messageCache("with different elements (", nShow, " most recent at top):", verbose = verbose)
@@ -1346,6 +1465,9 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     cacheSaveFormatFail <- FALSE
     if (is.null(shownCache)) {
+      # shownCache <- showCacheFast(cache_key, cachePath, dtFile = fe,
+      #                                 # cacheSaveFormat = cacheSaveFormat,
+      #                                 drv = drv, conn = conn)
       shownCache <- try(showCacheFast(cache_key, cachePath, dtFile = fe,
                                       # cacheSaveFormat = cacheSaveFormat,
                                       drv = drv, conn = conn),
@@ -1364,43 +1486,53 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
                                     cacheId = cache_key, cacheSaveFormat = cacheSaveFormat, verbose = verbose)
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
-      output <- get(cache_key, envir = memoiseEnv(cachePath))
+      # output <- get(cache_key, envir = memoiseEnv(cachePath))
+      output <- .unwrap(get(cache_key, envir = memoiseEnv(cachePath)), cacheId = cache_key, cachePath = cachePath,
+                        drv = drv, conn = conn)
       # need to update the individual files in file-backed objects from the cache; can't use memoise
-      outputTestIntegrity <- try(output[1], silent = TRUE)
-      fns <- try(Filenames(output), silent = TRUE) # previous will only get some of the failures
 
-      if (isTRUE(is(outputTestIntegrity, "try-error")) || isTRUE(is(fns, "try-error"))) {
-        # Some objects, especially Rcpp objects can get stale; rerun if this is the case
-        failMsgs <- "external pointer.+not valid|NULL value passed as symbol address"
-        if (isTRUE(any(grepl(failMsgs, outputTestIntegrity))) ||
-            isTRUE(any(grepl(failMsgs, fns)))) {
-          memoiseFail <- TRUE
-          rm(list = cache_key, envir = memoiseEnv(cachePath))
-          cache_file <- CacheStoredFile(cachePath, cache_key, readOnly = TRUE)
-        }
-      } else {
-        fns <- fns[nzchar(fns)]
-        if (!is.null(fns) && length(fns) > 0) {
-          fnsInOutputObjects <- intersect(names(fns), outputObjects)
-          fns <- fns[fnsInOutputObjects]
-          fnsExistBefore <- try(file.exists(fns))
-          fnsInCache <- file.path(CacheStorageDir(cachePath),
-                                  basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
-          hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
-          fnsExistAfter <- file.exists(fns)
-          if (any(fnsExistAfter %in% FALSE) && isTRUE(any(fnsExistBefore != fnsExistAfter))) # this means that hardLinkOrCopy failed
-            browser()
-        }
-      }
+      # Some objects, especially Rcpp objects can get stale; rerun if this is the case; the test with subsetting 1st element
+      #   is not great, but I could not find a better one that will fail on those Rcpp fails. The problem
+      #   is that the object exists, but it's inner structure is wrong
+      outputTestIntegrity <- try(output[1], silent = TRUE) # This needs to be `try`, not `try2`
+      fns <- try2(Filenames(output), silent = TRUE) # previous will only get some of the failures
+      memoiseFail <- dealWithCacheRecoveryErrors(memoiseFail, outputTestIntegrity, fns, cache_key, cachePath, outputObjects)
+      # if (isTRUE(is(outputTestIntegrity, "try-error")) || isTRUE(is(fns, "try-error"))) {
+      #   failMsgs <- "external pointer.+not valid|NULL value passed as symbol address"
+      #   if (isTRUE(any(grepl(failMsgs, outputTestIntegrity))) ||
+      #       isTRUE(any(grepl(failMsgs, fns)))) {
+      #     memoiseFail <- TRUE
+      #     rm(list = cache_key, envir = memoiseEnv(cachePath))
+      #     cache_file <- CacheStoredFile(cachePath, cache_key, readOnly = TRUE)
+      #   }
+      # } else {
+      #   fns <- fns[nzchar(fns)]
+      #   if (!is.null(fns) && length(fns) > 0) {
+      #     fnsInOutputObjects <- intersect(names(fns), outputObjects)
+      #     fns <- fns[fnsInOutputObjects]
+      #     fnsExistBefore <- try2(file.exists(fns))
+      #     fnsInCache <- file.path(CacheStorageDir(cachePath),
+      #                             basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
+      #     hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
+      #     fnsExistAfter <- file.exists(fns)
+      #     if (any(fnsExistAfter %in% FALSE) && isTRUE(any(fnsExistBefore != fnsExistAfter))) # this means that hardLinkOrCopy failed
+      #       browser()
+      #   }
+      # }
     }
 
     if (!fromMemoise || rerun || memoiseFail || cacheSaveFormatFail) {
       obj <- if (!is.null(cache_file)) {
-        try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat), silent = TRUE)
+        # loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
+        #              cacheId = cache_key, cachePath = cachePath, # in case it needs swapCacheFormat
+        #              drv = drv, conn = conn, verbose = verbose)
+        try(loadFile(cache_file, cacheSaveFormat = cacheSaveFormat,
+                     cacheId = cache_key, cachePath = cachePath, # in case it needs swapCacheFormat
+                     drv = drv, conn = conn, verbose = verbose), silent = TRUE)
       } else {
         rerun <- TRUE
       }
-      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+
       if (isTRUE(changedSaveFormat)) {
         swapTry <- try(swapCacheFileFormat(
           wrappedObj = obj, cachePath = cachePath, drv = drv, conn = conn,
@@ -1410,6 +1542,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
         # rerun <- TRUE
       }
+      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
@@ -1437,8 +1570,9 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     if (getOption("reproducible.useMemoise", FALSE)) {
       cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
       if (cache_key_in_memoiseEnv %in% FALSE) {
-        assign(cache_key, .unwrap(obj, cachePath = cachePath, cacheId = cache_key),
-               envir = memoiseEnv(cachePath))
+        # assign(cache_key, .unwrap(obj, cachePath = cachePath, cacheId = cache_key),
+        #        envir = memoiseEnv(cachePath))
+        assign(cache_key, obj, envir = memoiseEnv(cachePath)) # try without .unwrap in memoiseEnv
       }
     }
 
@@ -1483,8 +1617,20 @@ isDevMode <- function(useCache, userTags) {
   isTRUE(any(pmatch(table = useCache, "dev") %in% 1)) && !is.null(userTags)
 }
 
+## `useCloud` accepts: TRUE/FALSE/NULL, or one of "push"/"pull".
+##   - TRUE  / "push": developer role -- bidirectional. Download on cloud hit;
+##                     upload on miss.
+##   - "pull"        : user role -- read-only. Download on cloud hit; never
+##                     upload. If the local cache already has the object, the
+##                     cloud is not consulted at all (the gdriveLs fetch is
+##                     deferred until after the local check fails).
+##   - FALSE / NULL  : cloud disabled.
+## Legacy "^w"/"^r" prefix matching is retained for back-compat (e.g. "write",
+## "read", "readOnly") since the contract is otherwise narrow.
 cloudWrite <- function(useCloud) {
-  isTRUE(any(grepl("^w", useCloud) %in% 1)) || isTRUE(useCloud)
+  isTRUE(useCloud) ||
+    identical(useCloud, "push") ||
+    isTRUE(any(grepl("^w", useCloud) %in% 1))
 }
 
 cloudWriteOrRead <- function(useCloud) {
@@ -1492,11 +1638,25 @@ cloudWriteOrRead <- function(useCloud) {
 }
 
 cloudReadOnly <- function(useCloud) {
-  isTRUE(any(grepl("^r", useCloud) %in% 1))
+  identical(useCloud, "pull") ||
+    isTRUE(any(grepl("^r", useCloud) %in% 1))
 }
 
 cloudRead <- function(useCloud) {
-  cloudReadOnly(useCloud) || isTRUE(useCloud)
+  cloudReadOnly(useCloud) || isTRUE(useCloud) || identical(useCloud, "push")
+}
+
+## Validate the `useCloud` argument and return it unchanged. Errors on a
+## character value that is not "pull" or "push" (or a legacy ^w/^r prefix).
+validateUseCloud <- function(useCloud) {
+  if (is.null(useCloud) || isTRUE(useCloud) || isFALSE(useCloud))
+    return(invisible(useCloud))
+  if (is.character(useCloud) && length(useCloud) == 1L &&
+      (useCloud %in% c("pull", "push") ||
+       grepl("^[wr]", useCloud)))
+    return(invisible(useCloud))
+  stop("`useCloud` must be TRUE, FALSE, NULL, \"pull\", or \"push\"; got: ",
+       deparse(useCloud), call. = FALSE)
 }
 
 keyInGdriveLs <- function(cache_key, gdriveLs) {
@@ -1559,8 +1719,15 @@ doDigestPrepare <- function(new_call, omitArgs, .cacheExtra) {
   toDigest <- attr(new_call, ".Cache")$args_w_defaults # not evaluated arguments
 
   toDigest$.FUN <- attr(new_call, ".Cache")$method
-  # Deal with omitArgs by removing elements from the toDigest list of objects to digest
-  if (!is.null(omitArgs)) {
+  # Deal with omitArgs:
+  # - TRUE  => drop every captured arg; digest is based on .FUN (the actual
+  #            function value, body included, so source edits still bust the
+  #            cache) plus .cacheExtra
+  # - char  => drop the named args
+  # - NULL  => default, no change
+  if (isTRUE(omitArgs)) {
+    toDigest <- toDigest[names(toDigest) %in% ".FUN"]
+  } else if (is.character(omitArgs)) {
     if (any("FUN" %in% omitArgs))
       omitArgs <- c(dotFunTxt, omitArgs)
     toDigest[omitArgs] <- NULL
@@ -1684,7 +1851,7 @@ createSimilar <- function(similar, .functionName, verbose, devMode) {
 
 stopRcppError <- function(toDigest, .objects, length, algo, quick, classOptions) {
   ooo <- Map(obj = names(toDigest), function(obj)
-    try(.robustDigest(toDigest[[obj]], .objects = .objects,
+    try2(.robustDigest(toDigest[[obj]], .objects = .objects,
                       length, algo, quick, classOptions), silent = TRUE))
   ite <- Map(o = ooo, function(o) {
     is(o, "try-error")
@@ -1812,7 +1979,11 @@ cacheChainingPost <- function(detailed_key, outputFromEvaluate, cacheChainingOut
       fil <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheChainingFnDigest)
       needWrite <- TRUE
       if (file.exists(fil)) {
-        tmp <- loadFile(fil)
+        # browser() # what should 'cacheId' be --> detailed_key?
+        tmp <- loadFile(fil,
+                        # cacheId = cacheId,
+                        cachePath = cachePath, # in case it needs swapCacheFormat
+                        drv = drv, conn = conn, verbose = verbose)
         userTags1 <- paste0(tmp$tagKey, ":", tmp$tagValue)
         userTags2 <- union(userTags, userTags1)
         if (identical(length(userTags2), length(userTags1))) {
@@ -1946,3 +2117,30 @@ valInCacheTxt <- paste0("value", inCacheTxt)
 cacheIdInCacheTxt <- paste0("cacheId", inCacheTxt)
 cacheIdThisCallTxt <- paste0("cacheIdOf", thisCallTxt)
 valThisCallTxt <- paste0("value", thisCallTxt)
+
+
+dealWithCacheRecoveryErrors <- function(memoiseFail, outputTestIntegrity, fns, cache_key, cachePath, outputObjects) {
+  if (isTRUE(is(outputTestIntegrity, "try-error")) || isTRUE(is(fns, "try-error"))) {
+    failMsgs <- "external pointer.+not valid|NULL value passed as symbol address"
+    if (isTRUE(any(grepl(failMsgs, outputTestIntegrity))) ||
+        isTRUE(any(grepl(failMsgs, fns)))) {
+      memoiseFail <- TRUE
+      rm(list = cache_key, envir = memoiseEnv(cachePath))
+      cache_file <- CacheStoredFile(cachePath, cache_key, readOnly = TRUE)
+    }
+  } else {
+    fns <- fns[nzchar(fns)]
+    if (!is.null(fns) && length(fns) > 0) {
+      fnsInOutputObjects <- intersect(names(fns), outputObjects)
+      fns <- fns[fnsInOutputObjects]
+      fnsExistBefore <- try2(file.exists(fns))
+      fnsInCache <- file.path(CacheStorageDir(cachePath),
+                              basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
+      hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
+      fnsExistAfter <- file.exists(fns)
+      if (any(fnsExistAfter %in% FALSE) && isTRUE(any(fnsExistBefore != fnsExistAfter))) # this means that hardLinkOrCopy failed
+        browser()
+    }
+  }
+  memoiseFail
+}

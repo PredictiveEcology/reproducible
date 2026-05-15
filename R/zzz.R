@@ -20,6 +20,13 @@
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
 
   .pkgEnv$runningOnMac <- isMac()
+  ## Note: showCache async pre-population is no longer fired here.
+  ## .onLoad runs before the user's real cachePath is set (e.g. by
+  ## SpaDES.project::setupProject()), so spawning here would target the
+  ## default tempdir() cachePath -- wasted work. Instead, the spawn fires
+  ## lazily on the first Cache() / showCache() call against any given
+  ## cachePath, where we know the path is the one the caller actually wants.
+
   invisible()
 }
 
@@ -36,9 +43,16 @@
 
 .onUnload <- function(libpath) {
   ## unset reproducible options on unload
+  cp <- getOption("reproducible.cachePath")
+  if (!is.null(cp) && .Platform$OS.type != "windows") {
+    # mccollect is fork-based and not available on Windows
+    suppressMessages(parallel::mccollect())
+  }
+  
   o <- options()
   o[startsWith(names(o), prefix = "reproducible.")] <- NULL
   options(o)
+  
 }
 
 .reproducibleTempPath <- function() getOption("reproducible.tempPath") # file.path(tempdir(), "reproducible")

@@ -170,18 +170,6 @@ test_that("preProcess works when provides url and destinationPath for a .rar fil
   # extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
 
-  # if (!is(extractSystemCallPath, "try-error")) {
-  # if (is.null(extractSystemCallPath)) {
-  #   noisyOutput <- capture.output(
-  #     expect_error({
-  #       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-  #     })
-  #   )
-  # } else {
-  if (isWindows() && getRversion() < "4.3") {
-    skip("archive pkg on Windows 4.2.3 fails on rar")
-  }
-
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
   )
@@ -198,21 +186,6 @@ test_that("preProcess works when provides url, targetfile and destinationPath fo
   testInit("terra", needInternet = TRUE)
   ## extractSystemCallPath <- try(.testForArchiveExtract(), silent = TRUE)
   url <- theRasterTestRar
-
-  # if (!is(extractSystemCallPath, "try-error")) {
-  # if (is.null(extractSystemCallPath)) {
-  #   noisyOutput <- capture.output(
-  #     expect_error({
-  #       ras <- reproducible::preProcess(
-  #         url = url, targetFile = theRasterTestFilename(suff = "tif"),
-  #         destinationPath = tmpdir
-  #       )
-  #     })
-  #   )
-  # } else {
-  if (isWindows() && getRversion() < "4.3") {
-    skip("archive pkg on Windows 4.2.3 fails on rar")
-  }
 
   wd <- getwd()
   noisyOutput <- capture.output(
@@ -246,9 +219,6 @@ test_that("preProcess works when provides url, archive and destinationPath for a
   #     })
   #   )
   # } else {
-  if (isWindows() && getRversion() < "4.3") {
-    skip("archive pkg on Windows 4.2.3 fails on rar")
-  }
   noisyOutput <- capture.output(
     ras <- reproducible::preProcess(
       url = url,
@@ -363,15 +333,19 @@ test_that("message when file is a shapefile", {
   )
 })
 
-test_that("message when doesn't know the targetFile extension", {
+test_that("preProcess succeeds when targetFile extension is unknown", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
   url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
+  # preProcess does not load the object, so an unrecognised extension should
+  # not error; funChar is left NULL and the file is still extracted.
   noisyOutput <- capture.output(
-    ccc <- testthat::capture_output(testthat::expect_error(regexp = "guess at which function to use to read", {
-      ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
-    }))
+    ccc <- testthat::capture_output({
+      out <- reproducible::preProcess(url = url, destinationPath = tmpdir)
+    })
   )
+  expect_null(out$funChar)
+  expect_true(!is.null(out$targetFilePath))
 })
 
 test_that("When supplying two files without archive, when archive and files have different names", {
@@ -466,25 +440,25 @@ test_that("just google id not url", {
 })
 
 test_that("Test of using future and progress indicator for lrg files on Google Drive", {
+  skip_on_cran()
+  skip_on_ci()
   skip_if_not_installed("future")
   skip_if_not_installed("googledrive")
 
-  if (interactive()) {
-    testInit(
-      c("terra", "future"),
-      needGoogleDriveAuth = TRUE,
-      needInternet = TRUE,
-      opts = list("reproducible.futurePlan" = "multisession")
-    )
-    noisyOutput <- capture.output({
-      ccc <- testthat::capture_output({
-        smallRT <- preProcess(
-          url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN"
-        )
-      })
+  testInit(
+    c("terra", "future"),
+    needGoogleDriveAuth = TRUE,
+    needInternet = TRUE,
+    opts = list("reproducible.futurePlan" = "multisession")
+  )
+  noisyOutput <- capture.output({
+    ccc <- testthat::capture_output({
+      smallRT <- skip_on_transient_http(preProcess(
+        url = "https://drive.google.com/open?id=1WhL-DxrByCbzAj8A7eRx3Y1FVujtGmtN"
+      ))
     })
-    expect_true(is(smallRT, "list"))
-  }
+  })
+  expect_true(is(smallRT, "list"))
 })
 
 test_that("lightweight tests for preProcess code coverage", {

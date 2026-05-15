@@ -1172,11 +1172,13 @@ unmakeMemoisable.default <- function(x) {
                          conn = getOption("reproducible.conn", NULL), ...) {
   atts <- attributes(obj)
   anyNames <- names(obj)
-  isSpatVector <- if (is.null(anyNames) || length(anyNames) == 0) FALSE else all(names(obj) %in% spatVectorNamesForCache)
+  # isSpatVector <- if (is.null(anyNames) || length(anyNames) == 0) FALSE else {
+  #   identical(spatVectorNamesForCache, anyNames)
+  # }
   FAIL <- FALSE
-  if (isTRUE(isSpatVector)) {
-    obj <- unwrapSpatVector(obj)
-  } else {
+  # if (isTRUE(isSpatVector)) {
+  #   obj <- unwrapSpatVector(obj)
+  # } else {
     isRaster <- isTRUE("cacheRaster" %in% names(obj))
     if (isRaster) {
       obj <- unwrapRaster(obj, cachePath, cacheId)
@@ -1189,7 +1191,7 @@ unmakeMemoisable.default <- function(x) {
         ret
       })
     }
-  }
+  # }
   # put attributes back on the potentially packed object
   obj <- attributesReassign(atts, obj)
 

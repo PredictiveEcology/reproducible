@@ -133,7 +133,15 @@ if (requireNamespace("terra", quietly = TRUE) &&
     Checksums(dPath, write = TRUE, files = tf)
     elevOrig <- terra::rast(tf)
     studyAreaCrs <- terra::crs(studyArea)
-    elevForStudy2 <- terra::project(elevOrig, studyAreaCrs, res = 250) |>
+    # Build an explicit target raster (same CRS as studyArea, res = 250) and
+    # project to it. Avoids the recursive `terra::project(x, char_crs, res = N)`
+    # shorthand that recent terra (~1.9) regressed with
+    # `[write] unknown option(s): xscale,yscale`.
+    elevTarget <- terra::project(terra::rast(elevOrig), studyAreaCrs)
+    elevTarget <- terra::rast(terra::ext(elevTarget),
+                              crs = terra::crs(elevTarget),
+                              resolution = 250)
+    elevForStudy2 <- terra::project(elevOrig, elevTarget) |>
       terra::mask(studyArea2) |>
       terra::crop(studyArea2)
 

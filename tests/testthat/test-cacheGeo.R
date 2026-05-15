@@ -83,7 +83,10 @@ test_that("lightweight tests for code coverage", {
   iter <- 0
   for (z in list(zoneA, zoneB, zoneC, zoneD, zoneE, zoneF)) {
     iter <- iter + 1
-    if (identical(z, zoneA) || identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
+    if (identical(z, zoneA)) {
+      # First iteration: targetFile doesn't exist yet, so different message
+      mess <- "No remote targetFile exists"
+    } else if (identical(z, zoneB) || identical(z, zoneD) || identical(z, zoneF)) {
       mess <- "Domain is not contained within the targetFile"
     }
     if (identical(z, zoneC) || identical(z, zoneE)) {
