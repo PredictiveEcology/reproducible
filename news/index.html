@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
       </span>
     </div>
 
@@ -64,9 +64,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.1.0.9000" id="reproducible-3109000">reproducible 3.1.0.9000<a class="anchor" aria-label="anchor" href="#reproducible-3109000"></a></h2>
-<ul><li>development version.</li>
+<h2 class="page-header" data-toc-text="3.1.1" id="reproducible-311">reproducible 3.1.1<a class="anchor" aria-label="anchor" href="#reproducible-311"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-3-1-1">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-3-1-1"></a></h3>
+<ul><li>fixed a test failure (<code>test-destinationPathShared.R</code>) on file systems whose inode numbers exceed <code>.Machine$integer.max</code>: the inode helper now compares inode numbers as strings rather than coercing to integer. No user-facing change; the package code is unaffected.</li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="3.1.0" id="reproducible-310">reproducible 3.1.0<small>2026-05-16</small><a class="anchor" aria-label="anchor" href="#reproducible-310"></a></h2>
 <div class="section level3">
