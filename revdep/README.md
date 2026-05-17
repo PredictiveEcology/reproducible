@@ -10,7 +10,7 @@
 |collate  |en_US.UTF-8                  |
 |ctype    |en_US.UTF-8                  |
 |tz       |America/Los_Angeles          |
-|date     |2026-05-15                   |
+|date     |2026-05-17                   |
 |pandoc   |3.1.3 @ /usr/bin/pandoc      |
 |quarto   |NA                           |
 
@@ -18,7 +18,7 @@
 
 |package      |old    |new    |Δ  |
 |:------------|:------|:------|:--|
-|reproducible |3.0.0  |3.1.0  |*  |
+|reproducible |3.1.0  |3.1.1  |*  |
 |cli          |3.6.6  |3.6.6  |   |
 |cpp11        |0.5.5  |0.5.5  |   |
 |crayon       |1.5.3  |1.5.3  |   |

@@ -8,30 +8,32 @@ changes; this release modifies only a package test.
 
 ## Test environments
 
-### Previous R versions
-* Ubuntu 24.04                 (GitHub), R 4.4.x
-* Windows                      (GitHub), R 4.4.x
-* Windows                 (win-builder), R-oldrelease
+### win-builder (this 3.1.1 build)
+* Windows                 (win-builder), R-oldrelease (R 4.6.0)
+* Windows                 (win-builder), R-release    (R 4.5.3)
+* Windows                 (win-builder), R-devel       (r90061)
 
-### Current R versions
-* macOS 14                     (GitHub), R 4.5.2
-* Ubuntu 24.04                 (GitHub), R 4.5.2
-* Windows                      (GitHub), R 4.5.2
-* Windows                       (local), R 4.5.2
-* Windows                 (win-builder), R-release
-
-### Development R version
+### GitHub Actions (development branch)
+* Ubuntu 24.04                 (GitHub), R-release
+* Windows                      (GitHub), R-release
 * Ubuntu 24.04                 (GitHub), R-devel
 * Windows                      (GitHub), R-devel
-* Windows                 (win-builder), R-devel
 
-### R-hub v2
-* Flavours              Linux, Mac, Windows (via GitHub Actions, r-hub/actions)
+### Local
+* Linux                         (local), R 4.5.x
 
 ## R CMD check results
 
-There are no errors or warnings. There is one NOTE related to the author,
-Eliot McIntire.
+There are no errors or warnings.
+
+All three win-builder builds (oldrelease, release, devel) returned a
+single NOTE:
+
+    Days since last update: 1
+
+This is expected: version 3.1.0 was accepted one day ago. This 3.1.1
+release contains only the fix that the CRAN team requested (see
+"CRAN-flagged issue" below), submitted within the requested timeframe.
 
 ## CRAN-flagged issue
 
@@ -62,7 +64,7 @@ are all maintained by the same maintainer.
 
 ## revdepcheck results
 
-We checked 3 reverse dependencies, comparing R CMD check results across the
+We checked 3 reverse dependencies, comparing R CMD check results across
 CRAN and dev versions of this package.
 
  * We saw 0 new problems

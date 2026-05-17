@@ -30,7 +30,7 @@ Run `revdepcheck::revdep_details(, "SpaDES.core")` for more info
      Because of an interrupted spades call, the sim object at the start of the interrupted event was saved in
      SpaDES.core:::savedSimEnv()$.sim
      It will be deleted on next call to spades().
-     Timing stopped at: 0.279 0.022 0.301
+     Timing stopped at: 0.241 0.029 0.268
      
        When sourcing ‘iii-cache.R’:
      Error: Package 'NLMR' not available. Please install it using:
