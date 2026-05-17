@@ -1,6 +1,11 @@
-# reproducible 3.1.0.9000
+# reproducible 3.1.1
 
-* development version.
+## bug fixes
+
+* fixed a test failure (`test-destinationPathShared.R`) on file systems
+  whose inode numbers exceed `.Machine$integer.max`: the inode helper now
+  compares inode numbers as strings rather than coercing to integer. No
+  user-facing change; the package code is unaffected.
 
 # reproducible 3.1.0
 
