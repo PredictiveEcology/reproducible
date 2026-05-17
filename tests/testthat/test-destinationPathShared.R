@@ -49,16 +49,19 @@ writeChecksumsFor <- function(dir, fixture, name = basename(fixture$path)) {
   csf
 }
 
-# Inode of a file. POSIX-only; returns NA on failure or non-POSIX OS.
+# Inode of a file, as a string. POSIX-only; returns NA on failure or
+# non-POSIX OS. Kept as character (not integer) because inode numbers can
+# exceed R's .Machine$integer.max (2^31-1) on large filesystems, where
+# as.integer() would silently coerce to NA. We only ever test equality.
 # GNU stat (Linux) uses `-c %i`; BSD stat (macOS) uses `-f %i`.
 inoOf <- function(p) {
-  if (.Platform$OS.type != "unix") return(NA_integer_)
+  if (.Platform$OS.type != "unix") return(NA_character_)
   args <- if (Sys.info()[["sysname"]] == "Darwin") c("-f", "%i") else c("-c", "%i")
   out <- suppressWarnings(
     system2("stat", c(args, shQuote(p)), stdout = TRUE, stderr = FALSE)
   )
-  if (length(out) == 0L || !grepl("^[0-9]+$", out[[1L]])) return(NA_integer_)
-  as.integer(out[[1L]])
+  if (length(out) == 0L || !grepl("^[0-9]+$", out[[1L]])) return(NA_character_)
+  out[[1L]]
 }
 
 # Two paths refer to the same physical file (hardlinked) iff inodes match
