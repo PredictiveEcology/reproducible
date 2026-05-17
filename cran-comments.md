@@ -1,21 +1,10 @@
 ## Release information
 
-This is a minor feature release (3.0.0 -> 3.1.0).
+This is a patch release (3.1.0 -> 3.1.1) addressing a CRAN-flagged
+check problem (see "CRAN-flagged issue" below).
 
-Highlights:
-
-* `prepInputsCOG`: a new fast-path inside `prepInputs` that fetches only the
-  spatial window of interest from remote tiled/Cloud-Optimized GeoTiffs via
-  GDAL's `/vsicurl/`, avoiding full-file downloads.
-* The `reproducible.inputPaths` / `reproducible.inputPathsRecursive` options
-  have been renamed to `reproducible.destinationPathShared` /
-  `reproducible.destinationPathSharedRecursive`; the old names remain fully
-  functional as backwards-compatible aliases.
-* `alsoExtract` now also accepts regular-expression patterns.
-* `preProcess` skips re-downloading when a matching local copy already exists.
-
-See `NEWS.md` for the full list of changes. No user-visible changes are
-expected to break existing code.
+See `NEWS.md` for the full list of changes. There are no user-visible
+changes; this release modifies only a package test.
 
 ## Test environments
 
@@ -44,11 +33,27 @@ expected to break existing code.
 There are no errors or warnings. There is one NOTE related to the author,
 Eliot McIntire.
 
-## Resubmission
+## CRAN-flagged issue
 
-This is a resubmission. The previous submission produced a NOTE for the
-`postProcess` example exceeding the 5s elapsed-time limit; the timing was
-dominated by a remote download, which has been moved into `\donttest{}`.
+Thank you very much for flagging the check problem and for the helpful
+detail in your message.
+
+We have found the cause and can reproduce the issue, and we have
+implemented a fix.
+
+One of our tests checks whether two files are the same physical file by
+comparing their file-system identifiers. On the systems we had tested,
+those identifiers were small enough to be stored as whole numbers, but
+on file systems with very large numbers (such as the one used by the
+CRAN check machine, as you kindly pointed out) the value was too large
+for that storage and was lost, which made the test fail.
+
+We have changed the test to compare these identifiers as text instead,
+which works correctly for values of any size. No functionality in the
+package itself was affected; the change is limited to this single test.
+
+We are grateful for your patience and for the time the CRAN team spent
+on this.
 
 ## Downstream dependencies
 
