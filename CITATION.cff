@@ -8,7 +8,7 @@ message: 'To cite package "reproducible" in publications use:'
 type: software
 license: GPL-3.0-only
 title: 'reproducible: Enhance Reproducibility of R Code'
-version: 3.1.0
+version: 3.1.0.9001
 identifiers:
 - type: doi
   value: 10.32614/CRAN.package.reproducible
@@ -57,12 +57,12 @@ preferred-citation:
     email: ian.eddy@nrcan-rncan.gc.ca
     orcid: https://orcid.org/0000-0001-7397-2116
   year: '2026'
-  notes: R package version 3.1.0
+  notes: R package version 3.1.0.9001
   url: https://reproducible.predictiveecology.org
 repository: https://CRAN.R-project.org/package=reproducible
 repository-code: https://github.com/PredictiveEcology/reproducible
 url: https://reproducible.predictiveecology.org
-date-released: '2026-05-15'
+date-released: '2026-05-17'
 contact:
 - family-names: McIntire
   given-names: Eliot J B
