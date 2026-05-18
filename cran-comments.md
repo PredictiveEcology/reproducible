@@ -4,7 +4,8 @@ This is a patch release (3.1.0 -> 3.1.1) addressing a CRAN-flagged
 check problem (see "CRAN-flagged issue" below).
 
 See `NEWS.md` for the full list of changes. There are no user-visible
-changes; this release modifies only a package test.
+changes; no package code was changed and the only functional change is
+to a single test file.
 
 ## Test environments
 
