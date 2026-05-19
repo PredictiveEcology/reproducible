@@ -2,6 +2,14 @@
 
 * development version.
 
+## bug fixes
+
+* `prepInputs`/`preProcess` no longer error with
+  `missing value where TRUE/FALSE needed` in the remote hash check when the
+  remote source advertises no file size (e.g. a server with no
+  `content-length` header). The size comparison now treats a missing remote
+  size as "unknown" and falls through to the normal hash/download path.
+
 # reproducible 3.1.1
 
 ## bug fixes

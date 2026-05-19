@@ -628,8 +628,12 @@ pp_remote_hash_check <- function(ctx) {
   # ------------------------------------------------------------------
   # Step 3: size fail-fast (negative-only)
   # ------------------------------------------------------------------
-  remoteSize <- suppressWarnings(as.numeric(remoteMetadata$fileSize))
-  localSize  <- file.size(localFile)
+  # `[1L]` collapses a NULL/empty fileSize (numeric(0), e.g. a remote that
+  # advertises no content-length) to NA_real_ rather than length-0; without
+  # this, `logical(0) && ...` coerces to NA and the `if` below errors with
+  # "missing value where TRUE/FALSE needed".
+  remoteSize <- suppressWarnings(as.numeric(remoteMetadata$fileSize))[1L]
+  localSize  <- file.size(localFile)[1L]
   if (!is.na(remoteSize) && !is.na(localSize) && remoteSize != localSize) {
     return(ctx)  # bytes definitely differ → let pp_download fetch
   }
