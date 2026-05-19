@@ -1,3 +1,28 @@
+<!--
+  REMINDER FOR NEXT SUBMISSION (3.1.2 patch):
+
+  3.1.2 fixes a prepInputs()/preProcess() crash ("missing value where
+  TRUE/FALSE needed") that was latent in the CRAN-accepted 3.1.1, hit
+  whenever a remote advertises no file size. Fixed on development in
+  commit dc1a4080.
+
+  CRAN policy is "no more than every 1-2 months" between updates (there
+  is NO 7-day rule). Submitting 3.1.2 sooner than that is acceptable for
+  a regression bug-fix, but the short interval MUST be justified
+  explicitly here. When rewriting this file for 3.1.2, replace this
+  comment and the 3.1.1 content below with a "Release information"
+  section that states, in plain language:
+
+    - this is a patch release fixing a regression introduced in 3.1.1;
+    - the bug aborts a common prepInputs() workflow (size-less remote);
+    - we are submitting ahead of the usual 1-2 month interval precisely
+      because it breaks existing user code, and apologise for the short
+      gap since 3.1.1.
+
+  Also expect the "Days since last update: N" NOTE and explain it the
+  same way (as the 3.1.1 section below does for its 1-day gap).
+-->
+
 ## Release information
 
 This is a patch release (3.1.0 -> 3.1.1) addressing a CRAN-flagged
