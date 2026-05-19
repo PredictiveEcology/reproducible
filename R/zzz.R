@@ -23,9 +23,14 @@
   ## Note: showCache async pre-population is no longer fired here.
   ## .onLoad runs before the user's real cachePath is set (e.g. by
   ## SpaDES.project::setupProject()), so spawning here would target the
-  ## default tempdir() cachePath -- wasted work. Instead, the spawn fires
-  ## lazily on the first Cache() / showCache() call against any given
-  ## cachePath, where we know the path is the one the caller actually wants.
+  ## wrong path. Instead, the spawn fires lazily on the first Cache() /
+  ## showCache() call against any given cachePath, where we know the path
+  ## is the one the caller actually wants.
+  ##
+  ## Note: `reproducible.cachePath` is also intentionally left unset
+  ## (NULL) here -- see reproducibleOptions(). It is resolved lazily by
+  ## .checkCacheRepo() on the first call to a user-facing entry point
+  ## (Cache(), clearCache(), showCache(), keepCache(), ...).
 
   invisible()
 }

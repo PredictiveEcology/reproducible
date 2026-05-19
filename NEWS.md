@@ -2,6 +2,20 @@
 
 * development version.
 
+## behaviour changes
+
+* `options("reproducible.cachePath")` is no longer pre-set to a
+  session-tempdir path when the package is loaded; the default is now
+  `NULL`. The first call to a user-facing entry point (`Cache()`,
+  `clearCache()`, `showCache()`, `keepCache()`, ...) resolves it lazily
+  via `.checkCacheRepo()`. If still unset at that point, the option is
+  set to `.reproducibleTempCacheDir()` for the rest of the session.
+  This lets project-setup layers (e.g. `SpaDES.project::setupProject()`)
+  detect "unset" cleanly and stops every R session from silently
+  committing to a non-persistent tempdir cache. Users who set
+  `options(reproducible.cachePath = ...)` explicitly (in their `.Rprofile`,
+  in a setup script, or via `withr::local_options()`) see no change.
+
 ## bug fixes
 
 * `prepInputs`/`preProcess` no longer error with

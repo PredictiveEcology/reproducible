@@ -561,8 +561,15 @@ setMethod(
         }
         getOption("reproducible.cachePath", tmpDir)
       } else {
-        messageCache(.message$NoCachePathSupplied, ". Using ", .reproducibleTempCacheDir(), verbose = verbose)
-        .reproducibleTempCacheDir()
+        # No cachePath supplied AND the option is unset (the load-time default
+        # is now NULL -- see reproducibleOptions()). Resolve to a session-temp
+        # default and persist it into the option so subsequent calls in this
+        # session see the same path. This is the "lazy first-use" hook that
+        # replaces setting the option in .onLoad().
+        cachePath <- .reproducibleTempCacheDir()
+        messageCache(.message$NoCachePathSupplied, ". Using ", cachePath, verbose = verbose)
+        options(reproducible.cachePath = cachePath)
+        cachePath
       }
       checkPath(path = cachePath, create = create)
     })

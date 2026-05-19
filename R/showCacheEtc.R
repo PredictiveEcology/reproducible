@@ -130,8 +130,13 @@ setMethod(
         messageCache("x not specified, but cachePath is; using ", list(...)$cachePath, verbose = verbose)
         list(...)$cachePath
       } else {
-        messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
-        x <- getOption("reproducible.cachePath")[1]
+        # Resolve via .checkCacheRepo: honours getOption("reproducible.cachePath")
+        # if set; otherwise falls back to .reproducibleTempCacheDir() and
+        # persists that into the option for the rest of the session (lazy
+        # first-use default; see reproducibleOptions()).
+        # `[1]` preserves the pre-existing single-repo selection when the
+        # user has set the option to a multi-repo vector.
+        .checkCacheRepo(NULL, create = TRUE, verbose = verbose)[1]
       }
     }
 
@@ -413,8 +418,9 @@ setMethod(
                         drv, conn, ...) {
     # browser(expr = exists("rrrr"))
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
-      x <- getOption("reproducible.cachePath")[1]
+      # Lazy first-use default: see reproducibleOptions() and .checkCacheRepo.
+      # `[1]` preserves the pre-existing single-repo selection.
+      x <- .checkCacheRepo(NULL, create = TRUE, verbose = verbose)[1]
     }
     # browser(expr = exists("jjjj"))
     # if (useDBI()) {
@@ -732,8 +738,9 @@ setMethod(
                         verbose = getOption("reproducible.verbose"),
                         ...) {
     if (missing(x)) {
-      messageCache("x not specified; using ", getOption("reproducible.cachePath")[1], verbose = verbose)
-      x <- getOption("reproducible.cachePath")[1]
+      # Lazy first-use default: see reproducibleOptions() and .checkCacheRepo.
+      # `[1]` preserves the pre-existing single-repo selection.
+      x <- .checkCacheRepo(NULL, create = TRUE, verbose = verbose)[1]
     }
     args <- append(list(x = x, after = after, before = before, userTags = userTags),
                    modifyList(list(...), list(verbose = FALSE)))

@@ -25,8 +25,16 @@
 #'     Default: `FALSE`. Used in [Cache()] in the `.cacheChaining` argument.
 #'   }
 #'   \item{`cachePath`}{
-#'     Default: `.reproducibleTempCacheDir`. Used in [Cache()] and many others.
-#'     The default path for repositories if not passed as an argument.
+#'     Default: `NULL`. Used in [Cache()] and many others. The option is no
+#'     longer pre-set when the package is loaded; instead it is resolved
+#'     lazily on first use by an entry point ([Cache()], [clearCache()],
+#'     [showCache()], [keepCache()], ...). If still unset at that point,
+#'     it is set to `.reproducibleTempCacheDir()` for the rest of the
+#'     session. This lets project-setup layers (e.g.
+#'     `SpaDES.project::setupProject()`) detect "unset" cleanly and avoids
+#'     committing every R session to a session-tempdir path that would not
+#'     persist across sessions. Set this early (e.g. in your project setup
+#'     script) to use a persistent cache.
 #'   }
 #'   \item{`cacheSaveFormat`}{
 #'     Default: `"rds"`. What save format to use; currently, `"qs"` (which will use
@@ -295,7 +303,7 @@ reproducibleOptions <- function() {
     reproducible.ask = TRUE,
     reproducible.cacheChaining = FALSE,
     reproducible.checkRemoteHash = FALSE,
-    reproducible.cachePath = file.path(tempdir(), "reproducible", "cache"),
+    reproducible.cachePath = NULL,
     reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",
     reproducible.conn = NULL,
