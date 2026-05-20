@@ -86,14 +86,13 @@ clearUrlLog <- function() {
   as.character(x)
 }
 
-## Normalize a path-like value to an absolute path (no must-work check).
-## Returns NA on empty / null. Vector inputs joined with "; ".
+## Normalize a path-like value using the package's normPath() (handles NAs,
+## empty strings, ./-prefix, absolute-path forcing on *nix). NA on empty/null.
 .absPathOrNA <- function(x) {
   if (is.null(x) || !length(x) || all(is.na(x) | !nzchar(as.character(x))))
     return(NA_character_)
-  paths <- tryCatch(
-    normalizePath(as.character(x), mustWork = FALSE, winslash = "/"),
-    error = function(e) as.character(x))
+  paths <- tryCatch(normPath(as.character(x)),
+                    error = function(e) as.character(x))
   if (length(paths) > 1L) paste(paths, collapse = "; ") else paths
 }
 
