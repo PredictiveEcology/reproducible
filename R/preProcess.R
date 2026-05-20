@@ -174,8 +174,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath, .callingEnv = parent.frame(),
                        ...) {
   st <- Sys.time()
-  .logUrlAccess("preProcess", url, destinationPath = destinationPath,
-                via = "preProcess")
+  ## Caller detection: prepInputs always passes .tempPath; direct callers
+  ## don't. Single hook here labels the access either way.
+  .logUrlAccess(if (missing(.tempPath)) "preProcess" else "prepInputs",
+                url, destinationPath = destinationPath)
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   on.exit(.message$IndentRevert(), add = TRUE)

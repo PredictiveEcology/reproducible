@@ -50,24 +50,27 @@ test_that("urlLog: environment sink populates env$records and env$seen", {
   expect_length(e$records, 2L)
 })
 
-test_that("urlLog: preProcess record suppressed when prepInputs is on stack", {
+test_that("urlLog: preProcess head labels caller as 'prepInputs' when .tempPath supplied", {
   testInit()
-  e <- new.env(parent = emptyenv())
-  withr::local_options(reproducible.urlLog = e)
+  withr::local_options(reproducible.urlLog = TRUE)
+  clearUrlLog()
 
-  ## Simulate prepInputs -> preProcess (mark entry/exit to drive the depth
-  ## counter that suppresses the duplicate preProcess record).
-  prepInputs <- function() {
-    reproducible:::.markPrepInputsEntry()
-    on.exit(reproducible:::.markPrepInputsExit(), add = TRUE)
-    reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif",
-                                 cacheId = NA_character_)
-    reproducible:::.logUrlAccess("preProcess", "https://example.com/x.tif",
-                                 cacheId = NA_character_)
+  ## Direct preProcess() call -> .tempPath missing -> labelled "preProcess"
+  ## (we exercise this without network by stubbing as a minimal recorder
+  ## that mirrors what the real preProcess head does.)
+  fakePreProcess <- function(url, destinationPath = ".", .tempPath) {
+    reproducible:::.logUrlAccess(
+      if (missing(.tempPath)) "preProcess" else "prepInputs",
+      url, destinationPath = destinationPath)
   }
-  prepInputs()
-  expect_length(e$records, 1L)
-  expect_equal(e$records[[1]]$fn, "prepInputs")
+
+  fakePreProcess(url = "https://example.com/a.tif")
+  fakePreProcess(url = "https://example.com/b.tif", .tempPath = tempdir())
+
+  log <- getUrlLog()
+  expect_length(log, 2L)
+  expect_equal(log[[1]]$fn, "preProcess")
+  expect_equal(log[[2]]$fn, "prepInputs")
 })
 
 test_that("urlLog: function callback sink invoked with each record", {
@@ -154,11 +157,9 @@ test_that("urlLog: Cache(Map(..., function(url) prepInputs(url=url))) does not e
   )
   clearUrlLog()
 
-  ## Mask prepInputs locally with a stub that still invokes the real
-  ## function-head hook (so the frame mechanism gets exercised).
+  ## Mask prepInputs locally with a stub that invokes the real hook
+  ## (so the frame mechanism gets exercised).
   fakePrepInputs <- function(url, destinationPath = ".") {
-    reproducible:::.markPrepInputsEntry()
-    on.exit(reproducible:::.markPrepInputsExit(), add = TRUE)
     reproducible:::.logUrlAccess("prepInputs", url,
                                  destinationPath = destinationPath)
     url
@@ -183,8 +184,6 @@ test_that("urlLog: Cache hooks tag cacheId with reproducible.url* tags", {
   ## the stub invokes the real function-head hook so the frame mechanism
   ## carries the URL into the Cache tag-write path.
   fakePrepInputs <- function(url, destinationPath = ".") {
-    reproducible:::.markPrepInputsEntry()
-    on.exit(reproducible:::.markPrepInputsExit(), add = TRUE)
     reproducible:::.logUrlAccess("prepInputs", url,
                                  destinationPath = destinationPath)
     "ok"

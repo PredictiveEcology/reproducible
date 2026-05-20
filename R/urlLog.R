@@ -30,11 +30,10 @@
 ## tags carry their own hitCount counter independently.
 
 .urlLogEnv <- new.env(parent = emptyenv())
-.urlLogEnv$records          <- list()
-.urlLogEnv$seen             <- character()
-.urlLogEnv$frames           <- list()
-.urlLogEnv$frameCounter     <- 0L
-.urlLogEnv$prepInputsDepth  <- 0L   # bumped by prepInputs head, dec'd on exit
+.urlLogEnv$records      <- list()
+.urlLogEnv$seen         <- character()
+.urlLogEnv$frames       <- list()
+.urlLogEnv$frameCounter <- 0L
 
 #' URL access log for `prepInputs` / `preProcess`
 #'
@@ -119,12 +118,6 @@ clearUrlLog <- function() {
   if (is.null(url)) return(invisible())
   if (is.character(url) && !length(url)) return(invisible())
 
-  ## When prepInputs invokes preProcess, both heads would otherwise log the
-  ## same access. Suppress the inner preProcess record. prepInputs maintains
-  ## the depth counter via .markPrepInputsEntry() in its function head.
-  if (identical(fn, "preProcess") && .urlLogEnv$prepInputsDepth > 0L)
-    return(invisible())
-
   ## Inside a Cache wrapper: defer to Cache by pushing to its frame(s).
   ## Cache will write session records (with the cacheId) and tag the cacheId.
   if (length(.urlLogEnv$frames) > 0L &&
@@ -142,18 +135,6 @@ clearUrlLog <- function() {
                        cacheId = cacheId, cacheHit = cacheHit,
                        via = if (is.na(via)) fn else via)
   .writeSessionRecord(rec)
-}
-
-## Lightweight depth-counter helpers used by prepInputs to mark "I am running
-## right now" so preProcess can suppress its duplicate record. on.exit in the
-## caller ensures the counter unwinds even on error / interrupt.
-.markPrepInputsEntry <- function() {
-  .urlLogEnv$prepInputsDepth <- .urlLogEnv$prepInputsDepth + 1L
-  invisible()
-}
-.markPrepInputsExit <- function() {
-  .urlLogEnv$prepInputsDepth <- max(0L, .urlLogEnv$prepInputsDepth - 1L)
-  invisible()
 }
 
 ## ---- Cache url-frame lifecycle -------------------------------------------
