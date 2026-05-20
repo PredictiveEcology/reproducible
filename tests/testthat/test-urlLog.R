@@ -55,8 +55,11 @@ test_that("urlLog: preProcess record suppressed when prepInputs is on stack", {
   e <- new.env(parent = emptyenv())
   withr::local_options(reproducible.urlLog = e)
 
-  ## Simulate prepInputs -> preProcess
+  ## Simulate prepInputs -> preProcess (mark entry/exit to drive the depth
+  ## counter that suppresses the duplicate preProcess record).
   prepInputs <- function() {
+    reproducible:::.markPrepInputsEntry()
+    on.exit(reproducible:::.markPrepInputsExit(), add = TRUE)
     reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif",
                                  cacheId = NA_character_)
     reproducible:::.logUrlAccess("preProcess", "https://example.com/x.tif",
@@ -151,13 +154,18 @@ test_that("urlLog: Cache(Map(..., function(url) prepInputs(url=url))) does not e
   )
   clearUrlLog()
 
-  fakePrepInputs <- function(url, destinationPath = ".") url
-  prepInputs <- fakePrepInputs                      # local masking
+  ## Mask prepInputs locally with a stub that still invokes the real
+  ## function-head hook (so the frame mechanism gets exercised).
+  fakePrepInputs <- function(url, destinationPath = ".") {
+    reproducible:::.markPrepInputsEntry()
+    on.exit(reproducible:::.markPrepInputsExit(), add = TRUE)
+    reproducible:::.logUrlAccess("prepInputs", url,
+                                 destinationPath = destinationPath)
+    url
+  }
+  prepInputs <- fakePrepInputs
   urls <- c("https://example.com/a.tif", "https://example.com/b.tif")
 
-  ## Regression: walker must not descend into the anonymous function body and
-  ## try to resolve the `url` formal arg against the calling env (where it
-  ## would hit base::url, a closure).
   expect_no_error({
     Cache(Map(url = urls, function(url) prepInputs(url = url)))
   })
@@ -172,9 +180,15 @@ test_that("urlLog: Cache hooks tag cacheId with reproducible.url* tags", {
   clearUrlLog()
 
   ## Drive the Cache hooks via a synthetic call that does NOT touch the network:
-  ## Cache a trivial function whose call is shaped like prepInputs(url=...).
-  fakePrepInputs <- function(url, destinationPath = ".") "ok"
-  ## Make it visible as "prepInputs" to the Cache call inspection:
+  ## the stub invokes the real function-head hook so the frame mechanism
+  ## carries the URL into the Cache tag-write path.
+  fakePrepInputs <- function(url, destinationPath = ".") {
+    reproducible:::.markPrepInputsEntry()
+    on.exit(reproducible:::.markPrepInputsExit(), add = TRUE)
+    reproducible:::.logUrlAccess("prepInputs", url,
+                                 destinationPath = destinationPath)
+    "ok"
+  }
   prepInputs <- fakePrepInputs
 
   out1 <- Cache(prepInputs(url = "https://example.com/a.tif"))
