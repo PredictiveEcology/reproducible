@@ -98,6 +98,51 @@ test_that("urlLog: idempotency key handles NA cacheId", {
   expect_length(e$records, 1L)
 })
 
+test_that("urlLog: Cache(Map(...prepInputs(url=url))) attaches urls via frame on miss + replays on hit", {
+  testInit("terra")
+  withr::local_options(reproducible.cachePath = tmpdir)
+  e <- new.env(parent = emptyenv())
+  withr::local_options(reproducible.urlLog = e)
+
+  urls <- c("https://example.com/a.tif", "https://example.com/b.tif")
+
+  ## Stub prepInputs that calls the real function-head hook, so the frame
+  ## mechanism gets exercised without touching the network.
+  fakePrepInputs <- function(url, destinationPath = ".") {
+    reproducible:::.logUrlAccess("prepInputs", url,
+                                 destinationPath = destinationPath)
+    url
+  }
+  prepInputs <- fakePrepInputs
+
+  ## First call: cache miss. Inner stub fires hook -> urls pushed to Cache
+  ## frame -> Cache attaches tags + emits session records on save.
+  r1 <- Cache(Map(url = urls, function(url) prepInputs(url = url)))
+
+  expect_length(e$records, 2L)
+  cids <- unique(vapply(e$records, function(r) r$cacheId, character(1)))
+  expect_length(cids, 1L)
+  expect_true(all(vapply(e$records, function(r) r$cacheHit, logical(1)) == FALSE))
+  expect_setequal(vapply(e$records, function(r) r$url, character(1)), urls)
+
+  sc <- showCache(tmpdir, cacheId = cids)
+  expect_true("reproducible.url"          %in% sc$tagKey)
+  expect_true("reproducible.urlHitCount"  %in% sc$tagKey)
+
+  ## Second call: cache hit. Fresh env -> replay from DB tags.
+  e2 <- new.env(parent = emptyenv())
+  withr::local_options(reproducible.urlLog = e2)
+  r2 <- Cache(Map(url = urls, function(url) prepInputs(url = url)))
+
+  expect_length(e2$records, 2L)
+  expect_true(all(vapply(e2$records, function(r) r$cacheHit, logical(1)) == TRUE))
+  expect_setequal(vapply(e2$records, function(r) r$url, character(1)), urls)
+
+  sc2 <- showCache(tmpdir, cacheId = cids)
+  hc <- as.integer(sc2$tagValue[sc2$tagKey == "reproducible.urlHitCount"])
+  expect_true(any(hc >= 1L))
+})
+
 test_that("urlLog: Cache(Map(..., function(url) prepInputs(url=url))) does not error", {
   testInit("terra")
   withr::local_options(

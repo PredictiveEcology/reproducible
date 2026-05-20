@@ -15,13 +15,27 @@
 ## Cache(), the cacheId is tagged in the cache DB with reproducible.url* tags
 ## so the URL provenance lives with the cached object.
 ##
-## Idempotency key is (fn, url, cacheId), so a given URL access against a given
-## cacheId produces one record per scope (= per env, or per session in TRUE
-## mode). The cache-DB tags carry their own hitCount counter independently.
+## How `Cache(...prepInputs(url=...)...)` is handled (incl. Cache(Map(...))):
+##   - On Cache entry, a transient "url frame" is allocated. prepInputs and
+##     preProcess function-head hooks push (fn, url) onto every currently-open
+##     url frame. Cache, on save, drains its frame, writes session records
+##     with the cacheId, and tags the cacheId. On.exit clears the frame so
+##     interrupted evaluations don't leak state.
+##   - On Cache hit, no inner code runs. Cache reads existing reproducible.url
+##     tags from the DB and emits replay records (cacheHit = TRUE).
+##   - Matched-call extraction is kept as a fallback for direct
+##     Cache(prepInputs(url="...")) shapes where the inner function may not
+##     have been instrumented (e.g. local masks in tests).
+##
+## Idempotency key is (fn, url, cacheId). Within a scope (env, or session in
+## TRUE mode), each (fn,url,cacheId) triple produces one record. The cache-DB
+## tags carry their own hitCount counter independently.
 
 .urlLogEnv <- new.env(parent = emptyenv())
-.urlLogEnv$records <- list()
-.urlLogEnv$seen    <- character()
+.urlLogEnv$records      <- list()
+.urlLogEnv$seen         <- character()
+.urlLogEnv$frames       <- list()
+.urlLogEnv$frameCounter <- 0L
 
 #' URL access log for `prepInputs` / `preProcess`
 #'
@@ -70,24 +84,11 @@ clearUrlLog <- function() {
   )
 }
 
-## Session dispatcher. Called from prepInputs/preProcess function heads and
-## from Cache hit/miss branches. NULL or empty url is ignored.
-.logUrlAccess <- function(fn, url, destinationPath = NULL,
-                          cacheId = NA_character_, cacheHit = NA,
-                          via = NA_character_) {
+## Write one record to whichever sink is active. Applies idempotency.
+## Internal helper -- callers must already have validated the sink/url.
+.writeSessionRecord <- function(rec) {
   sink <- getOption("reproducible.urlLog", NULL)
-  if (is.null(sink) || isFALSE(sink)) return(invisible())
-  if (is.null(url)) return(invisible())
-  if (is.character(url) && !length(url)) return(invisible())
-
-  ## When prepInputs invokes preProcess, both heads would otherwise log the
-  ## same access. Suppress the inner preProcess record.
-  if (identical(fn, "preProcess") && .calledFromPrepInputs())
-    return(invisible())
-
-  rec <- .urlLogRecord(fn, url, destinationPath, cacheId, cacheHit, via)
-  key <- .urlLogKey(fn, url, cacheId)
-
+  key <- .urlLogKey(rec$fn, rec$url, rec$cacheId)
   if (is.environment(sink)) {
     if (is.null(sink$seen))    sink$seen    <- character()
     if (is.null(sink$records)) sink$records <- list()
@@ -106,6 +107,44 @@ clearUrlLog <- function() {
   invisible()
 }
 
+## Dispatcher used by prepInputs/preProcess function-head hooks.
+##
+## If any Cache url-frames are currently open, the (fn, url) record is pushed
+## onto each of them (so the outer Cache(s) will emit/tag the URL on save).
+## Otherwise the record is written to the session sink directly with cacheId
+## = NA. NULL or empty url is ignored.
+.logUrlAccess <- function(fn, url, destinationPath = NULL,
+                          cacheId = NA_character_, cacheHit = NA,
+                          via = NA_character_) {
+  sink <- getOption("reproducible.urlLog", NULL)
+  if (is.null(sink) || isFALSE(sink)) return(invisible())
+  if (is.null(url)) return(invisible())
+  if (is.character(url) && !length(url)) return(invisible())
+
+  ## When prepInputs invokes preProcess, both heads would otherwise log the
+  ## same access. Suppress the inner preProcess record.
+  if (identical(fn, "preProcess") && .calledFromPrepInputs())
+    return(invisible())
+
+  ## Inside a Cache wrapper: defer to Cache by pushing to its frame(s).
+  ## Cache will write session records (with the cacheId) and tag the cacheId.
+  if (length(.urlLogEnv$frames) > 0L &&
+      (is.null(cacheId) || any(is.na(cacheId)))) {
+    push <- list(fn = fn, url = url, destinationPath = destinationPath)
+    for (id in names(.urlLogEnv$frames)) {
+      n <- length(.urlLogEnv$frames[[id]]) + 1L
+      .urlLogEnv$frames[[id]][[n]] <- push
+    }
+    return(invisible())
+  }
+
+  ## Bare call (no Cache around): write directly with cacheId = NA.
+  rec <- .urlLogRecord(fn, url, destinationPath,
+                       cacheId = cacheId, cacheHit = cacheHit,
+                       via = if (is.na(via)) fn else via)
+  .writeSessionRecord(rec)
+}
+
 ## TRUE when prepInputs is on the call stack above the current frame.
 .calledFromPrepInputs <- function() {
   calls <- sys.calls()
@@ -121,6 +160,34 @@ clearUrlLog <- function() {
   }
   FALSE
 }
+
+## ---- Cache url-frame lifecycle -------------------------------------------
+
+## Open a transient slot for one Cache call. Returns the frame id (or NULL if
+## logging is off). Caller must arrange for .closeCacheUrlFrame() to fire on
+## exit so interrupted Cache calls don't leak slots.
+.openCacheUrlFrame <- function() {
+  sink <- getOption("reproducible.urlLog", NULL)
+  if (is.null(sink) || isFALSE(sink)) return(NULL)
+  .urlLogEnv$frameCounter <- .urlLogEnv$frameCounter + 1L
+  id <- paste0("f", .urlLogEnv$frameCounter)
+  .urlLogEnv$frames[[id]] <- list()
+  id
+}
+
+.closeCacheUrlFrame <- function(id) {
+  if (is.null(id)) return(invisible())
+  .urlLogEnv$frames[[id]] <- NULL
+  invisible()
+}
+
+.takeCacheUrlFrame <- function(id) {
+  if (is.null(id)) return(list())
+  recs <- .urlLogEnv$frames[[id]]
+  if (is.null(recs)) list() else recs
+}
+
+## ---- Matched-call extraction (fallback for direct Cache(prepInputs(...))) -
 
 ## Walk a call expression for the first inner call whose function name matches.
 ## Handles bare names and `pkg::name`. Returns list(name, call) or NULL.
@@ -167,50 +234,105 @@ clearUrlLog <- function() {
   if (is.null(urlExpr)) return(NULL)
   url <- tryCatch(eval(urlExpr, envir = .callingEnv), error = function(e) NULL)
   if (is.null(url) || !length(url)) return(NULL)
-  ## Belt-and-braces: even with the function-literal skip above, an eval can
-  ## still land on something un-coercible (e.g. a same-named function in the
-  ## calling env). Refuse anything that isn't atomic-character-shaped.
   if (!is.atomic(url)) return(NULL)
   url <- tryCatch(as.character(url), error = function(e) NULL)
   if (is.null(url) || !length(url) || all(is.na(url) | !nzchar(url))) return(NULL)
   list(fn = fn, url = url)
 }
 
-## Read/write helpers against the cache DB. DBI-only; no-op otherwise.
+## ---- Cache-DB tag helpers ------------------------------------------------
+
 .urlTagsForCacheId <- function(cacheId, cachePath, drv, conn) {
-  if (!useDBI()) return(character(0))
-  ownConn <- is.null(conn)
-  if (ownConn) {
-    conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
-                     error = function(e) NULL)
-    if (is.null(conn)) return(character(0))
-    on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+  if (useDBI()) {
+    ownConn <- is.null(conn)
+    if (ownConn) {
+      conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
+                       error = function(e) NULL)
+      if (is.null(conn)) return(character(0))
+      on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+    }
+    tab <- CacheDBTableName(cachePath, drv)
+    qry <- paste0("SELECT DISTINCT \"tagKey\" FROM \"", tab,
+                  "\" WHERE \"cacheId\" = '", cacheId,
+                  "' AND \"tagKey\" LIKE 'reproducible.url%'")
+    rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
+    if (is.null(rs) || NROW(rs) == 0L) return(character(0))
+    return(rs$tagKey)
   }
-  tab <- CacheDBTableName(cachePath, drv)
-  qry <- paste0("SELECT DISTINCT \"tagKey\" FROM \"", tab,
-                "\" WHERE \"cacheId\" = '", cacheId,
-                "' AND \"tagKey\" LIKE 'reproducible.url%'")
-  rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
-  if (is.null(rs) || NROW(rs) == 0L) return(character(0))
-  rs$tagKey
+  ## non-DBI: tags live in a per-cacheId data.table-on-disk
+  dt <- .loadCacheDtForCacheId(cacheId, cachePath, drv, conn)
+  if (is.null(dt) || NROW(dt) == 0L) return(character(0))
+  unique(dt$tagKey[grepl("^reproducible\\.url", dt$tagKey)])
+}
+
+## Helper: load the per-cacheId tag data.table (non-DBI mode). Returns NULL
+## on any error or if the file doesn't exist.
+.loadCacheDtForCacheId <- function(cacheId, cachePath, drv, conn) {
+  fmt <- getOption("reproducible.cacheSaveFormat")
+  dtFile <- tryCatch(
+    CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId,
+                      cacheSaveFormat = fmt),
+    error = function(e) NULL)
+  if (is.null(dtFile) || !file.exists(dtFile)) return(NULL)
+  tryCatch(
+    loadFile(dtFile, cacheId = cacheId, cachePath = cachePath,
+             drv = drv, conn = conn, verbose = 0),
+    error = function(e) NULL)
 }
 
 .urlTagValue <- function(cacheId, tagKey, cachePath, drv, conn) {
-  if (!useDBI()) return(NA_character_)
-  ownConn <- is.null(conn)
-  if (ownConn) {
-    conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
-                     error = function(e) NULL)
-    if (is.null(conn)) return(NA_character_)
-    on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+  if (useDBI()) {
+    ownConn <- is.null(conn)
+    if (ownConn) {
+      conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
+                       error = function(e) NULL)
+      if (is.null(conn)) return(NA_character_)
+      on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+    }
+    tab <- CacheDBTableName(cachePath, drv)
+    qry <- paste0("SELECT \"tagValue\" FROM \"", tab,
+                  "\" WHERE \"cacheId\" = '", cacheId,
+                  "' AND \"tagKey\" = '", tagKey, "' LIMIT 1")
+    rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
+    if (is.null(rs) || NROW(rs) == 0L) return(NA_character_)
+    return(rs$tagValue[1L])
   }
-  tab <- CacheDBTableName(cachePath, drv)
-  qry <- paste0("SELECT \"tagValue\" FROM \"", tab,
-                "\" WHERE \"cacheId\" = '", cacheId,
-                "' AND \"tagKey\" = '", tagKey, "' LIMIT 1")
-  rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
-  if (is.null(rs) || NROW(rs) == 0L) return(NA_character_)
-  rs$tagValue[1L]
+  dt <- .loadCacheDtForCacheId(cacheId, cachePath, drv, conn)
+  if (is.null(dt) || NROW(dt) == 0L) return(NA_character_)
+  v <- dt$tagValue[dt$tagKey == tagKey]
+  if (length(v) == 0L) NA_character_ else v[1L]
+}
+
+## Read all url/urlFn tag values for replay on cache hit. Returns
+## list(urls=character, fn=character(1) or NA).
+.readUrlTagsForCacheId <- function(cacheId, cachePath, drv, conn) {
+  empty <- list(urls = character(0), fn = NA_character_)
+  if (useDBI()) {
+    ownConn <- is.null(conn)
+    if (ownConn) {
+      conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
+                       error = function(e) NULL)
+      if (is.null(conn)) return(empty)
+      on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+    }
+    tab <- CacheDBTableName(cachePath, drv)
+    qry <- paste0("SELECT \"tagKey\", \"tagValue\" FROM \"", tab,
+                  "\" WHERE \"cacheId\" = '", cacheId,
+                  "' AND \"tagKey\" IN ('reproducible.url', 'reproducible.urlFn')")
+    rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
+    if (is.null(rs) || NROW(rs) == 0L) return(empty)
+  } else {
+    dt <- .loadCacheDtForCacheId(cacheId, cachePath, drv, conn)
+    if (is.null(dt) || NROW(dt) == 0L) return(empty)
+    rs <- as.data.frame(
+      dt[dt$tagKey %in% c("reproducible.url", "reproducible.urlFn"),
+         c("tagKey", "tagValue")])
+    if (NROW(rs) == 0L) return(empty)
+  }
+  urls <- rs$tagValue[rs$tagKey == "reproducible.url"]
+  fn   <- rs$tagValue[rs$tagKey == "reproducible.urlFn"][1L]
+  list(urls = if (length(urls)) as.character(urls) else character(0),
+       fn   = if (is.na(fn)) NA_character_ else as.character(fn))
 }
 
 ## Persistent provenance tags for a cacheId.
@@ -260,31 +382,78 @@ clearUrlLog <- function() {
 }
 
 ## Single dispatcher called from Cache() at hit-return and post-save branches.
-## Writes both the session record (deduped) and the persistent cacheId tags.
+##
+## On miss (isHit=FALSE): drain this Cache's url frame (pushed by inner
+## prepInputs/preProcess), union with matched-call extraction, write one
+## session record per (fn,url) with the cacheId, and tag the cacheId.
+##
+## On hit (isHit=TRUE): read existing reproducible.url* tags from the cache
+## DB and replay one session record per url (cacheHit=TRUE). Falls back to
+## matched-call extraction if the entry pre-dates this feature.
 .maybeRecordUrlForCache <- function(callList, keyFull, cachePaths, drv, conn,
-                                    isHit, .callingEnv = parent.frame()) {
+                                    isHit, .callingEnv = parent.frame(),
+                                    urlFrameId = NULL) {
   sink <- getOption("reproducible.urlLog", NULL)
-  haveSink <- !(is.null(sink) || isFALSE(sink))
-  info <- .urlInfoFromMatchedCall(callList$new_call, callList$.functionName,
-                                  .callingEnv = .callingEnv)
-  if (is.null(info)) return(invisible())
+  if (is.null(sink) || isFALSE(sink)) return(invisible())
 
   cacheId <- keyFull$key
-  if (haveSink) {
-    destExpr <- callList$new_call$destinationPath
-    dest <- if (is.null(destExpr)) NA_character_ else
-      tryCatch(eval(destExpr, .callingEnv), error = function(e) NA_character_)
-    .logUrlAccess(fn = info$fn, url = info$url, destinationPath = dest,
-                  cacheId = cacheId, cacheHit = isHit, via = "Cache")
-  }
+  cachePath <- if (length(cachePaths)) cachePaths[[1]] else
+    getOption("reproducible.cachePath")
 
-  ## Persistent cacheId tags fire whenever the sink is configured; gate is the
-  ## same option so users opt into the whole feature with one switch.
-  if (haveSink) {
-    cachePath <- if (length(cachePaths)) cachePaths[[1]] else
-      getOption("reproducible.cachePath")
-    try(.persistUrlTags(cacheId, info$fn, info$url, cachePath, drv, conn,
-                        isHit = isHit), silent = TRUE)
+  if (!isHit) {
+    framed <- .takeCacheUrlFrame(urlFrameId)
+    info   <- .urlInfoFromMatchedCall(callList$new_call,
+                                      callList$.functionName,
+                                      .callingEnv = .callingEnv)
+    if (length(framed) == 0L && is.null(info)) return(invisible())
+
+    ## Collapse framed + matched-call into one (fn, url, destinationPath) list,
+    ## deduped on url (a url shouldn't get two records for one cache miss).
+    seenUrl <- character(0)
+    items <- list()
+    addItem <- function(fn, url, dest) {
+      for (u in url) {
+        if (u %in% seenUrl) next
+        seenUrl <<- c(seenUrl, u)
+        items[[length(items) + 1L]] <<- list(fn = fn, url = u,
+                                             destinationPath = dest)
+      }
+    }
+    for (rec in framed) addItem(rec$fn, rec$url, rec$destinationPath)
+    if (!is.null(info)) addItem(info$fn, info$url, NULL)
+
+    for (it in items) {
+      rec <- .urlLogRecord(it$fn, it$url,
+                           destinationPath = it$destinationPath,
+                           cacheId = cacheId, cacheHit = FALSE,
+                           via = "Cache")
+      .writeSessionRecord(rec)
+    }
+    ## One tag-write for the whole vector so the `hasUrl` early-exit inside
+    ## .persistUrlTags doesn't skip the 2nd, 3rd, ... urls of the same miss.
+    fn <- items[[1L]]$fn
+    allUrls <- vapply(items, `[[`, character(1), "url")
+    try(.persistUrlTags(cacheId, fn, allUrls, cachePath, drv, conn,
+                        isHit = FALSE), silent = TRUE)
+  } else {
+    tags <- .readUrlTagsForCacheId(cacheId, cachePath, drv, conn)
+    fn <- if (is.na(tags$fn)) "prepInputs" else tags$fn
+    if (length(tags$urls) == 0L) {
+      info <- .urlInfoFromMatchedCall(callList$new_call,
+                                      callList$.functionName,
+                                      .callingEnv = .callingEnv)
+      if (is.null(info)) return(invisible())
+      tags$urls <- info$url
+      fn <- info$fn
+    }
+    for (u in tags$urls) {
+      rec <- .urlLogRecord(fn, u, destinationPath = NULL,
+                           cacheId = cacheId, cacheHit = TRUE,
+                           via = "Cache-replay")
+      .writeSessionRecord(rec)
+    }
+    try(.persistUrlTags(cacheId, fn, tags$urls, cachePath, drv, conn,
+                        isHit = TRUE), silent = TRUE)
   }
   invisible()
 }
