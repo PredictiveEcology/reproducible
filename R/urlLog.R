@@ -28,6 +28,12 @@
 ## Idempotency key is (fn, url, cacheId). Within a scope (env, or session in
 ## TRUE mode), each (fn,url,cacheId) triple produces one record. The cache-DB
 ## tags carry their own hitCount counter independently.
+##
+## Caller-supplied extra columns: for env sinks, set `sink$extra` to a list
+## of key-value pairs and they are merged into every record. SpaDES.core uses
+## this to attach module/event to each row -- update the slot just before
+## dispatching each event. Core columns (time/fn/url/...) always win on key
+## collisions.
 
 .urlLogEnv <- new.env(parent = emptyenv())
 .urlLogEnv$records      <- list()
@@ -67,19 +73,43 @@ clearUrlLog <- function() {
         sep = "\037")
 }
 
+## Collapse a possibly-vector char value to a single field, NA if empty.
+.scalarOrNA <- function(x) {
+  if (is.null(x) || !length(x)) return(NA_character_)
+  if (length(x) > 1L) return(paste(as.character(x), collapse = "; "))
+  as.character(x)
+}
+
 ## Build the record list written to the sink.
-.urlLogRecord <- function(fn, url, destinationPath, cacheId, cacheHit, via) {
-  list(
+##
+## Core columns: time, fn, url, targetFile, archive, alsoExtract,
+## destinationPath, cacheId, cacheHit, via. Any extra columns supplied by
+## the caller (env sink) via sink$extra are merged in -- core columns take
+## precedence so reproducible's own fields can't be overridden.
+.urlLogRecord <- function(fn, url,
+                          targetFile = NULL, archive = NULL, alsoExtract = NULL,
+                          destinationPath = NULL,
+                          cacheId, cacheHit, via) {
+  core <- list(
     time            = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3"),
     fn              = fn,
     url             = as.character(url),
-    destinationPath = if (is.null(destinationPath)) NA_character_
-                      else as.character(destinationPath),
+    targetFile      = .scalarOrNA(targetFile),
+    archive         = .scalarOrNA(archive),
+    alsoExtract     = .scalarOrNA(alsoExtract),
+    destinationPath = .scalarOrNA(destinationPath),
     cacheId         = if (is.null(cacheId)) NA_character_
                       else as.character(cacheId),
     cacheHit        = cacheHit,
     via             = via
   )
+  sink <- getOption("reproducible.urlLog", NULL)
+  if (is.environment(sink) && is.list(sink$extra) && length(sink$extra)) {
+    ## modifyList(extra, core) so core overrides matching keys in extra.
+    modifyList(sink$extra, core)
+  } else {
+    core
+  }
 }
 
 ## Write one record to whichever sink is active. Applies idempotency.
@@ -110,7 +140,9 @@ clearUrlLog <- function() {
 ## onto each of them (so the outer Cache(s) will emit/tag the URL on save).
 ## Otherwise the record is written to the session sink directly with cacheId
 ## = NA. NULL or empty url is ignored.
-.logUrlAccess <- function(fn, url, destinationPath = NULL,
+.logUrlAccess <- function(fn, url,
+                          targetFile = NULL, archive = NULL,
+                          alsoExtract = NULL, destinationPath = NULL,
                           cacheId = NA_character_, cacheHit = NA,
                           via = NA_character_) {
   sink <- getOption("reproducible.urlLog", NULL)
@@ -122,7 +154,10 @@ clearUrlLog <- function() {
   ## Cache will write session records (with the cacheId) and tag the cacheId.
   if (length(.urlLogEnv$frames) > 0L &&
       (is.null(cacheId) || any(is.na(cacheId)))) {
-    push <- list(fn = fn, url = url, destinationPath = destinationPath)
+    push <- list(fn = fn, url = url,
+                 targetFile = targetFile, archive = archive,
+                 alsoExtract = alsoExtract,
+                 destinationPath = destinationPath)
     for (id in names(.urlLogEnv$frames)) {
       n <- length(.urlLogEnv$frames[[id]]) + 1L
       .urlLogEnv$frames[[id]][[n]] <- push
@@ -131,7 +166,10 @@ clearUrlLog <- function() {
   }
 
   ## Bare call (no Cache around): write directly with cacheId = NA.
-  rec <- .urlLogRecord(fn, url, destinationPath,
+  rec <- .urlLogRecord(fn = fn, url = url,
+                       targetFile = targetFile, archive = archive,
+                       alsoExtract = alsoExtract,
+                       destinationPath = destinationPath,
                        cacheId = cacheId, cacheHit = cacheHit,
                        via = if (is.na(via)) fn else via)
   .writeSessionRecord(rec)
@@ -246,14 +284,23 @@ clearUrlLog <- function() {
       for (u in rec$url) {
         if (u %in% seenUrl) next
         seenUrl <- c(seenUrl, u)
-        items[[length(items) + 1L]] <- list(fn = rec$fn, url = u,
-                                            destinationPath = rec$destinationPath)
+        items[[length(items) + 1L]] <- list(
+          fn              = rec$fn,
+          url             = u,
+          targetFile      = rec$targetFile,
+          archive         = rec$archive,
+          alsoExtract     = rec$alsoExtract,
+          destinationPath = rec$destinationPath
+        )
       }
     }
     if (length(items) == 0L) return(invisible())
 
     for (it in items) {
-      rec <- .urlLogRecord(it$fn, it$url,
+      rec <- .urlLogRecord(fn = it$fn, url = it$url,
+                           targetFile = it$targetFile,
+                           archive = it$archive,
+                           alsoExtract = it$alsoExtract,
                            destinationPath = it$destinationPath,
                            cacheId = cacheId, cacheHit = FALSE,
                            via = "Cache")
@@ -274,7 +321,7 @@ clearUrlLog <- function() {
     if (length(urls) == 0L) return(invisible())
     fnTag <- extractFromCache(sc, "reproducible.urlFn", ifNot = "prepInputs")[1L]
     for (u in urls) {
-      rec <- .urlLogRecord(fnTag, u, destinationPath = NULL,
+      rec <- .urlLogRecord(fn = fnTag, url = u,
                            cacheId = cacheId, cacheHit = TRUE,
                            via = "Cache-replay")
       .writeSessionRecord(rec)

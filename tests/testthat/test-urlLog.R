@@ -1,3 +1,47 @@
+test_that("urlLog: core record carries targetFile/archive/alsoExtract", {
+  testInit()
+  withr::local_options(reproducible.urlLog = TRUE)
+  clearUrlLog()
+  reproducible:::.logUrlAccess(
+    "prepInputs", "https://example.com/a.zip",
+    targetFile = "raster.tif",
+    archive    = "raster.zip",
+    alsoExtract = c("aux1", "aux2"),
+    destinationPath = "/tmp"
+  )
+  rec <- getUrlLog()[[1]]
+  expect_equal(rec$targetFile, "raster.tif")
+  expect_equal(rec$archive,    "raster.zip")
+  expect_equal(rec$alsoExtract, "aux1; aux2")   # vector collapsed
+  expect_equal(rec$destinationPath, "/tmp")
+})
+
+test_that("urlLog: env sink merges sink$extra into each record (SpaDES module/event)", {
+  testInit()
+  e <- new.env(parent = emptyenv())
+  e$extra <- list(module = "ageModule", event = "init")
+  withr::local_options(reproducible.urlLog = e)
+  reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif")
+
+  rec <- e$records[[1]]
+  expect_equal(rec$module, "ageModule")
+  expect_equal(rec$event,  "init")
+
+  ## Dynamic update: next event sets new module/event, picked up immediately.
+  e$extra <- list(module = "vegModule", event = "step")
+  reproducible:::.logUrlAccess("prepInputs", "https://example.com/b.tif")
+  rec2 <- e$records[[2]]
+  expect_equal(rec2$module, "vegModule")
+  expect_equal(rec2$event,  "step")
+
+  ## Core columns win on key collisions: caller's `fn` doesn't override.
+  e$extra <- list(fn = "hijacked", custom = "ok")
+  reproducible:::.logUrlAccess("preProcess", "https://example.com/c.tif")
+  rec3 <- e$records[[3]]
+  expect_equal(rec3$fn,    "preProcess")  # core wins
+  expect_equal(rec3$custom, "ok")
+})
+
 test_that("urlLog: off by default", {
   testInit()
   withr::local_options(reproducible.urlLog = NULL)
