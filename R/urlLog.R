@@ -241,98 +241,42 @@ clearUrlLog <- function() {
 }
 
 ## ---- Cache-DB tag helpers ------------------------------------------------
+##
+## All three readers route through showCacheFast(cacheId = ...), which already
+## handles both the DBI and per-cacheId file backends. Cached the table once
+## per call to .maybeRecordUrlForCache via .urlTagsTable() so we don't reload
+## three times when both .urlTagsForCacheId and .urlTagValue are needed.
 
-.urlTagsForCacheId <- function(cacheId, cachePath, drv, conn) {
-  if (useDBI()) {
-    ownConn <- is.null(conn)
-    if (ownConn) {
-      conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
-                       error = function(e) NULL)
-      if (is.null(conn)) return(character(0))
-      on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
-    }
-    tab <- CacheDBTableName(cachePath, drv)
-    qry <- paste0("SELECT DISTINCT \"tagKey\" FROM \"", tab,
-                  "\" WHERE \"cacheId\" = '", cacheId,
-                  "' AND \"tagKey\" LIKE 'reproducible.url%'")
-    rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
-    if (is.null(rs) || NROW(rs) == 0L) return(character(0))
-    return(rs$tagKey)
-  }
-  ## non-DBI: tags live in a per-cacheId data.table-on-disk
-  dt <- .loadCacheDtForCacheId(cacheId, cachePath, drv, conn)
-  if (is.null(dt) || NROW(dt) == 0L) return(character(0))
-  unique(dt$tagKey[grepl("^reproducible\\.url", dt$tagKey)])
-}
-
-## Helper: load the per-cacheId tag data.table (non-DBI mode). Returns NULL
-## on any error or if the file doesn't exist.
-.loadCacheDtForCacheId <- function(cacheId, cachePath, drv, conn) {
-  fmt <- getOption("reproducible.cacheSaveFormat")
-  dtFile <- tryCatch(
-    CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId,
-                      cacheSaveFormat = fmt),
-    error = function(e) NULL)
-  if (is.null(dtFile) || !file.exists(dtFile)) return(NULL)
+.urlTagsTable <- function(cacheId, cachePath, drv, conn) {
   tryCatch(
-    loadFile(dtFile, cacheId = cacheId, cachePath = cachePath,
-             drv = drv, conn = conn, verbose = 0),
+    showCacheFast(cacheId = cacheId, cachePath = cachePath,
+                  strict = FALSE, drv = drv, conn = conn, verbose = 0),
     error = function(e) NULL)
 }
 
-.urlTagValue <- function(cacheId, tagKey, cachePath, drv, conn) {
-  if (useDBI()) {
-    ownConn <- is.null(conn)
-    if (ownConn) {
-      conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
-                       error = function(e) NULL)
-      if (is.null(conn)) return(NA_character_)
-      on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
-    }
-    tab <- CacheDBTableName(cachePath, drv)
-    qry <- paste0("SELECT \"tagValue\" FROM \"", tab,
-                  "\" WHERE \"cacheId\" = '", cacheId,
-                  "' AND \"tagKey\" = '", tagKey, "' LIMIT 1")
-    rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
-    if (is.null(rs) || NROW(rs) == 0L) return(NA_character_)
-    return(rs$tagValue[1L])
-  }
-  dt <- .loadCacheDtForCacheId(cacheId, cachePath, drv, conn)
-  if (is.null(dt) || NROW(dt) == 0L) return(NA_character_)
-  v <- dt$tagValue[dt$tagKey == tagKey]
+.urlTagsForCacheId <- function(cacheId, cachePath, drv, conn,
+                               .tab = .urlTagsTable(cacheId, cachePath, drv, conn)) {
+  if (is.null(.tab) || NROW(.tab) == 0L) return(character(0))
+  unique(.tab$tagKey[grepl("^reproducible\\.url", .tab$tagKey)])
+}
+
+.urlTagValue <- function(cacheId, tagKey, cachePath, drv, conn,
+                         .tab = .urlTagsTable(cacheId, cachePath, drv, conn)) {
+  if (is.null(.tab) || NROW(.tab) == 0L) return(NA_character_)
+  v <- .tab$tagValue[.tab$tagKey == tagKey]
   if (length(v) == 0L) NA_character_ else v[1L]
 }
 
 ## Read all url/urlFn tag values for replay on cache hit. Returns
-## list(urls=character, fn=character(1) or NA).
-.readUrlTagsForCacheId <- function(cacheId, cachePath, drv, conn) {
+## list(urls = character, fn = character(1) or NA).
+.readUrlTagsForCacheId <- function(cacheId, cachePath, drv, conn,
+                                   .tab = .urlTagsTable(cacheId, cachePath, drv, conn)) {
   empty <- list(urls = character(0), fn = NA_character_)
-  if (useDBI()) {
-    ownConn <- is.null(conn)
-    if (ownConn) {
-      conn <- tryCatch(dbConnectAll(drv, cachePath = cachePath, create = FALSE),
-                       error = function(e) NULL)
-      if (is.null(conn)) return(empty)
-      on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
-    }
-    tab <- CacheDBTableName(cachePath, drv)
-    qry <- paste0("SELECT \"tagKey\", \"tagValue\" FROM \"", tab,
-                  "\" WHERE \"cacheId\" = '", cacheId,
-                  "' AND \"tagKey\" IN ('reproducible.url', 'reproducible.urlFn')")
-    rs <- tryCatch(DBI::dbGetQuery(conn, qry), error = function(e) NULL)
-    if (is.null(rs) || NROW(rs) == 0L) return(empty)
-  } else {
-    dt <- .loadCacheDtForCacheId(cacheId, cachePath, drv, conn)
-    if (is.null(dt) || NROW(dt) == 0L) return(empty)
-    rs <- as.data.frame(
-      dt[dt$tagKey %in% c("reproducible.url", "reproducible.urlFn"),
-         c("tagKey", "tagValue")])
-    if (NROW(rs) == 0L) return(empty)
-  }
-  urls <- rs$tagValue[rs$tagKey == "reproducible.url"]
-  fn   <- rs$tagValue[rs$tagKey == "reproducible.urlFn"][1L]
+  if (is.null(.tab) || NROW(.tab) == 0L) return(empty)
+  urls <- .tab$tagValue[.tab$tagKey == "reproducible.url"]
+  fn   <- .tab$tagValue[.tab$tagKey == "reproducible.urlFn"][1L]
   list(urls = if (length(urls)) as.character(urls) else character(0),
-       fn   = if (is.na(fn)) NA_character_ else as.character(fn))
+       fn   = if (length(fn) == 0L || is.na(fn)) NA_character_ else as.character(fn))
 }
 
 ## Persistent provenance tags for a cacheId.
@@ -345,7 +289,8 @@ clearUrlLog <- function() {
   if (is.null(cachePath) || !nzchar(cachePath)) return(invisible())
 
   now <- as.character(Sys.time())
-  existing <- .urlTagsForCacheId(cacheId, cachePath, drv, conn)
+  tab <- .urlTagsTable(cacheId, cachePath, drv, conn)
+  existing <- .urlTagsForCacheId(cacheId, cachePath, drv, conn, .tab = tab)
   hasUrl       <- "reproducible.url"          %in% existing
   hasFn        <- "reproducible.urlFn"        %in% existing
   hasFirstSeen <- "reproducible.urlFirstSeen" %in% existing
@@ -371,7 +316,7 @@ clearUrlLog <- function() {
   newCount <- if (isHit) {
     cur <- if (hasCount) {
       suppressWarnings(as.integer(.urlTagValue(cacheId, "reproducible.urlHitCount",
-                                               cachePath, drv, conn)))
+                                               cachePath, drv, conn, .tab = tab)))
     } else 0L
     if (is.na(cur)) 1L else cur + 1L
   } else {
