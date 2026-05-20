@@ -116,8 +116,11 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                      cacheSaveFormat = cacheSaveFormat,
                                                      .cacheChaining = .cacheChaining,
                                                      drv = drv, conn = conn, verbose = verbose)
-    if (!identical2(.returnNothing, outputFromMemoise))
+    if (!identical2(.returnNothing, outputFromMemoise)) {
+      .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                              isHit = TRUE, .callingEnv = .callingEnv)
       return(outputFromMemoise)
+    }
 
     # After memoising fail, try files; need to check Cache dir and set lockfile
     locked <- lockFile(cachePaths[[1]], keyFull$key, verbose = verbose)
@@ -143,8 +146,11 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                 .cacheChaining = .cacheChaining,
                                                 drv, conn, verbose = verbose)
 
-    if (!identical2(.returnNothing, outputFromDisk))
+    if (!identical2(.returnNothing, outputFromDisk)) {
+      .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                              isHit = TRUE, .callingEnv = .callingEnv)
       return(outputFromDisk)
+    }
 
   }
   if (useDBI()) conn <- attr(outputFromDisk, ".Cache")$conn
@@ -166,6 +172,8 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                 cacheSaveFormat = cacheSaveFormat,
                                                 .cacheChaining = .cacheChaining,
                                                 drv, conn, verbose = verbose)
+    .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                            isHit = TRUE, .callingEnv = .callingEnv)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
 
@@ -212,6 +220,8 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                       verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
+  .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                          isHit = FALSE, .callingEnv = .callingEnv)
   if (getOption("reproducible.savePreDigest", FALSE)) {
     keyFullPreDigest <- keyFull
     keyFullPreDigest$key <- paste0(.txtPreDigest, "_", keyFullPreDigest$key)

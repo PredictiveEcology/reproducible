@@ -351,6 +351,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   .callingEnv <- parent.frame()
+  .logUrlAccess("prepInputs", url, destinationPath = destinationPath,
+                via = "prepInputs")
   messagePreProcess("Running ", .messageFunctionFn("prepInputs"), verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   stStart <- Sys.time()

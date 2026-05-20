@@ -342,6 +342,7 @@ reproducibleOptions <- function() {
     reproducible.useCOG = TRUE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCacheV3 = TRUE, # override Cache function
+    reproducible.urlLog = NULL,
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = {
       getEnv("R_REPRODUCIBLE_USE_DBI",

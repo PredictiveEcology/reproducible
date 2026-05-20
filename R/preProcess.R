@@ -174,6 +174,8 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath, .callingEnv = parent.frame(),
                        ...) {
   st <- Sys.time()
+  .logUrlAccess("preProcess", url, destinationPath = destinationPath,
+                via = "preProcess")
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   on.exit(.message$IndentRevert(), add = TRUE)
