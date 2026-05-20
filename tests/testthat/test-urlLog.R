@@ -1,3 +1,16 @@
+test_that("urlLog: destinationPath is normalized to an absolute path", {
+  testInit()
+  withr::local_options(reproducible.urlLog = TRUE)
+  clearUrlLog()
+  reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif",
+                               destinationPath = ".")
+  rec <- getUrlLog()[[1]]
+  expect_true(nzchar(rec$destinationPath))
+  expect_false(identical(rec$destinationPath, "."))   # was expanded
+  expect_true(startsWith(rec$destinationPath, "/") ||
+              grepl("^[A-Za-z]:/", rec$destinationPath))  # absolute
+})
+
 test_that("urlLog: core record carries targetFile/archive/alsoExtract", {
   testInit()
   withr::local_options(reproducible.urlLog = TRUE)

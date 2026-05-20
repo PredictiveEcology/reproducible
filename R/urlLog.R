@@ -86,6 +86,17 @@ clearUrlLog <- function() {
   as.character(x)
 }
 
+## Normalize a path-like value to an absolute path (no must-work check).
+## Returns NA on empty / null. Vector inputs joined with "; ".
+.absPathOrNA <- function(x) {
+  if (is.null(x) || !length(x) || all(is.na(x) | !nzchar(as.character(x))))
+    return(NA_character_)
+  paths <- tryCatch(
+    normalizePath(as.character(x), mustWork = FALSE, winslash = "/"),
+    error = function(e) as.character(x))
+  if (length(paths) > 1L) paste(paths, collapse = "; ") else paths
+}
+
 ## Build the record list written to the sink.
 ##
 ## Core columns: time, fn, url, targetFile, archive, alsoExtract,
@@ -103,7 +114,7 @@ clearUrlLog <- function() {
     targetFile      = .scalarOrNA(targetFile),
     archive         = .scalarOrNA(archive),
     alsoExtract     = .scalarOrNA(alsoExtract),
-    destinationPath = .scalarOrNA(destinationPath),
+    destinationPath = .absPathOrNA(destinationPath),
     cacheId         = if (is.null(cacheId)) NA_character_
                       else as.character(cacheId),
     cacheHit        = cacheHit,
@@ -326,8 +337,18 @@ clearUrlLog <- function() {
     urls <- extractFromCache(sc, "reproducible.url")
     if (length(urls) == 0L) return(invisible())
     fnTag <- extractFromCache(sc, "reproducible.urlFn", ifNot = "prepInputs")[1L]
+    ## destinationPath for hit replays: prefer the value in the current matched
+    ## call (Cache(prepInputs(..., destinationPath = ...)) shape), else fall
+    ## back to the option default so the column isn't blank.
+    destExpr <- callList$new_call$destinationPath
+    dest <- if (!is.null(destExpr)) {
+      tryCatch(eval(destExpr, .callingEnv), error = function(e) NULL)
+    } else {
+      getOption("reproducible.destinationPath", ".")
+    }
     for (u in urls) {
       rec <- .urlLogRecord(fn = fnTag, url = u,
+                           destinationPath = dest,
                            cacheId = cacheId, cacheHit = TRUE,
                            via = "Cache-replay")
       .writeSessionRecord(rec)
