@@ -256,7 +256,7 @@ retry <- function(expr, envir = parent.frame(), retries = 5,
     if ( hasRutils) {
       # wrap the expr with R.utils::withTimeout
       expr2 <- append(append(list(R.utils::withTimeout), exprSub),
-                      list(timeout = getOption("reproducible.timeout", 1200), onTimeout = "error"))
+                      list(timeout = getOption("reproducible.timeout", 12000), onTimeout = "error"))
       exprSub <- as.call(expr2)
     }
 

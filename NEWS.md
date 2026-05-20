@@ -16,6 +16,14 @@
   `options(reproducible.cachePath = ...)` explicitly (in their `.Rprofile`,
   in a setup script, or via `withr::local_options()`) see no change.
 
+* `options("reproducible.timeout")` default raised from `1200` (20 min)
+  to `12000` (~3.3 h). The previous default caused failures on large
+  (multi-GB) downloads over slow or congested links well before the
+  transfer could complete; the new default keeps the same wall-clock
+  safety net but at a scale appropriate for the file sizes typically
+  handled by `prepInputs`/`preProcess`. Users who set
+  `options(reproducible.timeout = ...)` explicitly see no change.
+
 ## bug fixes
 
 * `prepInputs`/`preProcess` no longer error with

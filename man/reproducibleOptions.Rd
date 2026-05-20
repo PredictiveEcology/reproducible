@@ -30,8 +30,16 @@ Default: \code{TRUE}. Used in \code{\link[=clearCache]{clearCache()}} and \code{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}} in the \code{.cacheChaining} argument.
 }
 \item{\code{cachePath}}{
-Default: \code{.reproducibleTempCacheDir}. Used in \code{\link[=Cache]{Cache()}} and many others.
-The default path for repositories if not passed as an argument.
+Default: \code{NULL}. Used in \code{\link[=Cache]{Cache()}} and many others. The option is no
+longer pre-set when the package is loaded; instead it is resolved
+lazily on first use by an entry point (\code{\link[=Cache]{Cache()}}, \code{\link[=clearCache]{clearCache()}},
+\code{\link[=showCache]{showCache()}}, \code{\link[=keepCache]{keepCache()}}, ...). If still unset at that point,
+it is set to \code{.reproducibleTempCacheDir()} for the rest of the
+session. This lets project-setup layers (e.g.
+\code{SpaDES.project::setupProject()}) detect "unset" cleanly and avoids
+committing every R session to a session-tempdir path that would not
+persist across sessions. Set this early (e.g. in your project setup
+script) to use a persistent cache.
 }
 \item{\code{cacheSaveFormat}}{
 Default: \code{"rds"}. What save format to use; currently, \code{"qs"} (which will use
@@ -187,7 +195,7 @@ behaviour will return, where it tries to guess whether a character vector
 is filenames or not, and if it is, then digest the file content.
 }
 \item{\code{timeout}}{
-Default \code{1200}. Used in \code{preProcess} when downloading occurs. If a user has \code{R.utils}
+Default \code{12000}. Used in \code{preProcess} when downloading occurs. If a user has \code{R.utils}
 package installed, \code{R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))}
 will be wrapped around the download so that it will timeout (and error) after this many
 seconds.

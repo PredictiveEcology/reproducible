@@ -534,7 +534,7 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
 
   if (.requireNamespace("httr2") && .requireNamespace("curl")) {
     for (i in 1:2) {
-      totalTimeout <- getOption("reproducible.timeout", 1200)
+      totalTimeout <- getOption("reproducible.timeout", 12000)
       req <- httr2::request(url) |>
         httr2::req_timeout(totalTimeout) |>
         httr2::req_options(connecttimeout = totalTimeout)

@@ -186,7 +186,7 @@
 #'     is filenames or not, and if it is, then digest the file content.
 #'   }
 #'   \item{`timeout`}{
-#'     Default `1200`. Used in `preProcess` when downloading occurs. If a user has `R.utils`
+#'     Default `12000`. Used in `preProcess` when downloading occurs. If a user has `R.utils`
 #'     package installed, `R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))`
 #'     will be wrapped around the download so that it will timeout (and error) after this many
 #'     seconds.
@@ -338,7 +338,7 @@ reproducibleOptions <- function() {
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
     reproducible.testCharacterAsFile = FALSE,
-    reproducible.timeout = 1200,
+    reproducible.timeout = 12000,
     reproducible.useCOG = TRUE,
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCacheV3 = TRUE, # override Cache function
