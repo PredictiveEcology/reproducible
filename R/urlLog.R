@@ -64,12 +64,18 @@ clearUrlLog <- function() {
   invisible()
 }
 
-## Build the (fn, url, cacheId) idempotency key. Field separator is \037 (US),
-## which never appears in URLs / function names / cacheIds.
-.urlLogKey <- function(fn, url, cacheId) {
+## Build the (fn, url, cacheId, cacheHit) idempotency key. Field separator is
+## \037 (US), which never appears in URLs / function names / cacheIds.
+##
+## cacheHit is part of the key so a cache miss and a subsequent cache hit of
+## the same cacheId in the same scope each get one record -- they are distinct
+## events ("bytes were fetched" vs. "the cached object was used") and the user
+## wants both visible in the log.
+.urlLogKey <- function(fn, url, cacheId, cacheHit) {
   paste(fn,
         paste(url, collapse = "\036"),
         if (is.null(cacheId) || !length(cacheId)) "NA" else cacheId,
+        if (is.na(cacheHit)) "NA" else if (isTRUE(cacheHit)) "hit" else "miss",
         sep = "\037")
 }
 
@@ -115,7 +121,7 @@ clearUrlLog <- function() {
 ## Write one record to whichever sink is active. Applies idempotency.
 .writeSessionRecord <- function(rec) {
   sink <- getOption("reproducible.urlLog", NULL)
-  key <- .urlLogKey(rec$fn, rec$url, rec$cacheId)
+  key <- .urlLogKey(rec$fn, rec$url, rec$cacheId, rec$cacheHit)
   if (is.environment(sink)) {
     if (is.null(sink$seen))    sink$seen    <- character()
     if (is.null(sink$records)) sink$records <- list()
