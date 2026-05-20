@@ -351,6 +351,14 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        verbose = getOption("reproducible.verbose", 1),
                        ...) {
   .callingEnv <- parent.frame()
+  ## Fire the URL-log hook here so we catch every prepInputs access including
+  ## the COG fast-path (which bypasses preProcess). preProcess's own hook is
+  ## gated on missing(.tempPath) so it only fires for direct preProcess calls.
+  .logUrlAccess("prepInputs", url = url,
+                targetFile = targetFile,
+                archive = archive,
+                alsoExtract = alsoExtract,
+                destinationPath = destinationPath)
   messagePreProcess("Running ", .messageFunctionFn("prepInputs"), verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   stStart <- Sys.time()
