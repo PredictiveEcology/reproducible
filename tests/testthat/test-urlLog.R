@@ -98,6 +98,26 @@ test_that("urlLog: idempotency key handles NA cacheId", {
   expect_length(e$records, 1L)
 })
 
+test_that("urlLog: Cache(Map(..., function(url) prepInputs(url=url))) does not error", {
+  testInit("terra")
+  withr::local_options(
+    reproducible.urlLog   = TRUE,
+    reproducible.cachePath = tmpdir
+  )
+  clearUrlLog()
+
+  fakePrepInputs <- function(url, destinationPath = ".") url
+  prepInputs <- fakePrepInputs                      # local masking
+  urls <- c("https://example.com/a.tif", "https://example.com/b.tif")
+
+  ## Regression: walker must not descend into the anonymous function body and
+  ## try to resolve the `url` formal arg against the calling env (where it
+  ## would hit base::url, a closure).
+  expect_no_error({
+    Cache(Map(url = urls, function(url) prepInputs(url = url)))
+  })
+})
+
 test_that("urlLog: Cache hooks tag cacheId with reproducible.url* tags", {
   testInit("terra", needInternet = FALSE)
   withr::local_options(

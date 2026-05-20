@@ -124,9 +124,15 @@ clearUrlLog <- function() {
 
 ## Walk a call expression for the first inner call whose function name matches.
 ## Handles bare names and `pkg::name`. Returns list(name, call) or NULL.
+##
+## Does NOT descend into `function(...)` literals: symbols inside an anonymous
+## function's body refer to its formal args, not the calling env, so a hit
+## there can't be resolved meaningfully (e.g. `function(url) prepInputs(url=url)`
+## binds `url` to the formal, not to a string we can record).
 .findCallByName <- function(expr, names) {
   if (is.call(expr)) {
     head <- expr[[1]]
+    if (identical(head, as.name("function"))) return(NULL)
     nm <- if (is.name(head)) {
       as.character(head)
     } else if (is.call(head) && length(head) == 3L &&
@@ -161,7 +167,13 @@ clearUrlLog <- function() {
   if (is.null(urlExpr)) return(NULL)
   url <- tryCatch(eval(urlExpr, envir = .callingEnv), error = function(e) NULL)
   if (is.null(url) || !length(url)) return(NULL)
-  list(fn = fn, url = as.character(url))
+  ## Belt-and-braces: even with the function-literal skip above, an eval can
+  ## still land on something un-coercible (e.g. a same-named function in the
+  ## calling env). Refuse anything that isn't atomic-character-shaped.
+  if (!is.atomic(url)) return(NULL)
+  url <- tryCatch(as.character(url), error = function(e) NULL)
+  if (is.null(url) || !length(url) || all(is.na(url) | !nzchar(url))) return(NULL)
+  list(fn = fn, url = url)
 }
 
 ## Read/write helpers against the cache DB. DBI-only; no-op otherwise.
