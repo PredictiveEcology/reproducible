@@ -132,4 +132,5 @@ Collate:
     'showCacheEtc.R'
     'spatialObjects-class.R'
     'terra-migration.R'
+    'urlLog.R'
     'zzz.R'
