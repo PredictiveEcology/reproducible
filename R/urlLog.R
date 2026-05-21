@@ -42,6 +42,21 @@
 .urlLogEnv$seen         <- character()
 .urlLogEnv$frames       <- list()
 .urlLogEnv$frameCounter <- 0L
+.urlLogEnv$announced    <- FALSE   # one-time "how to view" hint per session
+
+## One-time, per-session hint pointing users at the log. Fires the first time
+## a URL access is recorded (any mode except FALSE), respects verbosity.
+.maybeAnnounceUrlLog <- function() {
+  if (isTRUE(.urlLogEnv$announced)) return(invisible())
+  .urlLogEnv$announced <- TRUE
+  messagePreProcess(
+    "Recording data-source URLs from prepInputs/preProcess. View with ",
+    "getUrlLog() or showCache(userTags = 'reproducible.url'); ",
+    "disable with options(reproducible.urlLog = FALSE).",
+    verboseLevel = 1
+  )
+  invisible()
+}
 
 #' URL access log for `prepInputs` / `preProcess`
 #'
@@ -168,6 +183,7 @@ clearUrlLog <- function() {
   if (.urlLogOff()) return(invisible())
   if (is.null(url)) return(invisible())
   if (is.character(url) && !length(url)) return(invisible())
+  .maybeAnnounceUrlLog()
 
   ## Inside a Cache wrapper: defer to Cache by pushing to its frame(s).
   ## Cache will write session records (with the cacheId) and tag the cacheId.
@@ -402,6 +418,9 @@ clearUrlLog <- function() {
       urls  <- info$url
       fnTag <- info$fn
     }
+    ## Pure cache-hit replay -- inner code didn't run, so .logUrlAccess didn't
+    ## fire; announce here (once per session) now that a URL is confirmed.
+    .maybeAnnounceUrlLog()
 
     ## destinationPath for hit replays: prefer the value in the current matched
     ## call (Cache(prepInputs(..., destinationPath = ...)) shape), else fall

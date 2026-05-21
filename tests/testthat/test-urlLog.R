@@ -55,6 +55,23 @@ test_that("urlLog: env sink merges sink$extra into each record (SpaDES module/ev
   expect_equal(rec3$custom, "ok")
 })
 
+test_that("urlLog: one-time 'how to view' hint fires once per session", {
+  testInit()
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.verbose = 1)
+  clearUrlLog()
+  ## reset the session-level announce flag so this test controls it
+  assign("announced", FALSE, envir = reproducible:::.urlLogEnv)
+
+  msg1 <- capture_messages(
+    reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif"))
+  expect_true(any(grepl("getUrlLog\\(\\)|showCache", msg1)))
+
+  ## second access: no repeat hint
+  msg2 <- capture_messages(
+    reproducible:::.logUrlAccess("prepInputs", "https://example.com/b.tif"))
+  expect_false(any(grepl("getUrlLog\\(\\)|showCache", msg2)))
+})
+
 test_that("urlLog: FALSE is the kill switch", {
   testInit()
   withr::local_options(reproducible.urlLog = FALSE)
