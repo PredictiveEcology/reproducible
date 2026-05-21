@@ -89,28 +89,20 @@ test_that("urlLog: environment sink populates env$records and env$seen", {
   e <- new.env(parent = emptyenv())
   withr::local_options(reproducible.urlLog = e)
 
-  ## miss + hit of the same cacheId are distinct events -> two records.
+  ## Same (fn, url, cacheId) collapses to one record regardless of miss/hit.
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif",
-                               cacheId = "abc", cacheHit = FALSE,
-                               via = "Cache")
+                               cacheId = "abc")
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif",
-                               cacheId = "abc", cacheHit = TRUE,
-                               via = "Cache-replay")
-  expect_length(e$records, 2L)
-  expect_equal(vapply(e$records, function(r) r$cacheHit, logical(1)),
-               c(FALSE, TRUE))
-
-  ## Repeating the same hit is still deduped.
-  reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif",
-                               cacheId = "abc", cacheHit = TRUE,
-                               via = "Cache-replay")
-  expect_length(e$records, 2L)
+                               cacheId = "abc")
+  expect_length(e$records, 1L)
+  expect_equal(e$records[[1]]$url, "https://example.com/a.tif")
+  expect_equal(e$records[[1]]$fn,  "prepInputs")
+  expect_equal(e$records[[1]]$cacheId, "abc")
 
   ## Different cacheId -> new record.
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif",
-                               cacheId = "DIFFERENT", cacheHit = FALSE,
-                               via = "Cache")
-  expect_length(e$records, 3L)
+                               cacheId = "DIFFERENT")
+  expect_length(e$records, 2L)
 })
 
 test_that("urlLog: preProcess head labels caller as 'prepInputs' when .tempPath supplied", {
@@ -191,7 +183,6 @@ test_that("urlLog: Cache(Map(...prepInputs(url=url))) attaches urls via frame on
   expect_length(e$records, 2L)
   cids <- unique(vapply(e$records, function(r) r$cacheId, character(1)))
   expect_length(cids, 1L)
-  expect_true(all(vapply(e$records, function(r) r$cacheHit, logical(1)) == FALSE))
   expect_setequal(vapply(e$records, function(r) r$url, character(1)), urls)
 
   sc <- showCache(tmpdir, cacheId = cids)
@@ -204,7 +195,6 @@ test_that("urlLog: Cache(Map(...prepInputs(url=url))) attaches urls via frame on
   r2 <- Cache(Map(url = urls, function(url) prepInputs(url = url)))
 
   expect_length(e2$records, 2L)
-  expect_true(all(vapply(e2$records, function(r) r$cacheHit, logical(1)) == TRUE))
   expect_setequal(vapply(e2$records, function(r) r$url, character(1)), urls)
 
   sc2 <- showCache(tmpdir, cacheId = cids)
@@ -270,9 +260,7 @@ test_that("urlLog: Cache hooks tag cacheId with reproducible.url* tags", {
   hc <- as.integer(sc$tagValue[sc$tagKey == "reproducible.urlHitCount"])
   expect_true(any(hc >= 1L))
 
-  ## Session log: one miss record + one hit record (distinct cacheHit values).
+  ## Session log: miss + subsequent hit dedup to one record per cacheId.
   log <- getUrlLog()
-  expect_length(log, 2L)
-  expect_setequal(vapply(log, function(r) r$cacheHit, logical(1)),
-                  c(FALSE, TRUE))
+  expect_length(log, 1L)
 })

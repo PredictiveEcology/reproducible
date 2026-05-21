@@ -23,7 +23,7 @@
 ##     interrupted evaluations don't leak state.
 ##   - On Cache hit, no inner code runs. Cache reads existing reproducible.url
 ##     tags from the DB (via showCacheFast + extractFromCache) and emits
-##     replay records (cacheHit = TRUE).
+##     replay records so the access is still visible in the run's log.
 ##
 ## Idempotency key is (fn, url, cacheId). Within a scope (env, or session in
 ## TRUE mode), each (fn,url,cacheId) triple produces one record. The cache-DB
@@ -64,18 +64,14 @@ clearUrlLog <- function() {
   invisible()
 }
 
-## Build the (fn, url, cacheId, cacheHit) idempotency key. Field separator is
-## \037 (US), which never appears in URLs / function names / cacheIds.
-##
-## cacheHit is part of the key so a cache miss and a subsequent cache hit of
-## the same cacheId in the same scope each get one record -- they are distinct
-## events ("bytes were fetched" vs. "the cached object was used") and the user
-## wants both visible in the log.
-.urlLogKey <- function(fn, url, cacheId, cacheHit) {
+## Build the (fn, url, cacheId) idempotency key. Field separator is \037 (US),
+## which never appears in URLs / function names / cacheIds. Whether the access
+## was a miss or a hit is internal cache mechanics, not part of the access
+## identity, so it isn't keyed here.
+.urlLogKey <- function(fn, url, cacheId) {
   paste(fn,
         paste(url, collapse = "\036"),
         if (is.null(cacheId) || !length(cacheId)) "NA" else cacheId,
-        if (is.na(cacheHit)) "NA" else if (isTRUE(cacheHit)) "hit" else "miss",
         sep = "\037")
 }
 
@@ -99,13 +95,13 @@ clearUrlLog <- function() {
 ## Build the record list written to the sink.
 ##
 ## Core columns: time, fn, url, targetFile, archive, alsoExtract,
-## destinationPath, cacheId, cacheHit, via. Any extra columns supplied by
-## the caller (env sink) via sink$extra are merged in -- core columns take
-## precedence so reproducible's own fields can't be overridden.
+## destinationPath, cacheId. Any extra columns supplied by the caller (env
+## sink) via sink$extra are merged in -- core columns take precedence so
+## reproducible's own fields can't be overridden.
 .urlLogRecord <- function(fn, url,
                           targetFile = NULL, archive = NULL, alsoExtract = NULL,
                           destinationPath = NULL,
-                          cacheId, cacheHit, via) {
+                          cacheId = NA_character_) {
   core <- list(
     time            = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3"),
     fn              = fn,
@@ -115,9 +111,7 @@ clearUrlLog <- function() {
     alsoExtract     = .scalarOrNA(alsoExtract),
     destinationPath = .absPathOrNA(destinationPath),
     cacheId         = if (is.null(cacheId)) NA_character_
-                      else as.character(cacheId),
-    cacheHit        = cacheHit,
-    via             = via
+                      else as.character(cacheId)
   )
   sink <- getOption("reproducible.urlLog", NULL)
   if (is.environment(sink) && is.list(sink$extra) && length(sink$extra)) {
@@ -131,7 +125,7 @@ clearUrlLog <- function() {
 ## Write one record to whichever sink is active. Applies idempotency.
 .writeSessionRecord <- function(rec) {
   sink <- getOption("reproducible.urlLog", NULL)
-  key <- .urlLogKey(rec$fn, rec$url, rec$cacheId, rec$cacheHit)
+  key <- .urlLogKey(rec$fn, rec$url, rec$cacheId)
   if (is.environment(sink)) {
     if (is.null(sink$seen))    sink$seen    <- character()
     if (is.null(sink$records)) sink$records <- list()
@@ -159,8 +153,7 @@ clearUrlLog <- function() {
 .logUrlAccess <- function(fn, url,
                           targetFile = NULL, archive = NULL,
                           alsoExtract = NULL, destinationPath = NULL,
-                          cacheId = NA_character_, cacheHit = NA,
-                          via = NA_character_) {
+                          cacheId = NA_character_) {
   sink <- getOption("reproducible.urlLog", NULL)
   if (is.null(sink) || isFALSE(sink)) return(invisible())
   if (is.null(url)) return(invisible())
@@ -186,8 +179,7 @@ clearUrlLog <- function() {
                        targetFile = targetFile, archive = archive,
                        alsoExtract = alsoExtract,
                        destinationPath = destinationPath,
-                       cacheId = cacheId, cacheHit = cacheHit,
-                       via = if (is.na(via)) fn else via)
+                       cacheId = cacheId)
   .writeSessionRecord(rec)
 }
 
@@ -277,7 +269,8 @@ clearUrlLog <- function() {
 ##
 ## On hit (isHit=TRUE): read existing reproducible.url* tags from the cache
 ## DB via showCacheFast + extractFromCache, and replay one session record
-## per url (cacheHit=TRUE).
+## per url. fromCache distinction isn't tracked at the record level (the
+## DB tag hitCount captures access frequency separately).
 .maybeRecordUrlForCache <- function(callList, keyFull, cachePaths, drv, conn,
                                     isHit, .callingEnv = parent.frame(),
                                     urlFrameId = NULL) {
@@ -318,8 +311,7 @@ clearUrlLog <- function() {
                            archive = it$archive,
                            alsoExtract = it$alsoExtract,
                            destinationPath = it$destinationPath,
-                           cacheId = cacheId, cacheHit = FALSE,
-                           via = "Cache")
+                           cacheId = cacheId)
       .writeSessionRecord(rec)
     }
     ## One tag-write for the whole vector so the `hasUrl` early-exit inside
@@ -348,8 +340,7 @@ clearUrlLog <- function() {
     for (u in urls) {
       rec <- .urlLogRecord(fn = fnTag, url = u,
                            destinationPath = dest,
-                           cacheId = cacheId, cacheHit = TRUE,
-                           via = "Cache-replay")
+                           cacheId = cacheId)
       .writeSessionRecord(rec)
     }
     try(.persistUrlTags(cacheId, fnTag, urls, cachePath, drv, conn,
