@@ -268,7 +268,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     reproducible.inputPaths = NULL, successfulDir = NULL,
     successfulCheckSumFilePath = NULL,
     downloadResult = NULL, funChar = NULL,
-    skipDownload = FALSE, remoteMetadata = NULL,
+    skipDownload = FALSE, skipDownloadFile = NULL, remoteMetadata = NULL,
     hashVerified = character(),
     verboseCFS = verbose
   )
@@ -619,7 +619,8 @@ pp_remote_hash_check <- function(ctx) {
       "Skipping download; local file matches remote version (cached): ",
       .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
     )
-    ctx$skipDownload <- TRUE
+    ctx$skipDownload     <- TRUE
+    ctx$skipDownloadFile <- localFile
     ctx$hashVerified <- unique(c(ctx$hashVerified, localFile))
     if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
       ctx$archive <- localFile
@@ -670,7 +671,8 @@ pp_remote_hash_check <- function(ctx) {
         "Skipping download; local file matches remote version: ",
         .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
       )
-      ctx$skipDownload   <- TRUE
+      ctx$skipDownload     <- TRUE
+      ctx$skipDownloadFile <- localFile
       ctx$remoteMetadata <- remoteMetadata
       ctx$hashVerified   <- unique(c(ctx$hashVerified, localFile))
       if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
@@ -723,7 +725,8 @@ pp_remote_hash_check <- function(ctx) {
     "Skipping download; local file matches remote version: ",
     .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
   )
-  ctx$skipDownload   <- TRUE
+  ctx$skipDownload     <- TRUE
+  ctx$skipDownloadFile <- localFile
   ctx$remoteMetadata <- remoteMetadata
   ctx$hashVerified   <- unique(c(ctx$hashVerified, localFile))
   if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
@@ -742,8 +745,17 @@ pp_download <- function(ctx) {
   # .checkForSimilar / filesToChecksum logic below works unchanged.
   # ------------------------------------------------------------------
   if (isTRUE(ctx$skipDownload)) {
+    # When archive = NA (regular non-archive file), ctx$archive is NA — fall
+    # back to the verified local file path recorded by pp_remote_hash_check so
+    # downloaded carries the actual file, not NA. Without this, NA propagates
+    # into ctx$filesToChecksum and pollutes downstream checkSums lookups.
+    downloadedFile <- if (isTRUE(is.na(ctx$archive)) || is.null(ctx$archive)) {
+      if (!is.null(ctx$skipDownloadFile)) ctx$skipDownloadFile else ctx$archive
+    } else {
+      ctx$archive
+    }
     downloadFileResult <- list(
-      downloaded    = ctx$archive,
+      downloaded    = downloadedFile,
       archive       = ctx$archive,
       neededFiles   = ctx$neededFiles,
       checkSums     = ctx$checkSums,
