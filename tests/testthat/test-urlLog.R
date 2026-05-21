@@ -26,7 +26,10 @@ test_that("urlLog: core record carries targetFile/archive/alsoExtract", {
   expect_equal(rec$targetFile, "raster.tif")
   expect_equal(rec$archive,    "raster.zip")
   expect_equal(rec$alsoExtract, "aux1; aux2")   # vector collapsed
-  expect_equal(rec$destinationPath, "/tmp")
+  # The record stores the normPath()-resolved path (see .absPathOrNA), so the
+  # expectation must normalize too: "/tmp" -> "/private/tmp" on macOS,
+  # "C:/tmp" on Windows. Comparing to the literal "/tmp" only passes on Linux.
+  expect_equal(rec$destinationPath, normPath("/tmp"))
 })
 
 test_that("urlLog: env sink merges sink$extra into each record (SpaDES module/event)", {
