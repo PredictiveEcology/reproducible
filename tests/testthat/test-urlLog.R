@@ -4,7 +4,7 @@ test_that("urlLog: destinationPath is normalized to an absolute path", {
   clearUrlLog()
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif",
                                destinationPath = ".")
-  rec <- getUrlLog()[[1]]
+  rec <- prepInputsLog()[[1]]
   expect_true(nzchar(rec$destinationPath))
   expect_false(identical(rec$destinationPath, "."))   # was expanded
   expect_true(startsWith(rec$destinationPath, "/") ||
@@ -22,7 +22,7 @@ test_that("urlLog: core record carries targetFile/archive/alsoExtract", {
     alsoExtract = c("aux1", "aux2"),
     destinationPath = "/tmp"
   )
-  rec <- getUrlLog()[[1]]
+  rec <- prepInputsLog()[[1]]
   expect_equal(rec$targetFile, "raster.tif")
   expect_equal(rec$archive,    "raster.zip")
   expect_equal(rec$alsoExtract, "aux1; aux2")   # vector collapsed
@@ -64,12 +64,12 @@ test_that("urlLog: one-time 'how to view' hint fires once per session", {
 
   msg1 <- capture_messages(
     reproducible:::.logUrlAccess("prepInputs", "https://example.com/a.tif"))
-  expect_true(any(grepl("getUrlLog\\(\\)|showCache", msg1)))
+  expect_true(any(grepl("prepInputsLog\\(\\)|showCache", msg1)))
 
   ## second access: no repeat hint
   msg2 <- capture_messages(
     reproducible:::.logUrlAccess("prepInputs", "https://example.com/b.tif"))
-  expect_false(any(grepl("getUrlLog\\(\\)|showCache", msg2)))
+  expect_false(any(grepl("prepInputsLog\\(\\)|showCache", msg2)))
 })
 
 test_that("urlLog: FALSE is the kill switch", {
@@ -77,7 +77,7 @@ test_that("urlLog: FALSE is the kill switch", {
   withr::local_options(reproducible.urlLog = FALSE)
   clearUrlLog()
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif")
-  expect_length(getUrlLog(), 0L)
+  expect_length(prepInputsLog(), 0L)
 })
 
 test_that("urlLog: default (NULL) captures bare prepInputs into in-memory log", {
@@ -88,7 +88,7 @@ test_that("urlLog: default (NULL) captures bare prepInputs into in-memory log", 
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif")
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif")  # dedup
   reproducible:::.logUrlAccess("preProcess", "https://example.com/y.tif")
-  log <- getUrlLog()
+  log <- prepInputsLog()
   expect_length(log, 2L)
   expect_setequal(vapply(log, function(r) r$url, character(1)),
                   c("https://example.com/x.tif", "https://example.com/y.tif"))
@@ -106,13 +106,13 @@ test_that("urlLog: TRUE sink + idempotency + clear", {
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/b.tif",
                                destinationPath = "/tmp", cacheId = "abc")
 
-  log <- getUrlLog()
+  log <- prepInputsLog()
   expect_length(log, 2L)
   expect_equal(log[[1]]$url, "https://example.com/a.tif")
   expect_equal(log[[2]]$url, "https://example.com/b.tif")
 
   clearUrlLog()
-  expect_length(getUrlLog(), 0L)
+  expect_length(prepInputsLog(), 0L)
 })
 
 test_that("urlLog: environment sink populates env$records and env$seen", {
@@ -153,7 +153,7 @@ test_that("urlLog: preProcess head labels caller as 'prepInputs' when .tempPath 
   fakePreProcess(url = "https://example.com/a.tif")
   fakePreProcess(url = "https://example.com/b.tif", .tempPath = tempdir())
 
-  log <- getUrlLog()
+  log <- prepInputsLog()
   expect_length(log, 2L)
   expect_equal(log[[1]]$fn, "preProcess")
   expect_equal(log[[2]]$fn, "prepInputs")
@@ -176,7 +176,7 @@ test_that("urlLog: NULL url is ignored", {
   clearUrlLog()
   reproducible:::.logUrlAccess("prepInputs", NULL)
   reproducible:::.logUrlAccess("prepInputs", character(0))
-  expect_length(getUrlLog(), 0L)
+  expect_length(prepInputsLog(), 0L)
 })
 
 test_that("urlLog: idempotency key handles NA cacheId", {
@@ -292,7 +292,7 @@ test_that("urlLog: Cache hooks tag cacheId with reproducible.url* tags", {
   expect_true(any(hc >= 1L))
 
   ## Session log: miss + subsequent hit dedup to one record per cacheId.
-  log <- getUrlLog()
+  log <- prepInputsLog()
   expect_length(log, 1L)
 })
 
@@ -316,7 +316,7 @@ test_that("urlLog: legacy cache hit (no tags) recovers url from matched call + s
   out <- Cache(prepInputs(url = "https://example.com/legacy.tif"))  # hit
   expect_equal(as.character(out), "ok")
 
-  log <- getUrlLog()
+  log <- prepInputsLog()
   expect_length(log, 1L)
   expect_equal(log[[1]]$url, "https://example.com/legacy.tif")
 

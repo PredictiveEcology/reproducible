@@ -10,7 +10,7 @@
 ##                         SpaDES.core simInitAndSpades). Records appended to
 ##                         `env$records`; idempotency via `env$seen`. Caller
 ##                         decides what to do with the contents on exit.
-##   TRUE               -> tags + in-memory session log via getUrlLog().
+##   TRUE               -> tags + in-memory session log via prepInputsLog().
 ##   function(record)   -> tags + callback invoked with each record (no dedup).
 ##
 ## So persistent cacheId provenance accrues by default (cheap, disk-only); the
@@ -51,7 +51,7 @@
   .urlLogEnv$announced <- TRUE
   messagePreProcess(
     "Recording data-source URLs from prepInputs/preProcess. View with ",
-    "getUrlLog() or showCache(userTags = 'reproducible.url'); ",
+    "prepInputsLog() or showCache(userTags = 'reproducible.url'); ",
     "disable with options(reproducible.urlLog = FALSE).",
     verboseLevel = 1
   )
@@ -61,20 +61,20 @@
 #' URL access log for `prepInputs` / `preProcess`
 #'
 #' Controlled by `getOption("reproducible.urlLog")`. See the package option
-#' documentation for modes. `getUrlLog()` returns the package-level in-memory
-#' records, which are populated in the default (`NULL`) and `TRUE` modes;
-#' `clearUrlLog()` empties them. Records written to an environment or function
-#' sink live there instead and are not retrievable through these accessors.
-#' Set the option to `FALSE` to disable logging entirely.
+#' documentation for modes. `prepInputsLog()` returns the package-level
+#' in-memory records, which are populated in the default (`NULL`) and `TRUE`
+#' modes; `clearUrlLog()` empties them. Records written to an environment or
+#' function sink live there instead and are not retrievable through these
+#' accessors. Set the option to `FALSE` to disable logging entirely.
 #'
-#' @return `getUrlLog()` returns a list of record lists. `clearUrlLog()` returns
-#'   `NULL` invisibly.
+#' @return `prepInputsLog()` returns a list of record lists. `clearUrlLog()`
+#'   returns `NULL` invisibly.
 #'
-#' @rdname urlLog
+#' @rdname prepInputsLog
 #' @export
-getUrlLog <- function() .urlLogEnv$records
+prepInputsLog <- function() .urlLogEnv$records
 
-#' @rdname urlLog
+#' @rdname prepInputsLog
 #' @export
 clearUrlLog <- function() {
   .urlLogEnv$records <- list()
@@ -145,7 +145,7 @@ clearUrlLog <- function() {
 
 ## Write one record to whichever sink is active. Applies idempotency.
 ## NULL (default) and TRUE both route to the package-level in-memory log so
-## getUrlLog() captures accesses (incl. bare prepInputs with no Cache) out of
+## prepInputsLog() captures accesses (incl. bare prepInputs with no Cache) out of
 ## the box; an environment or function sink overrides that destination.
 .writeSessionRecord <- function(rec) {
   sink <- getOption("reproducible.urlLog", NULL)
