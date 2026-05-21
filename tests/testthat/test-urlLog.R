@@ -55,12 +55,26 @@ test_that("urlLog: env sink merges sink$extra into each record (SpaDES module/ev
   expect_equal(rec3$custom, "ok")
 })
 
-test_that("urlLog: off by default", {
+test_that("urlLog: FALSE is the kill switch", {
   testInit()
-  withr::local_options(reproducible.urlLog = NULL)
+  withr::local_options(reproducible.urlLog = FALSE)
   clearUrlLog()
   reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif")
   expect_length(getUrlLog(), 0L)
+})
+
+test_that("urlLog: default (NULL) captures bare prepInputs into in-memory log", {
+  testInit()
+  withr::local_options(reproducible.urlLog = NULL)
+  clearUrlLog()
+  ## bare prepInputs (no Cache, no explicit sink) still recorded by default
+  reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif")
+  reproducible:::.logUrlAccess("prepInputs", "https://example.com/x.tif")  # dedup
+  reproducible:::.logUrlAccess("preProcess", "https://example.com/y.tif")
+  log <- getUrlLog()
+  expect_length(log, 2L)
+  expect_setequal(vapply(log, function(r) r$url, character(1)),
+                  c("https://example.com/x.tif", "https://example.com/y.tif"))
 })
 
 test_that("urlLog: TRUE sink + idempotency + clear", {
@@ -263,4 +277,34 @@ test_that("urlLog: Cache hooks tag cacheId with reproducible.url* tags", {
   ## Session log: miss + subsequent hit dedup to one record per cacheId.
   log <- getUrlLog()
   expect_length(log, 1L)
+})
+
+test_that("urlLog: legacy cache hit (no tags) recovers url from matched call + self-heals", {
+  testInit("terra")
+  withr::local_options(reproducible.cachePath = tmpdir)
+
+  fakePrepInputs <- function(url, destinationPath = ".") "ok"
+  prepInputs <- fakePrepInputs
+
+  ## Create a "legacy" entry with the feature OFF -> no reproducible.url* tags.
+  withr::local_options(reproducible.urlLog = FALSE)
+  invisible(Cache(prepInputs(url = "https://example.com/legacy.tif")))
+  sc0 <- showCache(tmpdir, userTags = "reproducible.url")
+  expect_equal(NROW(sc0), 0L)   # confirm no url tags yet
+
+  ## Now turn the feature on (default) and hit the same entry. Option 1 should
+  ## recover the url from the matched call, emit a record, and back-fill tags.
+  withr::local_options(reproducible.urlLog = TRUE)
+  clearUrlLog()
+  out <- Cache(prepInputs(url = "https://example.com/legacy.tif"))  # hit
+  expect_equal(as.character(out), "ok")
+
+  log <- getUrlLog()
+  expect_length(log, 1L)
+  expect_equal(log[[1]]$url, "https://example.com/legacy.tif")
+
+  ## Self-heal: tags now exist, so a further hit replays from the DB.
+  sc1 <- showCache(tmpdir, userTags = "reproducible.url")
+  expect_true("reproducible.url" %in% sc1$tagKey)
+  expect_true(any(sc1$tagValue == "https://example.com/legacy.tif"))
 })

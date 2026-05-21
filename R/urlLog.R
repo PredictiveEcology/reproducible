@@ -1,19 +1,21 @@
 ## URL access logging for prepInputs / preProcess.
 ##
-## The option `reproducible.urlLog` selects a sink:
-##   NULL / FALSE       -> off (default)
-##   <environment>      -> the caller (e.g. SpaDES.core simInitAndSpades) owns
-##                         the env and its lifecycle. Records appended to
+## The option `reproducible.urlLog` has three modes:
+##   FALSE              -> fully off (kill switch).
+##   NULL (default)     -> "tags only": prepInputs/preProcess accesses that
+##                         flow through Cache() tag the cacheId in the cache DB
+##                         with reproducible.url* tags (permanent, on disk,
+##                         queryable via showCache). No in-memory session log.
+##   <environment>      -> tags + a session log the caller owns (e.g.
+##                         SpaDES.core simInitAndSpades). Records appended to
 ##                         `env$records`; idempotency via `env$seen`. Caller
-##                         decides what to do with the contents on exit
-##                         (flush to CSV, attach to a sim object, discard...).
-##   TRUE               -> in-memory session log, retrievable via getUrlLog();
-##                         per-session dedup.
-##   function(record)   -> callback invoked with each record list (no dedup).
+##                         decides what to do with the contents on exit.
+##   TRUE               -> tags + in-memory session log via getUrlLog().
+##   function(record)   -> tags + callback invoked with each record (no dedup).
 ##
-## Independent of the sink, when a prepInputs/preProcess access flows through
-## Cache(), the cacheId is tagged in the cache DB with reproducible.url* tags
-## so the URL provenance lives with the cached object.
+## So persistent cacheId provenance accrues by default (cheap, disk-only); the
+## live session log is opt-in. The cacheId tags also let a later cache hit be
+## replayed into the session log even though no inner code runs on a hit.
 ##
 ## How `Cache(...prepInputs(url=...)...)` is handled (incl. Cache(Map(...))):
 ##   - On Cache entry, a transient "url frame" is allocated. prepInputs and
@@ -44,10 +46,11 @@
 #' URL access log for `prepInputs` / `preProcess`
 #'
 #' Controlled by `getOption("reproducible.urlLog")`. See the package option
-#' documentation for sink types. `getUrlLog()` returns the in-memory records
-#' written under the `TRUE` sink mode; `clearUrlLog()` empties them. Records
-#' written to an environment sink (the typical SpaDES use case) live on that
-#' environment and are not retrievable through these accessors.
+#' documentation for modes. `getUrlLog()` returns the package-level in-memory
+#' records, which are populated in the default (`NULL`) and `TRUE` modes;
+#' `clearUrlLog()` empties them. Records written to an environment or function
+#' sink live there instead and are not retrievable through these accessors.
+#' Set the option to `FALSE` to disable logging entirely.
 #'
 #' @return `getUrlLog()` returns a list of record lists. `clearUrlLog()` returns
 #'   `NULL` invisibly.
@@ -122,9 +125,16 @@ clearUrlLog <- function() {
   }
 }
 
+## TRUE only when the user explicitly set the option to FALSE (kill switch).
+.urlLogOff <- function() isFALSE(getOption("reproducible.urlLog", NULL))
+
 ## Write one record to whichever sink is active. Applies idempotency.
+## NULL (default) and TRUE both route to the package-level in-memory log so
+## getUrlLog() captures accesses (incl. bare prepInputs with no Cache) out of
+## the box; an environment or function sink overrides that destination.
 .writeSessionRecord <- function(rec) {
   sink <- getOption("reproducible.urlLog", NULL)
+  if (isFALSE(sink)) return(invisible())
   key <- .urlLogKey(rec$fn, rec$url, rec$cacheId)
   if (is.environment(sink)) {
     if (is.null(sink$seen))    sink$seen    <- character()
@@ -133,13 +143,14 @@ clearUrlLog <- function() {
       sink$seen <- c(sink$seen, key)
       sink$records[[length(sink$records) + 1L]] <- rec
     }
-  } else if (isTRUE(sink)) {
+  } else if (is.function(sink)) {
+    try(sink(rec), silent = TRUE)
+  } else {
+    ## NULL (default) or TRUE -> package-level in-memory log.
     if (!key %in% .urlLogEnv$seen) {
       .urlLogEnv$seen <- c(.urlLogEnv$seen, key)
       .urlLogEnv$records[[length(.urlLogEnv$records) + 1L]] <- rec
     }
-  } else if (is.function(sink)) {
-    try(sink(rec), silent = TRUE)
   }
   invisible()
 }
@@ -154,8 +165,7 @@ clearUrlLog <- function() {
                           targetFile = NULL, archive = NULL,
                           alsoExtract = NULL, destinationPath = NULL,
                           cacheId = NA_character_) {
-  sink <- getOption("reproducible.urlLog", NULL)
-  if (is.null(sink) || isFALSE(sink)) return(invisible())
+  if (.urlLogOff()) return(invisible())
   if (is.null(url)) return(invisible())
   if (is.character(url) && !length(url)) return(invisible())
 
@@ -189,8 +199,7 @@ clearUrlLog <- function() {
 ## logging is off). Caller must arrange for .closeCacheUrlFrame() to fire on
 ## exit so interrupted Cache calls don't leak slots.
 .openCacheUrlFrame <- function() {
-  sink <- getOption("reproducible.urlLog", NULL)
-  if (is.null(sink) || isFALSE(sink)) return(NULL)
+  if (.urlLogOff()) return(NULL)
   .urlLogEnv$frameCounter <- .urlLogEnv$frameCounter + 1L
   id <- paste0("f", .urlLogEnv$frameCounter)
   .urlLogEnv$frames[[id]] <- list()
@@ -207,6 +216,58 @@ clearUrlLog <- function() {
   if (is.null(id)) return(list())
   recs <- .urlLogEnv$frames[[id]]
   if (is.null(recs)) list() else recs
+}
+
+## ---- Matched-call URL extraction (legacy cache-hit recovery) -------------
+
+## Walk a call expression for the first inner call whose function name matches.
+## Handles bare names and `pkg::name`. Does NOT descend into `function(...)`
+## literals (symbols there are formal args, not values we can resolve, e.g.
+## `function(url) prepInputs(url = url)`). Returns list(name, call) or NULL.
+.findCallByName <- function(expr, names) {
+  if (is.call(expr)) {
+    head <- expr[[1]]
+    if (identical(head, as.name("function"))) return(NULL)
+    nm <- if (is.name(head)) {
+      as.character(head)
+    } else if (is.call(head) && length(head) == 3L &&
+               identical(head[[1]], as.name("::"))) {
+      as.character(head[[3]])
+    } else {
+      NULL
+    }
+    if (!is.null(nm) && nm %in% names)
+      return(list(name = nm, call = expr))
+    for (i in seq_along(expr)) {
+      hit <- .findCallByName(expr[[i]], names)
+      if (!is.null(hit)) return(hit)
+    }
+  }
+  NULL
+}
+
+## Recover (fn, url) from a Cache()'s matched call when the wrapped function is
+## prepInputs/preProcess. Used on a cache HIT of a legacy entry that has no
+## reproducible.url* tags (the URL is only hashed in the cache DB, so the
+## current call expression is the only place a literal URL exists). Returns
+## NULL for opaque wrappers (Cache(userFn())) where the URL isn't in the call.
+.urlInfoFromMatchedCall <- function(matchedCall, functionName,
+                                    .callingEnv = parent.frame()) {
+  fn <- functionName
+  mc <- matchedCall
+  if (!isTRUE(fn %in% c("prepInputs", "preProcess"))) {
+    hit <- .findCallByName(mc, c("prepInputs", "preProcess"))
+    if (is.null(hit)) return(NULL)
+    fn <- hit$name
+    mc <- hit$call
+  }
+  urlExpr <- mc$url
+  if (is.null(urlExpr)) return(NULL)
+  url <- tryCatch(eval(urlExpr, envir = .callingEnv), error = function(e) NULL)
+  if (is.null(url) || !length(url) || !is.atomic(url)) return(NULL)
+  url <- tryCatch(as.character(url), error = function(e) NULL)
+  if (is.null(url) || all(is.na(url) | !nzchar(url))) return(NULL)
+  list(fn = fn, url = url)
 }
 
 ## ---- Persistent provenance tags on cacheIds ------------------------------
@@ -274,8 +335,7 @@ clearUrlLog <- function() {
 .maybeRecordUrlForCache <- function(callList, keyFull, cachePaths, drv, conn,
                                     isHit, .callingEnv = parent.frame(),
                                     urlFrameId = NULL) {
-  sink <- getOption("reproducible.urlLog", NULL)
-  if (is.null(sink) || isFALSE(sink)) return(invisible())
+  if (.urlLogOff()) return(invisible())
 
   cacheId <- keyFull$key
   cachePath <- if (length(cachePaths)) cachePaths[[1]] else
@@ -324,10 +384,25 @@ clearUrlLog <- function() {
                                  strict = FALSE, drv = drv, conn = conn,
                                  verbose = 0),
                    error = function(e) NULL)
-    if (is.null(sc) || NROW(sc) == 0L) return(invisible())
-    urls <- extractFromCache(sc, "reproducible.url")
-    if (length(urls) == 0L) return(invisible())
-    fnTag <- extractFromCache(sc, "reproducible.urlFn", ifNot = "prepInputs")[1L]
+    urls  <- if (is.null(sc) || NROW(sc) == 0L) character(0)
+             else extractFromCache(sc, "reproducible.url")
+    fnTag <- if (length(urls) == 0L) NA_character_
+             else extractFromCache(sc, "reproducible.urlFn",
+                                   ifNot = "prepInputs")[1L]
+
+    ## Option 1 recovery: a legacy entry (created before this feature) has no
+    ## reproducible.url* tags, and the URL is only hashed in the cache DB. The
+    ## one place a literal URL still exists on a hit is the current matched
+    ## call -- extract it for the direct Cache(prepInputs(url=...)) shape.
+    ## Then .persistUrlTags below back-fills the tags so the entry self-heals.
+    if (length(urls) == 0L) {
+      info <- .urlInfoFromMatchedCall(callList$new_call, callList$.functionName,
+                                      .callingEnv = .callingEnv)
+      if (is.null(info)) return(invisible())
+      urls  <- info$url
+      fnTag <- info$fn
+    }
+
     ## destinationPath for hit replays: prefer the value in the current matched
     ## call (Cache(prepInputs(..., destinationPath = ...)) shape), else fall
     ## back to the option default so the column isn't blank.
