@@ -200,6 +200,18 @@ package installed, \code{R.utils::withTimeout(  , timeout = getOption("reproduci
 will be wrapped around the download so that it will timeout (and error) after this many
 seconds.
 }
+\item{\code{urlLog}}{
+Default: \code{NULL}. Controls whether \code{prepInputs()} / \code{preProcess()} keep a
+record of the files and web addresses (URLs) they download. \code{NULL} (the
+default) records each download as a permanent tag on the matching cache
+entry, which you can look up later with
+\code{showCache(userTags = "reproducible.url")}; it keeps no in-session list.
+\code{TRUE} additionally keeps an in-memory list for the current session, which
+you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}.
+\code{FALSE} turns the recording off completely. Advanced: you may instead
+supply an environment (records are appended to \code{env$records}, which you
+own and manage) or a function (called once with each record).
+}
 \item{\code{useCache}}{
 Default: \code{TRUE}. Used in \code{\link[=Cache]{Cache()}}. If \code{FALSE}, then the entire
 \code{Cache} machinery is skipped and the functions are run as if there was no Cache occurring.

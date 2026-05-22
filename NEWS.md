@@ -2,27 +2,32 @@
 
 * development version.
 
+## new features
+
+* `prepInputs()` and `preProcess()` now keep a record of every file and web
+  address (URL) they download. By default, each download is saved as a permanent
+  note on the matching cache entry, which you can look up later with
+  `showCache(userTags = "reproducible.url")`. Set
+  `options(reproducible.urlLog = TRUE)` to also keep an in-memory list for the
+  current session, which you can read with `prepInputsLog()` and empty with
+  `clearUrlLog()`. Set `options(reproducible.urlLog = FALSE)` to turn the
+  recording off. See `?prepInputsLog` and `?reproducibleOptions`.
+
 ## behaviour changes
 
-* `options("reproducible.cachePath")` is no longer pre-set to a
-  session-tempdir path when the package is loaded; the default is now
-  `NULL`. The first call to a user-facing entry point (`Cache()`,
-  `clearCache()`, `showCache()`, `keepCache()`, ...) resolves it lazily
-  via `.checkCacheRepo()`. If still unset at that point, the option is
-  set to `.reproducibleTempCacheDir()` for the rest of the session.
-  This lets project-setup layers (e.g. `SpaDES.project::setupProject()`)
-  detect "unset" cleanly and stops every R session from silently
-  committing to a non-persistent tempdir cache. Users who set
-  `options(reproducible.cachePath = ...)` explicitly (in their `.Rprofile`,
-  in a setup script, or via `withr::local_options()`) see no change.
+* Until you choose a cache location, reproducible no longer picks one for you
+  when the package loads. The cache-location option (`reproducible.cachePath`)
+  now starts empty (`NULL`), and a temporary folder is chosen only the first
+  time you actually use the cache. This lets project-setup tools (such as
+  `SpaDES.project::setupProject()`) tell whether you have set a location yet, and
+  stops every R session from quietly settling on a temporary cache that does not
+  persist. If you set `options(reproducible.cachePath = ...)` yourself, nothing
+  changes.
 
-* `options("reproducible.timeout")` default raised from `1200` (20 min)
-  to `12000` (~3.3 h). The previous default caused failures on large
-  (multi-GB) downloads over slow or congested links well before the
-  transfer could complete; the new default keeps the same wall-clock
-  safety net but at a scale appropriate for the file sizes typically
-  handled by `prepInputs`/`preProcess`. Users who set
-  `options(reproducible.timeout = ...)` explicitly see no change.
+* Large downloads were timing out too soon, so the default time limit for a
+  download (`reproducible.timeout`) is now about 3.3 hours (12000 seconds)
+  instead of 20 minutes (1200 seconds). If you set
+  `options(reproducible.timeout = ...)` yourself, nothing changes.
 
 ## bug fixes
 
