@@ -174,6 +174,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath, .callingEnv = parent.frame(),
                        ...) {
   st <- Sys.time()
+  ## URL-log hook fires only on direct preProcess() calls. When called from
+  ## prepInputs, the prepInputs head already logged (so the COG fast-path,
+  ## which bypasses preProcess, is still covered).
+  if (missing(.tempPath)) {
+    .logUrlAccess("preProcess", url = url,
+                  targetFile = targetFile,
+                  archive = archive,
+                  alsoExtract = alsoExtract,
+                  destinationPath = destinationPath)
+  }
   messagePreProcess("Running `preProcess`", verbose = verbose, verboseLevel = 0)
   .message$IndentUpdate()
   on.exit(.message$IndentRevert(), add = TRUE)

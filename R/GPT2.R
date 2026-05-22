@@ -54,6 +54,12 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   # Harmonize call so the different versions are all cannonical, now that useCache = FALSE is past
   callList <- harmonizeCall(callList, .callingEnv, .functionName)
+
+  # Open a transient URL frame so inner prepInputs/preProcess calls can push
+  # url accesses up to this Cache for attribution to this cacheId. on.exit
+  # makes interrupted Cache calls clean up. See R/urlLog.R.
+  .urlFrameId <- .openCacheUrlFrame()
+  on.exit(.closeCacheUrlFrame(.urlFrameId), add = TRUE)
   # Add .functionName to .pkgEnv userTags in case this becomes part of a nested Cache
   appendFunctionNameToNestedTags(userTags, callList$.functionName)
   # .pkgEnv$.reproEnv2$userTags
@@ -116,8 +122,12 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                      cacheSaveFormat = cacheSaveFormat,
                                                      .cacheChaining = .cacheChaining,
                                                      drv = drv, conn = conn, verbose = verbose)
-    if (!identical2(.returnNothing, outputFromMemoise))
+    if (!identical2(.returnNothing, outputFromMemoise)) {
+      .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                              isHit = TRUE, .callingEnv = .callingEnv,
+                              urlFrameId = .urlFrameId)
       return(outputFromMemoise)
+    }
 
     # After memoising fail, try files; need to check Cache dir and set lockfile
     locked <- lockFile(cachePaths[[1]], keyFull$key, verbose = verbose)
@@ -143,8 +153,12 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                 .cacheChaining = .cacheChaining,
                                                 drv, conn, verbose = verbose)
 
-    if (!identical2(.returnNothing, outputFromDisk))
+    if (!identical2(.returnNothing, outputFromDisk)) {
+      .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                              isHit = TRUE, .callingEnv = .callingEnv,
+                              urlFrameId = .urlFrameId)
       return(outputFromDisk)
+    }
 
   }
   if (useDBI()) conn <- attr(outputFromDisk, ".Cache")$conn
@@ -166,6 +180,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                                 cacheSaveFormat = cacheSaveFormat,
                                                 .cacheChaining = .cacheChaining,
                                                 drv, conn, verbose = verbose)
+    .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                            isHit = TRUE, .callingEnv = .callingEnv,
+                            urlFrameId = .urlFrameId)
     return(outputFromDisk)
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
 
@@ -212,6 +229,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                                       verbose = verbose,
                                       times$SaveStart, times$EvaluateStart)
   times$SaveEnd <- Sys.time()
+  .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
+                          isHit = FALSE, .callingEnv = .callingEnv,
+                          urlFrameId = .urlFrameId)
   if (getOption("reproducible.savePreDigest", FALSE)) {
     keyFullPreDigest <- keyFull
     keyFullPreDigest$key <- paste0(.txtPreDigest, "_", keyFullPreDigest$key)
