@@ -55,6 +55,26 @@ jobs:
             any::covr
             rspatial/geodata
 
+      # The GOOGLEDRIVE_AUTH secret holds the service-account JSON *contents*,
+      # but tests/testthat/helper-allEqual.R passes the env var to
+      # googledrive::drive_auth(path = ...) and gates on file.exists(env var).
+      # Without materialization the file check fails, drive_auth is never
+      # called, and every needGoogleDriveAuth=TRUE test skips silently --
+      # leaving cacheGeo.R / cloud.R at 0% coverage on codecov. If the secret
+      # already happens to be a real path on the runner, this step is a no-op.
+      - name: Materialize GOOGLEDRIVE_AUTH to a file
+        if: env.GOOGLEDRIVE_AUTH != ''
+        run: |
+          if [ -f "$GOOGLEDRIVE_AUTH" ]; then
+            echo "GOOGLEDRIVE_AUTH already points to an existing file; no-op"
+          else
+            AUTH_FILE="$RUNNER_TEMP/gdrive-auth.json"
+            printf '%s' "$GOOGLEDRIVE_AUTH" > "$AUTH_FILE"
+            chmod 600 "$AUTH_FILE"
+            echo "GOOGLEDRIVE_AUTH=$AUTH_FILE" >> "$GITHUB_ENV"
+            echo "Materialized GOOGLEDRIVE_AUTH to $AUTH_FILE ($(wc -c < "$AUTH_FILE") bytes)"
+          fi
+
       - id: covr
         name: Test coverage
         continue-on-error: true
