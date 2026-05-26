@@ -4,6 +4,24 @@
 
 ## behaviour changes
 
+* `postProcessTo()` is now faster and uses less memory on large rasters.
+  A new option `reproducible.terraMemmax` (default `2`, in GB) sets how
+  much memory `terra` is allowed to use per raster during the call; the
+  previous setting is restored when the call finishes. In one test with
+  a 1.8-billion-cell output, this was about 45% faster and used about
+  one-third of the memory of the previous default. Set the option to
+  `NULL` to turn the cap off. If you have already set
+  `terraOptions(memmax)` yourself, that setting is left alone.
+
+* `postProcessTo()` now keeps categorical (factor) rasters categorical.
+  When the input is a factor raster and you have not supplied `method`
+  or `datatype`, the projection step uses nearest-neighbour (so no
+  in-between values are invented) and the output is written with the
+  same data type as the input (for example, `INT1U` stays `INT1U`
+  instead of being promoted to `FLT4S`, which would make the file four
+  times larger and lose the link to the category labels). Anything you
+  pass for `method` or `datatype` is respected as before.
+
 * `options("reproducible.cachePath")` is no longer pre-set to a
   session-tempdir path when the package is loaded; the default is now
   `NULL`. The first call to a user-facing entry point (`Cache()`,

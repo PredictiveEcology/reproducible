@@ -193,6 +193,23 @@ postProcessTo <- function(from, to,
           on.exit(terra::terraOptions(memfrac = origMemFrac))
         }
       }
+      # Cap terra per-raster memory for the duration of this call. On high-RAM
+      # machines this is a much bigger speedup than any pipeline restructuring
+      # (~45% faster, ~3x less peak RSS on the LCC benchmark). NULL = disabled.
+      # IMPORTANT: only apply if the user hasn't already set memmax themselves.
+      # terra treats memmax as "ignored" when NA / NULL / <= 0 (default is -1),
+      # so a positive finite value means the user opted in deliberately and we
+      # must respect it -- mirrors the leaveOnDisk / memfrac handling above.
+      .tmMax <- getOption("reproducible.terraMemmax", NULL)
+      if (!is.null(.tmMax) && is.numeric(.tmMax) && is.finite(.tmMax) && .tmMax > 0) {
+        co <- capture.output(.origMemmax <- terra::terraOptions()$memmax)
+        .userSetMemmax <- !is.null(.origMemmax) && !is.na(.origMemmax) &&
+          is.numeric(.origMemmax) && is.finite(.origMemmax) && .origMemmax > 0
+        if (!.userSetMemmax) {
+          terra::terraOptions(memmax = .tmMax)
+          on.exit(terra::terraOptions(memmax = .origMemmax), add = TRUE)
+        }
+      }
     }
 
     messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
@@ -205,6 +222,20 @@ postProcessTo <- function(from, to,
       }
     }
     fromOrig <- from # may need it later
+    # Capture source datatype + factor flag while `from` may still be file-backed.
+    # These are the only cheap, reliable signals (terra::datatype() reads GDAL
+    # metadata in O(1); terra::is.factor() is also O(1)). minmax / value scans
+    # are unreliable or expensive. Used below to keep categorical inputs from
+    # being silently bilinear-projected to float (which both bloats storage 4x
+    # and invents values that don't exist in the source's level scheme).
+    origDatatype <- tryCatch(
+      if (.isGridded(from)) terra::datatype(from)[1] else "",
+      error = function(e) ""
+    )
+    origIsFactor <- tryCatch(
+      if (.isGridded(from)) isTRUE(terra::is.factor(from)[1]) else FALSE,
+      error = function(e) FALSE
+    )
     # ASSERTION STEP
     postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
 
@@ -293,7 +324,19 @@ postProcessTo <- function(from, to,
       #   errors and slivers
       if (!(isPolygons(from) && isPolygons(projectTo) && identical(cropTo, projectTo)))
         from <- cropTo(from, cropTo, needBuffer = TRUE, verbose = verbose, ..., overwrite = overwrite) # crop first for speed
-      from <- projectTo(from, projectTo, verbose = verbose, ..., overwrite = overwrite) # need to project with edges intact
+      # For factor inputs, force nearest-neighbour resampling so projection
+      # preserves the source's categorical values (no invented in-between values).
+      # Only inject if the caller hasn't supplied `method` themselves.
+      .dotsNames <- ...names()
+      .injectMethodNear <- origIsFactor && !"method" %in% .dotsNames
+      # NB: `projectTo` is also the name of a postProcessTo() parameter, so it
+      # shadows the function within this scope -- pass the function name as a
+      # string so do.call()/match.fun() finds the function, skipping the arg.
+      from <- do.call("projectTo", c(
+        list(from = from, projectTo = projectTo, verbose = verbose, overwrite = overwrite),
+        list(...),
+        if (.injectMethodNear) list(method = "near")
+      )) # need to project with edges intact
       from <- maskTo(from, maskTo, verbose = verbose, ..., overwrite = overwrite)
       from <- cropTo(from, cropTo, needBuffer = FALSE, verbose = verbose, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 
@@ -310,10 +353,21 @@ postProcessTo <- function(from, to,
         from <- keepOrigGeom(from, fromOrig)
 
       # WRITE STEP
-      from <- writeTo(
-        from, writeTo, overwrite, isStackHere, isBrickHere, isRasterHere, isSpatRasterHere,
-        ...
-      )
+      # For factor inputs, preserve the source's GDAL datatype on write (e.g.
+      # INT1U) instead of letting terra default to FLT4S -- that's a 4x storage
+      # / I/O blowup on a 1-byte categorical. Only inject if the caller hasn't
+      # supplied `datatype` and we captured a non-empty source datatype.
+      .injectDatatype <- origIsFactor && nzchar(origDatatype) &&
+        !"datatype" %in% ...names()
+      # `writeTo` is also a parameter name (the output path) -- string keeps
+      # do.call() looking up the function rather than the local binding.
+      from <- do.call("writeTo", c(
+        list(from = from, writeTo = writeTo, overwrite = overwrite,
+             isStack = isStackHere, isBrick = isBrickHere,
+             isRaster = isRasterHere, isSpatRaster = isSpatRasterHere),
+        list(...),
+        if (.injectDatatype) list(datatype = origDatatype)
+      ))
 
     }
 
