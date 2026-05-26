@@ -3,7 +3,6 @@ utils::globalVariables(c("X", "Y"))
 checkNameHasGeom <- function(existingObj) {
   hasGeomNamedCol <- names(existingObj) %in% "geom"
   if (any(hasGeomNamedCol)) {
-    browser()
     names(existingObj)[hasGeomNamedCol] <- "geometry"
   }
   existingObj
