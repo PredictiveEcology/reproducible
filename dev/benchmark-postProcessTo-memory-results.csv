@@ -1,0 +1,11 @@
+"elapsed_s","user_s","peakRSS_GB","terraTmp_GB","out_datatype","out_isFactor","out_inMemory","out_ncell","config","rep"
+384.88,149.89,46.903,0.259,"FLT4S","TRUE","TRUE","1,809,162,810","mem_inRAM",1
+380.88,149.48,46.9,0.259,"FLT4S","TRUE","TRUE","1,809,162,810","mem_inRAM",2
+257.33,202.73,18.257,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","disk_todisk",1
+257.09,203.09,18.256,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","disk_todisk",2
+209.75,202.72,13.782,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","memmax_4GB",1
+209.05,202.3,13.78,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","memmax_4GB",2
+250.23,207.46,13.841,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","memmax_16GB",1
+249.68,206.71,13.84,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","memmax_16GB",2
+256.83,205.94,14.078,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","memmax_64GB",1
+254.74,203.73,14.079,0.766,"FLT4S","TRUE","FALSE","1,809,162,810","memmax_64GB",2

@@ -57,13 +57,11 @@ jobs:
           Ncpus: 2
           use-public-rspm: true
 
-      # Use setup-r-dependencies (the pattern in
-      # PredictiveEcology/actions/.github/workflows/R-CMD-check.yaml@main).
-      # It bootstraps pak's library serially via a resolve -> install lockfile
-      # before parallel installs begin. A raw `pak::pak()` call parallel-installs
-      # deps including R6 and itself uses R6 mid-install via
-      # zip::unzip_process, racing on R6.rdb. The two-phase action avoids that.
-      # `ropensci/NLMR` is needed by SpaDES.core Suggests;
+      # setup-r-dependencies bootstraps pak's library serially (resolve ->
+      # install via lockfile) before parallel installs begin. A raw
+      # `pak::pak()` call parallel-installs deps including R6 and itself uses
+      # R6 mid-install via zip::unzip_process, racing on R6.rdb. The two-phase
+      # action avoids that. `ropensci/NLMR` is needed by SpaDES.core Suggests;
       # `PredictiveEcology/Require@development` is the dev-version fix for
       # setLinuxBinaryRepo (drop once Require is on CRAN). `local::../X` paths
       # resolve relative to working-directory (the reproducible checkout).
@@ -82,9 +80,8 @@ jobs:
             any::knitr
             any::rmarkdown
 
-      # Fallback: same retry pattern as the reusable R-CMD-check workflow.
-      # Re-installs pak from stable and resolves all refs via pak::pak() up to
-      # 3 attempts.
+      # Fallback: same retry pattern as R-CMD-check.yaml. Re-installs pak from
+      # stable and resolves all refs via pak::pak() up to 3 attempts.
       - name: Install R deps (retry fallback)
         if: steps.deps.outcome == 'failure'
         uses: nick-fields/retry@v3
