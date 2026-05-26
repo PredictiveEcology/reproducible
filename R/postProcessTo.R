@@ -141,8 +141,7 @@
 #'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
 #'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
 #'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
-#'   `writeTo = `. If `reproducible.gdalwarp = TRUE`, then these will be passed to the
-#'   `gdal*` functions. See them for details.
+#'   `writeTo = `.
 #' @inheritParams Cache
 #'
 #' @details
@@ -248,43 +247,7 @@ postProcessTo <- function(from, to,
       }
     }
 
-    couldDoGDAL <- .isGridded(from) && .isVector(maskTo) && .isGridded(projectTo)
-    stillNeed <- TRUE
-
-    if (isTRUE(getOption("reproducible.gdalwarp", FALSE)) && couldDoGDAL) {
-      messagePreProcess("option(reproducible.gdalwarp = TRUE) is now defunct; passing to postProcessTo...")
-      # stillNeed <- FALSE
-      # #############################################################
-      # # project resample mask sequence ################################
-      # #############################################################
-      # messagePreProcess("using sf::gdal_utils('warp') because options(\"reproducible.gdalwarp\" = TRUE) ...", appendLF = TRUE, verbose = verbose)
-      # st <- Sys.time()
-      #
-      # withCallingHandlers(
-      #   tryCatch({
-      #     from <- gdalProject(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-      #     from <- gdalResample(fromRas = from, toRas = projectTo, verbose = verbose, ...)
-      #     if (.isGridded(maskTo)) { # won't be used at the moment because couldDoGDAL = FALSE for gridded
-      #       from <- maskTo(from = from, maskTo = maskTo, verbose = verbose, ...)
-      #     } else {
-      #       from <- gdalMask(fromRas = from, maskToVect = maskTo, writeTo = writeTo, verbose = verbose, ...)
-      #     }
-      #   }, error = function(e) {
-      #     stillNeed <<- TRUE
-      #     couldDoGDAL <<- FALSE
-      #     message("Attempted to use gdal* functions, but errors occured; trying without gdal*...")
-      #   }),
-      #   warning = function(w) {
-      #     if (any(grepl("transformer options does not support option NUM_THREADS", w$message)))
-      #       invokeRestart("muffleWarning")
-      #   })
-      #   # from <- setMinMax(from)
-
-    } # else {
-
-    if (stillNeed) {
-      if (couldDoGDAL)
-        message("Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm")
+    {
       #############################################################
       # crop project mask sequence ################################
       #############################################################
@@ -1604,16 +1567,14 @@ isGeomType <- function(geom, type) {
 #' `-dstnodata = NA`, and `-overwrite`.
 #'
 #' @details
-#' These three functions are used within `postProcessTo`, in the sequence:
-#' `gdalProject`, `gdalResample` and `gdalMask`, when `from` and `projectTo` are `SpatRaster` and
-#' `maskTo` is a `SpatVector`, but only if `options(reproducible.gdalwarp = TRUE)` is set.
-#'
-#' This sequence is a slightly different order than the sequence when `gdalwarp = FALSE` or
-#' the arguments do not match the above. This sequence was determined to be faster and
-#' more accurate than any other sequence, including running all three steps in one
-#' `gdalwarp` call (which `gdalwarp` can do). Using one-step `gdalwarp` resulted in
-#' very coarse pixelation when converting from a coarse resolution to fine resolution, which
-#' visually was inappropriate in test cases.
+#' These three functions were an alternative sequence
+#' (`gdalProject`, `gdalResample`, `gdalMask`) for the `from` + `projectTo`
+#' `SpatRaster` / `maskTo` `SpatVector` case in `postProcessTo`. The sequence
+#' was determined to be faster and more accurate than any other ordering,
+#' including running all three steps in one `gdalwarp` call (one-step
+#' `gdalwarp` resulted in very coarse pixelation when converting from a
+#' coarse resolution to fine resolution). They are retained for reference
+#' only; the live `postProcessTo` path no longer dispatches to them.
 #'
 #' @export
 #' @example inst/examples/example_postProcessTo.R

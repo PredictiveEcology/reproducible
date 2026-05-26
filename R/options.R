@@ -311,7 +311,6 @@ reproducibleOptions <- function() {
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.dryRun = FALSE,
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
-    reproducible.gdalwarp = FALSE,
     reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.destinationPathShared = NULL,
