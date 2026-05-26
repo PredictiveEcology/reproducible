@@ -46,10 +46,11 @@ if (isNamespaceLoaded("googledrive"))
   if ((!googledrive::drive_has_token())) {
     gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
     if (nzchar(gauthEnv)) {
-      if (file.exists(gauthEnv))
-        ## see helper-allEqual.R: tolerate revoked / rotated service-account keys
-        tryCatch(googledrive::drive_auth(path = gauthEnv),
-                 error = function(e) invisible(NULL))
+      ## drive_auth(path =) accepts a JSON file path OR the JSON contents
+      ## directly. On GHA the secret holds JSON; locally it's a path.
+      ## see helper-allEqual.R: tolerate revoked / rotated service-account keys
+      tryCatch(googledrive::drive_auth(path = gauthEnv),
+               error = function(e) invisible(NULL))
     }
   }
 
