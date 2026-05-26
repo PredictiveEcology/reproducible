@@ -188,16 +188,20 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
         }
         gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
         if (nzchar(gauthEnv)) {
-          if (file.exists(gauthEnv)) {
-            ## Service-account credentials can be revoked at Google's end
-            ## (key rotated, SA disabled, etc.). drive_auth() converts the
-            ## underlying HTTP 400 / invalid_grant into a generic "Can't get
-            ## Google credentials" abort, which turns every Drive-using test
-            ## into an ERROR instead of a SKIP. Swallow it so the
-            ## skip_if_no_token() below cleanly skips instead.
-            tryCatch(googledrive::drive_auth(path = gauthEnv),
-                     error = function(e) invisible(NULL))
-          }
+          ## drive_auth() -> gargle::credentials_service_account() accepts
+          ## either a JSON file path or the JSON contents themselves
+          ## (anything jsonlite::fromJSON accepts as `txt`), so pass the
+          ## env var through as-is. On GHA the secret holds JSON content;
+          ## locally it's typically a path.
+          ##
+          ## Service-account credentials can be revoked at Google's end
+          ## (key rotated, SA disabled, etc.). drive_auth() converts the
+          ## underlying HTTP 400 / invalid_grant into a generic "Can't get
+          ## Google credentials" abort, which turns every Drive-using test
+          ## into an ERROR instead of a SKIP. Swallow it so the
+          ## skip_if_no_token() below cleanly skips instead.
+          tryCatch(googledrive::drive_auth(path = gauthEnv),
+                   error = function(e) invisible(NULL))
         }
       }
 

@@ -214,13 +214,6 @@ postProcessTo <- function(from, to,
 
     messagePreProcess("Running `postProcessTo`", verbose = verbose, verboseLevel = 0)
     .message$IndentUpdate()
-    if (isTRUE(is.character(from))) {
-      fe <- fileExt(from)
-      if (fe %in% "shp") {
-        shpFilename <- gdalTransform(from, cropTo, projectTo, maskTo, writeTo)
-        return(shpFilename)
-      }
-    }
     fromOrig <- from # may need it later
     # Capture source datatype + factor flag while `from` may still be file-backed.
     # These are the only cheap, reliable signals (terra::datatype() reads GDAL
@@ -1944,115 +1937,6 @@ keepOrigGeom <- function(newObj, origObj) {
     }
   }
   newObj
-}
-
-detectThreads <- function(threads = getOption("reproducible.gdalwarpThreads", 2)) {
-  isNotNumThreads <- !is.numeric(threads)
-  lenNumThreadsNot1 <- length(threads) > 1
-  isNAThreads <- all(is.na(threads))
-  isNULLThreads <- is.null(threads)
-  if (isNULLThreads) {
-    threads <- 1L
-  } else {
-    if (isNotNumThreads || isNAThreads || lenNumThreadsNot1) {
-      if (isNotNumThreads)
-        threads <- 2L
-      if (lenNumThreadsNot1)
-        threads <- threads[1]
-      if (isNAThreads)
-        threads <- 1L
-    } else {
-      if (threads < 1) {
-        threads <- 1L
-      } else {
-        .requireNamespace("parallel", stopOnFALSE = TRUE)
-        detCors <- parallel::detectCores()
-        if (threads > detCors)
-          threads <- detCors - 1
-      }
-    }
-  }
-
-  threads
-}
-
-addDataType <- function(opts, fromRas, ...) {
-  hasDatatype <- which(...names() %in% "datatype")
-  datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else {
-    assessDataType(fromRas, type = "GDAL")
-  }
-  if (!is.null(datatype)) {
-    datatype <- switchDataTypes(datatype, type = "GDAL")
-    opts <- c(opts, "-ot", datatype)
-  }
-  opts <- unname(opts)
-  opts
-}
-
-gdalTransform <- function(from, cropTo, projectTo, maskTo, writeTo, verbose) {
-  messagePreProcess("running gdalTransform ...", appendLF = FALSE, verbose = verbose)
-  st <- Sys.time()
-  tf4 <- tempfile(fileext = ".prj")
-  on.exit(unlink(tf4), add = TRUE)
-  wkt1 <- sf::st_crs(projectTo)$wkt
-  cat(wkt1, file = tf4)
-  tf <- tempfile(fileext = ".shp")
-  tf2 <- tempfile(fileext = ".shp")
-  # tf3 <- tempfile(fileext = ".shp")
-  if (!sf::st_crs(projectTo) == sf::st_crs(maskTo)) {
-    stop("maskTo and projectTo must have the same crs")
-  }
-  # prjFile <- dir(dirname(from), pattern = paste0(basename(tools::file_path_sans_ext(from)), ".prj"), full.names = TRUE)
-  # maskToInFromCRS <- terra::project(maskTo, prjFile)
-  # terra::writeVector(maskToInFromCRS, filename = tf3, overwrite = TRUE)
-  # system.time(sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
-  #                        destination = tf2, options =
-  #                          c(# "-t_srs", tf4,
-  #                            "-clipdst", tf3, "-overwrite"
-  #                          )))
-  # system.time(gdal_utils(util = "vectortranslate",
-  #                        source = tf2,
-  #                        destination = tf,
-  #                        options =
-  #                          c("-t_srs", tf4,
-  #                            # "-clipdst", tf2,
-  #                            "-overwrite"
-  #                          )))
-  #
-  terra::writeVector(maskTo, filename = tf2)
-  # system.time(
-    sf::gdal_utils(util = "vectortranslate", source = "C:/Eliot/GitHub/Edehzhie/modules/fireSense_dataPrepFit/data/NFDB_poly_20210707.shp",
-                             destination = tf, options =
-                               c("-t_srs", tf4,
-                                 "-clipdst", tf2, "-overwrite"
-                               ))# )
-  messagePreProcess(messagePrefixDoneIn,
-                    format(difftime(Sys.time(), st), units = "secs", digits = 3),
-                    verbose = verbose)
-  tf
-}
-
-updateDstNoData <- function(opts, fromRas) {
-  hasDashOT <- which(opts %in% "-ot")
-  valForNoData <- MaxVals[[switchDataTypes(opts[hasDashOT + 1], "writeRaster")]]
-  hasMM <- terra::hasMinMax(fromRas)
-  if (!isTRUE(all(hasMM)))
-    fromRas <- terra::setMinMax(fromRas)
-  minmaxRas <- terra::minmax(fromRas)
-  if (any(minmaxRas[2, ] >= valForNoData)) {
-    valForNoData <- MinVals[[switchDataTypes(opts[hasDashOT + 1], "writeRaster")]]
-    if (any(minmaxRas[1, ] <= valForNoData))
-      valForNoData <- NA
-  }
-  valForNoData <- as.character(valForNoData)
-  valForNoData
-  hasDstNoData <- which(opts %in% "-dstnodata")
-  va <- try(valForNoData)
-  if (length(va) == 0) browser()
-  if (is(va, "try-error")) browser()
-
-  opts[hasDstNoData + 1] <- va
-  opts
 }
 
 addDotArgsInner <- function(ll, fun, class, ...) {

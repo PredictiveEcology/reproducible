@@ -99,13 +99,6 @@ setMethod(
       )
     } else if (is(object, "proto")) { # don't want to import class for reproducible package; an edge case
       out <- get(class(object)[1])(object)
-    } else if (inherits(object, "SQLiteConnection")) {
-      con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-      messageCache("Making a copy of the entire SQLite database: ", object@dbname,
-                   "; this may not be desireable ...",
-                   verbose = verbose
-      )
-      out <- RSQLite::sqliteCopyDatabase(object, con)
     } else if (!identical(is(object)[1], "environment") && is.environment(object)) {
       # keep this environment method here, as it will intercept "proto"
       #   and other environments that it shouldn't

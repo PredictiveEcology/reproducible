@@ -1,6 +1,5 @@
 test_that("test Cache(useCloud=TRUE, ...)", {
   skip_on_cran()
-  skip_on_ci()
 
   testInit(
     c("googledrive", "terra"),
@@ -145,7 +144,6 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd", {
   skip_on_cran()
-  skip_on_ci()
   testInit(c("googledrive", "terra"),
     needGoogleDriveAuth = TRUE,
     opts = list(reproducible.ask = FALSE)
@@ -188,7 +186,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
   skip_on_cran()
-  skip_on_ci()
   testInit(c("googledrive", "terra"),
     needGoogleDriveAuth = TRUE,
     opts = list(reproducible.ask = FALSE)
@@ -212,7 +209,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
 
 test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   skip_on_cran()
-  skip_on_ci()
   testInit(c("googledrive", "terra"),
     needGoogleDriveAuth = TRUE,
     opts = list(reproducible.ask = FALSE)
@@ -236,7 +232,6 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
 
 test_that("prepInputs works with team drives", {
   skip_on_cran()
-  skip_on_ci()
 
   testInit(needGoogleDriveAuth = TRUE, "googledrive")
   withr::local_options(

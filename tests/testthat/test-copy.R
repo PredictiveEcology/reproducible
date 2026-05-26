@@ -102,3 +102,35 @@ test_that("test Copy", {
   # The hardlink is not affected by "overwrite = TRUE" -- it is not by filename, but by file location
   expect_true(all(ras2[] == 1))
 })
+
+test_that("Copy on data.frame is a pass-through", {
+  df <- data.frame(x = 1:3, y = letters[1:3])
+  out <- Copy(df)
+  expect_identical(out, df)
+})
+
+test_that("Copy on SpatRaster without filebackedDir keeps file in original dir", {
+  skip_if_not_installed("terra")
+  testInit("terra", tmpFileExt = ".tif")
+
+  ras <- terra::rast(terra::ext(0, 10, 0, 10), vals = 1)
+  ras <- suppressWarningsSpecific(
+    falseWarnings = proj6Warn,
+    writeRaster(ras, filename = tmpfile, overwrite = TRUE)
+  )
+  # No filebackedDir -> hits the nextNumericName branch and copies the
+  # backing file alongside the original (numerically-suffixed).
+  ras2 <- Copy(ras)
+  expect_true(all.equal(values2(ras), values2(ras2)))
+  expect_false(Filenames(ras2) == Filenames(ras))
+  expect_identical(dirname(Filenames(ras2)), dirname(Filenames(ras)))
+})
+
+test_that("Copy on a DBIConnection emits a no-deep-copy message", {
+  skip_if_not_installed("RSQLite")
+  skip_if_not_installed("DBI")
+  con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  expect_message(out <- Copy(con, verbose = 1), "deep copy of a DBI")
+  expect_identical(out, con)
+})
