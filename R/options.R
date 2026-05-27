@@ -134,6 +134,23 @@
 #'     however, if the user has set the `terraOptions` away from its default of `0.5`. The default
 #'     increases predictability of whether the returned object is on disk or in memory.
 #'   }
+#'   \item{`terraMemmax`}{
+#'     Default: `2` (gigabytes). Used in [postProcessTo()].
+#'     Caps `terra`'s per-raster memory budget for the duration of a `postProcessTo()`
+#'     call by temporarily setting `terraOptions(memmax = ...)`, restored via
+#'     `on.exit()`. Small values force `terra` to process in chunks, which on
+#'     high-RAM machines is substantially faster than letting it pull whole
+#'     rasters into RAM (in benchmarks on a 1TB-RAM machine, `memmax = 4` was
+#'     ~45% faster and used ~3x less peak RSS than the unbounded default; the
+#'     2GB default is conservative for shared nodes). Set to `NULL` to disable
+#'     and let `terra` choose. **Respects user-set values**: if the caller has
+#'     already set `terraOptions(memmax = ...)` to a positive finite value,
+#'     `postProcessTo()` leaves it alone -- the option only applies when
+#'     `terra`'s `memmax` is at its default ("ignored": `NA`, `NULL`, or `<= 0`;
+#'     terra's out-of-the-box default is `-1`). See also `memfrac` in
+#'     [terra::terraOptions()]; a `memfrac` ceiling of `0.1` is sensible on
+#'     shared machines.
+#'   }
 #'   \item{`memoisePersist`}{
 #'     Default: `FALSE`. Used in [Cache()].
 #'     Should the memoised copy of the Cache objects persist even if `reproducible` reloads
@@ -319,6 +336,8 @@ reproducibleOptions <- function() {
     reproducible.inputPathsRecursive = FALSE, # deprecated alias for reproducible.destinationPathSharedRecursive
     reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
+    reproducible.terraMemmax = 2, # GB; chunked path is faster on high-RAM machines
+
     reproducible.memoisePersist = FALSE,
     reproducible.messageColourPrepInputs = "cyan",
     reproducible.messageColourCache = "blue",
