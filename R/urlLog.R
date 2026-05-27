@@ -1,6 +1,16 @@
 ## URL access logging for prepInputs / preProcess.
 ##
-## The option `reproducible.urlLog` has three modes:
+## **Backend limitation:** URL logging is currently only implemented for the
+## non-DBI cache backend (`useDBI() == FALSE`). When `useDBI()` is TRUE, the
+## per-Cache hook short-circuits regardless of the `reproducible.urlLog`
+## option -- no in-memory record is appended and no reproducible.url* tags
+## are written to the SQLite cache table. This sidesteps a stall (250x
+## retry loop in .createCache) that the tag-write path can trigger when
+## useDBI is toggled with existing cached objects. To enable URL logging,
+## use the rds-backed cache (`useDBI(FALSE)`).
+##
+## The option `reproducible.urlLog` has three modes (active only when
+## useDBI() is FALSE):
 ##   FALSE              -> fully off (kill switch).
 ##   NULL (default)     -> "tags only": prepInputs/preProcess accesses that
 ##                         flow through Cache() tag the cacheId in the cache DB
@@ -66,6 +76,14 @@
 #' modes; `clearUrlLog()` empties them. Records written to an environment or
 #' function sink live there instead and are not retrievable through these
 #' accessors. Set the option to `FALSE` to disable logging entirely.
+#'
+#' @section Backend limitation:
+#' URL logging is only implemented for the non-DBI cache backend
+#' (`useDBI() == FALSE`). When `useDBI()` is `TRUE`, the per-Cache logging
+#' hook short-circuits regardless of `reproducible.urlLog`: no in-memory
+#' records are appended and no `reproducible.url*` tags are written to the
+#' SQLite cache table. To collect URL access logs, switch the cache to the
+#' rds-backed multi-file backend via `useDBI(FALSE)`.
 #'
 #' @return `prepInputsLog()` returns a list of record lists. `clearUrlLog()`
 #'   returns `NULL` invisibly.
@@ -351,7 +369,13 @@ clearUrlLog <- function() {
 .maybeRecordUrlForCache <- function(callList, keyFull, cachePaths, drv, conn,
                                     isHit, .callingEnv = parent.frame(),
                                     urlFrameId = NULL) {
-  if (.urlLogOff()) return(invisible())
+  ## useDBI() short-circuit: the cache-tag write path is not yet wired up for
+  ## the DBI backend, and forcing it through there triggers a 250-retry stall
+  ## in .createCache when DBI state is being re-initialised (e.g. after a
+  ## useDBI(FALSE) -> useDBI(TRUE) toggle with existing cached objects).
+  ## See the file header for the limitation; documented in ?prepInputsLog.
+  if (.urlLogOff() || useDBI()) return(invisible())
+
 
   cacheId <- keyFull$key
   cachePath <- if (length(cachePaths)) cachePaths[[1]] else

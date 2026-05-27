@@ -21,3 +21,13 @@ modes; \code{clearUrlLog()} empties them. Records written to an environment or
 function sink live there instead and are not retrievable through these
 accessors. Set the option to \code{FALSE} to disable logging entirely.
 }
+\section{Backend limitation}{
+
+URL logging is only implemented for the non-DBI cache backend
+(\code{useDBI() == FALSE}). When \code{useDBI()} is \code{TRUE}, the per-Cache logging
+hook short-circuits regardless of \code{reproducible.urlLog}: no in-memory
+records are appended and no \verb{reproducible.url*} tags are written to the
+SQLite cache table. To collect URL access logs, switch the cache to the
+rds-backed multi-file backend via \code{useDBI(FALSE)}.
+}
+

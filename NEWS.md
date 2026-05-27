@@ -50,6 +50,18 @@
   `content-length` header). The size comparison now treats a missing remote
   size as "unknown" and falls through to the normal hash/download path.
 
+* `Cache()` no longer stalls for several minutes when called repeatedly
+  across `useDBI(FALSE)` and `useDBI(TRUE)` toggles. The URL-logging hook
+  (`.maybeRecordUrlForCache`) was triggering a 250-retry loop in
+  `.createCache` (totalling about 7-8 minutes per stalled call) when DBI
+  state was being re-initialised. URL logging is now short-circuited when
+  `useDBI()` is `TRUE`, eliminating the stall. As a consequence,
+  `prepInputs` / `preProcess` URL access logs (`prepInputsLog()` and the
+  `reproducible.url*` cache tags) are only recorded when `useDBI()` is
+  `FALSE`; this is documented under `?prepInputsLog` and in
+  `R/urlLog.R`. Implementing URL logging for the DBI backend is left for
+  a follow-up.
+
 # reproducible 3.1.1
 
 ## bug fixes
