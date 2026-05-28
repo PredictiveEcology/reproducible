@@ -9,45 +9,70 @@ checkNameHasGeom <- function(existingObj) {
 }
 
 extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj, verbose = TRUE) {
-  wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
-  if (isTRUE(all(wh %in% FALSE)) && isTRUE(bufferOK)) {
-    diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
-      round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
-    buff <- diffs * 0.025
-    meanBuff <- mean(buff)
-    meanBuffKm <- round(meanBuff/1e3, 1)
-    message("domain is not within existing object; trying a 2.5% (", meanBuffKm, "km) buffer")
-    existingObjSF_wider <- sf::st_buffer(existingObjSF, dist = meanBuff)
-    wh <- sf::st_within(domain, existingObjSF_wider, sparse = FALSE)
-  }
-  wh1 <- apply(wh, 1, any)
-  wh2 <- apply(wh, 2, any) # This is "are the several domains inside the several existingObjSF"
-  # length of existingObjSF
-  domainExisted <- all(wh1)
-  if (domainExisted) {
-
-    # THIS IS "PULL OUT INDIVIDUAL SF POLYGON FROM THE MANY"
-    if (isTRUE(verbose)) {
-      if (isTRUE(bufferOK)) # the message will be previously given
-        message("domain is within the buffered object; returning the existing parameters")
-      else
-        message(.message$cacheGeoDomainContained)
+  # domainOrig <- domain
+  # 2 ways to do this ... the one with st_within is the original, but only works for 1 ELF
+  if (TRUE) {
+    # new way --> allows for >1 ELF
+    wh <- sf::st_intersects(domain, existingObjSF, sparse = FALSE)
+    if (any(wh)) {
+      existingObjSF <- existingObjSF[wh,]
+      existingObj <- existingObj[wh,]
     }
-    existingObj <- existingObj[wh2, ]
-    existingObjSF <- existingObjSF[wh2, ]
+    if (bufferOK) {
+      bufferRes <- bufferIncremental(existingObjSF, domain)
+      if(NROW(bufferRes$dif)) { # there was some area that was not covered by the ELFs
+        wh1 <- NULL
+      } else {
+        wh1 <- as.vector(wh)
+        existingObjSF <- bufferRes$existingObjSF 
+      }
+      domainExisted <- !is.null(wh1)
+      
+    }
+  } else {
+    wh <- sf::st_within(domain, existingObjSF, sparse = FALSE)
+    dif <- character()
+    
+    if ( (isTRUE(all(wh %in% FALSE)) || NROW(dif)) && isTRUE(bufferOK)) {
+      diffs <- mapply(minmax = list(c("xmin", "xmax"), c("ymin", "ymax")), function(minmax)
+        round(abs(diff(sf::st_bbox(existingObjSF)[minmax])), 0))
+      buff <- diffs * 0.025
+      meanBuff <- mean(buff)
+      meanBuffKm <- round(meanBuff/1e3, 1)
+      message("domain is not within existing object; trying a 2.5% (", meanBuffKm, "km) buffer")
+      existingObjSF_wider <- sf::st_as_sf(terra::aggregate(terra::vect(sf::st_buffer(existingObjSF, dist = meanBuff))))
+      wh <- sf::st_within(domain, existingObjSF_wider, sparse = FALSE)
+    }
+    wh1 <- apply(wh, 1, any)
+    wh2 <- apply(wh, 2, any) # This is "are the several domains inside the several existingObjSF"
+    # length of existingObjSF
+    domainExisted <- all(wh1)
+    if (domainExisted) {
+      
+      # THIS IS "PULL OUT INDIVIDUAL SF POLYGON FROM THE MANY"
+      if (isTRUE(verbose)) {
+        if (isTRUE(bufferOK)) # the message will be previously given
+          message("domain is within the buffered object; returning the existing parameters")
+        else
+          message(.message$cacheGeoDomainContained)
+      }
+      existingObj <- existingObj[wh2, ]
+      existingObjSF <- existingObjSF[wh2, ]
+    }
   }
   if (all(wh1 %in% FALSE)) {
     existingObj <- NULL
     existingObjSF <- NULL
   }
-  list(existingObj = existingObj, existingObjSF = existingObjSF, domainExisted = domainExisted)
+  list(existingObj = existingObj, existingObjSF = existingObjSF, 
+       domainExisted = domainExisted)
 }
 
 
-#  from https://github.com/zhukovyuri/SUNGEO/blob/master/R/update_bbox.R
-update_bbox <- function(sfobj){
-  # Manually calculate bounds from coordinates
-  new_bb <- data.table::as.data.table(sf::st_coordinates(sfobj))[,c(min(X),min(Y),max(X),max(Y))]
+  #  from https://github.com/zhukovyuri/SUNGEO/blob/master/R/update_bbox.R
+  update_bbox <- function(sfobj){
+    # Manually calculate bounds from coordinates
+    new_bb <- data.table::as.data.table(sf::st_coordinates(sfobj))[,c(min(X),min(Y),max(X),max(Y))]
   # Rename columns
   names(new_bb) <- c("xmin", "ymin", "xmax", "ymax")
   # Change object class
@@ -458,3 +483,16 @@ CacheGeo <- function(targetFile = NULL,
   existingObjSF
 }
 
+
+bufferIncremental <- function(existingObjSF, domain) {
+  for (i in 1:2) {
+    eosf <- sf::st_as_sf(terra::fillHoles(terra::aggregate(terra::vect(existingObjSF))))
+    dif <- sf::st_difference(domain, eosf)
+    if (NROW(dif)) {
+      existingObjSF <- sf::st_buffer(existingObjSF, dist = 10000)
+    } else {
+      break
+    }
+  }
+  list(existingObjSF = existingObjSF, dif = dif)
+}
