@@ -69,16 +69,14 @@ set, notably, \code{-r} to \code{method} (in the ...), \code{-t_srs} to the crs 
 \code{-te} to the extent of the \code{toRas}, \code{-te_srs} to the \code{crs} of the \code{toRas},
 \code{-dstnodata = NA}, and \code{-overwrite}.
 
-These three functions are used within \code{postProcessTo}, in the sequence:
-\code{gdalProject}, \code{gdalResample} and \code{gdalMask}, when \code{from} and \code{projectTo} are \code{SpatRaster} and
-\code{maskTo} is a \code{SpatVector}, but only if \code{options(reproducible.gdalwarp = TRUE)} is set.
-
-This sequence is a slightly different order than the sequence when \code{gdalwarp = FALSE} or
-the arguments do not match the above. This sequence was determined to be faster and
-more accurate than any other sequence, including running all three steps in one
-\code{gdalwarp} call (which \code{gdalwarp} can do). Using one-step \code{gdalwarp} resulted in
-very coarse pixelation when converting from a coarse resolution to fine resolution, which
-visually was inappropriate in test cases.
+These three functions were an alternative sequence
+(\code{gdalProject}, \code{gdalResample}, \code{gdalMask}) for the \code{from} + \code{projectTo}
+\code{SpatRaster} / \code{maskTo} \code{SpatVector} case in \code{postProcessTo}. The sequence
+was determined to be faster and more accurate than any other ordering,
+including running all three steps in one \code{gdalwarp} call (one-step
+\code{gdalwarp} resulted in very coarse pixelation when converting from a
+coarse resolution to fine resolution). They are retained for reference
+only; the live \code{postProcessTo} path no longer dispatches to them.
 }
 \examples{
 if (require("terra", quietly = TRUE)) {

@@ -22,6 +22,15 @@
   times larger and lose the link to the category labels). Anything you
   pass for `method` or `datatype` is respected as before.
 
+* `options("reproducible.gdalwarp")` is removed. The option was a switch
+  for an experimental alternative dispatch in `postProcessTo()` that used
+  `sf::gdal_utils("gdalwarp")` directly. The branch behind the switch had
+  been fully commented out for some time; the live code path was the same
+  whether the option was `TRUE` or `FALSE`. Any existing
+  `options(reproducible.gdalwarp = ...)` calls in user code are now
+  silently ignored and can be deleted. `options("reproducible.gdalwarpThreads")`
+  (the unrelated thread-count knob for `detectThreads()`) is unaffected.
+
 * `options("reproducible.cachePath")` is no longer pre-set to a
   session-tempdir path when the package is loaded; the default is now
   `NULL`. The first call to a user-facing entry point (`Cache()`,
