@@ -351,6 +351,7 @@ clearUrlLog <- function() {
 .maybeRecordUrlForCache <- function(callList, keyFull, cachePaths, drv, conn,
                                     isHit, .callingEnv = parent.frame(),
                                     urlFrameId = NULL) {
+  if (useDBI()) return(invisible())
   if (.urlLogOff()) return(invisible())
 
   cacheId <- keyFull$key
