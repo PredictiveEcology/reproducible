@@ -303,9 +303,9 @@ test_that("dlGeneric applies the remap hook before downloading (generic url)", {
 
 test_that("parallel ranged download is byte-identical to single-stream (network)", {
   skip_on_cran()
-  skip_if_offline()
-  skip_if_not_installed("curl")
+  skip_if_not_installed("curl") # before skip_if_offline(): it requires curl
   skip_if_not_installed("httr2")
+  skip_if_offline()
 
   url <- paste0(
     "https://object-arbutus.cloud.computecanada.ca/predictiveecology/",
