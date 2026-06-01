@@ -208,6 +208,18 @@
 #'     will be wrapped around the download so that it will timeout (and error) after this many
 #'     seconds.
 #'   }
+#'   \item{`urlLog`}{
+#'     Default: `NULL`. Controls whether `prepInputs()` / `preProcess()` keep a
+#'     record of the files and web addresses (URLs) they download. `NULL` (the
+#'     default) records each download as a permanent tag on the matching cache
+#'     entry, which you can look up later with
+#'     `showCache(userTags = "reproducible.url")`; it keeps no in-session list.
+#'     `TRUE` additionally keeps an in-memory list for the current session, which
+#'     you can read with [prepInputsLog()] and empty with [clearUrlLog()].
+#'     `FALSE` turns the recording off completely. Advanced: you may instead
+#'     supply an environment (records are appended to `env$records`, which you
+#'     own and manage) or a function (called once with each record).
+#'   }
 #'   \item{`useCache`}{
 #'     Default: `TRUE`. Used in [Cache()]. If `FALSE`, then the entire
 #'     `Cache` machinery is skipped and the functions are run as if there was no Cache occurring.

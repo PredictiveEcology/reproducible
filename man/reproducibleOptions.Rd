@@ -143,6 +143,23 @@ cues (largely based on \code{memfrac}, \code{maxmem} \code{terraOptions}). This 
 however, if the user has set the \code{terraOptions} away from its default of \code{0.5}. The default
 increases predictability of whether the returned object is on disk or in memory.
 }
+\item{\code{terraMemmax}}{
+Default: \code{2} (gigabytes). Used in \code{\link[=postProcessTo]{postProcessTo()}}.
+Caps \code{terra}'s per-raster memory budget for the duration of a \code{postProcessTo()}
+call by temporarily setting \code{terraOptions(memmax = ...)}, restored via
+\code{on.exit()}. Small values force \code{terra} to process in chunks, which on
+high-RAM machines is substantially faster than letting it pull whole
+rasters into RAM (in benchmarks on a 1TB-RAM machine, \code{memmax = 4} was
+~45\% faster and used ~3x less peak RSS than the unbounded default; the
+2GB default is conservative for shared nodes). Set to \code{NULL} to disable
+and let \code{terra} choose. \strong{Respects user-set values}: if the caller has
+already set \code{terraOptions(memmax = ...)} to a positive finite value,
+\code{postProcessTo()} leaves it alone -- the option only applies when
+\code{terra}'s \code{memmax} is at its default ("ignored": \code{NA}, \code{NULL}, or \verb{<= 0};
+terra's out-of-the-box default is \code{-1}). See also \code{memfrac} in
+\code{\link[terra:terraOptions]{terra::terraOptions()}}; a \code{memfrac} ceiling of \code{0.1} is sensible on
+shared machines.
+}
 \item{\code{memoisePersist}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}.
 Should the memoised copy of the Cache objects persist even if \code{reproducible} reloads
@@ -199,6 +216,18 @@ Default \code{12000}. Used in \code{preProcess} when downloading occurs. If a us
 package installed, \code{R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))}
 will be wrapped around the download so that it will timeout (and error) after this many
 seconds.
+}
+\item{\code{urlLog}}{
+Default: \code{NULL}. Controls whether \code{prepInputs()} / \code{preProcess()} keep a
+record of the files and web addresses (URLs) they download. \code{NULL} (the
+default) records each download as a permanent tag on the matching cache
+entry, which you can look up later with
+\code{showCache(userTags = "reproducible.url")}; it keeps no in-session list.
+\code{TRUE} additionally keeps an in-memory list for the current session, which
+you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}.
+\code{FALSE} turns the recording off completely. Advanced: you may instead
+supply an environment (records are appended to \code{env$records}, which you
+own and manage) or a function (called once with each record).
 }
 \item{\code{useCache}}{
 Default: \code{TRUE}. Used in \code{\link[=Cache]{Cache()}}. If \code{FALSE}, then the entire
