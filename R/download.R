@@ -865,6 +865,33 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   out
 }
 
+#' Format a duration in seconds as a compact human-readable string
+#'
+#' Internal helper for download progress reporting: `90` -> `"1m30s"`,
+#' `3725` -> `"1h02m05s"`, `5` -> `"5s"`. A non-finite or negative input
+#' (e.g. an ETA before there is any signal) returns `"--"`.
+#'
+#' @param secs Numeric, seconds.
+#' @return A length-one character string.
+#' @keywords internal
+#' @rdname dot-formatDuration
+.formatDuration <- function(secs) {
+  if (length(secs) != 1L || !is.finite(secs) || secs < 0) {
+    return("--")
+  }
+  secs <- round(secs)
+  h <- secs %/% 3600L
+  m <- (secs %% 3600L) %/% 60L
+  s <- secs %% 60L
+  if (h > 0L) {
+    sprintf("%dh%02dm%02ds", h, m, s)
+  } else if (m > 0L) {
+    sprintf("%dm%02ds", m, s)
+  } else {
+    sprintf("%ds", s)
+  }
+}
+
 #' Download a file in parallel using HTTP Range requests
 #'
 #' Internal helper for the opt-in parallel download path (Feature A). Splits
@@ -941,11 +968,17 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     # the on-disk part files against the known total -- same `\r` style as the
     # Google Drive future-download loop.
     totOS <- structure(size, class = "object_size")
+    startTime <- Sys.time()
     repeat {
       st <- curl::multi_run(timeout = 0.5, poll = FALSE, pool = pool)
-      doneOS <- structure(sum(file.size(partFiles), na.rm = TRUE), class = "object_size")
-      cat(sprintf("\r  %s of %s via %d parallel ranged streams        ",
-                  format(doneOS, units = "auto"), format(totOS, units = "auto"), nParts))
+      done <- sum(file.size(partFiles), na.rm = TRUE)
+      doneOS <- structure(done, class = "object_size")
+      elapsed <- as.numeric(difftime(Sys.time(), startTime, units = "secs"))
+      # ETA from the average rate so far (bytes/sec); blank until there is signal
+      eta <- if (done > 0 && elapsed > 0) elapsed * (size - done) / done else NA_real_
+      cat(sprintf("\r  %s of %s via %d parallel ranged streams | elapsed time: %s | estimated time left: %s        ",
+                  format(doneOS, units = "auto"), format(totOS, units = "auto"), nParts,
+                  .formatDuration(elapsed), .formatDuration(eta)))
       utils::flush.console()
       if (st$pending == 0) break
     }
