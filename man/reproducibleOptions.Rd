@@ -143,6 +143,23 @@ cues (largely based on \code{memfrac}, \code{maxmem} \code{terraOptions}). This 
 however, if the user has set the \code{terraOptions} away from its default of \code{0.5}. The default
 increases predictability of whether the returned object is on disk or in memory.
 }
+\item{\code{terraMemmax}}{
+Default: \code{2} (gigabytes). Used in \code{\link[=postProcessTo]{postProcessTo()}}.
+Caps \code{terra}'s per-raster memory budget for the duration of a \code{postProcessTo()}
+call by temporarily setting \code{terraOptions(memmax = ...)}, restored via
+\code{on.exit()}. Small values force \code{terra} to process in chunks, which on
+high-RAM machines is substantially faster than letting it pull whole
+rasters into RAM (in benchmarks on a 1TB-RAM machine, \code{memmax = 4} was
+~45\% faster and used ~3x less peak RSS than the unbounded default; the
+2GB default is conservative for shared nodes). Set to \code{NULL} to disable
+and let \code{terra} choose. \strong{Respects user-set values}: if the caller has
+already set \code{terraOptions(memmax = ...)} to a positive finite value,
+\code{postProcessTo()} leaves it alone -- the option only applies when
+\code{terra}'s \code{memmax} is at its default ("ignored": \code{NA}, \code{NULL}, or \verb{<= 0};
+terra's out-of-the-box default is \code{-1}). See also \code{memfrac} in
+\code{\link[terra:terraOptions]{terra::terraOptions()}}; a \code{memfrac} ceiling of \code{0.1} is sensible on
+shared machines.
+}
 \item{\code{memoisePersist}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}.
 Should the memoised copy of the Cache objects persist even if \code{reproducible} reloads
@@ -162,6 +179,28 @@ faster, depending on the objects.
 \item{\code{overwrite}}{
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}}, \code{\link[=preProcess]{preProcess()}},
 \code{\link[=downloadFile]{downloadFile()}}, and \code{\link[=postProcess]{postProcess()}}.
+}
+\item{\code{parallel.streams}}{
+Default: \code{48L}. The number of concurrent HTTP Range requests to use when
+downloading a single large file over HTTPS. \strong{This has no effect unless
+you have opted in by setting \code{reproducible.urlRemap}} (see below): if no
+remap is set, downloads are always single-stream, regardless of this
+value. Once opted in, a download that gets redirected to a Range-capable
+mirror is fetched in parallel using this many streams — but only when the
+server advertises \code{Accept-Ranges: bytes} and the file is larger than
+\code{reproducible.parallel.threshold}; otherwise, and on any failure, it
+falls back transparently to a single stream. Especially useful on
+networks that shape bandwidth per-connection (a per-flow cap times 48
+streams). Set to \code{1L} to force single-stream downloads even when a remap
+is set. Requires the \pkg{curl} and \pkg{httr2} packages. The assembled
+file is byte-identical to a single-stream download, so checksums are
+unaffected.
+}
+\item{\code{parallel.threshold}}{
+Default: \code{10 * 1024^2} (10 MiB), in bytes. Files at or below this size are
+always downloaded single-stream; only files larger than this use the
+parallel ranged path. Like \code{reproducible.parallel.streams}, this has no
+effect unless you have opted in via \code{reproducible.urlRemap}.
 }
 \item{\code{quick}}{
 Default: \code{FALSE}. Used in \code{\link[=Cache]{Cache()}}. This will cause \code{Cache} to use
@@ -219,6 +258,20 @@ If there is ambiguity in the \code{userTags}, i.e., they do not uniquely identif
 entry in the \code{cachePath}, then this option will default back to the non-dev-mode
 behaviour to avoid deleting objects.
 This, therefore, is most useful if the user is using unique values for \code{userTags}.
+}
+\item{\code{urlRemap}}{
+Default: \code{NULL} (feature off). \strong{This is the opt-in switch for the faster
+download path.} Set it to a function \verb{function(url, filename)} — most
+easily built from a manifest \code{data.frame} via \code{\link[=makeUrlRemap]{makeUrlRemap()}} — and it is
+consulted in the download path once the target \code{filename} has been
+resolved (for Google Drive URLs, after the \code{drive_get()} lookup). The
+function may return an alternative URL to download from instead, e.g. a
+public mirror that supports HTTP Range requests (which then triggers the
+parallel ranged download governed by \code{reproducible.parallel.streams} and
+\code{reproducible.parallel.threshold}); returning \code{NULL} or the original URL
+keeps the behaviour unchanged. A function that errors is ignored (with a
+warning) so a broken remap cannot break a download. With the default
+\code{NULL}, no remapping occurs and downloads behave exactly as before.
 }
 \item{\code{reproducible.useCacheV3}}{
 Default: \code{TRUE}. If this is set to \code{FALSE}, it will use the old \code{Cache} source

@@ -2,6 +2,38 @@
 
 * development version.
 
+## new features
+
+* Downloads can now be transparently redirected to faster mirrors and
+  fetched in parallel. Two cooperating, opt-in features:
+  * **URL remap hook** — a new option `reproducible.urlRemap` accepts a
+    function `function(url, filename)` that is consulted in the download
+    path once the target filename is resolved (for Google Drive URLs,
+    after the `drive_get()` lookup). It may return an alternative URL to
+    download from instead — typically a public mirror that supports HTTP
+    Range requests. Returning `NULL`/the original URL leaves behaviour
+    unchanged, and a remap that errors is ignored (with a warning) so it
+    can never break a download. A new exported helper
+    `makeUrlRemap(manifest)` builds such a function from a `data.frame`
+    with `filename` and `url` columns (matching on basename). This is the
+    opt-in switch for the faster download path; with the default `NULL`,
+    nothing changes.
+  * **Parallel ranged downloads** — once opted in via
+    `reproducible.urlRemap` (with no remap set, downloads are always
+    single-stream), a download that resolves to an HTTPS URL advertising
+    `Accept-Ranges: bytes` and larger than
+    `reproducible.parallel.threshold` (default 10 MiB) is fetched as
+    `reproducible.parallel.streams` (default `48L`) concurrent byte-range
+    requests via `curl`, then reassembled. The result is
+    byte-identical to a single-stream download, so checksums are
+    unaffected, and it falls back transparently to a single stream on any
+    failure or when ranges are unsupported. Set
+    `reproducible.parallel.streams = 1L` to force single-stream downloads.
+    On networks that shape bandwidth per-connection this is dramatically
+    faster: in one test a 6.1 GB file dropped from ~75 minutes
+    (single-stream) to ~2 minutes (48 streams from a Range-capable
+    mirror).
+
 ## behaviour changes
 
 * `postProcessTo()` is now faster and uses less memory on large rasters.

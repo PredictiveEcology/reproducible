@@ -366,7 +366,23 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   )
 
   destFile <- file.path(destinationPath, basename2(downloadFilename))
+
+  # Feature B: now that the Drive filename is resolved, consult the user remap
+  # hook. If it returns an alternative (public HTTPS) URL, fetch that via the
+  # generic path instead -- this bypasses Google Drive auth entirely (intended,
+  # for public mirrors such as Arbutus) and lets the parallel ranged-download
+  # path apply. `targetFile` keeps the on-disk name equal to the Drive filename
+  # so downstream checksum/extract logic is unchanged.
+  remapUrl <- .applyUrlRemap(url, basename2(downloadFilename), verbose = verbose)
+
   if (!isTRUE(checkSums[checkSums$expectedFile == basename(destFile), ]$result == "OK")) {
+    if (!identical(remapUrl, url)) {
+      res <- dlGeneric(
+        url = remapUrl, destinationPath = destinationPath,
+        targetFile = basename2(downloadFilename), applyRemap = FALSE, verbose = verbose
+      )
+      return(list(destFile = res$destFile, needChecksums = needChecksums))
+    }
     messagePreProcess("Downloading from Google Drive.", verbose = verbose)
     fs <- attr(archive, "fileSize")
     if (is.null(fs)) {
@@ -507,22 +523,213 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   return(list(destFile = destFile, needChecksums = needChecksums))
 }
 
+#' Apply the user-supplied URL remap hook
+#'
+#' Internal. Consults `getOption("reproducible.urlRemap")`. When that option is a
+#' function, it is called as `fn(url, filename)` once the target `filename` has
+#' been resolved (which, for Google Drive URLs, requires the `drive_get()` lookup
+#' in `assessGoogle()`). The function may return a replacement URL to download
+#' from instead. A `NULL` return, a non-character or empty return, a return
+#' identical to the original `url`, or *any error* (which emits a `warning()`
+#' rather than failing the download) all mean "keep the original url". This way a
+#' broken remap can never break a download.
+#'
+#' @param url The original (resolved) URL.
+#' @param filename The resolved target filename, passed to the hook so the user
+#'   can remap based on filename, the original url, or both.
+#' @param verbose Numeric verbosity level.
+#' @return A length-one character URL to download from (possibly the original).
+#' @keywords internal
+#' @rdname dot-applyUrlRemap
+.applyUrlRemap <- function(url, filename, verbose = getOption("reproducible.verbose", 1)) {
+  fn <- getOption("reproducible.urlRemap")
+  if (is.null(fn) || !is.function(fn)) {
+    return(url)
+  }
+  newUrl <- tryCatch(
+    fn(url, filename),
+    error = function(e) {
+      warning("reproducible.urlRemap function failed; using original url.\n  ",
+              conditionMessage(e), call. = FALSE)
+      NULL
+    }
+  )
+  if (is.null(newUrl) || !is.character(newUrl) || length(newUrl) != 1L ||
+      is.na(newUrl) || !nzchar(newUrl) || identical(newUrl, url)) {
+    return(url)
+  }
+  messagePreProcess("URL remapped via 'reproducible.urlRemap':\n  ", url, "\n  -> ", newUrl,
+                    verbose = verbose)
+  newUrl
+}
+
+#' Build a URL remap function from a manifest
+#'
+#' Convenience constructor for the `reproducible.urlRemap` option (see
+#' [preProcess()]). Given a `data.frame` with (at least) columns `filename` and
+#' `url`, it returns a function `function(url, filename)` suitable for
+#' `options(reproducible.urlRemap = ...)`. The returned function matches on the
+#' basename of the resolved `filename`: when a manifest row's `filename` matches,
+#' its `url` is returned, so the download is redirected there (and, if that URL
+#' supports HTTP Range requests, the parallel download path applies). When there
+#' is no match it returns `NULL`, so the original URL is kept.
+#'
+#' The manifest itself — and the responsibility for keeping it current — lives
+#' with the user (for example, a community-maintained mirror manifest);
+#' `reproducible` hard-codes no mirror URLs.
+#'
+#' @param manifest A `data.frame` (or `data.table`) with at least the character
+#'   columns `filename` and `url`. `filename` is matched against the basename of
+#'   the file being downloaded.
+#'
+#' @return A function of `(url, filename)` returning a replacement URL, or `NULL`
+#'   to keep the original.
+#' @seealso [preProcess()] for the `reproducible.urlRemap` option.
+#' @export
+#' @examples
+#' \donttest{
+#' manifest <- data.frame(
+#'   filename = "SCANFI_att_biomass_2010_v2_20260119.tif",
+#'   url = paste0(
+#'     "https://object-arbutus.cloud.computecanada.ca/predictiveecology/",
+#'     "SCANFI_v2/2010/SCANFI_att_biomass_2010_v2_20260119.tif"
+#'   )
+#' )
+#' options(reproducible.urlRemap = makeUrlRemap(manifest))
+#' }
+makeUrlRemap <- function(manifest) {
+  needed <- c("filename", "url")
+  if (!is.data.frame(manifest) || !all(needed %in% colnames(manifest))) {
+    stop("'manifest' must be a data.frame with columns 'filename' and 'url'")
+  }
+  urls <- as.character(manifest[["url"]])
+  names(urls) <- basename2(as.character(manifest[["filename"]]))
+  # Drop rows with empty/NA key or value up front.
+  keep <- nzchar(names(urls)) & !is.na(urls) & nzchar(urls)
+  urls <- urls[keep]
+  function(url, filename) {
+    # Only remap a single file. A length != 1 `filename` (e.g. a Google Drive
+    # directory that resolves to several files) has no single mirror URL, so
+    # keep the original; this also avoids vectorized `is.na()` in `||` below.
+    if (length(filename) != 1L) {
+      return(NULL)
+    }
+    hit <- urls[basename2(filename)]
+    if (length(hit) != 1L || is.na(hit)) NULL else unname(hit)
+  }
+}
+
+#' Resolve and remap a URL early, before the COG fast-path
+#'
+#' Internal. Called near the top of [prepInputs()] so that a Google Drive URL can
+#' be redirected to a Range-capable mirror *before* the COG fast-path decision.
+#' [prepInputsCOG()] only triggers for `https://....tif`-style URLs, so a Drive
+#' URL or bare Drive ID would otherwise never benefit from partial `/vsicurl/`
+#' reads. When `reproducible.urlRemap` is set and `url` is a Drive URL/ID, this
+#' resolves its filename (via the cached `assessGoogle()` `drive_get()` lookup)
+#' and applies the remap; for plain HTTP(S) URLs it remaps on `basename(url)`.
+#' With no remap set, or any failure resolving the Drive filename, the original
+#' `url` is returned unchanged.
+#'
+#' @param url The original URL (a Google Drive URL, a bare Drive ID, or HTTP(S)).
+#' @param verbose Numeric verbosity level.
+#' @param ... May carry `team_drive`/`shared_drive` for the Drive lookup.
+#' @return A length-one character URL (possibly the original).
+#' @keywords internal
+#' @rdname dot-remapUrlEarly
+.remapUrlEarly <- function(url, verbose = getOption("reproducible.verbose", 1), ...) {
+  if (is.null(url) || length(url) != 1L || isNULLorNA(url)) {
+    return(url)
+  }
+  if (!is.function(getOption("reproducible.urlRemap"))) {
+    return(url)
+  }
+
+  isGID <- tryCatch(isGoogleDriveURL(url) || isGoogleID(url), error = function(e) FALSE)
+  if (isTRUE(isGID)) {
+    if (!requireNamespace("googledrive", quietly = TRUE)) {
+      return(url)
+    }
+    # Resolve the Drive ID -> filename (cached) so the manifest can match on it.
+    df <- tryCatch(
+      assessGoogle(url, verbose = verbose - 1, team_drive = getTeamDrive(list(...))),
+      error = function(e) NULL
+    )
+    if (is.null(df)) {
+      return(url)
+    }
+    filename <- basename2(df)
+  } else if (grepl("^https?://", url)) {
+    filename <- basename2(url)
+  } else {
+    return(url)
+  }
+  # Only remap a single resolved file. A Google Drive *directory* resolves to
+  # several filenames; there is no single mirror URL for a folder, so leave it
+  # to the normal per-file download path.
+  if (length(filename) != 1L || !nzchar(filename)) {
+    return(url)
+  }
+  .applyUrlRemap(url, filename, verbose = verbose)
+}
+
 #' Download file from generic source url
 #'
 #' @param url  The url (link) to the file.
+#' @param targetFile Optional basename to give the downloaded file. When supplied
+#'   (e.g. by [dlGoogle()] after a URL remap) the file is named with this rather
+#'   than `basename(url)`, so the rest of the pipeline sees the expected filename.
+#' @param applyRemap Logical. When `TRUE` (default) the `reproducible.urlRemap`
+#'   hook is consulted here. Callers that have already applied the remap (e.g.
+#'   [dlGoogle()] delegating a remapped Drive URL) pass `FALSE` to avoid a
+#'   second call.
 #'
 #' @author Eliot McIntire and Alex Chubaty
 #' @keywords internal
 #' @importFrom utils download.file
 #' @inheritParams preProcess
-dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.verbose", 1)) {
+dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE,
+                      verbose = getOption("reproducible.verbose", 1)) {
   if (missing(destinationPath)) {
     destinationPath <- tempdir2(rndstr(1, 6))
   }
 
-  bn <- basename2(url)
+  haveTarget <- !is.null(targetFile) && length(targetFile) == 1 && nzchar(targetFile)
+  if (isTRUE(applyRemap)) {
+    filename <- if (haveTarget) basename2(targetFile) else basename2(url)
+    url <- .applyUrlRemap(url, filename, verbose = verbose)
+  }
+
+  bn <- if (haveTarget) basename2(targetFile) else basename2(url)
   bn <- gsub("\\?|\\&", "_", bn) # causes errors with ? and maybe &
   destFile <- file.path(destinationPath, bn)
+
+  # Feature A: parallel ranged download. Gated on the opt-in
+  # `reproducible.urlRemap` being set (no remap set => never parallel, even at
+  # streams = 48). When opted in, this engages if the server advertises
+  # `Accept-Ranges: bytes` and the file exceeds the threshold; it can be forced
+  # off with `reproducible.parallel.streams = 1L`. Any failure falls through to
+  # the single-stream path below, which is byte-for-byte unchanged. The assembled
+  # file is byte-identical to a single-stream download, so checksums are
+  # unaffected.
+  pp <- .useParallelDownload(url, verbose = verbose)
+  if (isTRUE(pp$use)) {
+    streams <- as.integer(getOption("reproducible.parallel.streams", 48L))
+    messagePreProcess("Downloading ", url, " using ", streams,
+                      " parallel ranged streams ...", verbose = verbose)
+    ok <- tryCatch(
+      .parallelRangedDownload(url, destFile, pp$info$size, n = streams, verbose = verbose),
+      error = function(e) {
+        messagePreProcess("Parallel download failed (", conditionMessage(e),
+                          "); falling back to single stream.", verbose = verbose)
+        FALSE
+      }
+    )
+    if (isTRUE(ok)) {
+      return(list(destFile = destFile))
+    }
+    if (file.exists(destFile)) unlink(destFile) # clean partial before fallback
+  }
 
   # if (suppressWarnings(httr::http_error(url))) ## TODO: http_error is throwing warnings
   #   stop("Can not access url ", url)
@@ -572,6 +779,211 @@ dlGeneric <- function(url, destinationPath, verbose = getOption("reproducible.ve
   }
 
   list(destFile = destFile)
+}
+
+#' Decide whether to use the parallel ranged download path
+#'
+#' Internal policy helper for Feature A, separated from the download mechanism so
+#' it can be unit-tested without network access. The parallel path is **gated on
+#' the opt-in `reproducible.urlRemap` being set**: if no remap function is set,
+#' it is never used, regardless of `reproducible.parallel.streams`. When a remap
+#' is set, the path is used only when `reproducible.parallel.streams > 1` (the
+#' default is `48L`; set it to `1L` to disable), the \pkg{curl} and \pkg{httr2}
+#' packages are available, the server advertises `Accept-Ranges: bytes`, and the
+#' file is larger than `reproducible.parallel.threshold`. When that gate is not
+#' met, the (potentially network-touching) [.probeRange()] call is skipped
+#' entirely.
+#'
+#' @param url The resolved URL.
+#' @param streams Number of parallel streams (`reproducible.parallel.streams`).
+#' @param threshold Size threshold in bytes.
+#' @param verbose Numeric verbosity level.
+#' @return A list with `use` (logical) and `info` (the [.probeRange()] result, or
+#'   `NULL` when the probe was skipped).
+#' @keywords internal
+#' @rdname dot-useParallelDownload
+.useParallelDownload <- function(url,
+                                 streams = getOption("reproducible.parallel.streams", 48L),
+                                 threshold = getOption("reproducible.parallel.threshold", 10 * 1024^2),
+                                 verbose = getOption("reproducible.verbose", 1)) {
+  # Opt-in gate: the parallel path exists ONLY to accelerate downloads that the
+  # user has redirected to a Range-capable mirror. If `reproducible.urlRemap` is
+  # not set, there is no opt-in and the parallel path is never used, regardless
+  # of `reproducible.parallel.streams`. This is also a hard short-circuit before
+  # any (potentially network-touching) probe.
+  if (!is.function(getOption("reproducible.urlRemap"))) {
+    return(list(use = FALSE, info = NULL))
+  }
+  # Capability gate -- deps present and not explicitly forced to single-stream.
+  if (!(is.numeric(streams) && isTRUE(streams > 1L) &&
+        .requireNamespace("curl") && .requireNamespace("httr2"))) {
+    return(list(use = FALSE, info = NULL))
+  }
+  info <- .probeRange(url, verbose = verbose)
+  use <- isTRUE(info$acceptRanges) && !is.na(info$size) && info$size > threshold
+  list(use = use, info = info)
+}
+
+#' Probe a URL for size and HTTP Range support
+#'
+#' Internal helper for the parallel ranged download path. Sends a HEAD request
+#' and reads `Content-Length` and `Accept-Ranges`. Any failure (HEAD not
+#' supported, timeout, httr2 unavailable) returns `size = NA` /
+#' `acceptRanges = FALSE`, which the caller treats as "use single-stream".
+#'
+#' @param url The URL to probe.
+#' @param verbose Numeric verbosity level.
+#' @return A list with `size` (numeric, bytes or `NA`) and `acceptRanges`
+#'   (logical).
+#' @keywords internal
+#' @rdname dot-probeRange
+.probeRange <- function(url, verbose = getOption("reproducible.verbose", 1)) {
+  out <- list(size = NA_real_, acceptRanges = FALSE)
+  if (!.requireNamespace("httr2")) {
+    return(out)
+  }
+  resp <- tryCatch(
+    {
+      req <- httr2::request(url) |>
+        httr2::req_method("HEAD") |>
+        httr2::req_timeout(getOption("reproducible.timeout", 12000)) |>
+        httr2::req_user_agent(getOption("reproducible.useragent"))
+      httr2::req_perform(req)
+    },
+    error = function(e) NULL
+  )
+  if (is.null(resp) || httr2::resp_is_error(resp)) {
+    return(out)
+  }
+  cl <- httr2::resp_header(resp, "content-length")
+  ar <- httr2::resp_header(resp, "accept-ranges")
+  if (!is.null(cl)) {
+    out$size <- suppressWarnings(as.numeric(cl))
+  }
+  # "Accept-Ranges: bytes" => supported; "none" or absent => not supported
+  out$acceptRanges <- !is.null(ar) && isTRUE(tolower(trimws(ar)) == "bytes")
+  out
+}
+
+#' Download a file in parallel using HTTP Range requests
+#'
+#' Internal helper for the opt-in parallel download path (Feature A). Splits
+#' `[0, size)` into `n` contiguous byte ranges and fetches them concurrently
+#' with one `curl` handle per part (each carrying its own `Range:` header) via
+#' `curl`'s multi interface. On success the parts are concatenated **in order**
+#' and the total size is verified to equal `size`, so the result is
+#' byte-identical to a single-stream download. Returns `FALSE` (rather than
+#' erroring) on any partial failure or size mismatch, so the caller can fall
+#' back to single-stream.
+#'
+#' @param url The (already-resolved, range-capable) URL.
+#' @param destFile The destination file path to assemble into.
+#' @param size Total expected size in bytes (from [.probeRange()]).
+#' @param n Number of parallel streams (`reproducible.parallel.streams`).
+#' @param verbose Numeric verbosity level.
+#' @return `TRUE` on verified success, otherwise `FALSE`.
+#' @keywords internal
+#' @rdname dot-parallelRangedDownload
+.parallelRangedDownload <- function(url, destFile, size, n,
+                                    verbose = getOption("reproducible.verbose", 1)) {
+  .requireNamespace("curl", stopOnFALSE = TRUE)
+  size <- as.numeric(size)
+  if (!is.finite(size) || size <= 0) {
+    return(FALSE)
+  }
+  n <- max(1L, as.integer(n))
+
+  # Contiguous, non-overlapping byte ranges covering [0, size). Use a numeric
+  # (double) sequence so files > .Machine$integer.max (2 GB) are handled.
+  breaks <- unique(floor(seq(0, size, length.out = n + 1L)))
+  lo <- breaks[-length(breaks)]
+  hi <- c(breaks[-1] - 1)
+  hi[length(hi)] <- size - 1 # last part runs to the final byte
+  nParts <- length(lo)
+
+  partFiles <- paste0(destFile, sprintf(".part%03d", seq_len(nParts)))
+  on.exit(unlink(partFiles), add = TRUE)
+
+  okPart <- logical(nParts)
+  # curl::new_pool() defaults to host_con = 6, i.e. at most 6 concurrent
+  # connections PER HOST. Since every part targets the same host, that would
+  # silently cap real parallelism at 6 regardless of `n`. Raise both the
+  # per-host and total connection limits to nParts so the requested number of
+  # streams actually run concurrently.
+  pool <- curl::new_pool(total_con = nParts, host_con = nParts)
+  for (i in seq_len(nParts)) {
+    h <- curl::new_handle(url = url)
+    curl::handle_setheaders(h, Range = sprintf("bytes=%.0f-%.0f", lo[i], hi[i]))
+    curl::handle_setopt(h,
+      connecttimeout = ceiling(getOption("reproducible.timeout", 12000) / 1000),
+      useragent = getOption("reproducible.useragent")
+    )
+    # Record success/failure per part; `data = <file>` streams the body to disk
+    # (so we never hold a whole part in memory).
+    local({
+      idx <- i
+      curl::multi_add(
+        handle = h,
+        done = function(res) {
+          # 206 = Partial Content (ranged); 200 = server ignored Range (whole file)
+          okPart[idx] <<- isTRUE(res$status_code %in% c(200L, 206L))
+        },
+        fail = function(str) okPart[idx] <<- FALSE,
+        data = partFiles[i],
+        pool = pool
+      )
+    })
+  }
+  if (verbose > 0 && interactive()) {
+    # The low-level multi pool has no built-in progress bar (unlike
+    # curl::multi_download, which we can't use because it cannot set per-part
+    # Range headers). Instead, poll in short slices and report the aggregate of
+    # the on-disk part files against the known total -- same `\r` style as the
+    # Google Drive future-download loop.
+    totOS <- structure(size, class = "object_size")
+    repeat {
+      st <- curl::multi_run(timeout = 0.5, poll = FALSE, pool = pool)
+      doneOS <- structure(sum(file.size(partFiles), na.rm = TRUE), class = "object_size")
+      cat(sprintf("\r  %s of %s via %d parallel ranged streams        ",
+                  format(doneOS, units = "auto"), format(totOS, units = "auto"), nParts))
+      utils::flush.console()
+      if (st$pending == 0) break
+    }
+    cat("\n")
+  } else {
+    curl::multi_run(pool = pool)
+  }
+
+  if (!all(okPart)) {
+    return(FALSE)
+  }
+  partSizes <- file.size(partFiles)
+  if (anyNA(partSizes) || sum(partSizes) != size) {
+    return(FALSE)
+  }
+
+  # Assemble in order via file.append (streams bytes, no in-R copy), deleting
+  # each part as soon as it has been appended. As destFile grows the parts
+  # shrink, so the transient temp-space peak stays ~= the final file size
+  # (rather than ~2x it, which would matter for multi-GB files split many ways).
+  if (file.exists(destFile)) unlink(destFile)
+  if (!file.create(destFile)) {
+    return(FALSE)
+  }
+  for (pf in partFiles) {
+    if (!isTRUE(file.append(destFile, pf))) {
+      unlink(destFile)
+      return(FALSE)
+    }
+    unlink(pf) # free this part's bytes before appending the next
+  }
+  if (isTRUE(file.size(destFile) != size)) {
+    unlink(destFile)
+    return(FALSE)
+  }
+  messagePreProcess("Download of ", destFile, " complete (", nParts,
+                    " parallel ranged streams)", verbose = verbose)
+  TRUE
 }
 
 #' Download a remote file

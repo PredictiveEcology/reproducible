@@ -381,6 +381,12 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   if (is.character(url) && length(url) == 0L) url <- NULL
   prepInputsAssertions(environment())
 
+  # Apply the `reproducible.urlRemap` hook BEFORE the COG fast-path. This lets a
+  # Google Drive URL (resolved to its filename via drive_get) be redirected to a
+  # Range-capable mirror, so the COG path can do partial `/vsicurl/` reads of
+  # just the `to`/`cropTo` window. With no remap set this is a no-op.
+  url <- .remapUrlEarly(url, verbose = verbose, ...)
+
   runNormalPreProcess <- TRUE
 
   # COG fast-path: triggered when url is HTTP(S), a spatial subsetting arg is
