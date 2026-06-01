@@ -181,6 +181,8 @@ test_that("parallel path is disabled when streams = 1L and does not probe", {
 })
 
 test_that("parallel path engages when opted in, ranges supported, above threshold", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.urlRemap = optedIn,
     reproducible.parallel.streams = 16L,
@@ -195,6 +197,8 @@ test_that("parallel path engages when opted in, ranges supported, above threshol
 })
 
 test_that("parallel path does NOT engage below the size threshold", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.urlRemap = optedIn,
     reproducible.parallel.streams = 16L,
@@ -207,6 +211,8 @@ test_that("parallel path does NOT engage below the size threshold", {
 })
 
 test_that("parallel path does NOT engage when the server lacks Accept-Ranges", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.urlRemap = optedIn,
     reproducible.parallel.streams = 16L,
@@ -223,6 +229,8 @@ test_that("parallel path does NOT engage when the server lacks Accept-Ranges", {
 # ---------------------------------------------------------------------------
 
 test_that("dlGeneric takes the parallel path and returns its file when opted in", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.parallel.streams = 8L,
     reproducible.parallel.threshold = 1L,
@@ -245,6 +253,8 @@ test_that("dlGeneric takes the parallel path and returns its file when opted in"
 })
 
 test_that("dlGeneric falls back to single-stream when the parallel attempt fails", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.parallel.streams = 8L,
     reproducible.parallel.threshold = 1L,
