@@ -2,6 +2,17 @@
 
 * development version.
 
+## new features
+
+* `prepInputs()` and `preProcess()` now keep a record of every file and web
+  address (URL) they download. By default, each download is saved as a permanent
+  note on the matching cache entry, which you can look up later with
+  `showCache(userTags = "reproducible.url")`. Set
+  `options(reproducible.urlLog = TRUE)` to also keep an in-memory list for the
+  current session, which you can read with `prepInputsLog()` and empty with
+  `clearUrlLog()`. Set `options(reproducible.urlLog = FALSE)` to turn the
+  recording off. See `?prepInputsLog` and `?reproducibleOptions`.
+
 ## behaviour changes
 
 * `postProcessTo()` is now faster and uses less memory on large rasters.
