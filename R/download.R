@@ -932,66 +932,84 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   on.exit(unlink(partFiles), add = TRUE)
 
   okPart <- logical(nParts)
-  # curl::new_pool() defaults to host_con = 6, i.e. at most 6 concurrent
-  # connections PER HOST. Since every part targets the same host, that would
-  # silently cap real parallelism at 6 regardless of `n`. Raise both the
-  # per-host and total connection limits to nParts so the requested number of
-  # streams actually run concurrently.
-  pool <- curl::new_pool(total_con = nParts, host_con = nParts)
-  for (i in seq_len(nParts)) {
-    h <- curl::new_handle(url = url)
-    curl::handle_setheaders(h, Range = sprintf("bytes=%.0f-%.0f", lo[i], hi[i]))
-    curl::handle_setopt(h,
-      connecttimeout = ceiling(getOption("reproducible.timeout", 12000) / 1000),
-      useragent = getOption("reproducible.useragent")
-    )
-    # Record success/failure per part; `data = <file>` streams the body to disk
-    # (so we never hold a whole part in memory).
-    local({
-      idx <- i
-      curl::multi_add(
-        handle = h,
-        done = function(res) {
-          # 206 = Partial Content (ranged); 200 = server ignored Range (whole file)
-          okPart[idx] <<- isTRUE(res$status_code %in% c(200L, 206L))
-        },
-        fail = function(str) okPart[idx] <<- FALSE,
-        data = partFiles[i],
-        pool = pool
+  expected <- hi - lo + 1 # expected byte count for each part
+  totOS <- structure(size, class = "object_size")
+
+  # Fetch a set of part indices concurrently, streaming each body straight to
+  # its `partFiles[j]` (`data = <file>` => never held in memory). curl's
+  # new_pool() defaults to host_con = 6 (max concurrent connections per host),
+  # which would silently cap parallelism regardless of `n`; raise it to the
+  # number of parts being fetched so all requested streams run at once. The
+  # low-level multi pool has no built-in progress bar (unlike
+  # curl::multi_download, which can't set per-part Range headers), so when
+  # asked we poll in short slices and report the on-disk aggregate.
+  fetchParts <- function(idx, showProgress) {
+    pool <- curl::new_pool(total_con = length(idx), host_con = length(idx))
+    for (i in idx) {
+      h <- curl::new_handle(url = url)
+      curl::handle_setheaders(h, Range = sprintf("bytes=%.0f-%.0f", lo[i], hi[i]))
+      curl::handle_setopt(h,
+        connecttimeout = ceiling(getOption("reproducible.timeout", 12000) / 1000),
+        useragent = getOption("reproducible.useragent")
       )
-    })
-  }
-  if (verbose > 0 && interactive()) {
-    # The low-level multi pool has no built-in progress bar (unlike
-    # curl::multi_download, which we can't use because it cannot set per-part
-    # Range headers). Instead, poll in short slices and report the aggregate of
-    # the on-disk part files against the known total -- same `\r` style as the
-    # Google Drive future-download loop.
-    totOS <- structure(size, class = "object_size")
-    startTime <- Sys.time()
-    repeat {
-      st <- curl::multi_run(timeout = 0.5, poll = FALSE, pool = pool)
-      done <- sum(file.size(partFiles), na.rm = TRUE)
-      doneOS <- structure(done, class = "object_size")
-      elapsed <- as.numeric(difftime(Sys.time(), startTime, units = "secs"))
-      # ETA from the average rate so far (bytes/sec); blank until there is signal
-      eta <- if (done > 0 && elapsed > 0) elapsed * (size - done) / done else NA_real_
-      cat(sprintf("\r  %s of %s via %d parallel ranged streams | elapsed time: %s | estimated time left: %s        ",
-                  format(doneOS, units = "auto"), format(totOS, units = "auto"), nParts,
-                  .formatDuration(elapsed), .formatDuration(eta)))
-      utils::flush.console()
-      if (st$pending == 0) break
+      local({
+        j <- i
+        curl::multi_add(
+          handle = h,
+          # 206 = Partial Content (ranged); 200 = server ignored Range (whole file)
+          done = function(res) okPart[j] <<- isTRUE(res$status_code %in% c(200L, 206L)),
+          fail = function(str) okPart[j] <<- FALSE,
+          data = partFiles[j],
+          pool = pool
+        )
+      })
     }
-    cat("\n")
-  } else {
-    curl::multi_run(pool = pool)
+    if (isTRUE(showProgress)) {
+      startTime <- Sys.time()
+      repeat {
+        st <- curl::multi_run(timeout = 0.5, poll = FALSE, pool = pool)
+        done <- sum(file.size(partFiles), na.rm = TRUE)
+        doneOS <- structure(done, class = "object_size")
+        elapsed <- as.numeric(difftime(Sys.time(), startTime, units = "secs"))
+        # ETA from the average rate so far (bytes/sec); blank until there is signal
+        eta <- if (done > 0 && elapsed > 0) elapsed * (size - done) / done else NA_real_
+        cat(sprintf("\r  %s of %s via %d parallel ranged streams | elapsed time: %s | estimated time left: %s        ",
+                    format(doneOS, units = "auto"), format(totOS, units = "auto"), nParts,
+                    .formatDuration(elapsed), .formatDuration(eta)))
+        utils::flush.console()
+        if (st$pending == 0) break
+      }
+      cat("\n")
+    } else {
+      curl::multi_run(pool = pool)
+    }
   }
 
-  if (!all(okPart)) {
-    return(FALSE)
+  # Parts that are missing, short, or errored -- candidates for a retry.
+  badParts <- function() {
+    sz <- file.size(partFiles)
+    which(!okPart | is.na(sz) | sz != expected)
   }
-  partSizes <- file.size(partFiles)
-  if (anyNA(partSizes) || sum(partSizes) != size) {
+
+  # Fetch all parts, then RETRY ONLY the failed/short parts a few times before
+  # giving up. A single dropped connection (common with many parallel streams
+  # on a long transfer) thus costs one part re-fetch (~size/n bytes), not a full
+  # single-stream re-download of the whole file.
+  showProgress <- verbose > 0 && interactive()
+  todo <- seq_len(nParts)
+  maxAttempts <- 3L
+  for (attempt in seq_len(maxAttempts)) {
+    unlink(partFiles[todo]) # clear any partial bytes before (re)fetching
+    okPart[todo] <- FALSE
+    fetchParts(todo, showProgress = isTRUE(showProgress) && attempt == 1L)
+    todo <- badParts()
+    if (!length(todo)) break
+    if (attempt < maxAttempts) {
+      messagePreProcess("Retrying ", length(todo), " incomplete download part(s) (attempt ",
+                        attempt + 1L, " of ", maxAttempts, ") ...", verbose = verbose)
+    }
+  }
+  if (length(todo)) { # a part still won't complete -> let caller fall back
     return(FALSE)
   }
 

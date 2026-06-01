@@ -26,8 +26,10 @@
     `reproducible.parallel.streams` (default `48L`) concurrent byte-range
     requests via `curl`, then reassembled. The result is
     byte-identical to a single-stream download, so checksums are
-    unaffected, and it falls back transparently to a single stream on any
-    failure or when ranges are unsupported. Set
+    unaffected. A part that drops mid-transfer is retried individually
+    (not a full re-download); only if a part still cannot complete after a
+    few attempts does it fall back transparently to a single stream (also
+    when ranges are unsupported). Set
     `reproducible.parallel.streams = 1L` to force single-stream downloads.
     On networks that shape bandwidth per-connection this is dramatically
     faster: in one test a 6.1 GB file dropped from ~75 minutes

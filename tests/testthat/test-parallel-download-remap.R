@@ -326,3 +326,43 @@ test_that("parallel ranged download is byte-identical to single-stream (network)
   expect_identical(file.size(parFile), file.size(baseFile))
   expect_identical(unname(tools::md5sum(parFile)), unname(tools::md5sum(baseFile)))
 })
+
+test_that("a dropped part is retried (not a full re-download) and still byte-identical (network)", {
+  skip_on_cran()
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  skip_if_offline()
+
+  url <- paste0(
+    "https://object-arbutus.cloud.computecanada.ca/predictiveecology/",
+    "SCANFI_v2/1990/SCANFI_spsCC_BETU_ALL_1990_v2_20260119.tif.ovr"
+  )
+  info <- reproducible:::.probeRange(url, verbose = 0)
+  skip_if_not(isTRUE(info$acceptRanges) && is.finite(info$size) && info$size > 0,
+              "host did not advertise Range support")
+
+  baseFile <- withr::local_tempfile()
+  httr2::req_perform(httr2::request(url), path = baseFile)
+
+  dest <- withr::local_tempfile()
+  # Truncate part 001 immediately after the first multi_run() to simulate one
+  # dropped connection; the retry loop should re-fetch only that part.
+  realMultiRun <- curl::multi_run
+  firstRun <- TRUE
+  ok <- testthat::with_mocked_bindings(
+    reproducible:::.parallelRangedDownload(url, dest, info$size, n = 4L, verbose = 0),
+    multi_run = function(...) {
+      res <- realMultiRun(...)
+      if (firstRun) {
+        firstRun <<- FALSE
+        p1 <- paste0(dest, ".part001")
+        if (file.exists(p1)) writeBin(raw(10), p1) # corrupt/short part
+      }
+      res
+    },
+    .package = "curl"
+  )
+  expect_true(isTRUE(ok)) # retry repaired it; no fall-through to single-stream
+  expect_identical(file.size(dest), info$size)
+  expect_identical(unname(tools::md5sum(dest)), unname(tools::md5sum(baseFile)))
+})
