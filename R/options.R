@@ -171,6 +171,28 @@
 #'     Default: `FALSE`. Used in [prepInputs()], [preProcess()],
 #'     [downloadFile()], and [postProcess()].
 #'   }
+#'   \item{`parallel.streams`}{
+#'     Default: `48L`. The number of concurrent HTTP Range requests to use when
+#'     downloading a single large file over HTTPS. **This has no effect unless
+#'     you have opted in by setting `reproducible.urlRemap`** (see below): if no
+#'     remap is set, downloads are always single-stream, regardless of this
+#'     value. Once opted in, a download that gets redirected to a Range-capable
+#'     mirror is fetched in parallel using this many streams — but only when the
+#'     server advertises `Accept-Ranges: bytes` and the file is larger than
+#'     `reproducible.parallel.threshold`; otherwise, and on any failure, it
+#'     falls back transparently to a single stream. Especially useful on
+#'     networks that shape bandwidth per-connection (a per-flow cap times 48
+#'     streams). Set to `1L` to force single-stream downloads even when a remap
+#'     is set. Requires the \pkg{curl} and \pkg{httr2} packages. The assembled
+#'     file is byte-identical to a single-stream download, so checksums are
+#'     unaffected.
+#'   }
+#'   \item{`parallel.threshold`}{
+#'     Default: `10 * 1024^2` (10 MiB), in bytes. Files at or below this size are
+#'     always downloaded single-stream; only files larger than this use the
+#'     parallel ranged path. Like `reproducible.parallel.streams`, this has no
+#'     effect unless you have opted in via `reproducible.urlRemap`.
+#'   }
 #'   \item{`quick`}{
 #'     Default: `FALSE`. Used in [Cache()]. This will cause `Cache` to use
 #'     `file.size(file)` instead of the `digest::digest(file)`.
@@ -239,6 +261,20 @@
 #'     entry in the `cachePath`, then this option will default back to the non-dev-mode
 #'     behaviour to avoid deleting objects.
 #'     This, therefore, is most useful if the user is using unique values for `userTags`.
+#'   }
+#'   \item{`urlRemap`}{
+#'     Default: `NULL` (feature off). **This is the opt-in switch for the faster
+#'     download path.** Set it to a function `function(url, filename)` — most
+#'     easily built from a manifest `data.frame` via [makeUrlRemap()] — and it is
+#'     consulted in the download path once the target `filename` has been
+#'     resolved (for Google Drive URLs, after the `drive_get()` lookup). The
+#'     function may return an alternative URL to download from instead, e.g. a
+#'     public mirror that supports HTTP Range requests (which then triggers the
+#'     parallel ranged download governed by `reproducible.parallel.streams` and
+#'     `reproducible.parallel.threshold`); returning `NULL` or the original URL
+#'     keeps the behaviour unchanged. A function that errors is ignored (with a
+#'     warning) so a broken remap cannot break a download. With the default
+#'     `NULL`, no remapping occurs and downloads behave exactly as before.
 #'   }
 #'   \item{`reproducible.useCacheV3`}{
 #'     Default: `TRUE`. If this is set to `FALSE`, it will use the old `Cache` source
@@ -358,6 +394,8 @@ reproducibleOptions <- function() {
     reproducible.nThreads = 1,
     reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
+    reproducible.parallel.streams = 48L,            # concurrent ranged streams; opt-in is via urlRemap
+    reproducible.parallel.threshold = 10 * 1024^2,  # bytes; only files larger use the parallel path
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",
       default = "terra::rast",
@@ -373,6 +411,7 @@ reproducibleOptions <- function() {
     reproducible.useCache = TRUE, # override Cache function
     reproducible.useCacheV3 = TRUE, # override Cache function
     reproducible.urlLog = NULL,
+    reproducible.urlRemap = NULL,
     reproducible.useCloud = FALSE, #
     reproducible.useDBI = {
       getEnv("R_REPRODUCIBLE_USE_DBI",

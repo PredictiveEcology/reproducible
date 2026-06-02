@@ -4,7 +4,13 @@
 \alias{dlGeneric}
 \title{Download file from generic source url}
 \usage{
-dlGeneric(url, destinationPath, verbose = getOption("reproducible.verbose", 1))
+dlGeneric(
+  url,
+  destinationPath,
+  targetFile = NULL,
+  applyRemap = TRUE,
+  verbose = getOption("reproducible.verbose", 1)
+)
 }
 \arguments{
 \item{url}{The url (link) to the file.}
@@ -18,6 +24,15 @@ search for the file before attempting to download. Default for that option is
 \code{NULL} meaning do not search locally. The previous name
 \code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
 alias.}
+
+\item{targetFile}{Optional basename to give the downloaded file. When supplied
+(e.g. by \code{\link[=dlGoogle]{dlGoogle()}} after a URL remap) the file is named with this rather
+than \code{basename(url)}, so the rest of the pipeline sees the expected filename.}
+
+\item{applyRemap}{Logical. When \code{TRUE} (default) the \code{reproducible.urlRemap}
+hook is consulted here. Callers that have already applied the remap (e.g.
+\code{\link[=dlGoogle]{dlGoogle()}} delegating a remapped Drive URL) pass \code{FALSE} to avoid a
+second call.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
