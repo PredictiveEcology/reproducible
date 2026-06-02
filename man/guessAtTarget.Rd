@@ -10,7 +10,8 @@
   destinationPath = getOption("reproducible.destinationPath", "."),
   filesExtracted,
   fun = NULL,
-  verbose = getOption("reproducible.verbose", 1)
+  verbose = getOption("reproducible.verbose", 1),
+  messageGuessing = TRUE
 )
 }
 \arguments{
@@ -18,6 +19,13 @@
 
 \item{filesExtracted}{A character vector of all files that have been extracted (e.g.,
 from an archive)}
+
+\item{messageGuessing}{Logical. If \code{TRUE} (the default, used when a load will
+follow, e.g. from \code{prepInputs}), emit the messages about the guessed
+\code{targetFile}/\code{fun} (e.g. "targetFile was not specified", "Picking the last
+one"). A direct \code{preProcess()} call sets this to \code{FALSE} because it never
+loads the object, so those messages would be misleading; the guessing
+itself (and the returned values) is unchanged.}
 }
 \description{
 Try to pick a file to load

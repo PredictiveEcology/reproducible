@@ -96,6 +96,13 @@
 
 ## bug fixes
 
+* A direct `preProcess()` call no longer prints the target/fun guessing
+  messages ("targetFile was not specified...", "Trying `fun` on ...",
+  "More than one possible files to load... Picking the last one..."). Because
+  `preProcess()` never loads the object into R (it only returns file paths),
+  those messages were misleading. They are still shown when `preProcess()` is
+  called from `prepInputs()` (where a load follows) and are always suppressed
+  when `fun = NA`. The returned `targetFile`/`fun` are unchanged.
 * `prepInputs`/`preProcess` no longer error with
   `missing value where TRUE/FALSE needed` in the remote hash check when the
   remote source advertises no file size (e.g. a server with no

@@ -117,6 +117,52 @@ test_that("guessAtTargetAndFun works correctly", {
   )
 })
 
+test_that("guessAtTargetAndFun: messageGuessing = FALSE suppresses guessing messages", {
+  testInit("terra")
+
+  twoFiles <- c("hi.rds", "hello.rds")
+
+  # messageGuessing = TRUE (the prepInputs path, where a load follows): the
+  # target/fun guessing messages are shown.
+  msgsOn <- capture_messages(
+    resOn <- .guessAtTargetAndFun(
+      targetFilePath = NULL, filesExtracted = twoFiles,
+      fun = "readRDS", messageGuessing = TRUE
+    )
+  )
+  expect_true(any(grepl("targetFile was not specified", msgsOn)))
+  expect_true(any(grepl("More than one possible files to load", msgsOn)))
+  expect_true(any(grepl("Picking the last one", msgsOn)))
+
+  # messageGuessing = FALSE (direct preProcess(), which never loads): the same
+  # messages must be suppressed.
+  msgsOff <- capture_messages(
+    resOff <- .guessAtTargetAndFun(
+      targetFilePath = NULL, filesExtracted = twoFiles,
+      fun = "readRDS", messageGuessing = FALSE
+    )
+  )
+  expect_false(any(grepl("targetFile was not specified", msgsOff)))
+  expect_false(any(grepl("More than one possible files to load", msgsOff)))
+  expect_false(any(grepl("Picking the last one", msgsOff)))
+
+  # ... but the returned targetFile/fun are identical regardless of messaging
+  # (it still picks the last candidate so the result remains usable).
+  expect_identical(resOff$targetFilePath, resOn$targetFilePath)
+  expect_identical(resOff$fun, resOn$fun)
+  expect_identical(resOff$targetFilePath, "hello.rds")
+
+  # fun = NA already short-circuits before any guessing, so no messages regardless.
+  msgsNA <- capture_messages(
+    resNA <- .guessAtTargetAndFun(
+      targetFilePath = NULL, filesExtracted = twoFiles,
+      fun = NA, messageGuessing = TRUE
+    )
+  )
+  expect_false(any(grepl("targetFile was not specified", msgsNA)))
+  expect_false(any(grepl("Picking the last one", msgsNA)))
+})
+
 test_that("unrar is working as expected", {
   testInit("terra", tmpFileExt = c(".tif", ".grd"))
 
