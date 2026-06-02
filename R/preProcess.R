@@ -174,6 +174,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
                        .tempPath, .callingEnv = parent.frame(),
                        ...) {
   st <- Sys.time()
+  ## A direct preProcess() call never loads the object into R (it only returns
+  ## file paths), so the target/fun *guessing* messages emitted in pp_finalize
+  ## ("targetFile was not specified", "Picking the last one", ...) are noise.
+  ## prepInputs always passes `.tempPath`, so a missing `.tempPath` is the
+  ## signal that no load will follow and those messages should be suppressed.
+  directCall <- missing(.tempPath)
   ## URL-log hook fires only on direct preProcess() calls. When called from
   ## prepInputs, the prepInputs head already logged (so the COG fast-path,
   ## which bypasses preProcess, is still covered).
@@ -218,6 +224,10 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     dots = dots, quick = quick, overwrite = overwrite, purge = purge, verbose = verbose,
     .tempPath = .tempPath, .callingEnv = .callingEnv
   )
+  ## When TRUE, a load will follow (called from prepInputs), so pp_finalize is
+  ## allowed to emit the target/fun guessing messages; a direct preProcess()
+  ## call suppresses them.
+  ctx$loadWillFollow <- !directCall
 
   ctx <- pp_resolve_files(ctx)
   ctx <- pp_checksums_init(ctx)
@@ -1029,7 +1039,8 @@ pp_link_to_destination <- function(ctx) {
 pp_finalize <- function(ctx) {
   targetParams       <- .guessAtTargetAndFun(
     ctx$targetFilePath, ctx$destinationPath,
-    filesExtracted = ctx$filesExtr, ctx$fun, verbose = ctx$verbose
+    filesExtracted = ctx$filesExtr, ctx$fun, verbose = ctx$verbose,
+    messageGuessing = isTRUE(ctx$loadWillFollow)
   )
   ctx[["targetFile"]]     <- makeRelative(targetParams$targetFilePath, ctx$destinationPath)
   ctx$targetFilePath <- targetParams$targetFilePath

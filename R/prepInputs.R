@@ -741,10 +741,21 @@ extractFromArchive <- function(archive,
 #' @param filesExtracted A character vector of all files that have been extracted (e.g.,
 #'                       from an archive)
 #' @param destinationPath Full path of the directory where the target file should be
+#' @param messageGuessing Logical. If `TRUE` (the default, used when a load will
+#'   follow, e.g. from `prepInputs`), emit the messages about the guessed
+#'   `targetFile`/`fun` (e.g. "targetFile was not specified", "Picking the last
+#'   one"). A direct `preProcess()` call sets this to `FALSE` because it never
+#'   loads the object, so those messages would be misleading; the guessing
+#'   itself (and the returned values) is unchanged.
 #' @keywords internal
 .guessAtTargetAndFun <- function(targetFilePath,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
-                                 filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1)) {
+                                 filesExtracted, fun = NULL, verbose = getOption("reproducible.verbose", 1),
+                                 messageGuessing = TRUE) {
+  # `messageGuessing = FALSE` keeps the target/fun guessing (the result still
+  # needs a targetFile + fun) but suppresses the user-facing messages about it.
+  # This is used by direct preProcess() calls, which never load the object, so
+  # "targetFile was not specified", "Picking the last one", etc. are misleading.
   # fun = NA means "don't load anything" — skip all guessing and messaging.
   # Guard is.na() with is.atomic + length-1 so a user-supplied language object
   # (e.g. `fun = sf::st_read(targetFile)`) doesn't trip "is.na() applied to
@@ -837,7 +848,8 @@ extractFromArchive <- function(archive,
           paste(possibleFiles, collapse = "\n")
         )
       }
-      messagePreProcess(c("targetFile was not specified.", secondPartOfMess), verbose = verbose)
+      if (messageGuessing)
+        messagePreProcess(c("targetFile was not specified.", secondPartOfMess), verbose = verbose)
 
       targetFilePath <- if (is.null(fun)) {
         NULL
@@ -853,15 +865,17 @@ extractFromArchive <- function(archive,
         }
       }
       if (length(targetFilePath) > 1) {
-        messagePreProcess("More than one possible files to load:\n", verbose = verbose)
-        if (length(targetFilePath) > 100) {
-          filesForMess <- data.table(Extracted = targetFilePath)
-          messageDF(filesForMess, indent = .message$PreProcessIndent, verbose = verbose)
-        } else {
-          filesForMess <- paste(targetFilePath, collapse = "\n")
-          messagePreProcess(filesForMess)
+        if (messageGuessing) {
+          messagePreProcess("More than one possible files to load:\n", verbose = verbose)
+          if (length(targetFilePath) > 100) {
+            filesForMess <- data.table(Extracted = targetFilePath)
+            messageDF(filesForMess, indent = .message$PreProcessIndent, verbose = verbose)
+          } else {
+            filesForMess <- paste(targetFilePath, collapse = "\n")
+            messagePreProcess(filesForMess)
+          }
+          messagePreProcess("Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
         }
-        messagePreProcess("Picking the last one. If not correct, specify a targetFile.", verbose = verbose)
         targetFilePath <- targetFilePath[length(targetFilePath)]
       }
     }

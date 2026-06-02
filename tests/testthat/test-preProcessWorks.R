@@ -686,3 +686,41 @@ test_that("PR#358 if dwnld already exists, was missing nested paths", {
   )
   testthat::expect_true(file.exists(ras$targetFilePath))
 })
+
+test_that("direct preProcess() suppresses target/fun guessing messages; prepInputs keeps them", {
+  testInit("terra")
+
+  # Build a local archive with two same-type candidate files so the target is
+  # ambiguous -> exercises the "Picking the last one" guessing path. No internet
+  # needed (local zip).
+  srcDir <- checkPath(file.path(tmpdir, "guessSrc"), create = TRUE)
+  saveRDS(1:10, file.path(srcDir, "aaa.rds"))
+  saveRDS(11:20, file.path(srcDir, "bbb.rds"))
+  arch <- file.path(tmpdir, "twoFiles.zip")
+  owd <- setwd(srcDir)
+  zipOK <- tryCatch(utils::zip(arch, files = c("aaa.rds", "bbb.rds"), flags = "-q"),
+                    error = function(e) e)
+  setwd(owd)
+  skip_if(is(zipOK, "error") || !file.exists(arch), "zip not available")
+
+  # Direct preProcess() never loads the object into R, so the guessing messages
+  # are noise and must be suppressed -- but the result still resolves.
+  ppMsgs <- capture_messages(
+    pp <- preProcess(archive = arch,
+                     destinationPath = checkPath(file.path(tmpdir, "ppDest"), create = TRUE))
+  )
+  expect_false(any(grepl("targetFile was not specified", ppMsgs)))
+  expect_false(any(grepl("More than one possible files to load", ppMsgs)))
+  expect_false(any(grepl("Picking the last one", ppMsgs)))
+  expect_true(file.exists(pp$targetFilePath))
+
+  # prepInputs() loads the object, so the same guessing messages are relevant
+  # and must still be shown.
+  piMsgs <- capture_messages(
+    pi <- prepInputs(archive = arch,
+                     destinationPath = checkPath(file.path(tmpdir, "piDest"), create = TRUE))
+  )
+  expect_true(any(grepl("targetFile was not specified", piMsgs)))
+  expect_true(any(grepl("Picking the last one", piMsgs)))
+  expect_identical(pi, 11:20) # "Picking the last one" == bbb.rds
+})
