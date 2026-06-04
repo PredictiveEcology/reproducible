@@ -108,6 +108,19 @@
   remote source advertises no file size (e.g. a server with no
   `content-length` header). The size comparison now treats a missing remote
   size as "unknown" and falls through to the normal hash/download path.
+* Parallel ranged downloads (the opt-in `reproducible.urlRemap` path) no longer
+  fail on Windows, where opening all `reproducible.parallel.streams` (e.g. 48)
+  connections at once was refused at connection time, so almost every part
+  failed and the download fell back to a single stream. The number of
+  *simultaneous* connections is now capped (the file is still split into many
+  small parts for cheap retries, but only some download at once); the new option
+  `reproducible.parallel.maxConnections` controls this and defaults to
+  `parallelly::availableCores() - 1`. The per-part failure reason (from
+  `curl`) is now reported on each retry and on fallback, instead of being
+  silently discarded. A new option `reproducible.parallel.connecttimeout`
+  (default `30` seconds) sets the per-connection establishment timeout; this was
+  previously mis-derived from `reproducible.timeout` and could collapse to ~1
+  second if that option was lowered.
 
 # reproducible 3.1.1
 

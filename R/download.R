@@ -716,7 +716,8 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   if (isTRUE(pp$use)) {
     streams <- as.integer(getOption("reproducible.parallel.streams", 48L))
     messagePreProcess("Downloading ", url, " using ", streams,
-                      " parallel ranged streams ...", verbose = verbose)
+                      " ranged parts (capped at ",
+                      .parallelMaxConnections(), " concurrent connections) ...", verbose = verbose)
     ok <- tryCatch(
       .parallelRangedDownload(url, destFile, pp$info$size, n = streams, verbose = verbose),
       error = function(e) {
@@ -892,6 +893,20 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
 }
 
+# Maximum number of *simultaneous* connections for the parallel ranged download.
+# Controlled by `reproducible.parallel.maxConnections`; when that is unset (NULL)
+# or not a valid number, the ceiling is `parallelly::availableCores() - 1`. Always
+# at least 1. This bounds the burst of concurrent TLS handshakes (independent of
+# how many parts the file is split into), which is what some stacks -- notably
+# Windows -- reject when all `reproducible.parallel.streams` open at once.
+.parallelMaxConnections <- function() {
+  mc <- getOption("reproducible.parallel.maxConnections", NULL)
+  if (is.null(mc) || is.na(suppressWarnings(as.integer(mc)[1]))) {
+    mc <- tryCatch(parallelly::availableCores() - 1L, error = function(e) 1L)
+  }
+  max(1L, as.integer(mc)[1])
+}
+
 #' Download a file in parallel using HTTP Range requests
 #'
 #' Internal helper for the opt-in parallel download path (Feature A). Splits
@@ -932,8 +947,22 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   on.exit(unlink(partFiles), add = TRUE)
 
   okPart <- logical(nParts)
+  failMsg <- rep(NA_character_, nParts) # last failure reason per part (diagnostics)
   expected <- hi - lo + 1 # expected byte count for each part
   totOS <- structure(size, class = "object_size")
+
+  # Compact, de-duplicated summary of why a set of parts failed, e.g.
+  # "Couldn't connect to server (x44); Timeout was reached (x2)". Surfaced on
+  # retries and on fallback so platform-specific failures (notably on Windows,
+  # where opening many simultaneous connections can be refused) are visible
+  # instead of silently triggering a single-stream fallback.
+  reasonSummary <- function(idx) {
+    msgs <- failMsg[idx]
+    msgs <- msgs[!is.na(msgs) & nzchar(msgs)]
+    if (!length(msgs)) return("no error detail reported")
+    tab <- sort(table(msgs), decreasing = TRUE)
+    paste(sprintf("%s (x%d)", names(tab), as.integer(tab)), collapse = "; ")
+  }
 
   # Fetch a set of part indices concurrently, streaming each body straight to
   # its `partFiles[j]` (`data = <file>` => never held in memory). curl's
@@ -944,12 +973,23 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   # curl::multi_download, which can't set per-part Range headers), so when
   # asked we poll in short slices and report the on-disk aggregate.
   fetchParts <- function(idx, showProgress) {
-    pool <- curl::new_pool(total_con = length(idx), host_con = length(idx))
+    # Cap the number of *simultaneous* connections. The file is still split into
+    # many small parts (so a single drop costs only one cheap re-fetch), but
+    # opening all of them at once (up to `reproducible.parallel.streams`, e.g. 48
+    # TLS handshakes in a burst) is rejected by some stacks -- notably Windows --
+    # failing most parts at connection time. curl's pool runs at most `maxCon`
+    # concurrently and queues the rest. See .parallelMaxConnections().
+    maxCon <- min(.parallelMaxConnections(), length(idx))
+    pool <- curl::new_pool(total_con = maxCon, host_con = maxCon)
     for (i in idx) {
       h <- curl::new_handle(url = url)
       curl::handle_setheaders(h, Range = sprintf("bytes=%.0f-%.0f", lo[i], hi[i]))
       curl::handle_setopt(h,
-        connecttimeout = ceiling(getOption("reproducible.timeout", 12000) / 1000),
+        # Per-connection establishment timeout (seconds). This is NOT the overall
+        # download timeout (`reproducible.timeout`, which can be hours): it is a
+        # short, dedicated cap so a stalled handshake fails its own part quickly
+        # and gets retried, rather than hanging.
+        connecttimeout = as.integer(getOption("reproducible.parallel.connecttimeout", 30L))[1],
         useragent = getOption("reproducible.useragent")
       )
       local({
@@ -957,8 +997,14 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
         curl::multi_add(
           handle = h,
           # 206 = Partial Content (ranged); 200 = server ignored Range (whole file)
-          done = function(res) okPart[j] <<- isTRUE(res$status_code %in% c(200L, 206L)),
-          fail = function(str) okPart[j] <<- FALSE,
+          done = function(res) {
+            okPart[j] <<- isTRUE(res$status_code %in% c(200L, 206L))
+            if (!okPart[j]) failMsg[j] <<- paste0("HTTP status ", res$status_code)
+          },
+          fail = function(str) {
+            okPart[j] <<- FALSE
+            failMsg[j] <<- str
+          },
           data = partFiles[j],
           pool = pool
         )
@@ -973,8 +1019,8 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
         elapsed <- as.numeric(difftime(Sys.time(), startTime, units = "secs"))
         # ETA from the average rate so far (bytes/sec); blank until there is signal
         eta <- if (done > 0 && elapsed > 0) elapsed * (size - done) / done else NA_real_
-        cat(sprintf("\r  %s of %s via %d parallel ranged streams | elapsed time: %s | estimated time left: %s        ",
-                    format(doneOS, units = "auto"), format(totOS, units = "auto"), nParts,
+        cat(sprintf("\r  %s of %s via %d concurrent ranged streams | elapsed time: %s | estimated time left: %s        ",
+                    format(doneOS, units = "auto"), format(totOS, units = "auto"), maxCon,
                     .formatDuration(elapsed), .formatDuration(eta)))
         utils::flush.console()
         if (st$pending == 0) break
@@ -1006,10 +1052,14 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     if (!length(todo)) break
     if (attempt < maxAttempts) {
       messagePreProcess("Retrying ", length(todo), " incomplete download part(s) (attempt ",
-                        attempt + 1L, " of ", maxAttempts, ") ...", verbose = verbose)
+                        attempt + 1L, " of ", maxAttempts, "); reason(s): ",
+                        reasonSummary(todo), " ...", verbose = verbose)
     }
   }
   if (length(todo)) { # a part still won't complete -> let caller fall back
+    messagePreProcess(length(todo), " of ", nParts, " parts still failed after ",
+                      maxAttempts, " attempts; reason(s): ", reasonSummary(todo),
+                      ". Falling back to single stream.", verbose = verbose)
     return(FALSE)
   }
 
