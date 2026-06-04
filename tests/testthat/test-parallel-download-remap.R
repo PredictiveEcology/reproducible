@@ -228,11 +228,20 @@ test_that("parallel path does NOT engage when the server lacks Accept-Ranges", {
 # Feature A: simultaneous-connection cap (.parallelMaxConnections) -- offline
 # ---------------------------------------------------------------------------
 
-test_that(".parallelMaxConnections defaults to availableCores() - 1", {
+test_that(".parallelMaxConnections returns a positive scalar integer by default", {
+  withr::local_options(reproducible.parallel.maxConnections = NULL)
+  mc <- reproducible:::.parallelMaxConnections()
+  expect_type(mc, "integer")
+  expect_length(mc, 1L)
+  expect_gte(mc, 1L)
+})
+
+test_that(".parallelMaxConnections defaults to availableCores() - 1 when parallelly is present", {
+  skip_if_not_installed("parallelly") # parallelly is Suggested, not a hard dependency
   withr::local_options(reproducible.parallel.maxConnections = NULL)
   expect_identical(
     reproducible:::.parallelMaxConnections(),
-    max(1L, as.integer(parallelly::availableCores() - 1L))
+    max(1L, as.integer(parallelly::availableCores())[1] - 1L)
   )
 })
 

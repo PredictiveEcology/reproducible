@@ -895,16 +895,25 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 
 # Maximum number of *simultaneous* connections for the parallel ranged download.
 # Controlled by `reproducible.parallel.maxConnections`; when that is unset (NULL)
-# or not a valid number, the ceiling is `parallelly::availableCores() - 1`. Always
-# at least 1. This bounds the burst of concurrent TLS handshakes (independent of
-# how many parts the file is split into), which is what some stacks -- notably
-# Windows -- reject when all `reproducible.parallel.streams` open at once.
+# or not a valid number, the ceiling is `availableCores() - 1` -- using
+# `parallelly::availableCores()` when that (Suggested) package is installed, else
+# falling back to base `parallel::detectCores()`. Always at least 1. This bounds
+# the burst of concurrent TLS handshakes (independent of how many parts the file
+# is split into), which is what some stacks -- notably Windows -- reject when all
+# `reproducible.parallel.streams` open at once.
 .parallelMaxConnections <- function() {
-  mc <- getOption("reproducible.parallel.maxConnections", NULL)
-  if (is.null(mc) || is.na(suppressWarnings(as.integer(mc)[1]))) {
-    mc <- tryCatch(parallelly::availableCores() - 1L, error = function(e) 1L)
+  mc <- suppressWarnings(as.integer(getOption("reproducible.parallel.maxConnections", NULL))[1])
+  if (is.na(mc)) {
+    mc <- tryCatch({
+      cores <- if (requireNamespace("parallelly", quietly = TRUE)) {
+        parallelly::availableCores()
+      } else {
+        parallel::detectCores() # base package; always available
+      }
+      as.integer(cores)[1] - 1L
+    }, error = function(e) NA_integer_)
   }
-  max(1L, as.integer(mc)[1])
+  if (is.na(mc) || mc < 1L) 1L else mc
 }
 
 #' Download a file in parallel using HTTP Range requests

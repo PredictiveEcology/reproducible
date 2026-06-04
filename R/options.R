@@ -190,7 +190,9 @@
 #'     single-stream download, so checksums are unaffected.
 #'   }
 #'   \item{`parallel.maxConnections`}{
-#'     Default: `NULL`, meaning `parallelly::availableCores() - 1`. The maximum
+#'     Default: `NULL`, meaning `parallelly::availableCores() - 1` (or
+#'     `parallel::detectCores() - 1` if the Suggested \pkg{parallelly} package is
+#'     not installed). The maximum
 #'     number of ranged parts that download **simultaneously**; the rest queue
 #'     until a connection frees up. This bounds the burst of concurrent TLS
 #'     handshakes, which some stacks (notably Windows) refuse when all

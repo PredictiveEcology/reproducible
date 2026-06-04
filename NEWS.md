@@ -115,7 +115,8 @@
   *simultaneous* connections is now capped (the file is still split into many
   small parts for cheap retries, but only some download at once); the new option
   `reproducible.parallel.maxConnections` controls this and defaults to
-  `parallelly::availableCores() - 1`. The per-part failure reason (from
+  `parallelly::availableCores() - 1` (or `parallel::detectCores() - 1` when the
+  Suggested `parallelly` package is absent). The per-part failure reason (from
   `curl`) is now reported on each retry and on fallback, instead of being
   silently discarded. A new option `reproducible.parallel.connecttimeout`
   (default `30` seconds) sets the per-connection establishment timeout; this was
