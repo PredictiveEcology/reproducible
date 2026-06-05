@@ -172,20 +172,40 @@
 #'     [downloadFile()], and [postProcess()].
 #'   }
 #'   \item{`parallel.streams`}{
-#'     Default: `48L`. The number of concurrent HTTP Range requests to use when
-#'     downloading a single large file over HTTPS. **This has no effect unless
-#'     you have opted in by setting `reproducible.urlRemap`** (see below): if no
-#'     remap is set, downloads are always single-stream, regardless of this
-#'     value. Once opted in, a download that gets redirected to a Range-capable
-#'     mirror is fetched in parallel using this many streams — but only when the
-#'     server advertises `Accept-Ranges: bytes` and the file is larger than
+#'     Default: `48L`. The number of contiguous byte-range **parts** a single
+#'     large HTTPS file is split into. **This has no effect unless you have opted
+#'     in by setting `reproducible.urlRemap`** (see below): if no remap is set,
+#'     downloads are always single-stream, regardless of this value. Once opted
+#'     in, a download that gets redirected to a Range-capable mirror is split
+#'     into this many parts — but only when the server advertises
+#'     `Accept-Ranges: bytes` and the file is larger than
 #'     `reproducible.parallel.threshold`; otherwise, and on any failure, it
-#'     falls back transparently to a single stream. Especially useful on
-#'     networks that shape bandwidth per-connection (a per-flow cap times 48
-#'     streams). Set to `1L` to force single-stream downloads even when a remap
-#'     is set. Requires the \pkg{curl} and \pkg{httr2} packages. The assembled
-#'     file is byte-identical to a single-stream download, so checksums are
-#'     unaffected.
+#'     falls back transparently to a single stream. Splitting into many small
+#'     parts keeps retries cheap (a dropped connection costs only one
+#'     part re-fetch). The number that download *at once* is separately capped by
+#'     `reproducible.parallel.maxConnections`. Especially useful on networks that
+#'     shape bandwidth per-connection. Set to `1L` to force single-stream
+#'     downloads even when a remap is set. Requires the \pkg{curl} and
+#'     \pkg{httr2} packages. The assembled file is byte-identical to a
+#'     single-stream download, so checksums are unaffected.
+#'   }
+#'   \item{`parallel.maxConnections`}{
+#'     Default: `NULL`, meaning `parallelly::availableCores() - 1` (or
+#'     `parallel::detectCores() - 1` if the Suggested \pkg{parallelly} package is
+#'     not installed). The maximum
+#'     number of ranged parts that download **simultaneously**; the rest queue
+#'     until a connection frees up. This bounds the burst of concurrent TLS
+#'     handshakes, which some stacks (notably Windows) refuse when all
+#'     `reproducible.parallel.streams` are opened at once — the symptom being
+#'     most parts failing immediately at connection time. Set a positive integer
+#'     to override the default ceiling.
+#'   }
+#'   \item{`parallel.connecttimeout`}{
+#'     Default: `30L`, in seconds. The per-connection establishment timeout for
+#'     each ranged stream. This is distinct from `reproducible.timeout` (the
+#'     overall download timeout, which may be hours): a short, dedicated cap so a
+#'     stalled handshake fails its own part quickly and is retried rather than
+#'     hanging.
 #'   }
 #'   \item{`parallel.threshold`}{
 #'     Default: `10 * 1024^2` (10 MiB), in bytes. Files at or below this size are
@@ -394,7 +414,9 @@ reproducibleOptions <- function() {
     reproducible.nThreads = 1,
     reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
-    reproducible.parallel.streams = 48L,            # concurrent ranged streams; opt-in is via urlRemap
+    reproducible.parallel.connecttimeout = 30L,     # seconds; per-connection establishment timeout for ranged streams
+    reproducible.parallel.maxConnections = NULL,    # max simultaneous connections; NULL => parallelly::availableCores() - 1
+    reproducible.parallel.streams = 48L,            # number of ranged parts; opt-in is via urlRemap
     reproducible.parallel.threshold = 10 * 1024^2,  # bytes; only files larger use the parallel path
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",

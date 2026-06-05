@@ -225,6 +225,65 @@ test_that("parallel path does NOT engage when the server lacks Accept-Ranges", {
 })
 
 # ---------------------------------------------------------------------------
+# Feature A: simultaneous-connection cap (.parallelMaxConnections) -- offline
+# ---------------------------------------------------------------------------
+
+test_that(".parallelMaxConnections returns a positive scalar integer by default", {
+  withr::local_options(reproducible.parallel.maxConnections = NULL)
+  mc <- reproducible:::.parallelMaxConnections()
+  expect_type(mc, "integer")
+  expect_length(mc, 1L)
+  expect_gte(mc, 1L)
+})
+
+test_that(".parallelMaxConnections defaults to availableCores() - 1 when parallelly is present", {
+  skip_if_not_installed("parallelly") # parallelly is Suggested, not a hard dependency
+  withr::local_options(reproducible.parallel.maxConnections = NULL)
+  expect_identical(
+    reproducible:::.parallelMaxConnections(),
+    max(1L, as.integer(parallelly::availableCores())[1] - 1L)
+  )
+})
+
+test_that(".parallelMaxConnections honours an explicit option", {
+  withr::local_options(reproducible.parallel.maxConnections = 4L)
+  expect_identical(reproducible:::.parallelMaxConnections(), 4L)
+})
+
+test_that(".parallelMaxConnections is floored at 1 and falls back on a bad value", {
+  withr::local_options(reproducible.parallel.maxConnections = 0L)
+  expect_identical(reproducible:::.parallelMaxConnections(), 1L) # floored at 1
+  withr::local_options(reproducible.parallel.maxConnections = "bogus")
+  expect_gte(reproducible:::.parallelMaxConnections(), 1L) # NA -> availableCores() - 1
+})
+
+# ---------------------------------------------------------------------------
+# Feature A: failed parts surface their reason, then return FALSE -- offline
+# ---------------------------------------------------------------------------
+
+test_that(".parallelRangedDownload reports failure reasons and returns FALSE when parts fail", {
+  skip_on_cran()
+  skip_if_not_installed("curl")
+  dest <- withr::local_tempfile()
+  withr::local_options(
+    reproducible.parallel.connecttimeout = 1L, # fail fast
+    reproducible.parallel.maxConnections = 2L
+  )
+  # Non-routable port -> every ranged part fails at connection time. The reason
+  # must be surfaced (not silently swallowed) and the function must return FALSE
+  # so the caller can fall back to a single stream.
+  msgs <- testthat::capture_messages(
+    ok <- reproducible:::.parallelRangedDownload(
+      "http://127.0.0.1:1/nope.bin", dest, size = 3000, n = 3L, verbose = 1)
+  )
+  expect_false(ok)
+  joined <- paste(msgs, collapse = "\n")
+  expect_match(joined, "reason\\(s\\)")
+  expect_match(joined, "Falling back to single stream")
+  expect_false(file.exists(dest)) # nothing assembled on failure
+})
+
+# ---------------------------------------------------------------------------
 # Feature A: dlGeneric dispatch -- offline via mocking of the mechanism
 # ---------------------------------------------------------------------------
 
