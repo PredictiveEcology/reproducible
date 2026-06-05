@@ -7,7 +7,6 @@
 
 test_that("checkAndMakeCloudFolderID warns when an explicit cloudFolderID cannot be resolved", {
   skip_if_not_installed("googledrive")
-  skip_if_not_installed("tibble")
   url <- "https://drive.google.com/drive/folders/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA?usp=share_link"
   testthat::with_mocked_bindings(
     expect_warning(
@@ -15,7 +14,7 @@ test_that("checkAndMakeCloudFolderID warns when an explicit cloudFolderID cannot
                                                create = FALSE, verbose = 0),
       "could not be resolved"
     ),
-    drive_get = function(...) tibble::tibble(name = character(0), id = character(0)),
+    drive_get = function(...) data.frame(name = character(0), id = character(0)),
     .package = "googledrive"
   )
 })
@@ -43,7 +42,6 @@ test_that("useCloud = TRUE with no cloudFolderID skips cloud and caches locally 
 
 test_that("checkAndMakeCloudFolderID does NOT warn when cloudFolderID is NULL (documented default)", {
   skip_if_not_installed("googledrive")
-  skip_if_not_installed("tibble")
   # A NULL cloudFolderID deriving a folder from the cache path is the documented
   # default behaviour, not a surprising substitution -> no warning.
   testthat::with_mocked_bindings(
@@ -53,7 +51,7 @@ test_that("checkAndMakeCloudFolderID does NOT warn when cloudFolderID is NULL (d
                                                  create = FALSE, verbose = 0)
       )
     ),
-    drive_get = function(...) tibble::tibble(name = character(0), id = character(0)),
+    drive_get = function(...) data.frame(name = character(0), id = character(0)),
     .package = "googledrive"
   )
 })
