@@ -179,11 +179,17 @@ setMethod(
                                          invokeRestart("muffleWarning")
                                      })
       }
-    } else if (inherits(object, "SpatVector")) {
+    } else if (.isSpatVector(object) || .isSF(object)) {
       if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
       }
-      forDig <- wrapSpatVector(object)
+      if (.isSF(object))
+        object <- terra::vect(object)
+      if (getOption("reproducible.digestV4", FALSE)) {
+        forDig <- digestSpatVector(object)
+      } else {
+        forDig <- wrapSpatVector(object)
+      }
     } else if (inherits(object, "SpatExtent")) {
       forDig <- .wrap(object)
     } else if (inherits(object, "drive_id")) {
@@ -202,6 +208,21 @@ setMethod(
     return(out)
   }
 )
+
+
+digestSpatVector <- function(x, precision = 6) {
+  geom_wkt <- terra::geom(x, wkt = TRUE)
+  # Round all numeric values in WKT strings
+  geom_normalised <- stringr::str_replace_all(
+    geom_wkt,
+    "-?\\d+\\.\\d+",
+    function(m) formatC(round(as.numeric(m), precision), format = "f", digits = precision)
+  )
+  # Attributes, sorted for stability
+  attrs <- as.data.frame(x)
+  attrs_sorted <- attrs[order(do.call(paste, attrs)), sort(names(attrs)), drop = FALSE]
+  list(geom_normalised, attrs_sorted)
+}
 
 #' @rdname robustDigest
 #' @export
