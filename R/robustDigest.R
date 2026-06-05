@@ -234,13 +234,30 @@ setMethod(
 digestSpatVector <- function(x, precision = 6) {
   geom <- terra::geom(x)
   geom[, c("x", "y")] <- round(geom[, c("x", "y")], precision)
-  # Attributes, sorted for stability (guard the no-attribute / single-row cases
-  # so `order(do.call(paste, attrs))` cannot collapse the rows).
+  # Attribute table, made platform-stable:
+  #  * columns are ordered by name with the locale-independent radix method;
+  #  * rows are LEFT in feature order (not sorted) so they stay aligned with the
+  #    geometry matrix above. Sorting rows independently (the earlier approach)
+  #    is unsafe on two counts: it depends on the locale (LC_COLLATE orders
+  #    accented text differently across OSes -> different digest), and it
+  #    decouples each feature's attributes from its geometry (swapping which
+  #    feature carries which attributes would not change the digest -- a hash
+  #    collision);
+  #  * character/factor text (and column names) is coerced to UTF-8 as cheap
+  #    insurance. terra already returns UTF-8 for stored attributes, so this is
+  #    usually a no-op, but it guarantees the mark regardless of how the
+  #    SpatVector was built.
   attrs <- as.data.frame(x)
-  if (NCOL(attrs) > 0L && NROW(attrs) > 1L) {
-    attrs <- attrs[order(do.call(paste, attrs)), sort(names(attrs)), drop = FALSE]
+  if (NCOL(attrs) > 0L) {
+    attrs[] <- lapply(attrs, function(col) {
+      if (is.factor(col)) `levels<-`(col, enc2utf8(levels(col)))
+      else if (is.character(col)) enc2utf8(col)
+      else col
+    })
+    names(attrs) <- enc2utf8(names(attrs))
+    attrs <- attrs[, order(names(attrs), method = "radix"), drop = FALSE]
   }
-  list(geom = geom, type = terra::geomtype(x), attrs_sorted = attrs)
+  list(geom = geom, type = terra::geomtype(x), attrs = attrs)
 }
 
 #' @rdname robustDigest

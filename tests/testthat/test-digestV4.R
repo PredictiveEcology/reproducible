@@ -58,6 +58,17 @@ test_that("digestV4 = FALSE leaves sf on the generic (unchanged) path", {
   expect_false(identical(d_off, d_on))
 })
 
+test_that("digestV4 = TRUE keeps attributes bound to their geometry (no row-sort collision)", {
+  skip_if_not_installed("terra")
+  withr::local_options(reproducible.digestV4 = TRUE)
+  gA <- "POLYGON ((0 0, 0 1, 1 1, 0 0))"
+  gB <- "POLYGON ((2 2, 2 3, 3 3, 2 2))"
+  v1 <- terra::vect(c(gA, gB)); v1$id <- c("x", "y")
+  v2 <- terra::vect(c(gA, gB)); v2$id <- c("y", "x") # same geoms + id set, swapped pairing
+  expect_false(identical(reproducible:::.robustDigest(v1),
+                         reproducible:::.robustDigest(v2)))
+})
+
 test_that("digestV4 = TRUE distinguishes geometry type (polygon vs line) with same vertices", {
   skip_if_not_installed("terra")
   poly <- terra::vect("POLYGON ((0 0, 0 1, 1 1, 0 0))")
