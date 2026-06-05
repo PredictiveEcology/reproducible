@@ -775,6 +775,28 @@ detectActiveCores <- function(pattern = "", minCPU = 50) {
   invisible()
 }
 
+# The effective digest version, an integer. `reproducible.digestVersion` is the
+# single going-forward control; it supersedes the (still-honoured) booleans
+# `reproducible.digestV3` and `reproducible.digestV4`. Resolution order:
+#   1. `reproducible.digestVersion`, if set to a valid integer;
+#   2. else derived from the superseded booleans (digestV4 = TRUE -> 4;
+#      digestV3 = FALSE -> 2);
+#   3. else the default, 4.
+# Used as `.digestVersion() >= N` at the points that switch digest behaviour
+# (>= 3: the hash assembly added in the reproducible package v3.x; >= 4:
+# platform-stable sf/SpatVector). N here is the digest-algorithm version, not
+# the reproducible package version.
+.digestVersion <- function() {
+  dv <- getOption("reproducible.digestVersion", NULL)
+  if (!is.null(dv)) {
+    dv <- suppressWarnings(as.integer(dv)[1])
+    if (!is.na(dv)) return(dv)
+  }
+  if (isTRUE(getOption("reproducible.digestV4", FALSE))) return(4L)
+  if (isFALSE(getOption("reproducible.digestV3", TRUE))) return(2L)
+  4L
+}
+
 #' @keywords internal
 .getDestinationPathShared <- function() {
   newVal <- getOption("reproducible.destinationPathShared", NULL)

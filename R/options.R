@@ -299,7 +299,7 @@
 #'   \item{`reproducible.useCacheV3`}{
 #'     Default: `TRUE`. If this is set to `FALSE`, it will use the old `Cache` source
 #'     code. This will only be available for a short period before it is deleted
-#'     from the package. See also `reproducible.digestV3`. It is not guaranteed to
+#'     from the package. See also `reproducible.digestVersion`. It is not guaranteed to
 #'     be identical to using a previous version of `reproducible (<3.0)`.
 #'   }
 #'   \item{`useCloud`}{
@@ -353,29 +353,54 @@
 #'     load the cached copy from the repository.
 #'     This may help diagnosing some problems that may occur.
 #'   }
+#'   \item{`digestVersion`}{
+#'     Default: `NULL` (which resolves to `4`). A single integer that selects the
+#'     digest (i.e. `cacheId`) algorithm used by [Cache()]. This is the
+#'     going-forward control; it supersedes the booleans `digestV3` and
+#'     `digestV4` below (which are still honoured when `digestVersion` is unset).
+#'     Higher numbers are newer; each builds on the previous one. (Note: this is
+#'     the *digest-algorithm* version, **not** the version of the `reproducible`
+#'     **package** — although the lower numbers echo the package generation that
+#'     introduced them. References below to e.g. "the `reproducible` package
+#'     v3.x" mean the package release, not this option.) The versions:
+#'     \describe{
+#'       \item{`2`}{*Some of* the hash assembly used by older `reproducible`
+#'         **package** versions (before package v3.0.0), for partial backwards
+#'         compatibility with caches they created. It cannot be made exact for
+#'         all classes, particularly file-backed objects. (Equivalent to the old
+#'         `digestV3 = FALSE`.)}
+#'       \item{`3`}{The hash assembly introduced in the `reproducible` **package**
+#'         v3.x (the default through package v3.1.1): includes the names of list
+#'         elements and several other tweaks. `sf`/`SpatVector` use the original
+#'         (pre-platform-stable) geometry digest, which could differ across
+#'         operating systems. Set `digestVersion = 3` to reproduce the `cacheId`s
+#'         of the `reproducible` package v3.1.1 and earlier, and to avoid the
+#'         one-time cache invalidation described under `4`.}
+#'       \item{`4`}{**Default.** As `3`, but `sf` and `SpatVector` objects are
+#'         digested with a platform-stable algorithm: the geometry is the numeric
+#'         vertex matrix with coordinates rounded to a fixed precision (plus the
+#'         geometry type), and attributes are kept in feature order with columns
+#'         sorted by a locale-independent method. The same vector data then
+#'         produces the same `cacheId` on Windows, macOS and Linux (digest
+#'         version `3` could differ across operating systems, preventing
+#'         shared/cloud caching of these objects), and an `sf` object and its
+#'         `SpatVector` equivalent digest identically. Requires the \pkg{terra}
+#'         package. **NOTE:** because `4` is now the default, the `cacheId` of
+#'         every `sf`/`SpatVector` object differs from that produced by the
+#'         `reproducible` package v3.1.1 and earlier, so cached results that
+#'         involved such objects are *recomputed once* under the new algorithm.
+#'         Set `digestVersion = 3` to avoid this.}
+#'     }
+#'   }
 #'   \item{`digestV3`}{
-#'     Default: `TRUE`. This uses a digest approach that includes the names of
-#'     list elements and several other tweaks that were created for `reproducible 3.x`.
-#'     Set this to `FALSE` to use *some of* the previous cache digesting to
-#'     achieve some backwards compatibility with the digest algorithms of `reproducible (<3.x)`.
-#'     It will not be possible to get it exact for all classes of objects, particularly
-#'     those with file-backing.
+#'     **Superseded by `digestVersion`** (still honoured when `digestVersion` is
+#'     unset). Default: `TRUE`. `TRUE` leaves the version at its default; `FALSE`
+#'     is equivalent to `digestVersion = 2` (see above).
 #'   }
 #'   \item{`digestV4`}{
-#'     Default: `FALSE`. **Opt-in.** When `TRUE`, `sf` and `SpatVector` objects
-#'     are digested with a new, platform-stable algorithm: the geometry is taken
-#'     as the numeric vertex matrix with coordinates rounded to a fixed
-#'     precision (plus the geometry type), and the
-#'     attribute table is sorted, so that the same vector data produces the same
-#'     `cacheId` on Windows, macOS and Linux (the previous algorithm could differ
-#'     across operating systems, preventing shared/cloud caching of these
-#'     objects). With the default (`FALSE`), `SpatVector` digesting is unchanged
-#'     and `sf` digesting is unchanged, so existing caches are **not** affected.
-#'     **NOTE:** turning this `TRUE` changes the `cacheId` of every `sf`/`SpatVector`
-#'     object, so it *invalidates previously cached results* that involved such
-#'     objects — they will be recomputed once under the new algorithm. It is
-#'     opt-in for now while it is validated; it may become the default in a
-#'     future release. Requires the \pkg{terra} package.
+#'     **Superseded by `digestVersion`** (still honoured when `digestVersion` is
+#'     unset). Default: `FALSE`. `TRUE` is equivalent to `digestVersion = 4`,
+#'     which is now also the default (see above).
 #'   }
 #'
 #' }
@@ -463,8 +488,9 @@ reproducibleOptions <- function() {
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1,
-    reproducible.digestV3 = TRUE,
-    reproducible.digestV4 = FALSE # opt-in platform-stable sf/SpatVector digest; invalidates prior caches when TRUE
+    reproducible.digestVersion = NULL, # NULL => 4; the going-forward digest-algorithm selector
+    reproducible.digestV3 = TRUE,      # superseded by digestVersion (still honoured when it is unset)
+    reproducible.digestV4 = FALSE      # superseded by digestVersion (still honoured when it is unset)
   )
 }
 

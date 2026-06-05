@@ -4,21 +4,23 @@
 
 ## new features
 
-* New **opt-in** option `reproducible.digestV4` (default `FALSE`) for a
-  platform-stable digest of `sf` and `SpatVector` objects. The previous
-  algorithm could digest the same vector to different values on Windows vs
-  Linux/macOS, so the same data produced different `cacheId`s on different
-  operating systems — preventing shared and cloud caching of these objects
-  across machines. With `reproducible.digestV4 = TRUE`, geometry is taken as the
-  numeric vertex matrix with coordinates rounded to a fixed precision (plus the
-  geometry type) and the attribute table is
-  sorted, so the `cacheId` is identical across platforms (and `sf` and its
-  `SpatVector` equivalent digest the same). **This is opt-in for now**: turning
-  it on changes the `cacheId` of every `sf`/`SpatVector` object and therefore
-  *invalidates previously cached results that involved them* (they are recomputed
-  once under the new algorithm). The default (`FALSE`) leaves `SpatVector` and
-  `sf` digesting unchanged. Requires the \pkg{terra} package. See
-  `?reproducibleOptions`.
+* New option `reproducible.digestVersion` — a single integer that selects the
+  `cacheId` (digest) algorithm, replacing the per-version booleans
+  `reproducible.digestV3`/`reproducible.digestV4` (which are still honoured when
+  `digestVersion` is unset). It **defaults to `4`**, a platform-stable digest of
+  `sf` and `SpatVector` objects: geometry is the numeric vertex matrix with
+  coordinates rounded to a fixed precision (plus the geometry type), and
+  attributes are kept in feature order with columns sorted locale-independently.
+  The same vector data therefore produces the same `cacheId` on Windows, macOS
+  and Linux (digest version 3 could differ across operating systems, preventing
+  shared/cloud caching of these objects), and an `sf` object and its `SpatVector`
+  equivalent now digest identically. **Because version 4 is the new default, the
+  `cacheId` of every `sf`/`SpatVector` object differs from the `reproducible`
+  package v3.1.1 and earlier**, so cached results that involved such objects are
+  recomputed once under the new algorithm. Set
+  `options(reproducible.digestVersion = 3)` to keep the previous behaviour and
+  avoid that one-time invalidation. Requires the \pkg{terra} package. See the
+  `digestVersion` entry in `?reproducibleOptions` for the full list of versions.
 
 * Downloads can now be transparently redirected to faster mirrors and
   fetched in parallel. Two cooperating, opt-in features:
