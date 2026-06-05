@@ -42,6 +42,9 @@
       "Using reproducible version ",
       utils::packageVersion("reproducible"), ".",
       # "\n  'reproducible' has changed the default database backend.", # Not true yet
+      "\n  cacheId digesting now defaults to version 4 (platform-stable sf/SpatVector,",
+      " consistent across operating systems); set options(reproducible.digestVersion = 3)",
+      " for the previous behaviour.",
       " See ?reproducibleOptions for many possible settings.")
   }
 }

@@ -44,6 +44,12 @@ utils::globalVariables(c(
 #'         call; 3) the default values of the Cache function. See section on *Nested Caching*.
 #' }
 #'
+#' The algorithm used to compute the `cacheId` (the hash of the inputs) is
+#' selectable via the `reproducible.digestVersion` option; see the
+#' `digestVersion` entry in [reproducibleOptions()] for the available versions
+#' and what each changes (notably version `4`, which makes `sf`/`SpatVector`
+#' digests identical across operating systems).
+#'
 #' `Cache` will add a tag to the entry in the cache database called `accessed`,
 #' which will assign the time that it was accessed, either read or write.
 #' That way, cached items can be shown (using `showCache`) or removed (using
@@ -379,7 +385,9 @@ utils::globalVariables(c(
 #'
 #' @seealso [showCache()], [clearCache()], [keepCache()],
 #'   [CacheDigest()] to determine the digest of a given function or expression,
-#'   as used internally within `Cache`, [movedCache()], [.robustDigest()], and
+#'   as used internally within `Cache`, [movedCache()], [.robustDigest()],
+#'   [reproducibleOptions()] (e.g. the `digestVersion` option that selects the
+#'   `cacheId` algorithm), and
 #'   for more advanced uses there are several helper functions,
 #'   e.g., [rmFromCache()], [CacheStorageDir()]
 #'
@@ -1226,7 +1234,7 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
   # preDigest[["._list"]] <- NULL # don't need this for CacheDigest
 
   # don't unname -- Eliot Jan 13, 2025 -- this keeps the outputHash
-  if (getOption("reproducible.digestV3", TRUE)) {
+  if (.digestVersion() >= 3L) {
     res <- .doDigest(preDigest, algo = algo, ...)
   } else {
     res <- .robustDigest(unname(sort(unlist(preDigest))), algo = algo, quick = TRUE, ...)

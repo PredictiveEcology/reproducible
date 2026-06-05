@@ -183,16 +183,16 @@ setMethod(
       if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
       }
-      # Opt-in (`reproducible.digestV4`): platform-stable digest. Default path
-      # (`wrapSpatVector`) is unchanged, so existing caches are not invalidated.
-      forDig <- if (isTRUE(getOption("reproducible.digestV4", FALSE))) {
+      # Digest version >= 4: platform-stable digest. Earlier versions keep the
+      # `wrapSpatVector` path, so existing caches are not invalidated by default.
+      forDig <- if (.digestVersion() >= 4L) {
         digestSpatVector(object)
       } else {
         wrapSpatVector(object)
       }
-    } else if (.isSF(object) && isTRUE(getOption("reproducible.digestV4", FALSE))) {
-      # Only opt-in: route `sf` through the same platform-stable algorithm as
-      # `SpatVector`. With `reproducible.digestV4 = FALSE` (default), `sf` falls
+    } else if (.isSF(object) && .digestVersion() >= 4L) {
+      # Digest version >= 4 only: route `sf` through the same platform-stable
+      # algorithm as `SpatVector`. At earlier versions (the default), `sf` falls
       # through to the generic path below, unchanged, so caches are unaffected.
       if (!requireNamespace("terra", quietly = TRUE)) {
         stop("Please install terra package")
@@ -218,7 +218,7 @@ setMethod(
 )
 
 # Platform-stable digest representation of a SpatVector. Used by .robustDigest()
-# when getOption("reproducible.digestV4") is TRUE (opt-in). The previous
+# when the digest version (.digestVersion()) is >= 4. The previous
 # representation (wrapSpatVector()) could digest the same vector to different
 # values on different operating systems, which broke shared/cloud caching of
 # sf/SpatVector objects across machines. This representation is built to be
