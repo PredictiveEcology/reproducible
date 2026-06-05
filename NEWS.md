@@ -96,6 +96,16 @@
 
 ## bug fixes
 
+* `Cache(useCloud = TRUE, cloudFolderID = ...)` now **warns** when the supplied
+  `cloudFolderID` cannot be resolved on Google Drive (not found, or not
+  accessible to the authenticated account). Previously this was silent: the code
+  substituted a folder *derived from the local cache path*, which differs from
+  machine to machine, so two machines computing the *identical* `cacheId` would
+  each read/write their own cloud folder and never share — the object would be
+  recomputed and re-uploaded on every machine. The warning tells the user the
+  supplied folder was not used and how to fix it (pass the same accessible Drive
+  folder id on every machine). Resolution behaviour is otherwise unchanged.
+
 * A direct `preProcess()` call no longer prints the target/fun guessing
   messages ("targetFile was not specified...", "Trying `fun` on ...",
   "More than one possible files to load... Picking the last one..."). Because

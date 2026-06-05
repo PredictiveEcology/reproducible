@@ -28,6 +28,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
 
   if (!is(cloudFolderID, "dribble")) {
     isNullCFI <- is.null(cloudFolderID)
+    cloudFolderIDorig <- cloudFolderID # for messaging if it cannot be resolved
     if (isNullCFI) {
       if (is.null(cachePath)) {
         cachePath <- .checkCacheRepo(cachePath, verbose = verbose)
@@ -74,6 +75,25 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
     }
 
     if (NROW(driveLs) == 0) {
+      # An explicit cloudFolderID was supplied but Google Drive could not resolve
+      # it (not found, or not accessible to the authenticated account). The code
+      # below silently substitutes a folder *derived from the local cache path*,
+      # which differs from machine to machine -- so cloud caches will NOT be
+      # shared across machines (the symptom: identical cacheIds, but each machine
+      # recomputes and re-uploads into its own folder). Warn so this is visible.
+      if (!isNullCFI) {
+        warning(
+          "The supplied cloudFolderID (", as.character(cloudFolderIDorig)[1], ") could not be ",
+          "resolved on Google Drive -- it was not found, or is not accessible to the ",
+          "authenticated Google account. ",
+          if (isTRUE(create)) "A folder derived from the local cache path is being used/created instead. " else "",
+          "That derived folder differs between machines, so cloud caches will NOT be shared ",
+          "across machines/operating systems. To share a cloud cache, ensure every machine ",
+          "passes the SAME cloudFolderID (a Drive folder id the authenticated account can ",
+          "access), e.g. options(reproducible.cloudFolderID = googledrive::as_id(\"<id>\")).",
+          call. = FALSE
+        )
+      }
       newcfid <- cloudFolderID
       if (isTRUE(create)) {
         if (isID) {
