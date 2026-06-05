@@ -112,6 +112,27 @@
 
 ## bug fixes
 
+* Cloud caching no longer silently invents a Google Drive folder when none is
+  specified. Previously, `Cache(useCloud = TRUE)` with no `cloudFolderID` (and
+  no `options(reproducible.cloudFolderID)`) **derived a folder name from the
+  local cache path and created/used it**. That derived name differs from machine
+  to machine, so two machines computing the *identical* `cacheId` each read/write
+  their own cloud folder and never share — the object is recomputed and
+  re-uploaded on every machine, silently. Now:
+  - if no `cloudFolderID` is set (neither the argument nor the option), cloud
+    caching is **skipped** (local cache only) with a one-time message, since a
+    `NULL` `cloudFolderID` means "no cloud target", not "make one up";
+  - a `cloudFolderID` argument of `NULL` now falls back to
+    `options(reproducible.cloudFolderID)` (the documented default) before this
+    check, so a globally-set option is honoured;
+  - when a `cloudFolderID` *is* supplied but cannot be resolved on Drive (not
+    found, or not accessible to the authenticated account), a **warning** is now
+    emitted (previously silent) explaining that the supplied folder was not used
+    and how to fix it (pass the same accessible Drive folder id on every
+    machine). To share a cloud cache across machines, set the same explicit
+    folder on each, e.g.
+    `options(reproducible.cloudFolderID = googledrive::as_id("<id>"))`.
+
 * A direct `preProcess()` call no longer prints the target/fun guessing
   messages ("targetFile was not specified...", "Trying `fun` on ...",
   "More than one possible files to load... Picking the last one..."). Because
