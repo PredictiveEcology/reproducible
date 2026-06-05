@@ -4,6 +4,21 @@
 
 ## new features
 
+* New **opt-in** option `reproducible.digestV4` (default `FALSE`) for a
+  platform-stable digest of `sf` and `SpatVector` objects. The previous
+  algorithm could digest the same vector to different values on Windows vs
+  Linux/macOS, so the same data produced different `cacheId`s on different
+  operating systems — preventing shared and cloud caching of these objects
+  across machines. With `reproducible.digestV4 = TRUE`, geometry is taken as
+  WKT with coordinates rounded to a fixed precision and the attribute table is
+  sorted, so the `cacheId` is identical across platforms (and `sf` and its
+  `SpatVector` equivalent digest the same). **This is opt-in for now**: turning
+  it on changes the `cacheId` of every `sf`/`SpatVector` object and therefore
+  *invalidates previously cached results that involved them* (they are recomputed
+  once under the new algorithm). The default (`FALSE`) leaves `SpatVector` and
+  `sf` digesting unchanged. Requires the \pkg{terra} package. See
+  `?reproducibleOptions`.
+
 * Downloads can now be transparently redirected to faster mirrors and
   fetched in parallel. Two cooperating, opt-in features:
   * **URL remap hook** — a new option `reproducible.urlRemap` accepts a

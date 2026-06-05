@@ -361,6 +361,21 @@
 #'     It will not be possible to get it exact for all classes of objects, particularly
 #'     those with file-backing.
 #'   }
+#'   \item{`digestV4`}{
+#'     Default: `FALSE`. **Opt-in.** When `TRUE`, `sf` and `SpatVector` objects
+#'     are digested with a new, platform-stable algorithm: the geometry is taken
+#'     as WKT with all coordinates rounded to a fixed precision, and the
+#'     attribute table is sorted, so that the same vector data produces the same
+#'     `cacheId` on Windows, macOS and Linux (the previous algorithm could differ
+#'     across operating systems, preventing shared/cloud caching of these
+#'     objects). With the default (`FALSE`), `SpatVector` digesting is unchanged
+#'     and `sf` digesting is unchanged, so existing caches are **not** affected.
+#'     **NOTE:** turning this `TRUE` changes the `cacheId` of every `sf`/`SpatVector`
+#'     object, so it *invalidates previously cached results* that involved such
+#'     objects — they will be recomputed once under the new algorithm. It is
+#'     opt-in for now while it is validated; it may become the default in a
+#'     future release. Requires the \pkg{terra} package.
+#'   }
 #'
 #' }
 #'
@@ -447,7 +462,8 @@ reproducibleOptions <- function() {
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
     reproducible.verbose = 1,
-    reproducible.digestV3 = TRUE
+    reproducible.digestV3 = TRUE,
+    reproducible.digestV4 = FALSE # opt-in platform-stable sf/SpatVector digest; invalidates prior caches when TRUE
   )
 }
 
