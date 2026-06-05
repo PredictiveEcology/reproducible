@@ -18,6 +18,24 @@ utils::globalVariables(c(
 #' @return
 #' Returns the character string of the cloud folder ID created or reported
 #' @export
+# One-time (per session) notice that cloud caching is being skipped because no
+# cloudFolderID is set. reproducible deliberately does NOT auto-create a cloud
+# folder from the local cache path: that folder differs across machines and
+# would silently break shared/cloud caching.
+.cloudFolderUnsetMessageOnce <- function(verbose = getOption("reproducible.verbose", 1)) {
+  if (isTRUE(.pkgEnv$.cloudFolderUnsetEmitted)) return(invisible())
+  messageCache(
+    "useCloud is on but no cloudFolderID is set (neither the argument nor ",
+    "options(reproducible.cloudFolderID)); skipping cloud caching (local cache ",
+    "only). reproducible does not create a cloud folder automatically. To enable ",
+    "cloud caching, set the same folder on every machine, e.g. ",
+    "options(reproducible.cloudFolderID = googledrive::as_id(\"<id>\")).",
+    verbose = verbose
+  )
+  .pkgEnv$.cloudFolderUnsetEmitted <- TRUE
+  invisible()
+}
+
 checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                                       cachePath = NULL,
                                       create = FALSE,

@@ -20,6 +20,27 @@ test_that("checkAndMakeCloudFolderID warns when an explicit cloudFolderID cannot
   )
 })
 
+test_that(".cloudFolderUnsetMessageOnce emits at most once per session", {
+  withr::defer(assign(".cloudFolderUnsetEmitted", NULL, envir = reproducible:::.pkgEnv))
+  assign(".cloudFolderUnsetEmitted", NULL, envir = reproducible:::.pkgEnv)
+  expect_message(reproducible:::.cloudFolderUnsetMessageOnce(), "no cloudFolderID")
+  expect_no_message(reproducible:::.cloudFolderUnsetMessageOnce()) # not repeated
+})
+
+test_that("useCloud = TRUE with no cloudFolderID skips cloud and caches locally (Option A)", {
+  withr::local_options(
+    reproducible.cloudFolderID = NULL,
+    reproducible.cachePath = withr::local_tempdir(),
+    reproducible.useMemoise = FALSE
+  )
+  withr::defer(assign(".cloudFolderUnsetEmitted", NULL, envir = reproducible:::.pkgEnv))
+  assign(".cloudFolderUnsetEmitted", NULL, envir = reproducible:::.pkgEnv)
+  # If cloud were attempted with no credentials it would error in
+  # googledrive::drive_auth(); reaching a local result proves cloud was skipped.
+  out <- Cache(rnorm, 3, useCloud = TRUE)
+  expect_length(out, 3)
+})
+
 test_that("checkAndMakeCloudFolderID does NOT warn when cloudFolderID is NULL (documented default)", {
   skip_if_not_installed("googledrive")
   skip_if_not_installed("tibble")

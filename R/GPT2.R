@@ -103,6 +103,18 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   CacheDBFileCheckAndCreate(cachePaths[[1]], drv, conn, verbose = verbose) # checks that we are using multiDBfile backend
 
+  # Cloud caching needs a destination folder. If none was passed, fall back to
+  # the option. If there is still no cloudFolderID, do NOT silently invent one
+  # from the local cache path (a derived folder differs from machine to machine
+  # and silently breaks shared/cloud caching) -- a NULL cloudFolderID means
+  # "no cloud target", so skip cloud caching for this call (local cache only).
+  if (is.null(cloudFolderID))
+    cloudFolderID <- getOption("reproducible.cloudFolderID", NULL)
+  if (cloudWriteOrRead(useCloud) && is.null(cloudFolderID)) {
+    .cloudFolderUnsetMessageOnce(verbose = verbose)
+    useCloud <- FALSE
+  }
+
   if (cloudWrite(useCloud)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePaths[[1]], create = TRUE, verbose = verbose)
     gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)))
