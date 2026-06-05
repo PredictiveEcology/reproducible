@@ -364,7 +364,8 @@
 #'   \item{`digestV4`}{
 #'     Default: `FALSE`. **Opt-in.** When `TRUE`, `sf` and `SpatVector` objects
 #'     are digested with a new, platform-stable algorithm: the geometry is taken
-#'     as WKT with all coordinates rounded to a fixed precision, and the
+#'     as the numeric vertex matrix with coordinates rounded to a fixed
+#'     precision (plus the geometry type), and the
 #'     attribute table is sorted, so that the same vector data produces the same
 #'     `cacheId` on Windows, macOS and Linux (the previous algorithm could differ
 #'     across operating systems, preventing shared/cloud caching of these

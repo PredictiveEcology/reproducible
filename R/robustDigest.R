@@ -223,28 +223,24 @@ setMethod(
 # values on different operating systems, which broke shared/cloud caching of
 # sf/SpatVector objects across machines. This representation is built to be
 # identical across platforms:
-#  * geometry is taken as WKT (terra::geom(x, wkt = TRUE)), and every decimal
-#    coordinate in the WKT is rounded to `precision` digits, so platform- or
-#    build-specific float-to-string formatting does not change the result;
+#  * geometry is taken as the numeric vertex matrix terra::geom(x) (columns
+#    geom, part, x, y, hole), and the x/y coordinates are rounded to `precision`
+#    digits. Rounding the numbers directly (no float-to-string conversion) is
+#    both platform-stable and ~7x faster than rounding numbers inside WKT
+#    strings. terra::geomtype(x) is included so geometries with identical
+#    vertices but a different type (e.g. a polygon vs a line) do not collide;
 #  * the attribute table is column-sorted (and row-sorted when it has rows), so
 #    incidental column/row ordering does not change the result.
 digestSpatVector <- function(x, precision = 6) {
-  geom_wkt <- terra::geom(x, wkt = TRUE)
-  # Round all decimal numbers embedded in the WKT strings. Base-R equivalent of
-  # a regex replace-with-function (no extra package dependency): pull the matches
-  # out, round, and write them back in place.
-  m <- gregexpr("-?\\d+\\.\\d+", geom_wkt, perl = TRUE)
-  regmatches(geom_wkt, m) <- lapply(
-    regmatches(geom_wkt, m),
-    function(v) formatC(round(as.numeric(v), precision), format = "f", digits = precision)
-  )
+  geom <- terra::geom(x)
+  geom[, c("x", "y")] <- round(geom[, c("x", "y")], precision)
   # Attributes, sorted for stability (guard the no-attribute / single-row cases
   # so `order(do.call(paste, attrs))` cannot collapse the rows).
   attrs <- as.data.frame(x)
   if (NCOL(attrs) > 0L && NROW(attrs) > 1L) {
     attrs <- attrs[order(do.call(paste, attrs)), sort(names(attrs)), drop = FALSE]
   }
-  list(geom_normalised = geom_wkt, attrs_sorted = attrs)
+  list(geom = geom, type = terra::geomtype(x), attrs_sorted = attrs)
 }
 
 #' @rdname robustDigest

@@ -9,8 +9,9 @@
   algorithm could digest the same vector to different values on Windows vs
   Linux/macOS, so the same data produced different `cacheId`s on different
   operating systems — preventing shared and cloud caching of these objects
-  across machines. With `reproducible.digestV4 = TRUE`, geometry is taken as
-  WKT with coordinates rounded to a fixed precision and the attribute table is
+  across machines. With `reproducible.digestV4 = TRUE`, geometry is taken as the
+  numeric vertex matrix with coordinates rounded to a fixed precision (plus the
+  geometry type) and the attribute table is
   sorted, so the `cacheId` is identical across platforms (and `sf` and its
   `SpatVector` equivalent digest the same). **This is opt-in for now**: turning
   it on changes the `cacheId` of every `sf`/`SpatVector` object and therefore

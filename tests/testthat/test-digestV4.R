@@ -58,6 +58,15 @@ test_that("digestV4 = FALSE leaves sf on the generic (unchanged) path", {
   expect_false(identical(d_off, d_on))
 })
 
+test_that("digestV4 = TRUE distinguishes geometry type (polygon vs line) with same vertices", {
+  skip_if_not_installed("terra")
+  poly <- terra::vect("POLYGON ((0 0, 0 1, 1 1, 0 0))")
+  line <- terra::vect("LINESTRING (0 0, 0 1, 1 1, 0 0)")
+  withr::local_options(reproducible.digestV4 = TRUE)
+  expect_false(identical(reproducible:::.robustDigest(poly),
+                         reproducible:::.robustDigest(line)))
+})
+
 test_that("digestSpatVector is robust to no-attribute and single-row vectors", {
   skip_if_not_installed("terra")
   v0 <- terra::vect("POLYGON ((0 0, 0 1, 1 1, 1 0, 0 0))") # no attributes
