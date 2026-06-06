@@ -51,3 +51,20 @@ test_that("test ALTREP integers", {
 
   }
 })
+
+test_that(".robustDigest realizes deferred-string ALTREP for a stable cross-platform digest (v4)", {
+  withr::local_options(reproducible.digestVersion = 4L)
+  ## A character vector must digest identically whether it is a plain STRSXP or a
+  ## deferred-string ALTREP. A deferred string serializes differently from its
+  ## realized form -- and differently across R versions/platforms -- which is what
+  ## split .inputObjects cacheIds between Linux and Windows. The fix realizes it via
+  ## `object[]`; it is a no-op for an already-materialized vector (so existing
+  ## cacheIds are unchanged). On platforms that don't create the ALTREP these are
+  ## already identical; the invariant must hold everywhere.
+  x <- c("alpha", ".useCache", "beta", "gamma")
+  expect_identical(.robustDigest(x), .robustDigest(x[]))
+  ## same content nested in a data.frame column (the parameter-table path)
+  df1 <- data.frame(p = x, stringsAsFactors = FALSE)
+  df2 <- df1; df2$p <- df2$p[]
+  expect_identical(.robustDigest(df1), .robustDigest(df2))
+})
