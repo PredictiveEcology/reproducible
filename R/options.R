@@ -176,11 +176,18 @@
 #'     large HTTPS file is split into. **This has no effect unless you have opted
 #'     in by setting `reproducible.urlRemap`** (see below): if no remap is set,
 #'     downloads are always single-stream, regardless of this value. Once opted
-#'     in, a download that gets redirected to a Range-capable mirror is split
-#'     into this many parts — but only when the server advertises
-#'     `Accept-Ranges: bytes` and the file is larger than
+#'     in, the parallel path is used **only for a URL that the `urlRemap` hook
+#'     actually redirected** to a (Range-capable) mirror — *not* for arbitrary
+#'     range-capable origin servers reached without a redirect, since those may
+#'     cap concurrent connections per IP (in which case parallel streams all
+#'     stall and the download is slower than a single stream). For an eligible,
+#'     redirected URL the file is split into this many parts — but only when the
+#'     server advertises `Accept-Ranges: bytes` and the file is larger than
 #'     `reproducible.parallel.threshold`; otherwise, and on any failure, it
-#'     falls back transparently to a single stream. Splitting into many small
+#'     falls back transparently to a single stream. (A redirected mirror that
+#'     *does* turn out to cap concurrency is detected on the first attempt — see
+#'     `reproducible.parallel.minConcurrentFrac` — and also falls back.)
+#'     Splitting into many small
 #'     parts keeps retries cheap (a dropped connection costs only one
 #'     part re-fetch). The number that download *at once* is separately capped by
 #'     `reproducible.parallel.maxConnections`. Especially useful on networks that
@@ -206,6 +213,14 @@
 #'     overall download timeout, which may be hours): a short, dedicated cap so a
 #'     stalled handshake fails its own part quickly and is retried rather than
 #'     hanging.
+#'   }
+#'   \item{`parallel.minConcurrentFrac`}{
+#'     Default: `0.25`. A guard against a redirected mirror that advertises Range
+#'     support but actually caps concurrent connections per IP. If the *first*
+#'     concurrent attempt completes fewer than this fraction of the parts (most
+#'     having stalled at 0 bytes), the parallel path gives up immediately and
+#'     falls back to a single stream, instead of grinding through every retry.
+#'     Set to `0` to disable the early fallback.
 #'   }
 #'   \item{`parallel.threshold`}{
 #'     Default: `10 * 1024^2` (10 MiB), in bytes. Files at or below this size are
@@ -457,7 +472,8 @@ reproducibleOptions <- function() {
     reproducible.overwrite = FALSE,
     reproducible.parallel.connecttimeout = 30L,     # seconds; per-connection establishment timeout for ranged streams
     reproducible.parallel.maxConnections = NULL,    # max simultaneous connections; NULL => parallelly::availableCores() - 1
-    reproducible.parallel.streams = 48L,            # number of ranged parts; opt-in is via urlRemap
+    reproducible.parallel.minConcurrentFrac = 0.25, # fall back to single stream if 1st attempt completes < this frac of parts
+    reproducible.parallel.streams = 48L,            # number of ranged parts; used only for urlRemap-redirected URLs
     reproducible.parallel.threshold = 10 * 1024^2,  # bytes; only files larger use the parallel path
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",
