@@ -308,6 +308,17 @@ setMethod(
   definition = function(object, .objects, length, algo, quick, classOptions) {
     object <- .removeCacheAtts(object)
 
+    # Realize a deferred-string ALTREP so it digests identically to its
+    # materialized form. A "deferred string" (e.g. produced by rbind of many
+    # data.frames, as.character of a factor, etc.) serializes differently from a
+    # plain STRSXP -- and differently across R versions/platforms -- so the same
+    # character content can yield different cacheIds on, say, Linux vs Windows.
+    # `object[]` realizes it; it is a no-op for an already-materialized vector
+    # (identical content/serialization, names preserved), so existing cacheIds are
+    # unchanged for non-ALTREP data. Gated to the platform-stable digest version,
+    # consistent with the sf/SpatVector treatment.
+    if (.digestVersion() >= 4L) object <- object[]
+
     simpleDigest <- TRUE # default -- only as character vector
     if (inherits(object, "fs_path")) {
       return(.robustDigest(asPath(object)))

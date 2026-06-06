@@ -22,6 +22,16 @@
   avoid that one-time invalidation. Requires the \pkg{terra} package. See the
   `digestVersion` entry in `?reproducibleOptions` for the full list of versions.
 
+* Digest version 4 also realizes "deferred-string" ALTREP character vectors before
+  hashing, so character content digests identically regardless of its internal
+  representation. A deferred string (e.g. produced by `rbind`-ing many data.frames,
+  `as.character()` of a factor, etc.) serializes differently from its realized form
+  — and differently across R versions/platforms — which could give the same
+  character content a different `cacheId` on, e.g., Linux vs Windows (seen as a
+  module's parameter table splitting the `.inputObjects` `cacheId`). The
+  realization is a no-op for already-materialized vectors, so existing `cacheId`s
+  are unchanged.
+
 * Downloads can now be transparently redirected to faster mirrors and
   fetched in parallel. Two cooperating, opt-in features:
   * **URL remap hook** — a new option `reproducible.urlRemap` accepts a
