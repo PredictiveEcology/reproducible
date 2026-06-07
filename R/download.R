@@ -695,24 +695,33 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
 
   haveTarget <- !is.null(targetFile) && length(targetFile) == 1 && nzchar(targetFile)
+  # `wasRemapped` records whether this URL came from the `reproducible.urlRemap`
+  # hook -- either remapped here, or handed in already-remapped via
+  # `applyRemap = FALSE` (the only such caller is the Google Drive path recursing
+  # with its mirror URL). The parallel ranged path is used ONLY for remapped
+  # (mirror) URLs, never for an arbitrary range-capable origin server: such a
+  # server may cap concurrent connections per IP, in which case parallel streams
+  # all stall and the download is far slower than a single stream.
+  wasRemapped <- !isTRUE(applyRemap)
   if (isTRUE(applyRemap)) {
     filename <- if (haveTarget) basename2(targetFile) else basename2(url)
-    url <- .applyUrlRemap(url, filename, verbose = verbose)
+    remappedUrl <- .applyUrlRemap(url, filename, verbose = verbose)
+    wasRemapped <- !identical(remappedUrl, url)
+    url <- remappedUrl
   }
 
   bn <- if (haveTarget) basename2(targetFile) else basename2(url)
   bn <- gsub("\\?|\\&", "_", bn) # causes errors with ? and maybe &
   destFile <- file.path(destinationPath, bn)
 
-  # Feature A: parallel ranged download. Gated on the opt-in
-  # `reproducible.urlRemap` being set (no remap set => never parallel, even at
-  # streams = 48). When opted in, this engages if the server advertises
+  # Feature A: parallel ranged download. Used ONLY for URLs that the
+  # `reproducible.urlRemap` hook redirected to a (Range-capable) mirror -- see
+  # `wasRemapped` above. When eligible, it engages if the server advertises
   # `Accept-Ranges: bytes` and the file exceeds the threshold; it can be forced
-  # off with `reproducible.parallel.streams = 1L`. Any failure falls through to
-  # the single-stream path below, which is byte-for-byte unchanged. The assembled
-  # file is byte-identical to a single-stream download, so checksums are
-  # unaffected.
-  pp <- .useParallelDownload(url, verbose = verbose)
+  # off with `reproducible.parallel.streams = 1L`. Any failure (including a mirror
+  # that turns out to cap concurrency) falls through to the single-stream path
+  # below, which is byte-for-byte unchanged, so checksums are unaffected.
+  pp <- if (isTRUE(wasRemapped)) .useParallelDownload(url, verbose = verbose) else list(use = FALSE, info = NULL)
   if (isTRUE(pp$use)) {
     streams <- as.integer(getOption("reproducible.parallel.streams", 48L))
     messagePreProcess("Downloading ", url, " using ", streams,
@@ -1053,12 +1062,25 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   showProgress <- verbose > 0 && interactive()
   todo <- seq_len(nParts)
   maxAttempts <- 3L
+  # If the FIRST concurrent attempt completes fewer than this fraction of parts,
+  # the (mirror) server is not honouring the requested concurrency -- e.g. it
+  # caps connections per IP, so most parts stall with 0 bytes and burn the
+  # connect timeout. Retrying is then futile and slow, so bail out immediately
+  # and let the caller fall back to a single stream.
+  minConcurrentFrac <- getOption("reproducible.parallel.minConcurrentFrac", 0.25)
   for (attempt in seq_len(maxAttempts)) {
     unlink(partFiles[todo]) # clear any partial bytes before (re)fetching
     okPart[todo] <- FALSE
     fetchParts(todo, showProgress = isTRUE(showProgress) && attempt == 1L)
     todo <- badParts()
     if (!length(todo)) break
+    if (attempt == 1L && (nParts - length(todo)) < ceiling(nParts * minConcurrentFrac)) {
+      messagePreProcess("Only ", nParts - length(todo), " of ", nParts,
+                        " parts completed concurrently (reason(s): ", reasonSummary(todo),
+                        "); the server appears to limit concurrent connections. ",
+                        "Falling back to single stream.", verbose = verbose)
+      return(FALSE)
+    }
     if (attempt < maxAttempts) {
       messagePreProcess("Retrying ", length(todo), " incomplete download part(s) (attempt ",
                         attempt + 1L, " of ", maxAttempts, "); reason(s): ",

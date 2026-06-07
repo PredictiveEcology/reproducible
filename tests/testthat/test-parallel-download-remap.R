@@ -141,9 +141,15 @@ test_that(".remapUrlEarly resolves a Drive URL's filename then remaps to a mirro
 # Feature A: opt-in gating policy (.useParallelDownload) -- all offline
 # ---------------------------------------------------------------------------
 
-# A remap function that observes nothing -- just marks the opt-in as "set" so
-# the parallel gate is reachable. (Returning NULL means "don't actually redirect".)
+# A remap function that observes nothing -- just marks the opt-in as "set".
+# Returning NULL means "don't actually redirect", so the parallel path is NOT
+# used for that URL (parallel is only for URLs the hook redirects to a mirror).
 optedIn <- function(url, filename) NULL
+
+# A remap function that DOES redirect to a (non-resolvable) mirror, so the
+# parallel path is eligible. ".invalid" is a reserved TLD -> any single-stream
+# fallback fails deterministically without touching the network.
+redirected <- function(url, filename) paste0("http://mirror.invalid/", filename)
 
 test_that("parallel path is GATED OFF when urlRemap is unset, even at streams = 48", {
   withr::local_options(
@@ -270,8 +276,9 @@ test_that(".parallelRangedDownload reports failure reasons and returns FALSE whe
     reproducible.parallel.maxConnections = 2L
   )
   # Non-routable port -> every ranged part fails at connection time. The reason
-  # must be surfaced (not silently swallowed) and the function must return FALSE
-  # so the caller can fall back to a single stream.
+  # must be surfaced (not silently swallowed), and because the *first* attempt
+  # completes 0 parts the function must fast-fall-back (without grinding through
+  # all retries) and return FALSE so the caller can use a single stream.
   msgs <- testthat::capture_messages(
     ok <- reproducible:::.parallelRangedDownload(
       "http://127.0.0.1:1/nope.bin", dest, size = 3000, n = 3L, verbose = 1)
@@ -279,7 +286,9 @@ test_that(".parallelRangedDownload reports failure reasons and returns FALSE whe
   expect_false(ok)
   joined <- paste(msgs, collapse = "\n")
   expect_match(joined, "reason\\(s\\)")
+  expect_match(joined, "limit concurrent connections") # fast fallback on attempt 1
   expect_match(joined, "Falling back to single stream")
+  expect_false(grepl("attempt 3 of 3", joined)) # did NOT grind through all retries
   expect_false(file.exists(dest)) # nothing assembled on failure
 })
 
@@ -287,13 +296,13 @@ test_that(".parallelRangedDownload reports failure reasons and returns FALSE whe
 # Feature A: dlGeneric dispatch -- offline via mocking of the mechanism
 # ---------------------------------------------------------------------------
 
-test_that("dlGeneric takes the parallel path and returns its file when opted in", {
+test_that("dlGeneric takes the parallel path when the URL was redirected by the remap", {
   skip_if_not_installed("curl")
   skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.parallel.streams = 8L,
     reproducible.parallel.threshold = 1L,
-    reproducible.urlRemap = optedIn # opt-in set (no actual redirect)
+    reproducible.urlRemap = redirected # hook redirects -> parallel eligible
   )
   dp <- withr::local_tempdir()
   called <- FALSE
@@ -311,13 +320,39 @@ test_that("dlGeneric takes the parallel path and returns its file when opted in"
   expect_identical(basename(res$destFile), "big.tif")
 })
 
+test_that("dlGeneric does NOT use the parallel path when the URL was not redirected", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  withr::local_options(
+    reproducible.parallel.streams = 8L,
+    reproducible.parallel.threshold = 1L,
+    reproducible.urlRemap = optedIn # opt-in set, but returns NULL (no redirect)
+  )
+  dp <- withr::local_tempdir()
+  called <- FALSE
+  testthat::local_mocked_bindings(
+    .probeRange = function(...) list(size = 1e6, acceptRanges = TRUE),
+    .parallelRangedDownload = function(url, destFile, size, n, verbose) {
+      called <<- TRUE
+      TRUE
+    }
+  )
+  # Not redirected -> parallel must be skipped; the single-stream path then errors
+  # on the non-routable host. The point is that .parallelRangedDownload is never
+  # reached for an origin server the user did not redirect.
+  try(suppressWarnings(
+    reproducible:::dlGeneric("http://127.0.0.1:1/big.tif", destinationPath = dp, verbose = 0)
+  ), silent = TRUE)
+  expect_false(called)
+})
+
 test_that("dlGeneric falls back to single-stream when the parallel attempt fails", {
   skip_if_not_installed("curl")
   skip_if_not_installed("httr2")
   withr::local_options(
     reproducible.parallel.streams = 8L,
     reproducible.parallel.threshold = 1L,
-    reproducible.urlRemap = optedIn # opt-in set (no actual redirect)
+    reproducible.urlRemap = redirected # redirects -> parallel eligible
   )
   dp <- withr::local_tempdir()
   called <- FALSE
@@ -328,11 +363,11 @@ test_that("dlGeneric falls back to single-stream when the parallel attempt fails
       FALSE # simulate a partial failure -> caller must fall back
     }
   )
-  # The fallback single-stream then targets a non-routable address and errors;
-  # the point is that control proceeded PAST the parallel block (no early return).
+  # The fallback single-stream then targets the (non-resolvable) mirror and
+  # errors; the point is that control proceeded PAST the parallel block.
   expect_error(
     suppressWarnings(
-      reproducible:::dlGeneric("http://127.0.0.1:1/big.tif", destinationPath = dp, verbose = 0)
+      reproducible:::dlGeneric("http://x/big.tif", destinationPath = dp, verbose = 0)
     )
   )
   expect_true(called)

@@ -124,6 +124,20 @@
 
 ## bug fixes
 
+* Parallel ranged downloads are now used **only for URLs that the
+  `reproducible.urlRemap` hook actually redirected** to a mirror, matching the
+  documented intent. Previously, once a remap hook was set, the parallel path
+  engaged for *any* range-capable URL — including direct origin servers that
+  were never redirected. Some such servers (e.g. `opendata.nfis.org`) cap
+  concurrent connections per IP, so most of the parallel streams stalled with 0
+  bytes and timed out, making the download far slower than a single stream before
+  eventually falling back. Two changes: (1) a non-redirected URL now downloads
+  single-stream directly; (2) a redirected mirror that nonetheless caps
+  concurrency is detected on the *first* attempt and falls back to a single
+  stream immediately instead of grinding through every retry. The new threshold
+  for (2) is `reproducible.parallel.minConcurrentFrac` (default `0.25`; `0`
+  disables it).
+
 * Cloud caching no longer silently invents a Google Drive folder when none is
   specified. Previously, `Cache(useCloud = TRUE)` with no `cloudFolderID` (and
   no `options(reproducible.cloudFolderID)`) **derived a folder name from the
