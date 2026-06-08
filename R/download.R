@@ -843,6 +843,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   t0 <- Sys.time()
   lastMsg <- t0
   got <- 0
+  shownAny <- FALSE
   repeat {
     chunk <- httr2::resp_stream_raw(resp, kb = 512L)
     if (length(chunk) == 0L) break
@@ -855,12 +856,20 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
       rate <- if (elapsed > 0) paste0(" | ", .humanBytes(got / elapsed), "/s") else ""
       messagePreProcess("  downloaded ", .humanBytes(got), totTxt, pct, rate, verbose = verbose)
       lastMsg <- now
+      shownAny <- TRUE
     }
   }
   close(con)
   conOpen <- FALSE
-  messagePreProcess("  downloaded ", .humanBytes(got), totTxt, " in ",
-                    round(as.numeric(Sys.time() - t0), 1), "s", verbose = verbose)
+  # Only emit the closing line if we already reported progress, i.e. the download
+  # ran longer than one interval. Fast/instant downloads (e.g. a local `file://`
+  # source, as in the test fixtures) then stay completely silent -- matching the
+  # old req_perform() behaviour and keeping message snapshots deterministic --
+  # while genuinely long downloads still get periodic lines plus this summary.
+  if (isTRUE(shownAny)) {
+    messagePreProcess("  downloaded ", .humanBytes(got), totTxt, " in ",
+                      round(as.numeric(Sys.time() - t0), 1), "s", verbose = verbose)
+  }
   resp
 }
 
