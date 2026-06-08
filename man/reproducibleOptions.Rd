@@ -181,20 +181,55 @@ Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}}, \code{\l
 \code{\link[=downloadFile]{downloadFile()}}, and \code{\link[=postProcess]{postProcess()}}.
 }
 \item{\code{parallel.streams}}{
-Default: \code{48L}. The number of concurrent HTTP Range requests to use when
-downloading a single large file over HTTPS. \strong{This has no effect unless
-you have opted in by setting \code{reproducible.urlRemap}} (see below): if no
-remap is set, downloads are always single-stream, regardless of this
-value. Once opted in, a download that gets redirected to a Range-capable
-mirror is fetched in parallel using this many streams — but only when the
+Default: \code{48L}. The number of contiguous byte-range \strong{parts} a single
+large HTTPS file is split into. \strong{This has no effect unless you have opted
+in by setting \code{reproducible.urlRemap}} (see below): if no remap is set,
+downloads are always single-stream, regardless of this value. Once opted
+in, the parallel path is used \strong{only for a URL that the \code{urlRemap} hook
+actually redirected} to a (Range-capable) mirror — \emph{not} for arbitrary
+range-capable origin servers reached without a redirect, since those may
+cap concurrent connections per IP (in which case parallel streams all
+stall and the download is slower than a single stream). For an eligible,
+redirected URL the file is split into this many parts — but only when the
 server advertises \code{Accept-Ranges: bytes} and the file is larger than
 \code{reproducible.parallel.threshold}; otherwise, and on any failure, it
-falls back transparently to a single stream. Especially useful on
-networks that shape bandwidth per-connection (a per-flow cap times 48
-streams). Set to \code{1L} to force single-stream downloads even when a remap
-is set. Requires the \pkg{curl} and \pkg{httr2} packages. The assembled
-file is byte-identical to a single-stream download, so checksums are
-unaffected.
+falls back transparently to a single stream. (A redirected mirror that
+\emph{does} turn out to cap concurrency is detected on the first attempt — see
+\code{reproducible.parallel.minConcurrentFrac} — and also falls back.)
+Splitting into many small
+parts keeps retries cheap (a dropped connection costs only one
+part re-fetch). The number that download \emph{at once} is separately capped by
+\code{reproducible.parallel.maxConnections}. Especially useful on networks that
+shape bandwidth per-connection. Set to \code{1L} to force single-stream
+downloads even when a remap is set. Requires the \pkg{curl} and
+\pkg{httr2} packages. The assembled file is byte-identical to a
+single-stream download, so checksums are unaffected.
+}
+\item{\code{parallel.maxConnections}}{
+Default: \code{NULL}, meaning \code{parallelly::availableCores() - 1} (or
+\code{parallel::detectCores() - 1} if the Suggested \pkg{parallelly} package is
+not installed). The maximum
+number of ranged parts that download \strong{simultaneously}; the rest queue
+until a connection frees up. This bounds the burst of concurrent TLS
+handshakes, which some stacks (notably Windows) refuse when all
+\code{reproducible.parallel.streams} are opened at once — the symptom being
+most parts failing immediately at connection time. Set a positive integer
+to override the default ceiling.
+}
+\item{\code{parallel.connecttimeout}}{
+Default: \code{30L}, in seconds. The per-connection establishment timeout for
+each ranged stream. This is distinct from \code{reproducible.timeout} (the
+overall download timeout, which may be hours): a short, dedicated cap so a
+stalled handshake fails its own part quickly and is retried rather than
+hanging.
+}
+\item{\code{parallel.minConcurrentFrac}}{
+Default: \code{0.25}. A guard against a redirected mirror that advertises Range
+support but actually caps concurrent connections per IP. If the \emph{first}
+concurrent attempt completes fewer than this fraction of the parts (most
+having stalled at 0 bytes), the parallel path gives up immediately and
+falls back to a single stream, instead of grinding through every retry.
+Set to \code{0} to disable the early fallback.
 }
 \item{\code{parallel.threshold}}{
 Default: \code{10 * 1024^2} (10 MiB), in bytes. Files at or below this size are
@@ -288,7 +323,7 @@ warning) so a broken remap cannot break a download. With the default
 \item{\code{reproducible.useCacheV3}}{
 Default: \code{TRUE}. If this is set to \code{FALSE}, it will use the old \code{Cache} source
 code. This will only be available for a short period before it is deleted
-from the package. See also \code{reproducible.digestV3}. It is not guaranteed to
+from the package. See also \code{reproducible.digestVersion}. It is not guaranteed to
 be identical to using a previous version of \verb{reproducible (<3.0)}.
 }
 \item{\code{useCloud}}{
@@ -342,13 +377,54 @@ them and also the time it took to run the call and save the call to the cache re
 load the cached copy from the repository.
 This may help diagnosing some problems that may occur.
 }
+\item{\code{digestVersion}}{
+Default: \code{NULL} (which resolves to \code{4}). A single integer that selects the
+digest (i.e. \code{cacheId}) algorithm used by \code{\link[=Cache]{Cache()}}. This is the
+going-forward control; it supersedes the booleans \code{digestV3} and
+\code{digestV4} below (which are still honoured when \code{digestVersion} is unset).
+Higher numbers are newer; each builds on the previous one. (Note: this is
+the \emph{digest-algorithm} version, \strong{not} the version of the \code{reproducible}
+\strong{package} — although the lower numbers echo the package generation that
+introduced them. References below to e.g. "the \code{reproducible} package
+v3.x" mean the package release, not this option.) The versions:
+\describe{
+\item{\code{2}}{\emph{Some of} the hash assembly used by older \code{reproducible}
+\strong{package} versions (before package v3.0.0), for partial backwards
+compatibility with caches they created. It cannot be made exact for
+all classes, particularly file-backed objects. (Equivalent to the old
+\code{digestV3 = FALSE}.)}
+\item{\code{3}}{The hash assembly introduced in the \code{reproducible} \strong{package}
+v3.x (the default through package v3.1.1): includes the names of list
+elements and several other tweaks. \code{sf}/\code{SpatVector} use the original
+(pre-platform-stable) geometry digest, which could differ across
+operating systems. Set \code{digestVersion = 3} to reproduce the \code{cacheId}s
+of the \code{reproducible} package v3.1.1 and earlier, and to avoid the
+one-time cache invalidation described under \code{4}.}
+\item{\code{4}}{\strong{Default.} As \code{3}, but \code{sf} and \code{SpatVector} objects are
+digested with a platform-stable algorithm: the geometry is the numeric
+vertex matrix with coordinates rounded to a fixed precision (plus the
+geometry type), and attributes are kept in feature order with columns
+sorted by a locale-independent method. The same vector data then
+produces the same \code{cacheId} on Windows, macOS and Linux (digest
+version \code{3} could differ across operating systems, preventing
+shared/cloud caching of these objects), and an \code{sf} object and its
+\code{SpatVector} equivalent digest identically. Requires the \pkg{terra}
+package. \strong{NOTE:} because \code{4} is now the default, the \code{cacheId} of
+every \code{sf}/\code{SpatVector} object differs from that produced by the
+\code{reproducible} package v3.1.1 and earlier, so cached results that
+involved such objects are \emph{recomputed once} under the new algorithm.
+Set \code{digestVersion = 3} to avoid this.}
+}
+}
 \item{\code{digestV3}}{
-Default: \code{TRUE}. This uses a digest approach that includes the names of
-list elements and several other tweaks that were created for \verb{reproducible 3.x}.
-Set this to \code{FALSE} to use \emph{some of} the previous cache digesting to
-achieve some backwards compatibility with the digest algorithms of \verb{reproducible (<3.x)}.
-It will not be possible to get it exact for all classes of objects, particularly
-those with file-backing.
+\strong{Superseded by \code{digestVersion}} (still honoured when \code{digestVersion} is
+unset). Default: \code{TRUE}. \code{TRUE} leaves the version at its default; \code{FALSE}
+is equivalent to \code{digestVersion = 2} (see above).
+}
+\item{\code{digestV4}}{
+\strong{Superseded by \code{digestVersion}} (still honoured when \code{digestVersion} is
+unset). Default: \code{FALSE}. \code{TRUE} is equivalent to \code{digestVersion = 4},
+which is now also the default (see above).
 }
 
 }

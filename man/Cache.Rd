@@ -274,6 +274,12 @@ passed at each Cache call; 2) any inherited arguments from an outer Cache
 call; 3) the default values of the Cache function. See section on \emph{Nested Caching}.
 }
 
+The algorithm used to compute the \code{cacheId} (the hash of the inputs) is
+selectable via the \code{reproducible.digestVersion} option; see the
+\code{digestVersion} entry in \code{\link[=reproducibleOptions]{reproducibleOptions()}} for the available versions
+and what each changes (notably version \code{4}, which makes \code{sf}/\code{SpatVector}
+digests identical across operating systems).
+
 \code{Cache} will add a tag to the entry in the cache database called \code{accessed},
 which will assign the time that it was accessed, either read or write.
 That way, cached items can be shown (using \code{showCache}) or removed (using
@@ -605,7 +611,9 @@ if (interactive())
 \seealso{
 \code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}, \code{\link[=keepCache]{keepCache()}},
 \code{\link[=CacheDigest]{CacheDigest()}} to determine the digest of a given function or expression,
-as used internally within \code{Cache}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}}, and
+as used internally within \code{Cache}, \code{\link[=movedCache]{movedCache()}}, \code{\link[=.robustDigest]{.robustDigest()}},
+\code{\link[=reproducibleOptions]{reproducibleOptions()}} (e.g. the \code{digestVersion} option that selects the
+\code{cacheId} algorithm), and
 for more advanced uses there are several helper functions,
 e.g., \code{\link[=rmFromCache]{rmFromCache()}}, \code{\link[=CacheStorageDir]{CacheStorageDir()}}
 }
