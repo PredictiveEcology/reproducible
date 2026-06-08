@@ -14,7 +14,8 @@
   `cacheId`s already present locally are skipped, and each remote metadata file
   is itself wrapped in `Cache()` (keyed by its `cacheId`) so the many `Cache()`
   calls in a single run (e.g. a module's `.inputObjects`) do not re-download the
-  same `.dbFile` repeatedly.
+  same `.dbFile` repeatedly. That memo lives in a dedicated `cloudMeta`
+  sub-cache, so it does not bloat the main cache's `showCache()` scans.
 
 * New option `reproducible.digestVersion` — a single integer that selects the
   `cacheId` (digest) algorithm, replacing the per-version booleans

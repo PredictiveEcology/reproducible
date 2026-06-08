@@ -333,19 +333,26 @@ showCacheCloud <- function(cloudFolderID, cachePath, existingCacheIds = characte
   # download in Cache() keyed on cacheId (everything else -- the volatile
   # gdrive id, the connection objects, etc. -- is omitted from the digest).
   # The many Cache() calls in a single run (e.g. a module's `.inputObjects`)
-  # then resolve from the (local) cache instead of re-downloading the same
-  # `.dbFile` over and over. useCloud/showSimilar are off on the inner call so
-  # it cannot recurse back into cloud listing or showSimilar.
+  # then resolve from the cache instead of re-downloading the same `.dbFile`
+  # over and over. useCloud/showSimilar are off on the inner call so it cannot
+  # recurse back into cloud listing or showSimilar.
+  #
+  # These memo entries live in a dedicated sub-cache ("cloudMeta") so they do
+  # NOT land in the main cache's `cacheOutputs/` dir -- showCache()/showSimilar
+  # scan only the main dir, so the metadata memo never bloats those scans (and
+  # is not touched by clearCache() on the main repo). conn = NULL lets the inner
+  # Cache manage the sub-cache's own connection when useDBI is TRUE.
+  cloudMetaPath <- checkPath(file.path(cachePath, "cloudMeta"), create = TRUE)
   dts <- lapply(seq_len(NROW(gdriveLs)), function(ind) {
     out <- try(
       .downloadCloudDBFile(id = gdriveLs[["id"]][ind], name = gdriveLs[["name"]][ind],
-                           cacheId = cacheIds[ind], cachePath = cachePath,
+                           cacheId = cacheIds[ind], cachePath = cloudMetaPath,
                            drv = drv, conn = conn, verbose = verbose) |>
-        Cache(useCloud = FALSE, showSimilar = FALSE, cachePath = cachePath,
+        Cache(useCloud = FALSE, showSimilar = FALSE, cachePath = cloudMetaPath,
               omitArgs = c("id", "name", "cachePath", "drv", "conn", "verbose"),
               userTags = paste0("cloudCacheId:", cacheIds[ind]),
               .functionName = "cloudDBFileMeta",
-              drv = drv, conn = conn, verbose = verbose - 2),
+              drv = drv, conn = NULL, verbose = verbose - 2),
       silent = TRUE)
     if (is(out, "try-error")) NULL else out
   })
