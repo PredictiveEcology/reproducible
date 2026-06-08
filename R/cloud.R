@@ -268,6 +268,25 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   inReposPoss
 }
 
+# Download + load a single cloud metadata (`.dbFile`) file. Deliberately errors
+# (rather than returning NULL) on failure so that a transient download error is
+# NOT memoised by the Cache() wrapper in showCacheCloud() -- only successful
+# loads are cached. The tmp download is removed once loaded; the returned
+# data.table is what Cache() keeps.
+.downloadCloudDBFile <- function(id, name, cacheId, cachePath,
+                                 drv = getDrv(getOption("reproducible.drv", NULL)),
+                                 conn = getOption("reproducible.conn", NULL),
+                                 verbose = getOption("reproducible.verbose")) {
+  localFile <- file.path(tempdir2(), basename2(name))
+  on.exit(unlink(localFile), add = TRUE)
+  retry(quote(googledrive::drive_download(
+    file = googledrive::as_id(id), path = localFile, overwrite = TRUE
+  )))
+  loadFile(localFile, cacheSaveFormat = fileExt(localFile),
+           cacheId = cacheId, cachePath = cachePath,
+           drv = drv, conn = conn, verbose = verbose - 2)
+}
+
 #' List and read all cloud cache metadata (dbFile) files
 #'
 #' Downloads every per-`cacheId` metadata file (the small `.dbFile.*` files) from
@@ -310,21 +329,24 @@ showCacheCloud <- function(cloudFolderID, cachePath, existingCacheIds = characte
   if (NROW(gdriveLs) == 0)
     return(.emptyCacheTable)
 
-  messageCache("Retrieving ", NROW(gdriveLs),
-               " cloud cache metadata file(s) for showSimilar", verbose = verbose)
-
+  # Each metadata file is content-addressed by its cacheId, so wrap the
+  # download in Cache() keyed on cacheId (everything else -- the volatile
+  # gdrive id, the connection objects, etc. -- is omitted from the digest).
+  # The many Cache() calls in a single run (e.g. a module's `.inputObjects`)
+  # then resolve from the (local) cache instead of re-downloading the same
+  # `.dbFile` over and over. useCloud/showSimilar are off on the inner call so
+  # it cannot recurse back into cloud listing or showSimilar.
   dts <- lapply(seq_len(NROW(gdriveLs)), function(ind) {
-    localFile <- file.path(tempdir2(), basename2(gdriveLs[["name"]][ind]))
-    dl <- try(retry(quote(googledrive::drive_download(
-      file = googledrive::as_id(gdriveLs[["id"]][ind]),
-      path = localFile, overwrite = TRUE
-    ))), silent = TRUE)
-    if (is(dl, "try-error"))
-      return(NULL)
-    out <- try(loadFile(localFile, cacheSaveFormat = fileExt(localFile),
-                        cacheId = cacheIds[ind], cachePath = cachePath,
-                        drv = drv, conn = conn, verbose = verbose - 2),
-               silent = TRUE)
+    out <- try(
+      .downloadCloudDBFile(id = gdriveLs[["id"]][ind], name = gdriveLs[["name"]][ind],
+                           cacheId = cacheIds[ind], cachePath = cachePath,
+                           drv = drv, conn = conn, verbose = verbose) |>
+        Cache(useCloud = FALSE, showSimilar = FALSE, cachePath = cachePath,
+              omitArgs = c("id", "name", "cachePath", "drv", "conn", "verbose"),
+              userTags = paste0("cloudCacheId:", cacheIds[ind]),
+              .functionName = "cloudDBFileMeta",
+              drv = drv, conn = conn, verbose = verbose - 2),
+      silent = TRUE)
     if (is(out, "try-error")) NULL else out
   })
   dts <- Filter(Negate(is.null), dts)
