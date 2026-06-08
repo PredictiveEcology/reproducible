@@ -273,7 +273,11 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
 # NOT memoised by the Cache() wrapper in showCacheCloud() -- only successful
 # loads are cached. The tmp download is removed once loaded; the returned
 # data.table is what Cache() keeps.
-.downloadCloudDBFile <- function(id, name, cacheId, cachePath,
+# NOTE: the content key is named `hash`, NOT `cacheId`, on purpose -- `cacheId`
+# is in `.defaultCacheOmitArgs`, so a Cache() wrapper keyed on an arg named
+# `cacheId` would drop it from the digest and collapse every file onto one
+# cache entry. `hash` is not reserved, so each file keys distinctly.
+.downloadCloudDBFile <- function(id, name, hash, cachePath,
                                  drv = getDrv(getOption("reproducible.drv", NULL)),
                                  conn = getOption("reproducible.conn", NULL),
                                  verbose = getOption("reproducible.verbose")) {
@@ -283,7 +287,7 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
     file = googledrive::as_id(id), path = localFile, overwrite = TRUE
   )))
   loadFile(localFile, cacheSaveFormat = fileExt(localFile),
-           cacheId = cacheId, cachePath = cachePath,
+           cacheId = hash, cachePath = cachePath,
            drv = drv, conn = conn, verbose = verbose - 2)
 }
 
@@ -346,7 +350,7 @@ showCacheCloud <- function(cloudFolderID, cachePath, existingCacheIds = characte
   dts <- lapply(seq_len(NROW(gdriveLs)), function(ind) {
     out <- try(
       .downloadCloudDBFile(id = gdriveLs[["id"]][ind], name = gdriveLs[["name"]][ind],
-                           cacheId = cacheIds[ind], cachePath = cloudMetaPath,
+                           hash = cacheIds[ind], cachePath = cloudMetaPath,
                            drv = drv, conn = conn, verbose = verbose) |>
         Cache(useCloud = FALSE, showSimilar = FALSE, cachePath = cloudMetaPath,
               omitArgs = c("id", "name", "cachePath", "drv", "conn", "verbose"),
