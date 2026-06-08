@@ -16,6 +16,15 @@
   set by the new option `reproducible.downloadProgressInterval` (default `2`
   seconds). In a dynamic terminal the native in-place cli bar is unchanged.
 
+* `showSimilar` (the `reproducible.showSimilar` option, also used by dev mode and
+  `dryRun`) is now cloud-aware. When `useCloud` is active, `Cache()` previously
+  compared the current call only against the *local* cache, so similar artifacts
+  cached by other machines sharing the same `cloudFolderID` were never reported.
+  It now downloads the small per-`cacheId` metadata files (`.dbFile.*`) from the
+  cloud folder, folds them into the local cache listing, and follows the normal
+  `showSimilar` path. Only metadata files are fetched (not the cached objects),
+  and `cacheId`s already present locally are skipped.
+
 * New option `reproducible.digestVersion` — a single integer that selects the
   `cacheId` (digest) algorithm, replacing the per-version booleans
   `reproducible.digestV3`/`reproducible.digestV4` (which are still honoured when
@@ -135,6 +144,17 @@
   `options(reproducible.timeout = ...)` explicitly see no change.
 
 ## bug fixes
+
+* The **single-stream `preProcess`/`prepInputs` download no longer hangs for
+  hours on a slow or flaky connection**. It was setting curl's `connecttimeout`
+  (the cap on *establishing* a connection) to `reproducible.timeout` — the
+  overall download budget, which defaults to `12000` seconds (3.3 h). A stalled
+  TLS handshake (e.g. a transient `SSL_connect` failure to `opendata.nfis.org`)
+  therefore froze the session for many minutes before erroring. The connect
+  timeout is now a short, dedicated cap, new option `reproducible.connecttimeout`
+  (default `30L` seconds), mirroring `reproducible.parallel.connecttimeout` for
+  the parallel ranged path; `reproducible.timeout` still governs the overall
+  download.
 
 * Parallel ranged downloads are now used **only for URLs that the
   `reproducible.urlRemap` hook actually redirected** to a mirror, matching the

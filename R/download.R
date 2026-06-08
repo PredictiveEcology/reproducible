@@ -752,9 +752,18 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   if (.requireNamespace("httr2") && .requireNamespace("curl")) {
     for (i in 1:2) {
       totalTimeout <- getOption("reproducible.timeout", 12000)
+      # `connecttimeout` is the cap on *establishing* the connection (TLS
+      # handshake etc.), NOT the overall download time. It must stay short so a
+      # stalled/flaky handshake fails quickly and gets retried, instead of hanging
+      # for the full `reproducible.timeout` (which can be hours -- a slow/failing
+      # SSL connect was freezing sessions for many minutes). Mirrors the parallel
+      # path's `reproducible.parallel.connecttimeout`. The overall request timeout
+      # (`req_timeout`) stays at `totalTimeout`.
       req <- httr2::request(url) |>
         httr2::req_timeout(totalTimeout) |>
-        httr2::req_options(connecttimeout = totalTimeout)
+        httr2::req_options(
+          connecttimeout = as.integer(getOption("reproducible.connecttimeout", 30L))[1]
+        )
       if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
         req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
       # Progress reporting. httr2::req_progress() draws a cli progress bar, which

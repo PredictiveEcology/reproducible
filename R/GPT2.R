@@ -206,6 +206,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (isTRUE(showSimilar) || isDevMode(useCache, userTags) || isTRUE(dryRun)) {
     if (dryRun) messageColoured(.txtDryRunTRUE, colour = "green")
     showSimilar(cachePaths[[1]], metadata, callList$.functionName, userTags, useCache,
+                useCloud = useCloud, cloudFolderID = cloudFolderID,
                 # cacheSaveFormat = cacheSaveFormat,
                 drv = drv, conn = conn, verbose)
   }
@@ -1061,6 +1062,7 @@ lockFile <- function(cachePath, cache_key,
 
 #' @importFrom data.table setorderv setcolorder
 showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
+                        useCloud = FALSE, cloudFolderID = NULL,
                         # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         drv, conn, verbose) {
   devMode <- isDevMode(useCache, userTags)  # don't use devMode if no userTags
@@ -1068,6 +1070,18 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                           verbose = verbose - 2)
   shownCache <- showCache(cachePath, Function = .functionName, # userTags = userTags,
                           verbose = verbose - 2)
+
+  # With `useCloud`, the remote cache may hold artifacts produced on other
+  # machines that never landed in this local cache. showCache() only reads the
+  # local backend, so pull the cloud metadata (the small `.dbFile.*` files),
+  # restrict it to the same function, and fold it into `shownCache` before the
+  # normal comparison path below.
+  if (cloudWriteOrRead(useCloud) && !is.null(cloudFolderID)) {
+    cloudShown <- showCacheCloud(cloudFolderID, cachePath,
+                                 existingCacheIds = unique(shownCache$cacheId),
+                                 drv = drv, conn = conn, verbose = verbose - 1)
+    shownCache <- mergeShownCacheCloud(shownCache, cloudShown, .functionName)
+  }
   # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, dotFunTxt)]$tagValue
   # shownCache <- shownCache[tagKey %in% "preDigest" & tagValue %in% functionByDigest]
   setorderv(shownCache, "createdDate", order = -1)
@@ -1251,6 +1265,30 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
   } else {
     messageCache(.message$noSimilarCacheTxt(.functionName), verbose = verbose)
   }
+}
+
+#' Fold cloud cache metadata into a local `showCache` result for `showSimilar`
+#'
+#' Restricts the cloud-sourced metadata (from [showCacheCloud()]) to the same
+#' function as the current call, then `rbind`s it onto the local `shownCache`,
+#' de-duplicating on `cacheId`/`tagKey`/`tagValue`. Pure (no I/O) so the merge
+#' behaviour can be tested without Google Drive.
+#'
+#' @param shownCache   The local [showCache()] `data.table`.
+#' @param cloudShown   The cloud metadata `data.table` from [showCacheCloud()].
+#' @param .functionName The function name to keep from `cloudShown` (or `NULL` for all).
+#' @return A combined cache `data.table`.
+#' @keywords internal
+mergeShownCacheCloud <- function(shownCache, cloudShown, .functionName = NULL) {
+  if (is.null(cloudShown) || NROW(cloudShown) == 0)
+    return(shownCache)
+  if (!is.null(.functionName))
+    cloudShown <- cloudShown[cloudShown[tagKey %in% "function" & tagValue %in% .functionName,
+                                        "cacheId", with = FALSE], on = "cacheId", nomatch = NULL]
+  if (NROW(cloudShown) == 0)
+    return(shownCache)
+  shownCache <- rbindlist(list(shownCache, cloudShown), fill = TRUE, use.names = TRUE)
+  unique(shownCache, by = c("cacheId", "tagKey", "tagValue"))
 }
 
 CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbose) {

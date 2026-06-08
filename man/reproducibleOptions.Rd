@@ -276,6 +276,14 @@ either \code{asPath} or \code{fs::as_fs_path}. Or set this option to \code{TRUE}
 behaviour will return, where it tries to guess whether a character vector
 is filenames or not, and if it is, then digest the file content.
 }
+\item{\code{connecttimeout}}{
+Default: \code{30L}, in seconds. The per-connection establishment (TLS
+handshake) timeout for the single-stream download in \code{preProcess}. This is
+distinct from \code{reproducible.timeout} (the overall download budget, which
+may be hours): a short, dedicated cap so a stalled or flaky connect fails
+quickly and is retried rather than hanging for the full timeout. Mirrors
+\code{reproducible.parallel.connecttimeout} for the parallel ranged path.
+}
 \item{\code{timeout}}{
 Default \code{12000}. Used in \code{preProcess} when downloading occurs. If a user has \code{R.utils}
 package installed, \code{R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))}
