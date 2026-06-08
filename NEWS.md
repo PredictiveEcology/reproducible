@@ -4,6 +4,18 @@
 
 ## new features
 
+* **Download progress is now visible in non-interactive / logged sessions.**
+  `httr2::req_progress()` draws a cli progress bar that is silent when
+  `!cli::is_dynamic_tty()` (logged runs, CI, a SpaDES `simInit`) and writes
+  straight to the terminal, so a large `preProcess()`/`prepInputs()` download
+  there produced *no* output until it finished. In those sessions the
+  single-stream download now streams the body itself
+  (`httr2::req_perform_connection()`) and reports progress through
+  `messagePreProcess()` -- e.g. `downloaded 45 Mb / 320 Mb (14%) | 12 Mb/s` --
+  which the calling app (e.g. SpaDES.core's logger) timestamps. The cadence is
+  set by the new option `reproducible.downloadProgressInterval` (default `2`
+  seconds). In a dynamic terminal the native in-place cli bar is unchanged.
+
 * New option `reproducible.digestVersion` — a single integer that selects the
   `cacheId` (digest) algorithm, replacing the per-version booleans
   `reproducible.digestV3`/`reproducible.digestV4` (which are still honoured when
