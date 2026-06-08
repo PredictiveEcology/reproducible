@@ -1080,6 +1080,20 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
     cloudShown <- showCacheCloud(cloudFolderID, cachePath,
                                  existingCacheIds = unique(shownCache$cacheId),
                                  drv = drv, conn = conn, verbose = verbose - 1)
+    # Report how many *same-function* calls the cloud added that were not already
+    # local. If this is 0 while the cloud folder clearly has many `.dbFile`s,
+    # those files are for OTHER functions (showSimilar compares same-function
+    # only) -- not a sign the cloud merge failed.
+    if (NROW(cloudShown)) {
+      cloudCids <- unique(cloudShown[tagKey %in% "function" &
+                                       tagValue %in% .functionName][["cacheId"]])
+      nFromCloud <- length(setdiff(cloudCids, unique(shownCache$cacheId)))
+      messageCache("showSimilar: cloud cache added ", nFromCloud,
+                   " same-function call(s) for ", .messageFunctionFn(.functionName),
+                   " (", NROW(cloudShown[, .N, by = "cacheId"]),
+                   " cloud cacheId(s) scanned, across all functions)",
+                   verbose = verbose)
+    }
     shownCache <- mergeShownCacheCloud(shownCache, cloudShown, .functionName)
   }
   # functionByDigest <- metadata[tagKey %in% "preDigest" & startsWith(tagValue, dotFunTxt)]$tagValue
