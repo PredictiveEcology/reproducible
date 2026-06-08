@@ -4,6 +4,15 @@
 
 ## new features
 
+* `showSimilar` (the `reproducible.showSimilar` option, also used by dev mode and
+  `dryRun`) is now cloud-aware. When `useCloud` is active, `Cache()` previously
+  compared the current call only against the *local* cache, so similar artifacts
+  cached by other machines sharing the same `cloudFolderID` were never reported.
+  It now downloads the small per-`cacheId` metadata files (`.dbFile.*`) from the
+  cloud folder, folds them into the local cache listing, and follows the normal
+  `showSimilar` path. Only metadata files are fetched (not the cached objects),
+  and `cacheId`s already present locally are skipped.
+
 * New option `reproducible.digestVersion` — a single integer that selects the
   `cacheId` (digest) algorithm, replacing the per-version booleans
   `reproducible.digestV3`/`reproducible.digestV4` (which are still honoured when
