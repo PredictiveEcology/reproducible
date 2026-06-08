@@ -259,6 +259,14 @@
 #'     behaviour will return, where it tries to guess whether a character vector
 #'     is filenames or not, and if it is, then digest the file content.
 #'   }
+#'   \item{`connecttimeout`}{
+#'     Default: `30L`, in seconds. The per-connection establishment (TLS
+#'     handshake) timeout for the single-stream download in `preProcess`. This is
+#'     distinct from `reproducible.timeout` (the overall download budget, which
+#'     may be hours): a short, dedicated cap so a stalled or flaky connect fails
+#'     quickly and is retried rather than hanging for the full timeout. Mirrors
+#'     `reproducible.parallel.connecttimeout` for the parallel ranged path.
+#'   }
 #'   \item{`timeout`}{
 #'     Default `12000`. Used in `preProcess` when downloading occurs. If a user has `R.utils`
 #'     package installed, `R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))`
@@ -447,6 +455,7 @@ reproducibleOptions <- function() {
     reproducible.cachePath = NULL,
     reproducible.cacheSaveFormat = .rdsFormat,
     reproducible.cacheSpeed = "slow",
+    reproducible.connecttimeout = 30L,              # seconds; single-stream connect/handshake cap (NOT the overall download timeout)
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
