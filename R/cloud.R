@@ -265,6 +265,71 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   inReposPoss
 }
 
+#' List and read all cloud cache metadata (dbFile) files
+#'
+#' Downloads every per-`cacheId` metadata file (the small `.dbFile.*` files) from
+#' the cloud cache folder, loads them, and `rbindlist`s them into a single cache
+#' `data.table` with the same shape as [showCache()]. This is what allows
+#' `showSimilar` to compare the current call against artifacts cached by *other*
+#' machines sharing the same `cloudFolderID`, not just those cached locally.
+#'
+#' The full object files are never fetched -- only the small metadata files --
+#' and any `cacheId` already present in `existingCacheIds` is skipped, so
+#' locally-known artifacts do not pay for a re-download.
+#'
+#' @param existingCacheIds Character vector of `cacheId`s already known locally;
+#'   their cloud metadata is skipped.
+#' @inheritParams cloudDownload
+#' @return A cache `data.table` (possibly empty) of cloud-only metadata.
+#' @keywords internal
+showCacheCloud <- function(cloudFolderID, cachePath, existingCacheIds = character(),
+                           drv = getDrv(getOption("reproducible.drv", NULL)),
+                           conn = getOption("reproducible.conn", NULL),
+                           verbose = getOption("reproducible.verbose")) {
+  .requireNamespace("googledrive",
+    stopOnFALSE = TRUE,
+    messageStart = "to use google drive files"
+  )
+
+  gdriveLs <- retry(quote(driveLs(cloudFolderID, pattern = suffixMultipleDBFiles(),
+                                  cachePath = cachePath, verbose = verbose - 2)))
+  if (NROW(gdriveLs) == 0)
+    return(.emptyCacheTable)
+
+  # Keep only the per-cacheId metadata files (defensive: the pattern should
+  # already exclude object files), then drop any cacheId we already have locally.
+  isDbFile <- grepl(suffixMultipleDBFiles(), gdriveLs[["name"]], fixed = TRUE)
+  gdriveLs <- gdriveLs[isDbFile, ]
+  cacheIds <- gsub(paste0(suffixMultipleDBFiles(), ".*$"), "", gdriveLs[["name"]])
+  keep <- !cacheIds %in% existingCacheIds
+  gdriveLs <- gdriveLs[keep, ]
+  cacheIds <- cacheIds[keep]
+  if (NROW(gdriveLs) == 0)
+    return(.emptyCacheTable)
+
+  messageCache("Retrieving ", NROW(gdriveLs),
+               " cloud cache metadata file(s) for showSimilar", verbose = verbose)
+
+  dts <- lapply(seq_len(NROW(gdriveLs)), function(ind) {
+    localFile <- file.path(tempdir2(), basename2(gdriveLs[["name"]][ind]))
+    dl <- try(retry(quote(googledrive::drive_download(
+      file = googledrive::as_id(gdriveLs[["id"]][ind]),
+      path = localFile, overwrite = TRUE
+    ))), silent = TRUE)
+    if (is(dl, "try-error"))
+      return(NULL)
+    out <- try(loadFile(localFile, cacheSaveFormat = fileExt(localFile),
+                        cacheId = cacheIds[ind], cachePath = cachePath,
+                        drv = drv, conn = conn, verbose = verbose - 2),
+               silent = TRUE)
+    if (is(out, "try-error")) NULL else out
+  })
+  dts <- Filter(Negate(is.null), dts)
+  if (length(dts) == 0)
+    return(.emptyCacheTable)
+  rbindlist(dts, fill = TRUE)
+}
+
 #' Upload a file to cloud directly from local `cachePath`
 #'
 #' Meant for internal use, as there are internal objects as arguments.
