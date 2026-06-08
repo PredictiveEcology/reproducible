@@ -133,6 +133,17 @@
 
 ## bug fixes
 
+* The **single-stream `preProcess`/`prepInputs` download no longer hangs for
+  hours on a slow or flaky connection**. It was setting curl's `connecttimeout`
+  (the cap on *establishing* a connection) to `reproducible.timeout` — the
+  overall download budget, which defaults to `12000` seconds (3.3 h). A stalled
+  TLS handshake (e.g. a transient `SSL_connect` failure to `opendata.nfis.org`)
+  therefore froze the session for many minutes before erroring. The connect
+  timeout is now a short, dedicated cap, new option `reproducible.connecttimeout`
+  (default `30L` seconds), mirroring `reproducible.parallel.connecttimeout` for
+  the parallel ranged path; `reproducible.timeout` still governs the overall
+  download.
+
 * Parallel ranged downloads are now used **only for URLs that the
   `reproducible.urlRemap` hook actually redirected** to a mirror, matching the
   documented intent. Previously, once a remap hook was set, the parallel path
