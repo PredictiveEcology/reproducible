@@ -118,6 +118,15 @@
 #'     **Deprecated — do not use** (see `gdalwarp` above). Default: `2`.
 #'     Previously set `-wo NUM_THREADS=` for `gdalProject`.
 #'   }
+#'   \item{`gdriveNoAuth`}{
+#'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
+#'     When `TRUE`, Google Drive files are downloaded over plain HTTPS without a
+#'     `googledrive` token (i.e. no `drive_auth()`). This only works for files
+#'     shared as "Anyone with the link". The same no-auth path is taken
+#'     automatically — regardless of this option — when the supplied `url` is the
+#'     public web-download form, e.g.
+#'     `https://drive.google.com/uc?export=download&id=<ID>`.
+#'   }
 #'   \item{`destinationPathShared`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     If set to a path, this will cause these functions to save their downloaded and preprocessed
@@ -506,6 +515,7 @@ reproducibleOptions <- function() {
     reproducible.fileBackedAnchors = NULL, # named list of semantic project paths (e.g. SpaDES paths(sim)); used to store/restore file-backed object paths *relative* to a portable anchor
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.gdalwarpThreads = 2L,
+    reproducible.gdriveNoAuth = FALSE,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.destinationPathShared = NULL,
     reproducible.destinationPathSharedRecursive = FALSE,

@@ -36,6 +36,20 @@
 
 ## new features
 
+* Google Drive files that are shared "Anyone with the link" can now be
+  downloaded by `prepInputs()`/`preProcess()` **without authentication**. This
+  happens automatically in three cases: (1) the supplied `url` is the public
+  web-download form (e.g. `https://drive.google.com/uc?export=download&id=<ID>`);
+  (2) no `googledrive` token is loaded — in which case the file's metadata could
+  only have been read anonymously, which is proof it is public, so the public
+  endpoint is used silently instead of failing with a "no token" error; or
+  (3) the new option **`reproducible.gdriveNoAuth`** is `TRUE`. An authenticated
+  download that fails (e.g. an expired token) also silently falls back to the
+  public endpoint, surfacing the original auth error only if the file turns out
+  not to be public. Large files that return Google's "can't scan for viruses"
+  interstitial are handled by parsing and resubmitting the one-time confirm
+  token. Authenticated workflows (token loaded) are unaffected.
+
 * **Download progress is now visible in non-interactive / logged sessions.**
   `httr2::req_progress()` draws a cli progress bar that is silent when
   `!cli::is_dynamic_tty()` (logged runs, CI, a SpaDES `simInit`) and writes
@@ -47,6 +61,7 @@
   which the calling app (e.g. SpaDES.core's logger) timestamps. The cadence is
   set by the new option `reproducible.downloadProgressInterval` (default `2`
   seconds). In a dynamic terminal the native in-place cli bar is unchanged.
+
 * New diagnostic option **`reproducible.preDigestDump`** (and
   `reproducible.preDigestDumpPattern`) to dump the full element-by-element
   `preDigest` (`name = hash`) that produces each `Cache()` `cacheId`. Unlike

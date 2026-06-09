@@ -1284,6 +1284,29 @@ isGoogleID <- function(url) {
 isGoogleDriveURL <- function(url) {
   grepl("drive.google.com", url)
 }
+
+# The *public* web-download form of a Google Drive URL, e.g.
+# `https://drive.google.com/uc?export=download&id=<ID>` or the endpoint it
+# redirects to, `https://drive.usercontent.google.com/download?id=<ID>...`.
+# When a user supplies this form they are signalling that the file is shared
+# "Anyone with the link"; such files can be fetched over plain HTTPS with no
+# googledrive token (see the no-auth bypass in `dlGoogle()`).
+isGoogleDownloadURL <- function(url) {
+  grepl("uc\\?export=download", url) |
+    grepl("drive\\.usercontent\\.google\\.com/download", url)
+}
+
+# Extract the file ID from any Google Drive URL form (`?id=`, `&id=`, `/d/<id>`)
+# without needing the googledrive package. Falls back to assuming `url` is
+# already a bare ID.
+.googleDriveId <- function(url) {
+  id <- regmatches(url, regexpr("(?<=[?&]id=)[A-Za-z0-9_-]+", url, perl = TRUE))
+  if (!length(id)) {
+    id <- regmatches(url, regexpr("(?<=/d/)[A-Za-z0-9_-]+", url, perl = TRUE))
+  }
+  if (!length(id)) id <- as.character(url)
+  id[[1]]
+}
 # COPIED FROM REQUIRE
 # urlExists <- function(url) {
 #   con <- url(url)
