@@ -74,6 +74,23 @@
 #'   \item{dryRun}{
 #'     Default: `FALSE`.
 #'   }
+#'   \item{`fileBackedAnchors`}{
+#'     Default: `NULL`. A named list of "anchor" directories (e.g. the result of
+#'     SpaDES `paths(sim)`: `cachePath`, `inputPath`, `outputPath`, `modulePath`,
+#'     ...) used to make *file-backed* objects (such as a `terra` `SpatRaster`)
+#'     portable across machines and users. A file-backed object embeds an
+#'     *absolute* path to its backing file; when stored relative to a named anchor
+#'     here, `Cache` records the anchor name plus the path relative to it, and on
+#'     load rebuilds the file under the *receiver's* anchor of the same name. Each
+#'     entry may hold one or more directories, and the most specific (longest)
+#'     matching anchor wins. The same named list must be set on both the machine
+#'     that writes the cache entry and the one that reads it (e.g. a shared cloud
+#'     cache). When the file lives under no anchor, or the anchor name is not set
+#'     on the receiver, the object is restored *self-contained under the
+#'     receiver's `cachePath`* rather than the producing machine's absolute path.
+#'     `cachePath` and the current working directory are always available as
+#'     fallback anchors.
+#'   }
 #'   \item{`futurePlan`}{
 #'     Default: `FALSE`. On Linux OSes, `Cache` and `cloudCache` have some
 #'     functionality that uses the `future` package.
@@ -477,6 +494,7 @@ reproducibleOptions <- function() {
     reproducible.destinationPath = NULL,
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.dryRun = FALSE,
+    reproducible.fileBackedAnchors = NULL, # named list of semantic project paths (e.g. SpaDES paths(sim)); used to store/restore file-backed object paths *relative* to a portable anchor
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
     reproducible.gdalwarpThreads = 2L,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),

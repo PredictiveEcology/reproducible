@@ -79,6 +79,23 @@ Only tested with \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
 \item{dryRun}{
 Default: \code{FALSE}.
 }
+\item{\code{fileBackedAnchors}}{
+Default: \code{NULL}. A named list of "anchor" directories (e.g. the result of
+SpaDES \code{paths(sim)}: \code{cachePath}, \code{inputPath}, \code{outputPath}, \code{modulePath},
+...) used to make \emph{file-backed} objects (such as a \code{terra} \code{SpatRaster})
+portable across machines and users. A file-backed object embeds an
+\emph{absolute} path to its backing file; when stored relative to a named anchor
+here, \code{Cache} records the anchor name plus the path relative to it, and on
+load rebuilds the file under the \emph{receiver's} anchor of the same name. Each
+entry may hold one or more directories, and the most specific (longest)
+matching anchor wins. The same named list must be set on both the machine
+that writes the cache entry and the one that reads it (e.g. a shared cloud
+cache). When the file lives under no anchor, or the anchor name is not set
+on the receiver, the object is restored \emph{self-contained under the
+receiver's \code{cachePath}} rather than the producing machine's absolute path.
+\code{cachePath} and the current working directory are always available as
+fallback anchors.
+}
 \item{\code{futurePlan}}{
 Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have some
 functionality that uses the \code{future} package.

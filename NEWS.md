@@ -2,6 +2,30 @@
 
 * development version.
 
+## bug fixes
+
+* File-backed objects (e.g. a `terra` `SpatRaster`) are now restored **portably**
+  when a cache entry is shared between machines or users (notably a cloud cache).
+  A file-backed raster embeds an *absolute* path to its backing `.tif`; previously,
+  when another user retrieved such an entry, `Cache()` tried to recreate that path
+  on their machine — e.g. `cannot create dir '/home/<producer>' ... Operation not
+  supported` followed by `[rast] file does not exist`. Three defects in the
+  existing relative-path machinery caused this: `relativeToWhat()` used an inverted
+  "is the file under this anchor?" test (so a raster even one directory below the
+  working directory was stored with its *absolute* path); `unwrapSpatRaster()`
+  reused the producer's embedded path on the normal load path instead of the
+  stored relative tags; and `remapFilenames()` had no safe fallback for an
+  unresolved/absolute path. Now the backing file is stored relative to the most
+  specific matching anchor and rebuilt under the *receiver's* anchor of the same
+  name; when no anchor resolves, the object is made self-contained under the
+  receiver's `cachePath` rather than the producing machine's absolute path.
+
+* New option **`reproducible.fileBackedAnchors`** — a named list of project
+  "anchor" directories (e.g. SpaDES `paths(sim)`) consulted at both cache *save*
+  and *load* so file-backed objects can be stored relative to a semantic,
+  machine-independent anchor (e.g. `inputPath`) and restored to the equivalent
+  location on another machine. See `?reproducibleOptions`.
+
 ## new features
 
 * New diagnostic option **`reproducible.preDigestDump`** (and
