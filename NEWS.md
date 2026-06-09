@@ -2,6 +2,17 @@
 
 * development version.
 
+## new features
+
+* `reproducible.urlRemap` manifests may now carry an optional **`id` column** (the
+  Google Drive file id; also accepted as `googledriveId`/`googledrive_id`/
+  `driveId`/`gid`). It is used as a *secondary* match, by the id parsed from a
+  Drive `url`, when the resolved filename is unavailable — e.g. an
+  unauthenticated session that cannot read a Drive file's metadata. With it, a
+  Drive URL whose id is in the manifest is redirected to the (public) mirror by
+  `prepInputs()` **before** the Drive metadata lookup, so the download needs no
+  Google authentication at all. Manifests without an `id` column are unchanged.
+
 ## bug fixes
 
 * A **public** Google Drive file no longer triggers an interactive OAuth prompt

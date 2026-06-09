@@ -772,6 +772,13 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' supports HTTP Range requests, the parallel download path applies). When there
 #' is no match it returns `NULL`, so the original URL is kept.
 #'
+#' An optional `id` column (also accepted as `googledriveId`, `googledrive_id`,
+#' `driveId` or `gid`) holding the Google Drive file id enables a **secondary**
+#' match by id: when the resolved `filename` is unavailable — e.g. an
+#' unauthenticated session that cannot read a Drive file's metadata — the id is
+#' parsed from the Drive `url` and matched against this column. This lets a
+#' download be redirected to the (public) mirror with no authentication at all.
+#'
 #' The manifest itself — and the responsibility for keeping it current — lives
 #' with the user (for example, a community-maintained mirror manifest);
 #' `reproducible` hard-codes no mirror URLs.
@@ -784,7 +791,9 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #'
 #' @param manifest A `data.frame` (or `data.table`) with at least the character
 #'   columns `filename` and `url`. `filename` is matched against the basename of
-#'   the file being downloaded.
+#'   the file being downloaded. An optional `id` column (Google Drive file id) is
+#'   matched secondarily, by the id parsed from the Drive `url`, when no filename
+#'   is available (e.g. an unauthenticated Drive download).
 #'
 #' @return A function of `(url, filename)` returning a replacement URL, or `NULL`
 #'   to keep the original.
@@ -807,20 +816,57 @@ makeUrlRemap <- function(manifest) {
     stop("'manifest' must be a data.frame with columns 'filename' and 'url'")
   }
   urls <- as.character(manifest[["url"]])
-  names(urls) <- basename2(as.character(manifest[["filename"]]))
+  byName <- urls
+  names(byName) <- basename2(as.character(manifest[["filename"]]))
   # Drop rows with empty/NA key or value up front.
-  keep <- nzchar(names(urls)) & !is.na(urls) & nzchar(urls)
-  urls <- urls[keep]
-  function(url, filename) {
-    # Only remap a single file. A length != 1 `filename` (e.g. a Google Drive
-    # directory that resolves to several files) has no single mirror URL, so
-    # keep the original; this also avoids vectorized `is.na()` in `||` below.
-    if (length(filename) != 1L) {
-      return(NULL)
-    }
-    hit <- urls[basename2(filename)]
-    if (length(hit) != 1L || is.na(hit)) NULL else unname(hit)
+  keepN <- nzchar(names(byName)) & !is.na(byName) & nzchar(byName)
+  byName <- byName[keepN]
+
+  # Optional secondary lookup by Google Drive id. When present, a download can be
+  # remapped even if the filename is unknown -- e.g. an unauthenticated session
+  # that cannot resolve a Drive file's name -- by parsing the id out of the url.
+  # Recognise a few likely column names.
+  idCol <- intersect(c("id", "googledriveId", "googledrive_id", "driveId", "gid"),
+                     colnames(manifest))
+  byId <- character(0)
+  if (length(idCol)) {
+    ids <- as.character(manifest[[idCol[[1]]]])
+    byId <- urls
+    names(byId) <- ids
+    keepI <- nzchar(names(byId)) & names(byId) != "NA" & !is.na(byId) & nzchar(byId)
+    byId <- byId[keepI]
   }
+
+  function(url, filename) {
+    # Primary: match on the basename of the resolved filename (a single file). A
+    # length != 1 `filename` (e.g. a Drive directory of several files) has no
+    # single mirror URL, so it is skipped here.
+    if (length(filename) == 1L && !is.na(filename) && nzchar(filename)) {
+      hit <- byName[basename2(filename)]
+      if (length(hit) == 1L && !is.na(hit)) return(unname(hit))
+    }
+    # Secondary: match on the Google Drive id parsed from the url. This lets an
+    # unauthenticated caller (no resolved filename) still redirect to the mirror.
+    if (length(byId) && length(url) == 1L && !is.na(url)) {
+      id <- .extractDriveId(url)
+      if (!is.na(id) && nzchar(id)) {
+        hit <- byId[id]
+        if (length(hit) == 1L && !is.na(hit)) return(unname(hit))
+      }
+    }
+    NULL
+  }
+}
+
+# Extract a Google Drive file/folder id from a Drive URL or a bare id. Returns
+# NA_character_ when none is found. Regex-based, so it needs no googledrive token
+# (the point is to match a manifest by id when the file cannot be authenticated).
+.extractDriveId <- function(url) {
+  u <- tryCatch(as.character(url)[1], error = function(e) NA_character_)
+  if (length(u) != 1L || is.na(u) || !nzchar(u)) return(NA_character_)
+  if (isTRUE(tryCatch(isGoogleID(u), error = function(e) FALSE))) return(u)
+  m <- regmatches(u, regexec("(?:/d/|[?&]id=|/folders/)([A-Za-z0-9_-]{15,})", u, perl = TRUE))[[1]]
+  if (length(m) >= 2L && nzchar(m[[2]])) m[[2]] else NA_character_
 }
 
 #' Resolve and remap a URL early, before the COG fast-path
@@ -851,6 +897,18 @@ makeUrlRemap <- function(manifest) {
 
   isGID <- tryCatch(isGoogleDriveURL(url) || isGoogleID(url), error = function(e) FALSE)
   if (isTRUE(isGID)) {
+    # First try an id-based remap that needs neither authentication nor a
+    # resolved filename: if the manifest lists this Drive id, redirect to the
+    # (public) mirror and skip the Drive metadata lookup -- and its auth --
+    # entirely. Only for single files (a folder has no single mirror URL), and a
+    # no-op (falls through) when there is no id match or no id column.
+    isDir <- tryCatch(isTRUE(isDirectory(url, FALSE)), error = function(e) FALSE)
+    if (!isDir) {
+      early <- .applyUrlRemap(url, filename = NA_character_, verbose = verbose)
+      if (!identical(early, url)) {
+        return(early)
+      }
+    }
     if (!requireNamespace("googledrive", quietly = TRUE)) {
       return(url)
     }

@@ -55,6 +55,68 @@ test_that("makeUrlRemap validates its manifest argument", {
                "filename.*url|columns")
 })
 
+test_that(".extractDriveId parses an id from the various Drive URL forms", {
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  expect_identical(reproducible:::.extractDriveId(
+    paste0("https://drive.google.com/file/d/", id, "/view?usp=share_link")), id)
+  expect_identical(reproducible:::.extractDriveId(
+    paste0("https://drive.google.com/open?id=", id)), id)
+  expect_identical(reproducible:::.extractDriveId(
+    paste0("https://drive.google.com/uc?export=download&id=", id)), id)
+  expect_identical(reproducible:::.extractDriveId(
+    "https://drive.google.com/drive/folders/199oEp-TVaCyacwqS4PPf3XWMbhPe4YBN"),
+    "199oEp-TVaCyacwqS4PPf3XWMbhPe4YBN")
+  expect_identical(reproducible:::.extractDriveId(id), id)               # bare id
+  expect_true(is.na(reproducible:::.extractDriveId("https://example.com/a.tif")))
+  expect_true(is.na(reproducible:::.extractDriveId("")))
+})
+
+test_that("makeUrlRemap remaps by Drive id (secondarily) when filename is unknown", {
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  manifest <- data.frame(
+    filename = "a.tif",
+    url = "https://mirror/a.tif",
+    id = id,
+    stringsAsFactors = FALSE
+  )
+  remap <- reproducible::makeUrlRemap(manifest)
+
+  # filename match still works (primary)
+  expect_identical(remap("gd://whatever", "a.tif"), "https://mirror/a.tif")
+  # no filename -> match by id parsed from the (Drive) url (secondary)
+  expect_identical(
+    remap(paste0("https://drive.google.com/file/d/", id, "/view"), NA_character_),
+    "https://mirror/a.tif"
+  )
+  expect_identical(remap(id, NA_character_), "https://mirror/a.tif")   # bare id url
+  # an id not in the manifest -> NULL
+  expect_null(remap("https://drive.google.com/file/d/NOPEnopeNOPEnopeNOPEnope12345/view",
+                    NA_character_))
+})
+
+test_that("makeUrlRemap without an id column behaves exactly as before", {
+  manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
+                         stringsAsFactors = FALSE)
+  remap <- reproducible::makeUrlRemap(manifest)
+  expect_identical(remap("gd://x", "a.tif"), "https://mirror/a.tif")
+  # no id column -> a filename-less call cannot match -> NULL
+  expect_null(remap("https://drive.google.com/file/d/13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u/view",
+                    NA_character_))
+})
+
+test_that(".remapUrlEarly redirects a Drive URL by id WITHOUT calling assessGoogle", {
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
+                         id = id, stringsAsFactors = FALSE)
+  withr::local_options(reproducible.urlRemap = manifest)
+  # If the id matches, the Drive metadata lookup (and thus auth) must be skipped.
+  testthat::local_mocked_bindings(
+    assessGoogle = function(...) stop("assessGoogle must not be called when id matches"))
+  out <- reproducible:::.remapUrlEarly(
+    paste0("https://drive.google.com/file/d/", id, "/view"), verbose = 0)
+  expect_identical(out, "https://mirror/a.tif")
+})
+
 test_that(".applyUrlRemap returns the original url when the option is unset", {
   withr::local_options(reproducible.urlRemap = NULL)
   expect_identical(
