@@ -1,9 +1,10 @@
 on:
+  # Run coverage only on push to the integration branches (a PR merge IS a push
+  # to `development`), NOT on pull_request. Running it per-PR meant every update
+  # to the busy `development` base recomputed refs/pull/N/merge and, with
+  # `cancel-in-progress: true`, cancelled the in-progress covr run (exit 143),
+  # so coverage showed spurious red on PRs without ever indicating a real failure.
   push:
-    branches:
-      - master
-      - development
-  pull_request:
     branches:
       - master
       - development
