@@ -4,6 +4,15 @@
 
 ## bug fixes
 
+* The public-Drive no-auth metadata read no longer prevents a *configured* user
+  from authenticating. The previous change deauthorized `googledrive` whenever no
+  token was currently *loaded*, but "no token loaded" is not the same as "cannot
+  authenticate": a user with `gargle_oauth_email` (+ `gargle_oauth_cache`) set, or
+  a service-account JSON, can load a cached token silently. `assessGoogle()` now
+  only falls back to anonymous access when token-less **and** gargle has no usable
+  non-interactive auth configured (so `drive_auth()` can silently load the cached
+  token); `reproducible.gdriveNoAuth = TRUE` still forces anonymous.
+
 * A **public** Google Drive file no longer triggers an interactive OAuth prompt
   ("Is it OK to cache OAuth access credentials ...") during `prepInputs()` /
   `preProcess()` when no `googledrive` token is loaded. The no-auth download path

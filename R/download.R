@@ -618,13 +618,35 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(tryCatch(googledrive::drive_has_token(), error = function(e) FALSE))
 }
 
+# Can googledrive authenticate WITHOUT an interactive prompt? TRUE when the user
+# has configured gargle for non-interactive auth: a specific OAuth email (so a
+# cached token at `gargle_oauth_cache` is loaded silently) or a service-account
+# JSON. Used to decide whether a token-less session should still attempt auth
+# (and silently load a cached token) rather than fall back to anonymous access.
+.gdriveCanAuthNonInteractively <- function() {
+  email <- tryCatch(getOption("gargle_oauth_email"), error = function(e) NULL)
+  wantsEmail <- (is.character(email) && length(email) == 1L && !is.na(email) && nzchar(email)) ||
+    isTRUE(email)
+  hasServiceAccount <- nzchar(Sys.getenv("GOOGLEDRIVE_AUTH", "")) ||
+    nzchar(Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
+  isTRUE(wantsEmail) || isTRUE(hasServiceAccount)
+}
+
 # Should a Google Drive *metadata* read (drive_get/drive_ls in assessGoogle) be
-# done anonymously, i.e. without triggering interactive OAuth? TRUE when no token
-# is loaded -- the typical "cloud reader" / public-file case -- or when the user
-# opted in via `reproducible.gdriveNoAuth`. A loaded token (a "cloud writer", who
-# needs auth to write the shared cache) otherwise keeps the existing behaviour.
+# done anonymously, i.e. without triggering interactive OAuth?
+#   * `reproducible.gdriveNoAuth = TRUE`  -> always anonymous (explicit opt-in);
+#   * a token is already loaded           -> no (use it -- the "cloud writer" case);
+#   * no token loaded, but gargle is configured to authenticate non-interactively
+#     (an OAuth email or a service account) -> no: let drive_auth() silently load
+#     the cached token. Going anonymous here was a regression that prevented a
+#     configured user from ever authenticating.
+#   * otherwise (no token, no usable auth config) -> yes: the typical "cloud
+#     reader" / public-file case, where authenticating would only mean an
+#     interactive prompt that we want to avoid.
 .gdriveShouldGoAnon <- function(hadToken = .gdriveHasToken()) {
-  isTRUE(getOption("reproducible.gdriveNoAuth", FALSE)) || !isTRUE(hadToken)
+  if (isTRUE(getOption("reproducible.gdriveNoAuth", FALSE))) return(TRUE)
+  if (isTRUE(hadToken)) return(FALSE)
+  !.gdriveCanAuthNonInteractively()
 }
 
 # Put googledrive into anonymous (deauthorized) mode so a metadata read of a
