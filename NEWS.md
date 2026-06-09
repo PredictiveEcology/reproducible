@@ -15,7 +15,15 @@
   which the calling app (e.g. SpaDES.core's logger) timestamps. The cadence is
   set by the new option `reproducible.downloadProgressInterval` (default `2`
   seconds). In a dynamic terminal the native in-place cli bar is unchanged.
-
+* New diagnostic option **`reproducible.preDigestDump`** (and
+  `reproducible.preDigestDumpPattern`) to dump the full element-by-element
+  `preDigest` (`name = hash`) that produces each `Cache()` `cacheId`. Unlike
+  `showSimilar` (closest prior call only), `dryRun`, or `verbose`, it covers
+  *every* `Cache()` call -- including ones built deep inside other packages (e.g.
+  SpaDES.core events) -- so two machines' dumps can be `diff`ed to find exactly
+  what splits a `cacheId` across machines/OSs (e.g. a cloud cache that will not
+  share). `TRUE` messages each call's sorted list; a directory path writes one
+  `preDigest_<functionName>[_<n>].txt` per call. See `?reproducibleOptions`.
 * `showSimilar` (the `reproducible.showSimilar` option, also used by dev mode and
   `dryRun`) is now cloud-aware. When `useCloud` is active, `Cache()` previously
   compared the current call only against the *local* cache, so similar artifacts
@@ -144,6 +152,16 @@
   `options(reproducible.timeout = ...)` explicitly see no change.
 
 ## bug fixes
+
+* **A best-effort cloud cache upload no longer aborts the run.** When caching an
+  object whose stored form does not include every file `CacheStoredFile()`
+  predicts from `Filenames()` (e.g. a cached `simList` that *references* its
+  `SpatRaster` backends rather than copying them under the `cacheId`),
+  `cloudUploadFromCache()` previously `stop()`ed with "File(s) to upload are not
+  available" -- crashing a long, already-locally-saved run during the upload
+  step. It now uploads the files that are present, warns about any it skips, and
+  never errors (the local cache is intact regardless).
+
 
 * The **single-stream `preProcess`/`prepInputs` download no longer hangs for
   hours on a slow or flaky connection**. It was setting curl's `connecttimeout`

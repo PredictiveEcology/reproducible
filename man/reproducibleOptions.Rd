@@ -263,6 +263,23 @@ it will use \code{raster::shapefile}
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
 }
+\item{\code{preDigestDump}}{
+Default: \code{NULL} (off). A diagnostic for "why is my \code{cacheId} different on
+this machine than that one?" (e.g. a cloud cache that will not share across
+OSs). Unlike \code{showSimilar} (closest prior call only) or \code{dryRun}/\code{verbose},
+this dumps the \strong{full} element-by-element \code{name = hash} list that produced
+the \code{cacheId}, for \emph{every} \code{Cache()} call (including ones built inside other
+packages, e.g. SpaDES.core events). Set to \code{TRUE} to print each call's
+sorted list via \code{messageCache()}, or to a \strong{directory path} to write one
+\verb{preDigest_<functionName>[_<n>].txt} file per call. Point it at a fresh,
+empty directory on each machine, run, then \code{diff} the two directories: the
+differing \code{name = hash} line is exactly what is splitting the \code{cacheId}.
+}
+\item{\code{preDigestDumpPattern}}{
+Default: \code{NULL}. Optional regular expression matched against a call's
+\code{.functionName}; when set, only matching \code{Cache()} calls are dumped by
+\code{reproducible.preDigestDump} (e.g. \code{"init|inputObjects"}).
+}
 \item{\code{testCharacterAsFile}}{
 Default \code{FALSE}. The behaviour of \code{.robustDigest} on \code{character} vectors prior to
 \verb{reproducible == 2.1.2} was that the function would test for whether they were

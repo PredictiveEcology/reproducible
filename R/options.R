@@ -254,6 +254,23 @@
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
+#'   \item{`preDigestDump`}{
+#'     Default: `NULL` (off). A diagnostic for "why is my `cacheId` different on
+#'     this machine than that one?" (e.g. a cloud cache that will not share across
+#'     OSs). Unlike `showSimilar` (closest prior call only) or `dryRun`/`verbose`,
+#'     this dumps the **full** element-by-element `name = hash` list that produced
+#'     the `cacheId`, for *every* `Cache()` call (including ones built inside other
+#'     packages, e.g. SpaDES.core events). Set to `TRUE` to print each call's
+#'     sorted list via `messageCache()`, or to a **directory path** to write one
+#'     `preDigest_<functionName>[_<n>].txt` file per call. Point it at a fresh,
+#'     empty directory on each machine, run, then `diff` the two directories: the
+#'     differing `name = hash` line is exactly what is splitting the `cacheId`.
+#'   }
+#'   \item{`preDigestDumpPattern`}{
+#'     Default: `NULL`. Optional regular expression matched against a call's
+#'     `.functionName`; when set, only matching `Cache()` calls are dumped by
+#'     `reproducible.preDigestDump` (e.g. `"init|inputObjects"`).
+#'   }
 #'   \item{`testCharacterAsFile`}{
 #'     Default `FALSE`. The behaviour of `.robustDigest` on `character` vectors prior to
 #'     `reproducible == 2.1.2` was that the function would test for whether they were
@@ -488,6 +505,8 @@ reproducibleOptions <- function() {
     reproducible.nThreads = 1,
     reproducible.objSize = TRUE,
     reproducible.overwrite = FALSE,
+    reproducible.preDigestDump = NULL,              # NULL/FALSE off; TRUE -> message each call's preDigest; or a dir path -> one file per call
+    reproducible.preDigestDumpPattern = NULL,       # optional regex on .functionName to limit which calls are dumped
     reproducible.parallel.connecttimeout = 30L,     # seconds; per-connection establishment timeout for ranged streams
     reproducible.parallel.maxConnections = NULL,    # max simultaneous connections; NULL => parallelly::availableCores() - 1
     reproducible.parallel.minConcurrentFrac = 0.25, # fall back to single stream if 1st attempt completes < this frac of parts
