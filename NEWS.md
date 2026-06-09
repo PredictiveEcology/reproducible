@@ -12,6 +12,13 @@
   only falls back to anonymous access when token-less **and** gargle has no usable
   non-interactive auth configured (so `drive_auth()` can silently load the cached
   token); `reproducible.gdriveNoAuth = TRUE` still forces anonymous.
+* A failed Google Drive access during `prepInputs()` / `preProcess()` now reports
+  the full, browser-pasteable URL instead of only the bare `fileId`. Previously a
+  `googledrive::drive_get()` failure surfaced e.g. `File not found:
+  13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u.`, which cannot be opened in a browser to
+  check the file exists / is shared. `assessGoogle()` now wraps the metadata read
+  and re-raises with `https://drive.google.com/file/d/<id>` (or the original Drive
+  URL), keeping the underlying error detail (e.g. the 404 reason).
 
 * A **public** Google Drive file no longer triggers an interactive OAuth prompt
   ("Is it OK to cache OAuth access credentials ...") during `prepInputs()` /

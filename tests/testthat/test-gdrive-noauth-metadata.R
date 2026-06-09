@@ -101,3 +101,28 @@ test_that(".gdriveDeauthForPublic preserves a token to restore when gdriveNoAuth
   expect_identical(res$token, "TOKEN")  # caller restores this on.exit
   expect_true(deauthed)
 })
+
+# --- error messages carry the full, pasteable URL (not just the bare fileId) ---
+
+test_that(".gdriveBrowserUrl returns a pasteable URL for URLs and bare IDs", {
+  fileUrl <- "https://drive.google.com/file/d/13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u/view?usp=share_link"
+  expect_identical(reproducible:::.gdriveBrowserUrl(fileUrl), fileUrl)         # full URL echoed
+  folderUrl <- "https://drive.google.com/drive/folders/199oEp-TVaCyacwqS4PPf3XWMbhPe4YBN"
+  expect_identical(reproducible:::.gdriveBrowserUrl(folderUrl), folderUrl)
+  # a bare 33-char Drive ID -> the file viewer URL
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  expect_identical(reproducible:::.gdriveBrowserUrl(id),
+                   "https://drive.google.com/file/d/13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u")
+  expect_true(is.na(reproducible:::.gdriveBrowserUrl(NA_character_)))
+  expect_true(is.na(reproducible:::.gdriveBrowserUrl("")))
+})
+
+test_that(".stopGoogleDriveAccess surfaces the full URL and the original error", {
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  err <- simpleError("Client error: (404) Not Found\nFile not found: 13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u.")
+  # a bare ID becomes a pasteable viewer URL in the message
+  expect_error(reproducible:::.stopGoogleDriveAccess(id, err),
+               "drive\\.google\\.com/file/d/13-atqi")
+  # ...and the original googledrive detail is preserved
+  expect_error(reproducible:::.stopGoogleDriveAccess(id, err), "File not found")
+})

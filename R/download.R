@@ -673,6 +673,30 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   list(deauthed = TRUE, token = tok)
 }
 
+# A browser-pasteable URL for a Google Drive resource, for use in error messages.
+# googledrive's own errors report only the bare fileId (e.g. "File not found:
+# 13-atqi_..."), which the user cannot paste into a browser to check. If the
+# input is already a Drive URL, echo it; if it is a bare ID, build the viewer
+# URL; otherwise return it unchanged.
+.gdriveBrowserUrl <- function(url) {
+  u <- tryCatch(as.character(url)[1], error = function(e) NA_character_)
+  if (length(u) != 1L || is.na(u) || !nzchar(u)) return(NA_character_)
+  if (isTRUE(tryCatch(isGoogleDriveURL(u), error = function(e) FALSE))) return(u)
+  if (isTRUE(tryCatch(isGoogleID(u), error = function(e) FALSE))) return(googledriveIDtoHumanURL(u))
+  u
+}
+
+# Re-raise a googledrive metadata-access error with the full (pasteable) URL up
+# front, preserving the original error detail (404 reason/location etc.).
+.stopGoogleDriveAccess <- function(url, e) {
+  browserUrl <- .gdriveBrowserUrl(url)
+  stop("Could not access the Google Drive resource:\n  ",
+       if (!is.na(browserUrl)) browserUrl else url,
+       "\n  (open it in a browser to confirm it exists and is shared ",
+       "'Anyone with the link')\n  ",
+       conditionMessage(e), call. = FALSE)
+}
+
 # Does the downloaded file look like Google's HTML interstitial (sign-in page or
 # virus-scan-warning download form) rather than the requested bytes?
 .looksLikeGoogleInterstitial <- function(file) {
@@ -1855,27 +1879,29 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   # URL. retry() captures its `expr` argument with substitute() and works
   # the same way whether or not it's wrapped in quote().
   # if (is.null(archive) || is.na(archive)) {
-  if (isTRUE(isDirectory(url, FALSE))) {
-    fileAttr <- Cache(
-      retry(retries = 1, googledrive::drive_ls(googledrive::as_id(url),
-                                               shared_drive = team_drive)),
-      verbose = FALSE
-    )
-  } else {
-    if (packageVersion("googledrive") < "2.0.0") {
-      fileAttr <- Cache(
-        retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
-                                                  team_drive = team_drive)),
+  fileAttr <- tryCatch({
+    if (isTRUE(isDirectory(url, FALSE))) {
+      Cache(
+        retry(retries = 1, googledrive::drive_ls(googledrive::as_id(url),
+                                                 shared_drive = team_drive)),
         verbose = FALSE
       )
     } else {
-      fileAttr <- Cache(
-        retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
-                                                  shared_drive = team_drive)),
-        verbose = FALSE
-      )
+      if (packageVersion("googledrive") < "2.0.0") {
+        Cache(
+          retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
+                                                    team_drive = team_drive)),
+          verbose = FALSE
+        )
+      } else {
+        Cache(
+          retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
+                                                    shared_drive = team_drive)),
+          verbose = FALSE
+        )
+      }
     }
-  }
+  }, error = function(e) .stopGoogleDriveAccess(url, e))
 
   fileSize <- sapply(fileAttr$drive_resource, function(x) x$size)
   if (!is.null(unlist(fileSize))) {
