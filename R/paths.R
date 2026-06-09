@@ -341,7 +341,14 @@ getRelative <- function(path, relativeToPath) {
       id <- which(a %in% b)
       if (length(id) > 0) {
         ## assume most internal subdirectory is the matching one
-        relPath <- do.call(file.path, as.list(a[(max(id) + 1):length(a)]))
+        start <- max(id) + 1L
+        if (start > length(a)) {
+          ## the path *is* (or is fully contained in) relativeToPath. Guard against
+          ## `(n+1):n` counting backwards -- it yielded `file.path(NA, last)` = "NA/last".
+          relPath <- "."
+        } else {
+          relPath <- do.call(file.path, as.list(a[start:length(a)]))
+        }
       } else {
         relPath <- p
       }

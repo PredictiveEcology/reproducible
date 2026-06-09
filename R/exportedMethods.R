@@ -101,11 +101,15 @@ modifyListPaths <- function(cachePath = getOption("reproducible.cachePath"), ...
     possRelPaths <- modifyList(possRelPaths, anchors)
   }
   possRelPaths <- append(possRelPaths, list(getwd = getwd()))
-  # Drop anchors that are NULL or empty so they can never match spuriously.
-  #   An anchor may hold several directories (e.g. modulePath), so test element-wise.
-  keep <- !vapply(possRelPaths,
-                  function(x) is.null(x) || length(x) == 0L || all(!nzchar(x)),
-                  logical(1))
+  # Drop NULL/NA/empty anchor directories so they can never match spuriously or
+  #   leak an "NA" path segment into a rebuilt filename. An anchor may hold several
+  #   directories (e.g. modulePath), so clean element-wise. NB: nzchar(NA) is TRUE,
+  #   so NA must be removed explicitly.
+  possRelPaths <- lapply(possRelPaths, function(x) {
+    if (is.null(x)) return(x)
+    x[!is.na(x) & nzchar(x)]
+  })
+  keep <- vapply(possRelPaths, function(x) length(x) > 0L, logical(1))
   possRelPaths[keep]
 }
 
@@ -725,6 +729,16 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
     if (length(relToWhere) == 1L && length(origRelName) > 1L)
       relToWhere <- rep(relToWhere, length(origRelName))
 
+    # Base for files whose anchor doesn't resolve / that are orphans. Prefer the
+    #   cache (so a shared/cloud-cache entry becomes self-contained under the
+    #   receiver's cache), but fall back to the first available anchor when there
+    #   is no cache (cachePath = NULL) -- e.g. saveSimList()/loadSimList(), which
+    #   anchor to projectPath/getwd, not a cache.
+    haveCache <- !is.null(cachePath) && length(cachePath) && !is.na(cachePath[[1]]) &&
+      nzchar(cachePath[[1]])
+    fallbackBase <- if (isTRUE(haveCache)) cachePath[[1]]
+      else if (length(possRelPaths)) possRelPaths[[1]][[1]] else getwd()
+
     newName <- vapply(seq_along(origRelName), function(i) {
       x <- origRelName[[i]]
       anchorNm <- if (length(relToWhere) >= i) relToWhere[[i]] else ""
@@ -749,7 +763,7 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
         while (any(grepl(grepStartsTwoDots, rel))) {
           rel <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", rel)
         }
-        as.character(fs::path_norm(fs::path_join(c(cachePath, rel))))
+        as.character(fs::path_norm(fs::path_join(c(fallbackBase, rel))))
       }
     }, character(1))
   } else {

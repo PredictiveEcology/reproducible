@@ -26,6 +26,14 @@
   machine-independent anchor (e.g. `inputPath`) and restored to the equivalent
   location on another machine. See `?reproducibleOptions`.
 
+* `getRelative()` no longer returns `"NA/<basename>"` when a path *is* (or is
+  fully contained in) `relativeToPath`; it now correctly returns `"."`. The old
+  result came from `(max(id) + 1):length(a)` counting backwards when the path
+  matched `relativeToPath` exactly, producing `file.path(NA, last)`. This
+  corrupted the relativized paths stored by `SpaDES.core::saveSimList()` and, now
+  that file-backed objects anchor to those paths, would otherwise surface as an
+  `NA` path segment when restoring a file-backed object.
+
 ## new features
 
 * New diagnostic option **`reproducible.preDigestDump`** (and

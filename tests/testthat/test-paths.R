@@ -69,3 +69,13 @@ test_that("relativeToWhat picks the most specific anchor and a true relative pat
   expect_identical(names(res2), "")
   expect_true(fs::is_absolute_path(unname(res2)))
 })
+
+test_that("getRelative returns '.' when the path is (or is within) relativeToPath", {
+  # regression: identical paths returned "NA/<basename>" because `(n+1):n`
+  #   counts backward, yielding file.path(NA, last). This corrupted the paths
+  #   that saveSimList()/loadSimList() store, surfacing as an "NA" path segment
+  #   when restoring a file-backed object anchored to such a path.
+  expect_identical(as.character(getRelative("/a/b/proj", "/a/b/proj")), ".")
+  expect_identical(as.character(getRelative("/a/b/proj/inputs/x.tif", "/a/b/proj")),
+                   "inputs/x.tif")
+})
