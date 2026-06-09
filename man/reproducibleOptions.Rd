@@ -72,6 +72,14 @@ For remote database servers, setting one connection may be far faster than using
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 Can be set globally here.
 }
+\item{\code{downloadProgressInterval}}{
+Default: \code{2}, in seconds. Minimum interval between download-progress lines
+in non-interactive / non-dynamic sessions (logged runs, CI, a SpaDES
+\code{simInit}). In those sessions \code{httr2}'s native cli progress bar emits
+nothing, so \code{preProcess()} instead streams the body and reports progress
+via \code{\link[=messagePreProcess]{messagePreProcess()}} (which the calling app can timestamp). In a
+dynamic terminal the native in-place bar is used and this has no effect.
+}
 \item{\code{drv}}{
 Default: \code{RSQLite::SQLite()}. Sets the default driver for the backend database system.
 Only tested with \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.

@@ -52,3 +52,6 @@ covr-tmp
 reproducible.Rcheck/
 reproducible_*.tar.gz
 .claude
+
+# aider AI assistant scratch files
+.aider*
