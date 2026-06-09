@@ -47,5 +47,35 @@ test_that("relativeToWhat can handle multiple paths", {
       )
     )
   })
-  expect_identical(res, list(outputPath = "."))
+  # relativeToWhat() returns a named character vector: name = the (most specific)
+  #   anchor the file lives under, value = the file's directory relative to it.
+  expect_identical(res, c(outputPath = "."))
+})
+
+test_that("relativeToWhat picks the most specific anchor and a true relative path", {
+  paths <- list(
+    cachePath = "/proj/cache",
+    projectPath = "/proj",
+    inputPath = "/proj/inputs"
+  )
+  # file several levels under inputPath -> relative to inputPath (most specific),
+  #   NOT projectPath; and certainly not stored as an absolute path.
+  res <- relativeToWhat("/proj/inputs/sub/dir/r.tif", cachePath = NULL, paths)
+  expect_identical(names(res), "inputPath")
+  expect_identical(unname(res), "sub/dir")
+
+  # a file under no anchor -> empty anchor name + absolute dir (an "orphan")
+  res2 <- relativeToWhat("/elsewhere/x/r.tif", cachePath = NULL, paths)
+  expect_identical(names(res2), "")
+  expect_true(fs::is_absolute_path(unname(res2)))
+})
+
+test_that("getRelative returns '.' when the path is (or is within) relativeToPath", {
+  # regression: identical paths returned "NA/<basename>" because `(n+1):n`
+  #   counts backward, yielding file.path(NA, last). This corrupted the paths
+  #   that saveSimList()/loadSimList() store, surfacing as an "NA" path segment
+  #   when restoring a file-backed object anchored to such a path.
+  expect_identical(as.character(getRelative("/a/b/proj", "/a/b/proj")), ".")
+  expect_identical(as.character(getRelative("/a/b/proj/inputs/x.tif", "/a/b/proj")),
+                   "inputs/x.tif")
 })

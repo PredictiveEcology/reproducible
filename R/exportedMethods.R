@@ -78,7 +78,7 @@ absoluteBase <- function(relToWhere, cachePath = getOption("reproducible.cachePa
 #' @importFrom utils modifyList
 modifyListPaths <- function(cachePath = getOption("reproducible.cachePath"), ...) {
   possRelPaths <- list()
-  if (!missing(cachePath))
+  if (!missing(cachePath) && !is.null(cachePath))
     possRelPaths$cachePath <- cachePath
   dots <- list(...)
   if (length(dots)) {
@@ -88,53 +88,74 @@ modifyListPaths <- function(cachePath = getOption("reproducible.cachePath"), ...
       possRelPaths <- modifyList(dots[[1]], possRelPaths)
     }
   }
+  # Semantic, machine-independent project anchors (e.g. SpaDES `paths(sim)`).
+  #   Read from the option so the *same* named anchors are available at both
+  #   save (wrapSpatRaster -> relativeToWhat) and load (unwrapSpatRaster ->
+  #   remapFilenames) without threading them through every call signature.
+  #   This is what lets a file-backed object be stored relative to e.g.
+  #   `inputPath` on one machine and restored under another machine's
+  #   `inputPath`. `cachePath`/`getwd` remain fallback anchors.
+  anchors <- getOption("reproducible.fileBackedAnchors", NULL)
+  if (is.list(anchors) && length(anchors) && !is.null(names(anchors))) {
+    anchors <- anchors[nzchar(names(anchors))]
+    possRelPaths <- modifyList(possRelPaths, anchors)
+  }
   possRelPaths <- append(possRelPaths, list(getwd = getwd()))
+  # Drop NULL/NA/empty anchor directories so they can never match spuriously or
+  #   leak an "NA" path segment into a rebuilt filename. An anchor may hold several
+  #   directories (e.g. modulePath), so clean element-wise. NB: nzchar(NA) is TRUE,
+  #   so NA must be removed explicitly.
+  possRelPaths <- lapply(possRelPaths, function(x) {
+    if (is.null(x)) return(x)
+    x[!is.na(x) & nzchar(x)]
+  })
+  keep <- vapply(possRelPaths, function(x) length(x) > 0L, logical(1))
+  possRelPaths[keep]
 }
 
 relativeToWhat <- function(file, cachePath = getOption("reproducible.cachePath"), ...) {
   possRelPaths <- modifyListPaths(cachePath, ...)
 
-  foundAbs <- FALSE
-  dirnameFile <- dirname(file)
-  whSame <- rep(FALSE, length(file))
-  pc <- rep("", length(file))
-  for (nams in names(possRelPaths)) {
-    pc[!whSame] <- mapply(fn = file[!whSame], function(fn)
-      fs::path_common(c(dirname(fn), possRelPaths[[nams]]))
-    )
+  # Flatten anchors to (name, dir) pairs: a single anchor (e.g. modulePath) may hold
+  #   several directories. Prefer the most specific (longest) anchor dir, so a nested
+  #   anchor (e.g. `inputPath`) wins over a parent that also contains the file (e.g. a
+  #   `projectPath` or `getwd`); otherwise the file would be stored relative to the
+  #   broadest anchor and lose the semantic location it actually lived in.
+  flatNames <- rep(names(possRelPaths), lengths(possRelPaths))
+  flatPaths <- as.character(fs::path_norm(unlist(possRelPaths, use.names = FALSE)))
+  ord <- order(nchar(flatPaths), decreasing = TRUE)
+  flatNames <- flatNames[ord]
+  flatPaths <- flatPaths[ord]
 
-    out <- sapply(possRelPaths[[nams]], fs::path_rel, path = pc) |> as.character()
-    whSame <- pc == dirnameFile
-    if (all(whSame)) {
-      out <- list(out)
-      names(out) <- nams
-      foundAbs <- TRUE
-      break
-    }
-  }
-  if (isFALSE(foundAbs)) {
-    for (nams in names(possRelPaths)) {
-      out <- dirname(file)
-      names(out) <- ""
-      if (FALSE) { # this is for rebuilding relative against
-        # poss <- fs::path_common(c(file, possRelPaths[nams]))
-        # if (!identical(poss, possRelPaths[nams])) {
-        #   fileRel <- makeRelative(file, poss)
-        #   rel <- makeRelative(possRelPaths[nams], poss)
-        #   relWithDots <- rep("..", length(strsplit(rel, "/|\\\\")[[1]]))
-        #   poss <- file.path(paste(relWithDots, collapse = "/"), dirname(fileRel))
-        #   out <- poss
-        #   out <- list(out)
-        #   names(out) <- nams
-        #   foundAbs <- TRUE
-        #   break
-        # }
-        # names(out) <- nams
+  dirnameFile <- as.character(fs::path_norm(dirname(file)))
+  relName <- character(length(file))
+  whichAnchor <- character(length(file))
+  for (i in seq_along(file)) {
+    found <- FALSE
+    for (j in seq_along(flatPaths)) {
+      anchor <- flatPaths[[j]]
+      # The file is *under* (or at) the anchor when their common ancestor is the
+      #   anchor itself. (The previous test, `common == dirname(file)`, was inverted:
+      #   it only matched when the anchor sat inside the file's own directory.)
+      # NB: coerce path_common()'s fs_path to plain character so identical() compares
+      #   values, not classes (flatPaths is plain character).
+      if (identical(as.character(fs::path_common(c(dirnameFile[i], anchor))), anchor)) {
+        relName[i] <- as.character(fs::path_rel(dirnameFile[i], start = anchor))
+        whichAnchor[i] <- flatNames[[j]]
+        found <- TRUE
+        break
       }
     }
+    if (!found) {
+      # Orphan: the file lives under no known anchor. Record its absolute directory
+      #   with an empty anchor name; remapFilenames() will make this self-contained
+      #   under the receiver's cache rather than resurrecting a foreign absolute path.
+      relName[i] <- dirnameFile[i]
+      whichAnchor[i] <- ""
+    }
   }
-
-  out
+  names(relName) <- whichAnchor
+  relName
 }
 
 ## non-exported wrap functions --------------------------------------------------
@@ -221,8 +242,12 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
         feObjs <- file.exists(obj)
         if (any(feObjs))
           unlink(obj[feObjs])
-        # fnToLoad <- fns
-        newFiles <- remapFilenames(fns, tags, cachePath, ...)
+        # Rebuild the destination from the stored *relative* tags (anchor + relName)
+        #   rather than reusing `fns` (the producing machine's embedded absolute path).
+        #   Passing `fns` as `obj` here short-circuited remapFilenames() to the verbatim
+        #   producer path, which is what made a cloud-cached raster try to write back to
+        #   e.g. /home/<producer>/... on a different user's machine.
+        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
         fromFiles <- unlist(filenameInCache)
       } else {
         newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
@@ -699,25 +724,46 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
     }
 
     possRelPaths <- modifyListPaths(cachePath, ...)
-    relToWhereInPossRelPaths <- relToWhere %in% names(possRelPaths)
-    if (isTRUE(any(relToWhereInPossRelPaths))) {
-      absBase <- absoluteBase(relToWhere, cachePath, ...)
-    } else {
-      absBase <- possRelPaths[[1]]
-      isOutside <- grepl(grepStartsTwoDots, origRelName)
-      if (isTRUE(any(isOutside))) {
-        ## means the relative path is "outside" of something;
-        ## strip all ".." if relToWhere doesn't exist
-        while (any(grepl(grepStartsTwoDots, origRelName))) {
-          origRelName <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", origRelName)
-        }
-      }
-    }
-    newName <- vapply(origRelName, function(x) {
-      if (fs::is_absolute_path(x)) {
+    # relToWhere is per-file (the anchor name each file was stored relative to);
+    #   recycle a scalar to match origRelName so we can resolve element-by-element.
+    if (length(relToWhere) == 1L && length(origRelName) > 1L)
+      relToWhere <- rep(relToWhere, length(origRelName))
+
+    # Base for files whose anchor doesn't resolve / that are orphans. Prefer the
+    #   cache (so a shared/cloud-cache entry becomes self-contained under the
+    #   receiver's cache), but fall back to the first available anchor when there
+    #   is no cache (cachePath = NULL) -- e.g. saveSimList()/loadSimList(), which
+    #   anchor to projectPath/getwd, not a cache.
+    haveCache <- !is.null(cachePath) && length(cachePath) && !is.na(cachePath[[1]]) &&
+      nzchar(cachePath[[1]])
+    fallbackBase <- if (isTRUE(haveCache)) cachePath[[1]]
+      else if (length(possRelPaths)) possRelPaths[[1]][[1]] else getwd()
+
+    newName <- vapply(seq_along(origRelName), function(i) {
+      x <- origRelName[[i]]
+      anchorNm <- if (length(relToWhere) >= i) relToWhere[[i]] else ""
+      anchorResolves <- nzchar(anchorNm) && anchorNm %in% names(possRelPaths) &&
+        !fs::is_absolute_path(x)
+      if (isTRUE(anchorResolves)) {
+        # The anchor exists on this machine: restore the file to its original
+        #   *relative* location under the receiver's own anchor (e.g. their inputPath).
+        #   An anchor may map to several dirs (e.g. modulePath); use the first.
+        absBase <- absoluteBase(anchorNm, cachePath, ...)[[1]]
+        as.character(fs::path_norm(fs::path_join(c(absBase, x))))
+      } else if (fs::is_absolute_path(x) && file.exists(x)) {
+        # Genuinely present on this machine (same-machine save/load): keep as-is.
         x
       } else {
-        fs::path_join(c(absBase, x)) |> fs::path_norm()
+        # Anchor missing on this machine, or a foreign/orphan absolute path: make the
+        #   object self-contained under THIS machine's cache. Never resurrect a path
+        #   from the producing machine (the cause of the cross-user cloud-cache crash:
+        #   "cannot create dir '/home/<producer>' ... Operation not supported").
+        rel <- x
+        if (fs::is_absolute_path(rel)) rel <- basename(rel)
+        while (any(grepl(grepStartsTwoDots, rel))) {
+          rel <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", rel)
+        }
+        as.character(fs::path_norm(fs::path_join(c(fallbackBase, rel))))
       }
     }, character(1))
   } else {
