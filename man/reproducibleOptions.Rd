@@ -123,6 +123,15 @@ compatibility and will be removed in a future release.
 \strong{Deprecated — do not use} (see \code{gdalwarp} above). Default: \code{2}.
 Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
+\item{\code{gdriveNoAuth}}{
+Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
+When \code{TRUE}, Google Drive files are downloaded over plain HTTPS without a
+\code{googledrive} token (i.e. no \code{drive_auth()}). This only works for files
+shared as "Anyone with the link". The same no-auth path is taken
+automatically — regardless of this option — when the supplied \code{url} is the
+public web-download form, e.g.
+\verb{https://drive.google.com/uc?export=download&id=<ID>}.
+}
 \item{\code{destinationPathShared}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 If set to a path, this will cause these functions to save their downloaded and preprocessed

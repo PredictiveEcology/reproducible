@@ -375,11 +375,32 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   # so downstream checksum/extract logic is unchanged.
   remapUrl <- .applyUrlRemap(url, basename2(downloadFilename), verbose = verbose)
 
+  # No-auth bypass: fetch over plain HTTPS with no googledrive token when any of:
+  #   * the user passes the public web-download form of the URL
+  #     (`uc?export=download&id=` / `drive.usercontent.google.com/download`);
+  #   * `options(reproducible.gdriveNoAuth = TRUE)` is set;
+  #   * no Drive token is loaded -- in which case `assessGoogle()` above
+  #     *already* read the metadata anonymously, which is only possible for a
+  #     public ("Anyone with the link") file, so the public endpoint is
+  #     guaranteed to work and authentication would only fail. This makes the
+  #     common "no token, public file" case Just Work, silently.
+  # A user remap (above) still takes precedence.
+  publicNoAuth <- identical(remapUrl, url) &&
+    (isGoogleDownloadURL(url) || isTRUE(getOption("reproducible.gdriveNoAuth", FALSE)) ||
+       !.gdriveHasToken())
+
   if (!isTRUE(checkSums[checkSums$expectedFile == basename(destFile), ]$result == "OK")) {
     if (!identical(remapUrl, url)) {
       res <- dlGeneric(
         url = remapUrl, destinationPath = destinationPath,
         targetFile = basename2(downloadFilename), applyRemap = FALSE, verbose = verbose
+      )
+      return(list(destFile = res$destFile, needChecksums = needChecksums))
+    }
+    if (isTRUE(publicNoAuth)) {
+      res <- .dlGooglePublic(
+        url = url, destinationPath = destinationPath,
+        targetFile = basename2(downloadFilename), verbose = verbose
       )
       return(list(destFile = res$destFile, needChecksums = needChecksums))
     }
@@ -512,7 +533,22 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       }
 
       if (isTRUE(useGoogleDrive)) {
-        a <- retry(downloadCall, retries = 2)
+        a <- tryCatch(
+          retry(downloadCall, retries = 2),
+          error = function(e) {
+            # Reactive no-auth fallback: the authenticated download failed (e.g.
+            # an expired/absent token). If the file is in fact public, fetch it
+            # silently via the no-auth endpoint and carry on; only if that *also*
+            # fails do we surface the original authentication error.
+            pub <- tryCatch(
+              .dlGooglePublic(url = url, destinationPath = destinationPath,
+                              targetFile = basename2(downloadFilename), verbose = 0),
+              error = function(e2) NULL)
+            if (is.null(pub)) stop(e)
+            messagePreProcess("Downloaded public Google Drive file without authentication.",
+                              verbose = verbose)
+            pub
+          })
       }
     }
   } else {
@@ -521,6 +557,93 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
 
   return(list(destFile = destFile, needChecksums = needChecksums))
+}
+
+#' Download a *public* Google Drive file without authentication
+#'
+#' Internal. Used by [dlGoogle()] when the user supplies the public web-download
+#' form of a Drive URL (or sets `reproducible.gdriveNoAuth = TRUE`). It fetches
+#' the file over plain HTTPS via [dlGeneric()] -- no googledrive token required.
+#'
+#' Small files stream directly. Large files (>~100 MB, or any that trip Drive's
+#' "can't scan for viruses" check) first return an HTML interstitial carrying a
+#' one-time `confirm` token and `uuid`; these are parsed out and the request is
+#' resubmitted to `drive.usercontent.google.com/download`. If the second attempt
+#' still returns HTML, the file is almost certainly not shared "Anyone with the
+#' link" and we error rather than silently save the page.
+#'
+#' @param url The original Google Drive URL (any form).
+#' @param destinationPath Directory to download into.
+#' @param targetFile The resolved Drive filename (so the on-disk name and
+#'   checksum bookkeeping match the authenticated path).
+#' @param verbose Numeric verbosity level.
+#' @return A list with `destFile`.
+#' @keywords internal
+#' @rdname dot-dlGooglePublic
+.dlGooglePublic <- function(url, destinationPath, targetFile,
+                            verbose = getOption("reproducible.verbose", 1)) {
+  id <- .googleDriveId(url)
+  messagePreProcess("Public Google Drive file; downloading without authentication (id: ",
+                    id, ").", verbose = verbose)
+  pubUrl <- paste0("https://drive.usercontent.google.com/download?id=", id,
+                   "&export=download&confirm=t")
+  res <- dlGeneric(url = pubUrl, destinationPath = destinationPath,
+                   targetFile = targetFile, applyRemap = FALSE, verbose = verbose)
+
+  if (.looksLikeGoogleInterstitial(res$destFile)) {
+    params <- .parseGoogleConfirm(res$destFile)
+    if (length(params)) {
+      pubUrl2 <- paste0("https://drive.usercontent.google.com/download?",
+                        paste(names(params),
+                              vapply(params, utils::URLencode, character(1), reserved = TRUE),
+                              sep = "=", collapse = "&"))
+      res <- dlGeneric(url = pubUrl2, destinationPath = destinationPath,
+                       targetFile = targetFile, applyRemap = FALSE, verbose = verbose)
+    }
+    if (.looksLikeGoogleInterstitial(res$destFile)) {
+      unlink(res$destFile)
+      stop("Public Google Drive download returned an HTML page, not the file. ",
+           "Confirm the file is shared as 'Anyone with the link'. URL: ", url)
+    }
+  }
+  res
+}
+
+# Is a googledrive OAuth token currently loaded? Returns FALSE (never prompts /
+# never errors) when googledrive is absent or no token has been acquired. A
+# FALSE result at the download step means `assessGoogle()`'s metadata read
+# succeeded anonymously, i.e. the file is public.
+.gdriveHasToken <- function() {
+  if (!requireNamespace("googledrive", quietly = TRUE)) return(FALSE)
+  isTRUE(tryCatch(googledrive::drive_has_token(), error = function(e) FALSE))
+}
+
+# Does the downloaded file look like Google's HTML interstitial (sign-in page or
+# virus-scan-warning download form) rather than the requested bytes?
+.looksLikeGoogleInterstitial <- function(file) {
+  if (!file.exists(file) || file.size(file) == 0) return(FALSE)
+  # Read raw bytes (the file may be binary, e.g. a zip) and match on bytes so a
+  # non-UTF-8 payload can't trip locale-translation warnings/errors in grepl().
+  raw <- readBin(file, what = "raw", n = 4096L)
+  txt <- rawToChar(raw[raw != as.raw(0L)])
+  grepl("<!doctype html|<html", txt, ignore.case = TRUE, useBytes = TRUE) &&
+    grepl("drive\\.usercontent\\.google\\.com|download-form|ServiceLogin|virus scan",
+          txt, ignore.case = TRUE, useBytes = TRUE)
+}
+
+# Parse the hidden form inputs (id, export, confirm, uuid) from Drive's large-file
+# interstitial so the download can be resubmitted with the one-time token.
+.parseGoogleConfirm <- function(file) {
+  html <- tryCatch(paste(readLines(file, warn = FALSE), collapse = " "),
+                   error = function(e) "")
+  inputs <- regmatches(html, gregexpr("<input[^>]*>", html, perl = TRUE))[[1]]
+  out <- list()
+  for (inp in inputs) {
+    nm <- regmatches(inp, regexpr('(?<=name=")[^"]*', inp, perl = TRUE))
+    vl <- regmatches(inp, regexpr('(?<=value=")[^"]*', inp, perl = TRUE))
+    if (length(nm) && length(vl) && nzchar(nm)) out[[nm]] <- vl
+  }
+  out
 }
 
 #' Apply the user-supplied URL remap hook
