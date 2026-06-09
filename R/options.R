@@ -120,12 +120,17 @@
 #'   }
 #'   \item{`gdriveNoAuth`}{
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
-#'     When `TRUE`, Google Drive files are downloaded over plain HTTPS without a
-#'     `googledrive` token (i.e. no `drive_auth()`). This only works for files
-#'     shared as "Anyone with the link". The same no-auth path is taken
-#'     automatically — regardless of this option — when the supplied `url` is the
-#'     public web-download form, e.g.
-#'     `https://drive.google.com/uc?export=download&id=<ID>`.
+#'     When `TRUE`, Google Drive files are accessed without a `googledrive` token
+#'     (i.e. no `drive_auth()`): both the *metadata* read in `assessGoogle()` and
+#'     the download itself are done anonymously (the metadata read by
+#'     deauthorizing `googledrive` so it uses an API key). This only works for
+#'     files shared as "Anyone with the link". The same no-auth path is taken
+#'     automatically — regardless of this option — when no Drive token is loaded
+#'     (the common "cloud reader" case) or when the supplied `url` is the public
+#'     web-download form, e.g.
+#'     `https://drive.google.com/uc?export=download&id=<ID>`. A loaded token (a
+#'     "cloud writer" who needs auth to write a shared cloud cache) is left
+#'     intact.
 #'   }
 #'   \item{`destinationPathShared`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].

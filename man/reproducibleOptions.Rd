@@ -125,12 +125,17 @@ Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
 \item{\code{gdriveNoAuth}}{
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
-When \code{TRUE}, Google Drive files are downloaded over plain HTTPS without a
-\code{googledrive} token (i.e. no \code{drive_auth()}). This only works for files
-shared as "Anyone with the link". The same no-auth path is taken
-automatically — regardless of this option — when the supplied \code{url} is the
-public web-download form, e.g.
-\verb{https://drive.google.com/uc?export=download&id=<ID>}.
+When \code{TRUE}, Google Drive files are accessed without a \code{googledrive} token
+(i.e. no \code{drive_auth()}): both the \emph{metadata} read in \code{assessGoogle()} and
+the download itself are done anonymously (the metadata read by
+deauthorizing \code{googledrive} so it uses an API key). This only works for
+files shared as "Anyone with the link". The same no-auth path is taken
+automatically — regardless of this option — when no Drive token is loaded
+(the common "cloud reader" case) or when the supplied \code{url} is the public
+web-download form, e.g.
+\verb{https://drive.google.com/uc?export=download&id=<ID>}. A loaded token (a
+"cloud writer" who needs auth to write a shared cloud cache) is left
+intact.
 }
 \item{\code{destinationPathShared}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
