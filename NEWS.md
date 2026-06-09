@@ -4,6 +4,17 @@
 
 ## new features
 
+* New diagnostic option **`reproducible.preDigestDump`** (and
+  `reproducible.preDigestDumpPattern`) to dump the full element-by-element
+  `preDigest` (`name = hash`) that produces each `Cache()` `cacheId`. Unlike
+  `showSimilar` (closest prior call only), `dryRun`, or `verbose`, it covers
+  *every* `Cache()` call -- including ones built deep inside other packages (e.g.
+  SpaDES.core events) -- so two machines' dumps can be `diff`ed to find exactly
+  what splits a `cacheId` across machines/OSs (e.g. a cloud cache that will not
+  share). `TRUE` messages each call's sorted list; a directory path writes one
+  `preDigest_<functionName>[_<n>].txt` per call. See `?reproducibleOptions`.
+
+
 * `showSimilar` (the `reproducible.showSimilar` option, also used by dev mode and
   `dryRun`) is now cloud-aware. When `useCloud` is active, `Cache()` previously
   compared the current call only against the *local* cache, so similar artifacts

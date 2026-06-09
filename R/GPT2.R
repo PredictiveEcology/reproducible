@@ -1828,6 +1828,10 @@ doDigest <- function(toDigest, .functionName, .objects, length, algo, quick,
                       modifiedDots = toDigest, verbose = verbose, verboseLevel = 3)
 
   names(detailed_key)[[1]] <- "key"
+  # Optional diagnostic dump of the full element-by-element preDigest (off unless
+  # options(reproducible.preDigestDump=) is set); for diffing cacheIds across
+  # machines/OSs. See .dumpPreDigest().
+  .dumpPreDigest(detailed_key, .functionName)
   detailed_key
 }
 
