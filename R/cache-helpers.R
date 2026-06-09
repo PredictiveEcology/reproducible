@@ -358,6 +358,61 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
   obj
 }
 
+#' Dump the element-by-element `preDigest` of a `Cache()` call
+#'
+#' Diagnostic for "why is my `cacheId` different here than there?" -- e.g. why a
+#' cloud cache is not shared across machines/OSs. Unlike `showSimilar` (which only
+#' reports the *closest* prior call's differences) or `dryRun`/`verbose`, this
+#' prints the **full** `name = hash` list that produced the `cacheId`, for *every*
+#' `Cache()` call (including ones constructed deep inside other packages, e.g.
+#' SpaDES.core events), so two machines' dumps can be diffed directly.
+#'
+#' Controlled by options (off by default):
+#' \describe{
+#'   \item{`reproducible.preDigestDump`}{`NULL`/`FALSE` (off); `TRUE` to emit each
+#'     call's sorted `name = hash` list via [messageCache()]; or a directory path
+#'     to write one `preDigest_<functionName>[_<n>].txt` file per call (point it at
+#'     a fresh/empty directory, then diff the directory against the other
+#'     machine's).}
+#'   \item{`reproducible.preDigestDumpPattern`}{optional regular expression matched
+#'     against the call's `.functionName`; only matching calls are dumped (e.g.
+#'     `"init|inputObjects"`).}
+#' }
+#' @param detailed_key The list returned by [CacheDigest()] (has `key`/`outputHash`
+#'   and `preDigest`).
+#' @param .functionName The function name for this `Cache()` call.
+#' @param dump,pattern,verbose Resolved from the options above.
+#' @return `invisible(NULL)`, called for its side effect.
+#' @keywords internal
+#' @rdname dumpPreDigest
+.dumpPreDigest <- function(detailed_key, .functionName,
+                           dump = getOption("reproducible.preDigestDump", NULL),
+                           pattern = getOption("reproducible.preDigestDumpPattern", NULL),
+                           verbose = getOption("reproducible.verbose", 1)) {
+  if (is.null(dump) || isFALSE(dump)) return(invisible())
+  fn <- paste(.functionName, collapse = "")
+  if (!is.null(pattern) && !isTRUE(grepl(pattern, fn))) return(invisible())
+  pd <- unlist(detailed_key[["preDigest"]])
+  if (length(pd)) pd <- pd[order(names(pd))]
+  key <- detailed_key[["key"]]
+  if (is.null(key)) key <- detailed_key[[1]]
+  lines <- c(paste0("# ", fn, "  cacheId=", key),
+             sprintf("%s = %s", names(pd), as.character(pd)))
+  if (is.character(dump)) {
+    checkPath(dump, create = TRUE)
+    safe <- gsub("[^A-Za-z0-9._-]+", "_", fn)
+    f <- file.path(dump, paste0("preDigest_", safe, ".txt"))
+    i <- 1L
+    while (file.exists(f)) {                 # repeated calls to the same fn within a run
+      f <- file.path(dump, sprintf("preDigest_%s_%d.txt", safe, i)); i <- i + 1L
+    }
+    writeLines(lines, f)
+  } else {
+    messageCache(paste(lines, collapse = "\n"), verbose = verbose)
+  }
+  invisible()
+}
+
 #' @keywords internal
 
 #' @keywords internal
