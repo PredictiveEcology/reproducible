@@ -665,8 +665,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @keywords internal
 #' @rdname dot-applyUrlRemap
 .applyUrlRemap <- function(url, filename, verbose = getOption("reproducible.verbose", 1)) {
-  fn <- getOption("reproducible.urlRemap")
-  if (is.null(fn) || !is.function(fn)) {
+  fn <- .urlRemapFn()
+  if (is.null(fn)) {
     return(url)
   }
   newUrl <- tryCatch(
@@ -686,6 +686,48 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   newUrl
 }
 
+#' Resolve the `reproducible.urlRemap` option to a remap function
+#'
+#' Internal. The `reproducible.urlRemap` option may be set to any of:
+#'   * `NULL` -- no remapping;
+#'   * a `function(url, filename)` (e.g. built with [makeUrlRemap()]);
+#'   * a `data.frame`/`data.table` manifest with `filename` and `url` columns; or
+#'   * a length-one character path or URL to a CSV with those columns.
+#' This returns a single `function(url, filename)` (or `NULL`). For the
+#' `data.frame`/character forms it builds the function once via [makeUrlRemap()]
+#' and caches it (keyed on the option value), so the lookup is not rebuilt -- and
+#' a CSV path/URL is not re-read -- on every download. An invalid option value is
+#' ignored with a warning (returns `NULL`), so it can never break a download.
+#'
+#' @param opt The current value of the `reproducible.urlRemap` option.
+#' @return A `function(url, filename)` or `NULL`.
+#' @keywords internal
+#' @rdname dot-urlRemapFn
+.urlRemapFn <- function(opt = getOption("reproducible.urlRemap")) {
+  if (is.null(opt)) return(NULL)
+  if (is.function(opt)) return(opt)
+
+  # data.frame manifest or CSV path/URL: build (and cache) the remap function.
+  cache <- .pkgEnv[["urlRemapCache"]]
+  if (!is.null(cache) && identical(cache$key, opt)) return(cache$fn)
+
+  fn <- tryCatch({
+    if (is.data.frame(opt)) {
+      makeUrlRemap(opt)
+    } else if (is.character(opt) && length(opt) == 1L && nzchar(opt)) {
+      makeUrlRemap(utils::read.csv(opt, stringsAsFactors = FALSE))
+    } else {
+      stop("must be NULL, a function, a data.frame manifest, or a CSV path/URL")
+    }
+  }, error = function(e) {
+    warning("reproducible.urlRemap is invalid; ignoring it.\n  ",
+            conditionMessage(e), call. = FALSE)
+    NULL
+  })
+  .pkgEnv[["urlRemapCache"]] <- list(key = opt, fn = fn)
+  fn
+}
+
 #' Build a URL remap function from a manifest
 #'
 #' Convenience constructor for the `reproducible.urlRemap` option (see
@@ -700,6 +742,12 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' The manifest itself — and the responsibility for keeping it current — lives
 #' with the user (for example, a community-maintained mirror manifest);
 #' `reproducible` hard-codes no mirror URLs.
+#'
+#' Calling `makeUrlRemap()` yourself is optional: you can also assign the manifest
+#' `data.frame` (or a CSV path/URL) directly to the option, e.g.
+#' `options(reproducible.urlRemap = read.csv("manifest.csv"))`, and `reproducible`
+#' will build (and cache) the remap function internally. See the `urlRemap` entry
+#' in [reproducibleOptions()].
 #'
 #' @param manifest A `data.frame` (or `data.table`) with at least the character
 #'   columns `filename` and `url`. `filename` is matched against the basename of
@@ -764,7 +812,7 @@ makeUrlRemap <- function(manifest) {
   if (is.null(url) || length(url) != 1L || isNULLorNA(url)) {
     return(url)
   }
-  if (!is.function(getOption("reproducible.urlRemap"))) {
+  if (is.null(.urlRemapFn())) {
     return(url)
   }
 
@@ -1069,7 +1117,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   # not set, there is no opt-in and the parallel path is never used, regardless
   # of `reproducible.parallel.streams`. This is also a hard short-circuit before
   # any (potentially network-touching) probe.
-  if (!is.function(getOption("reproducible.urlRemap"))) {
+  if (is.null(.urlRemapFn())) {
     return(list(use = FALSE, info = NULL))
   }
   # Capability gate -- deps present and not explicitly forced to single-stream.

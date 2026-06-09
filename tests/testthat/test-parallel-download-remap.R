@@ -101,6 +101,75 @@ test_that(".applyUrlRemap ignores invalid (non-scalar-character) hook returns", 
 })
 
 # ---------------------------------------------------------------------------
+# Feature B: urlRemap may be a function, a data.frame manifest, or a CSV path/URL
+# ---------------------------------------------------------------------------
+
+test_that(".urlRemapFn passes NULL and a function through unchanged", {
+  expect_null(reproducible:::.urlRemapFn(NULL))
+  f <- function(url, filename) "x"
+  expect_identical(reproducible:::.urlRemapFn(f), f)
+})
+
+test_that("urlRemap accepts a data.frame manifest directly (no makeUrlRemap call)", {
+  manifest <- data.frame(
+    filename = c("a.tif", "b.tif"),
+    url = c("https://mirror/x/a.tif", "https://mirror/y/b.tif"),
+    stringsAsFactors = FALSE
+  )
+  withr::local_options(reproducible.urlRemap = manifest)
+  # remapped by basename, through .applyUrlRemap, with no user-built closure
+  expect_identical(
+    reproducible:::.applyUrlRemap("gd://id1", "a.tif", verbose = 0),
+    "https://mirror/x/a.tif"
+  )
+  expect_identical(
+    reproducible:::.applyUrlRemap("gd://id2", "/some/dir/b.tif", verbose = 0),
+    "https://mirror/y/b.tif"
+  )
+  # no manifest match -> original kept
+  expect_identical(
+    reproducible:::.applyUrlRemap("http://x/c.tif", "c.tif", verbose = 0),
+    "http://x/c.tif"
+  )
+})
+
+test_that(".urlRemapFn rebuilds when the manifest data.frame changes", {
+  m1 <- data.frame(filename = "a.tif", url = "https://m1/a.tif", stringsAsFactors = FALSE)
+  m2 <- data.frame(filename = "a.tif", url = "https://m2/a.tif", stringsAsFactors = FALSE)
+  expect_identical(reproducible:::.urlRemapFn(m1)("u", "a.tif"), "https://m1/a.tif")
+  expect_identical(reproducible:::.urlRemapFn(m2)("u", "a.tif"), "https://m2/a.tif")
+})
+
+test_that("urlRemap accepts a CSV path; built once and cached (not re-read)", {
+  manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
+                         stringsAsFactors = FALSE)
+  csv <- tempfile(fileext = ".csv")
+  utils::write.csv(manifest, csv, row.names = FALSE)
+  withr::local_options(reproducible.urlRemap = csv)
+
+  fn1 <- reproducible:::.urlRemapFn()
+  expect_true(is.function(fn1))
+  expect_identical(fn1("gd://id", "a.tif"), "https://mirror/a.tif")
+
+  unlink(csv)                              # remove the source file
+  fn2 <- reproducible:::.urlRemapFn()      # must come from cache, not re-read
+  expect_identical(fn1, fn2)
+  expect_identical(
+    reproducible:::.applyUrlRemap("gd://id", "a.tif", verbose = 0),
+    "https://mirror/a.tif"
+  )
+})
+
+test_that("urlRemap ignores an invalid option value (warns, keeps original url)", {
+  withr::local_options(reproducible.urlRemap = 42)
+  expect_warning(
+    res <- reproducible:::.applyUrlRemap("http://x/y.tif", "y.tif", verbose = 0),
+    "invalid"
+  )
+  expect_identical(res, "http://x/y.tif")
+})
+
+# ---------------------------------------------------------------------------
 # Feature B: early remap (.remapUrlEarly) feeding the COG fast-path -- offline
 # ---------------------------------------------------------------------------
 

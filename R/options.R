@@ -358,8 +358,13 @@
 #'   }
 #'   \item{`urlRemap`}{
 #'     Default: `NULL` (feature off). **This is the opt-in switch for the faster
-#'     download path.** Set it to a function `function(url, filename)` — most
-#'     easily built from a manifest `data.frame` via [makeUrlRemap()] — and it is
+#'     download path.** It may be set to any of: a function `function(url,
+#'     filename)`; a manifest `data.frame` with `filename` and `url` columns; or a
+#'     length-one character path/URL to a CSV with those columns. For the
+#'     `data.frame`/CSV forms, `reproducible` builds the remap function internally
+#'     (once, then cached) — so a novice can simply write
+#'     `options(reproducible.urlRemap = read.csv("manifest.csv"))` without calling
+#'     [makeUrlRemap()] themselves. However supplied, it is
 #'     consulted in the download path once the target `filename` has been
 #'     resolved (for Google Drive URLs, after the `drive_get()` lookup). The
 #'     function may return an alternative URL to download from instead, e.g. a

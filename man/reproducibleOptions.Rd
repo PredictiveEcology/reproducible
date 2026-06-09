@@ -367,8 +367,12 @@ This, therefore, is most useful if the user is using unique values for \code{use
 }
 \item{\code{urlRemap}}{
 Default: \code{NULL} (feature off). \strong{This is the opt-in switch for the faster
-download path.} Set it to a function \verb{function(url, filename)} — most
-easily built from a manifest \code{data.frame} via \code{\link[=makeUrlRemap]{makeUrlRemap()}} — and it is
+download path.} It may be set to any of: a function \verb{function(url, filename)}; a manifest \code{data.frame} with \code{filename} and \code{url} columns; or a
+length-one character path/URL to a CSV with those columns. For the
+\code{data.frame}/CSV forms, \code{reproducible} builds the remap function internally
+(once, then cached) — so a novice can simply write
+\code{options(reproducible.urlRemap = read.csv("manifest.csv"))} without calling
+\code{\link[=makeUrlRemap]{makeUrlRemap()}} themselves. However supplied, it is
 consulted in the download path once the target \code{filename} has been
 resolved (for Google Drive URLs, after the \code{drive_get()} lookup). The
 function may return an alternative URL to download from instead, e.g. a

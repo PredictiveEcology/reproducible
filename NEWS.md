@@ -2,6 +2,18 @@
 
 * development version.
 
+## new features
+
+* `reproducible.urlRemap` now accepts the mirror **manifest directly**, not only a
+  pre-built function. It may be set to a `function(url, filename)` (as before, e.g.
+  via `makeUrlRemap()`), a `data.frame` manifest with `filename`/`url` columns, or
+  a length-one character path/URL to a CSV with those columns. For the
+  `data.frame`/CSV forms `reproducible` builds the remap function internally (once,
+  then cached), so a novice can simply write
+  `options(reproducible.urlRemap = read.csv("manifest.csv"))` without calling
+  `makeUrlRemap()`. An invalid value is ignored with a warning, so it can never
+  break a download.
+
 ## bug fixes
 
 * File-backed objects (e.g. a `terra` `SpatRaster`) are now restored **portably**
