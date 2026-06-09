@@ -618,6 +618,39 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(tryCatch(googledrive::drive_has_token(), error = function(e) FALSE))
 }
 
+# Should a Google Drive *metadata* read (drive_get/drive_ls in assessGoogle) be
+# done anonymously, i.e. without triggering interactive OAuth? TRUE when no token
+# is loaded -- the typical "cloud reader" / public-file case -- or when the user
+# opted in via `reproducible.gdriveNoAuth`. A loaded token (a "cloud writer", who
+# needs auth to write the shared cache) otherwise keeps the existing behaviour.
+.gdriveShouldGoAnon <- function(hadToken = .gdriveHasToken()) {
+  isTRUE(getOption("reproducible.gdriveNoAuth", FALSE)) || !isTRUE(hadToken)
+}
+
+# Put googledrive into anonymous (deauthorized) mode so a metadata read of a
+# public ("Anyone with the link") file resolves via an API key instead of
+# launching an interactive OAuth flow. Without this, `googledrive::drive_get()`
+# with no cached token PROMPTS ("Is it OK to cache OAuth credentials ...") even
+# for a public file. Returns a small list the caller uses to restore state:
+#   - deauthed: did we deauthorize?
+#   - token:    the previously-loaded token (or NULL) to restore on.exit, used
+#               only in the edge case of `gdriveNoAuth = TRUE` *with* a token
+#               present (so a cloud writer's token is never clobbered).
+# A no-token deauthorization is left in place (there was nothing to restore, and
+# the session was already token-less). No-op when googledrive is unavailable.
+.gdriveDeauthForPublic <- function() {
+  if (!requireNamespace("googledrive", quietly = TRUE)) return(list(deauthed = FALSE))
+  hadToken <- .gdriveHasToken()
+  if (!.gdriveShouldGoAnon(hadToken)) return(list(deauthed = FALSE))
+  tok <- if (isTRUE(hadToken)) {
+    tryCatch(googledrive::drive_token(), error = function(e) NULL)
+  } else {
+    NULL
+  }
+  try(googledrive::drive_deauth(), silent = TRUE)
+  list(deauthed = TRUE, token = tok)
+}
+
 # Does the downloaded file look like Google's HTML interstitial (sign-in page or
 # virus-scan-warning download form) rather than the requested bytes?
 .looksLikeGoogleInterstitial <- function(file) {
@@ -1770,7 +1803,19 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   if (.isRstudioServer()) {
     .requireNamespace("httr", stopOnFALSE = TRUE)
     opts <- options(httr_oob_default = TRUE)
-    on.exit(options(opts))
+    on.exit(options(opts), add = TRUE)
+  }
+
+  # Resolve a PUBLIC file's metadata without launching interactive OAuth. With no
+  # cached token, `drive_get()`/`drive_ls()` below would otherwise prompt ("Is it
+  # OK to cache OAuth credentials ...") even for an "Anyone with the link" file --
+  # the metadata read happens before (and so defeats) the no-auth download path.
+  # Deauthorizing makes googledrive use an API key, so a public file resolves
+  # anonymously. A loaded token (cloud writer) is preserved; in the edge case of
+  # `gdriveNoAuth = TRUE` with a token present, it is restored on exit.
+  .anonRead <- .gdriveDeauthForPublic()
+  if (isTRUE(.anonRead$deauthed) && !is.null(.anonRead$token)) {
+    on.exit(try(googledrive::drive_auth(token = .anonRead$token), silent = TRUE), add = TRUE)
   }
 
   # Cache the drive_get / drive_ls result indefinitely. The Cache key

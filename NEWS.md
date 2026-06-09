@@ -2,6 +2,21 @@
 
 * development version.
 
+## bug fixes
+
+* A **public** Google Drive file no longer triggers an interactive OAuth prompt
+  ("Is it OK to cache OAuth access credentials ...") during `prepInputs()` /
+  `preProcess()` when no `googledrive` token is loaded. The no-auth download path
+  (added previously) was defeated by the *metadata* read in `assessGoogle()`:
+  `googledrive::drive_get()` with no cached token launches interactive OAuth even
+  for an "Anyone with the link" file, and that read happens before the download.
+  `assessGoogle()` now deauthorizes `googledrive` for that read when there is no
+  token (the typical "cloud reader" case) or when `reproducible.gdriveNoAuth =
+  TRUE`, so a public file's metadata resolves anonymously via an API key. A
+  loaded token (a "cloud writer", who needs auth to write a shared cloud cache)
+  is left intact; in the edge case of `gdriveNoAuth = TRUE` with a token present,
+  the token is restored after the read.
+
 ## new features
 
 * `reproducible.urlRemap` now accepts the mirror **manifest directly**, not only a
