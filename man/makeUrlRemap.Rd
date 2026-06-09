@@ -9,7 +9,9 @@ makeUrlRemap(manifest)
 \arguments{
 \item{manifest}{A \code{data.frame} (or \code{data.table}) with at least the character
 columns \code{filename} and \code{url}. \code{filename} is matched against the basename of
-the file being downloaded.}
+the file being downloaded. An optional \code{id} column (Google Drive file id) is
+matched secondarily, by the id parsed from the Drive \code{url}, when no filename
+is available (e.g. an unauthenticated Drive download).}
 }
 \value{
 A function of \verb{(url, filename)} returning a replacement URL, or \code{NULL}
@@ -26,6 +28,13 @@ supports HTTP Range requests, the parallel download path applies). When there
 is no match it returns \code{NULL}, so the original URL is kept.
 }
 \details{
+An optional \code{id} column (also accepted as \code{googledriveId}, \code{googledrive_id},
+\code{driveId} or \code{gid}) holding the Google Drive file id enables a \strong{secondary}
+match by id: when the resolved \code{filename} is unavailable — e.g. an
+unauthenticated session that cannot read a Drive file's metadata — the id is
+parsed from the Drive \code{url} and matched against this column. This lets a
+download be redirected to the (public) mirror with no authentication at all.
+
 The manifest itself — and the responsibility for keeping it current — lives
 with the user (for example, a community-maintained mirror manifest);
 \code{reproducible} hard-codes no mirror URLs.
