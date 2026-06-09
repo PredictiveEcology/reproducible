@@ -618,59 +618,48 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(tryCatch(googledrive::drive_has_token(), error = function(e) FALSE))
 }
 
-# Can googledrive authenticate WITHOUT an interactive prompt? TRUE when the user
-# has configured gargle for non-interactive auth: a specific OAuth email (so a
-# cached token at `gargle_oauth_cache` is loaded silently) or a service-account
-# JSON. Used to decide whether a token-less session should still attempt auth
-# (and silently load a cached token) rather than fall back to anonymous access.
-.gdriveCanAuthNonInteractively <- function() {
-  email <- tryCatch(getOption("gargle_oauth_email"), error = function(e) NULL)
-  wantsEmail <- (is.character(email) && length(email) == 1L && !is.na(email) && nzchar(email)) ||
-    isTRUE(email)
-  hasServiceAccount <- nzchar(Sys.getenv("GOOGLEDRIVE_AUTH", "")) ||
-    nzchar(Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
-  isTRUE(wantsEmail) || isTRUE(hasServiceAccount)
+# Attempt googledrive authentication WITHOUT ever prompting. In order:
+#   1. a service-account JSON in `GOOGLEDRIVE_AUTH` (reproducible's convention) or
+#      `GARGLE_SERVICE_ACCOUNT` -- `drive_auth(path = ...)`, fully non-interactive;
+#   2. otherwise a cached user token -- `drive_auth()` with `rlang_interactive`
+#      forced FALSE, so a missing token ERRORS quietly instead of launching OAuth.
+# If nothing usable is available the attempt fails quietly (returns FALSE). Plain
+# `drive_auth()` does NOT itself consult `GOOGLEDRIVE_AUTH` (that is reproducible's
+# own env var), so step 1 is what actually honours a configured service account.
+# Returns TRUE iff a token is loaded afterwards.
+.gdriveTryAuthQuietly <- function() {
+  if (!requireNamespace("googledrive", quietly = TRUE)) return(FALSE)
+  op <- options(rlang_interactive = FALSE)
+  on.exit(options(op), add = TRUE)
+  saPath <- Sys.getenv("GOOGLEDRIVE_AUTH", Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
+  isTRUE(tryCatch({
+    if (nzchar(saPath) && file.exists(path.expand(saPath))) {
+      suppressMessages(googledrive::drive_auth(path = path.expand(saPath)))
+    } else {
+      suppressMessages(googledrive::drive_auth())
+    }
+    isTRUE(googledrive::drive_has_token())
+  }, error = function(e) FALSE))
 }
 
-# Should a Google Drive *metadata* read (drive_get/drive_ls in assessGoogle) be
-# done anonymously, i.e. without triggering interactive OAuth?
-#   * `reproducible.gdriveNoAuth = TRUE`  -> always anonymous (explicit opt-in);
-#   * a token is already loaded           -> no (use it -- the "cloud writer" case);
-#   * no token loaded, but gargle is configured to authenticate non-interactively
-#     (an OAuth email or a service account) -> no: let drive_auth() silently load
-#     the cached token. Going anonymous here was a regression that prevented a
-#     configured user from ever authenticating.
-#   * otherwise (no token, no usable auth config) -> yes: the typical "cloud
-#     reader" / public-file case, where authenticating would only mean an
-#     interactive prompt that we want to avoid.
-.gdriveShouldGoAnon <- function(hadToken = .gdriveHasToken()) {
-  if (isTRUE(getOption("reproducible.gdriveNoAuth", FALSE))) return(TRUE)
-  if (isTRUE(hadToken)) return(FALSE)
-  !.gdriveCanAuthNonInteractively()
-}
-
-# Put googledrive into anonymous (deauthorized) mode so a metadata read of a
-# public ("Anyone with the link") file resolves via an API key instead of
-# launching an interactive OAuth flow. Without this, `googledrive::drive_get()`
-# with no cached token PROMPTS ("Is it OK to cache OAuth credentials ...") even
-# for a public file. Returns a small list the caller uses to restore state:
-#   - deauthed: did we deauthorize?
-#   - token:    the previously-loaded token (or NULL) to restore on.exit, used
-#               only in the edge case of `gdriveNoAuth = TRUE` *with* a token
-#               present (so a cloud writer's token is never clobbered).
-# A no-token deauthorization is left in place (there was nothing to restore, and
-# the session was already token-less). No-op when googledrive is unavailable.
-.gdriveDeauthForPublic <- function() {
-  if (!requireNamespace("googledrive", quietly = TRUE)) return(list(deauthed = FALSE))
-  hadToken <- .gdriveHasToken()
-  if (!.gdriveShouldGoAnon(hadToken)) return(list(deauthed = FALSE))
-  tok <- if (isTRUE(hadToken)) {
-    tryCatch(googledrive::drive_token(), error = function(e) NULL)
-  } else {
-    NULL
+# Establish the googledrive auth state for a metadata/download operation, NEVER
+# prompting, and report which path to take ("token" or "anon"):
+#   * a token is already loaded            -> "token" (works public + private);
+#   * `reproducible.gdriveNoAuth = TRUE`    -> deauthorize, "anon" (public only);
+#   * otherwise *try* to authenticate quietly (a cached token / service account
+#     loads silently). If that succeeds -> "token"; if it fails (nothing usable,
+#     and we never prompt) -> deauthorize and "anon" (read the PUBLIC file).
+# This replaces guessing from gargle options ("is an email set?") with an actual,
+# non-prompting attempt -- so a public file always resolves with no prompt, while
+# a configured user's cached token is still used for private files.
+.gdrivePrepareAuth <- function() {
+  if (!requireNamespace("googledrive", quietly = TRUE)) return("anon")
+  if (.gdriveHasToken()) return("token")
+  if (!isTRUE(getOption("reproducible.gdriveNoAuth", FALSE)) && isTRUE(.gdriveTryAuthQuietly())) {
+    return("token")
   }
   try(googledrive::drive_deauth(), silent = TRUE)
-  list(deauthed = TRUE, token = tok)
+  "anon"
 }
 
 # A browser-pasteable URL for a Google Drive resource, for use in error messages.
@@ -1910,17 +1899,13 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
     on.exit(options(opts), add = TRUE)
   }
 
-  # Resolve a PUBLIC file's metadata without launching interactive OAuth. With no
-  # cached token, `drive_get()`/`drive_ls()` below would otherwise prompt ("Is it
-  # OK to cache OAuth credentials ...") even for an "Anyone with the link" file --
-  # the metadata read happens before (and so defeats) the no-auth download path.
-  # Deauthorizing makes googledrive use an API key, so a public file resolves
-  # anonymously. A loaded token (cloud writer) is preserved; in the edge case of
-  # `gdriveNoAuth = TRUE` with a token present, it is restored on exit.
-  .anonRead <- .gdriveDeauthForPublic()
-  if (isTRUE(.anonRead$deauthed) && !is.null(.anonRead$token)) {
-    on.exit(try(googledrive::drive_auth(token = .anonRead$token), silent = TRUE), add = TRUE)
-  }
+  # Establish auth state without ever prompting: use a loaded token, else try to
+  # authenticate quietly (cached token / service account, no prompt), else
+  # deauthorize and read the PUBLIC file's metadata anonymously. Without this,
+  # `drive_get()`/`drive_ls()` below would launch the OAuth prompt ("Is it OK to
+  # cache OAuth credentials ...") even for an "Anyone with the link" file -- and
+  # the metadata read happens before (so defeats) the no-auth download path.
+  .gdrivePrepareAuth()
 
   # Cache the drive_get / drive_ls result indefinitely. The Cache key
   # includes the URL/ID, so each distinct file pays one API hit ever per

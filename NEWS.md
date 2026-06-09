@@ -2,6 +2,24 @@
 
 * development version.
 
+## bug fixes
+
+* A public Google Drive file could still launch an interactive OAuth prompt when
+  a service account was configured via the `GOOGLEDRIVE_AUTH` environment variable
+  (or any case where "auth is configured" did not mean "auth will actually
+  succeed silently"). The previous logic *guessed* from gargle options/env whether
+  authentication was possible, then let `drive_get()` attempt it — but plain
+  `drive_auth()` does not consult `GOOGLEDRIVE_AUTH`, so the guess was a false
+  positive that fell through to the prompt. `assessGoogle()` now *attempts*
+  authentication non-interactively instead of guessing: it tries the
+  `GOOGLEDRIVE_AUTH`/`GARGLE_SERVICE_ACCOUNT` service-account JSON, then a cached
+  user token, with `rlang_interactive` forced `FALSE` so a missing token errors
+  *quietly* rather than prompting; only if nothing usable loads does it
+  deauthorize and read the public file anonymously. Net: a loaded or
+  silently-loadable token (incl. a service account) is used; a public file always
+  resolves with no prompt; `reproducible.gdriveNoAuth = TRUE` still forces the
+  public path.
+
 ## new features
 
 * `reproducible.urlRemap` manifests may now carry an optional **`id` column** (the
