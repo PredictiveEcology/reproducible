@@ -67,6 +67,14 @@
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
 #'     Can be set globally here.
 #'   }
+#'   \item{`downloadProgressInterval`}{
+#'     Default: `2`, in seconds. Minimum interval between download-progress lines
+#'     in non-interactive / non-dynamic sessions (logged runs, CI, a SpaDES
+#'     `simInit`). In those sessions `httr2`'s native cli progress bar emits
+#'     nothing, so `preProcess()` instead streams the body and reports progress
+#'     via [messagePreProcess()] (which the calling app can timestamp). In a
+#'     dynamic terminal the native in-place bar is used and this has no effect.
+#'   }
 #'   \item{`drv`}{
 #'     Default: `RSQLite::SQLite()`. Sets the default driver for the backend database system.
 #'     Only tested with `RSQLite::SQLite()` and `RPostgres::Postgres()`.
@@ -475,6 +483,7 @@ reproducibleOptions <- function() {
     reproducible.connecttimeout = 30L,              # seconds; single-stream connect/handshake cap (NOT the overall download timeout)
     reproducible.conn = NULL,
     reproducible.destinationPath = NULL,
+    reproducible.downloadProgressInterval = 2,      # seconds between streamed-download progress lines (non-dynamic sessions)
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.dryRun = FALSE,
     reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise

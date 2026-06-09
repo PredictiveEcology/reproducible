@@ -766,7 +766,19 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
         )
       if (i == 1) # only try on first run through, in case this is the cause of failure; which it is on some sites
         req <- req |> httr2::req_user_agent(getOption("reproducible.useragent"))
-      if (verbose > 0) {
+      # Progress reporting. httr2::req_progress() draws a cli progress bar, which
+      # is great in a dynamic terminal but emits *nothing* in non-interactive /
+      # non-dynamic sessions (logged runs, CI, a SpaDES simInit) -- so a large
+      # download there is completely silent until it finishes. In those sessions,
+      # stream the body ourselves and report progress through messagePreProcess()
+      # (which flows through the calling app's message handler and is timestamped);
+      # see .dlHttr2Stream(). Keep the native cli bar for dynamic terminals where
+      # it updates nicely in place.
+      streamProg <- isTRUE(verbose > 0) &&
+        !isTRUE(tryCatch(cli::is_dynamic_tty(), error = function(e) FALSE)) &&
+        exists("req_perform_connection", envir = asNamespace("httr2")) &&
+        exists("resp_stream_raw", envir = asNamespace("httr2"))
+      if (isTRUE(verbose > 0) && !streamProg) {
         # req_progress is not in the binary httr2 available for R version 4.1.3; fails on CRAN checks
         # Also wrap in tryCatch: cli's app$styles can be NULL/NA in parallel/non-interactive contexts
         req <- tryCatch({
@@ -775,9 +787,16 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
         }, error = function(e) req)
       }
 
-      resp <- req |> httr2::req_url_query() |>
-        httr2::req_perform(path = destFile)
-      a <- httr2::resp_body_string(resp)
+      reqq <- req |> httr2::req_url_query()
+      resp <- if (streamProg) {
+        .dlHttr2Stream(reqq, destFile, verbose = verbose)
+      } else {
+        reqq |> httr2::req_perform(path = destFile)
+      }
+      # Detect an HTML "Request Rejected" page (some servers return it with HTTP
+      # 200). For the streamed path read only the head of the file rather than the
+      # whole (possibly multi-GB) body into a string.
+      a <- if (streamProg) .dlRejectionProbeFile(destFile) else httr2::resp_body_string(resp)
       isRjcted <- grepl("Request Rejected", a)
       if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
         needDwnFl <- FALSE
@@ -798,6 +817,103 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
 
   list(destFile = destFile)
+}
+
+#' Stream an httr2 download to a file, reporting progress via `messagePreProcess`
+#'
+#' `httr2::req_progress()` draws a cli progress bar, which is silent in
+#' non-interactive / non-dynamic sessions (logged runs, CI, a SpaDES `simInit`)
+#' and writes straight to the terminal -- so there a large download shows no
+#' output at all until it completes. This streams the response body to `destFile`
+#' in chunks and emits a periodic progress line through [messagePreProcess()]
+#' instead, which flows through the calling app's message handler (and is
+#' timestamped by, e.g., SpaDES.core's logging). Errors (including HTTP error
+#' statuses, which [httr2::req_perform_connection()] raises just like
+#' [httr2::req_perform()]) propagate to the caller unchanged. Returns the httr2
+#' response object (its body already consumed to `destFile`).
+#'
+#' @param req An [httr2::request()].
+#' @param destFile Destination file path.
+#' @param verbose Numeric verbosity level.
+#' @return The httr2 response (invisibly used by the caller for status checks).
+#' @noRd
+.dlHttr2Stream <- function(req, destFile, verbose = getOption("reproducible.verbose", 1)) {
+  resp <- httr2::req_perform_connection(req)
+  on.exit(try(close(resp), silent = TRUE), add = TRUE)
+  total <- suppressWarnings(as.numeric(httr2::resp_header(resp, "content-length")))
+  if (length(total) != 1L || is.na(total) || total <= 0) total <- NA_real_
+  totTxt <- if (!is.na(total)) paste0(" / ", .humanBytes(total)) else ""
+
+  con <- file(destFile, "wb")
+  conOpen <- TRUE
+  on.exit(if (conOpen) try(close(con), silent = TRUE), add = TRUE)
+
+  interval <- getOption("reproducible.downloadProgressInterval", 2)
+  t0 <- Sys.time()
+  lastMsg <- t0
+  got <- 0
+  shownAny <- FALSE
+  repeat {
+    chunk <- httr2::resp_stream_raw(resp, kb = 512L)
+    if (length(chunk) == 0L) break
+    writeBin(chunk, con)
+    got <- got + length(chunk)
+    now <- Sys.time()
+    if (as.numeric(now - lastMsg) >= interval) {
+      elapsed <- as.numeric(now - t0)
+      pct <- if (!is.na(total)) paste0(" (", round(100 * got / total), "%)") else ""
+      rate <- if (elapsed > 0) paste0(" | ", .humanBytes(got / elapsed), "/s") else ""
+      messagePreProcess("  downloaded ", .humanBytes(got), totTxt, pct, rate, verbose = verbose)
+      lastMsg <- now
+      shownAny <- TRUE
+    }
+  }
+  close(con)
+  conOpen <- FALSE
+  # Only emit the closing line if we already reported progress, i.e. the download
+  # ran longer than one interval. Fast/instant downloads (e.g. a local `file://`
+  # source, as in the test fixtures) then stay completely silent -- matching the
+  # old req_perform() behaviour and keeping message snapshots deterministic --
+  # while genuinely long downloads still get periodic lines plus this summary.
+  if (isTRUE(shownAny)) {
+    messagePreProcess("  downloaded ", .humanBytes(got), totTxt, " in ",
+                      round(as.numeric(Sys.time() - t0), 1), "s", verbose = verbose)
+  }
+  resp
+}
+
+#' Read the head of a just-downloaded file to detect an HTML rejection page
+#'
+#' Some servers answer with HTTP 200 but an HTML "Request Rejected" body. Reading
+#' the whole (possibly multi-GB) file into a string to check for this is wasteful;
+#' the marker is at the very start, so read only the first few KB.
+#' @param destFile Path to the downloaded file.
+#' @param n Number of bytes to read.
+#' @return A character scalar (the head of the file, NUL bytes stripped), or `""`.
+#' @noRd
+.dlRejectionProbeFile <- function(destFile, n = 4096L) {
+  if (!file.exists(destFile)) return("")
+  con <- file(destFile, "rb")
+  on.exit(close(con))
+  raw <- readBin(con, what = "raw", n = n)
+  # Keep only printable ASCII so rawToChar() yields a valid string and the
+  # downstream grepl() does not warn on a binary (e.g. zip) body. The marker we
+  # look for ("Request Rejected") is ASCII, so this never masks a real rejection.
+  raw <- raw[raw >= as.raw(9L) & raw <= as.raw(126L)]
+  if (length(raw) == 0L) return("")
+  rawToChar(raw)
+}
+
+#' Human-readable byte count (e.g. `"45.2 Mb"`)
+#'
+#' Thin wrapper around base R's `format.object_size` so download progress lines
+#' read naturally regardless of magnitude. Non-finite input returns `"?"`.
+#' @param n A number of bytes.
+#' @return A character scalar.
+#' @noRd
+.humanBytes <- function(n) {
+  if (length(n) != 1L || !is.finite(n)) return("?")
+  format(structure(n, class = "object_size"), units = "auto")
 }
 
 #' Decide whether to use the parallel ranged download path

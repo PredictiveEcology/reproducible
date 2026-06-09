@@ -4,6 +4,17 @@
 
 ## new features
 
+* **Download progress is now visible in non-interactive / logged sessions.**
+  `httr2::req_progress()` draws a cli progress bar that is silent when
+  `!cli::is_dynamic_tty()` (logged runs, CI, a SpaDES `simInit`) and writes
+  straight to the terminal, so a large `preProcess()`/`prepInputs()` download
+  there produced *no* output until it finished. In those sessions the
+  single-stream download now streams the body itself
+  (`httr2::req_perform_connection()`) and reports progress through
+  `messagePreProcess()` -- e.g. `downloaded 45 Mb / 320 Mb (14%) | 12 Mb/s` --
+  which the calling app (e.g. SpaDES.core's logger) timestamps. The cadence is
+  set by the new option `reproducible.downloadProgressInterval` (default `2`
+  seconds). In a dynamic terminal the native in-place cli bar is unchanged.
 * New diagnostic option **`reproducible.preDigestDump`** (and
   `reproducible.preDigestDumpPattern`) to dump the full element-by-element
   `preDigest` (`name = hash`) that produces each `Cache()` `cacheId`. Unlike
@@ -13,8 +24,6 @@
   what splits a `cacheId` across machines/OSs (e.g. a cloud cache that will not
   share). `TRUE` messages each call's sorted list; a directory path writes one
   `preDigest_<functionName>[_<n>].txt` per call. See `?reproducibleOptions`.
-
-
 * `showSimilar` (the `reproducible.showSimilar` option, also used by dev mode and
   `dryRun`) is now cloud-aware. When `useCloud` is active, `Cache()` previously
   compared the current call only against the *local* cache, so similar artifacts
