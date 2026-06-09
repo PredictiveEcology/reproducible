@@ -27,6 +27,10 @@ skip_if_service_account <- function() {
   "Connection reset by peer", "Connection refused",
   "TLS connect error", "SSL connect error",
   "Recv failure", "Resolving timed out",
+  # httr2::req_perform_connection() (the streaming download path, .dlHttr2Stream)
+  #   surfaces a transient connection failure with these messages, which the
+  #   curl-style phrases above don't cover.
+  "Failed to perform HTTP request", "cannot open the connection",
   sep = "|"
 )
 
