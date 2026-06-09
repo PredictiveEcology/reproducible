@@ -372,7 +372,25 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
     } else {
       cacheDB <- CacheDBFileSingle(cachePath, outputHash)
     }
-    if (all(file.exists(cacheIdFileName))) {
+    # Only upload the cache files that are actually on disk. CacheStoredFile(...,
+    # "check", obj = ) *predicts* extra file-backed sidecars from Filenames(obj)
+    # (e.g. SpatRaster backends of a cached simList), but those are not always
+    # written under the cacheId in the cache folder -- a cached simList commonly
+    # *references* its rasters at their existing locations rather than copying
+    # them. Previously a single predicted-but-absent file made this stop() and
+    # abort the whole (already locally-saved) run. Cloud upload is best-effort:
+    # upload what exists, warn about the rest, and never crash the caller.
+    filesExist <- file.exists(cacheIdFileName)
+    if (any(filesExist)) {
+      if (!all(filesExist)) {
+        messageCache(
+          "Some predicted cache file(s) are not on disk; uploading the ",
+          sum(filesExist), " present file(s) and skipping:\n",
+          paste(basename2(cacheIdFileName[!filesExist]), collapse = "\n"),
+          verbose = verbose
+        )
+      }
+      cacheIdFileName <- cacheIdFileName[filesExist]
       newFileName <- basename2(cacheIdFileName)
 
       cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID = cloudFolderID, cachePath = cachePath, create = TRUE)
@@ -400,7 +418,11 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
         return(du)
       }
     } else {
-      stop("File(s) to upload are not available")
+      # Nothing on disk to push: do not abort the run -- the local cache is
+      # intact; cloud upload is best-effort.
+      messageCache("No cache file(s) available on disk to upload for cacheId ",
+                   outputHash, "; skipping cloud upload (local cache is intact).",
+                   verbose = verbose)
     }
   }
   # cloudUploadRasterBackends(obj = outputToSave, cloudFolderID)

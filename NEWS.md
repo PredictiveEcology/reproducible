@@ -133,6 +133,16 @@
 
 ## bug fixes
 
+* **A best-effort cloud cache upload no longer aborts the run.** When caching an
+  object whose stored form does not include every file `CacheStoredFile()`
+  predicts from `Filenames()` (e.g. a cached `simList` that *references* its
+  `SpatRaster` backends rather than copying them under the `cacheId`),
+  `cloudUploadFromCache()` previously `stop()`ed with "File(s) to upload are not
+  available" -- crashing a long, already-locally-saved run during the upload
+  step. It now uploads the files that are present, warns about any it skips, and
+  never errors (the local cache is intact regardless).
+
+
 * The **single-stream `preProcess`/`prepInputs` download no longer hangs for
   hours on a slow or flaky connection**. It was setting curl's `connecttimeout`
   (the cap on *establishing* a connection) to `reproducible.timeout` — the
