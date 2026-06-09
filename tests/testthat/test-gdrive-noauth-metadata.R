@@ -2,103 +2,90 @@
 # interactive OAuth. The decision + deauthorize helpers are tested offline by
 # mocking the token check and googledrive's auth functions.
 
-test_that(".gdriveCanAuthNonInteractively detects a configured email / service account", {
-  withr::local_options(gargle_oauth_email = NULL)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
-  expect_false(reproducible:::.gdriveCanAuthNonInteractively())
-
-  withr::local_options(gargle_oauth_email = "someone@example.com")
-  expect_true(reproducible:::.gdriveCanAuthNonInteractively())
-
-  withr::local_options(gargle_oauth_email = NULL)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "/path/to/sa.json")
-  expect_true(reproducible:::.gdriveCanAuthNonInteractively())
-})
-
-test_that(".gdriveShouldGoAnon: anonymous only when token-less AND no usable auth config", {
-  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = NULL)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
-
-  # token-less, no gargle config -> anonymous (cloud-reader / public-file case)
-  expect_true(reproducible:::.gdriveShouldGoAnon(hadToken = FALSE))
-  # token present -> keep existing (authenticated) behaviour
-  expect_false(reproducible:::.gdriveShouldGoAnon(hadToken = TRUE))
-
-  # explicit opt-in forces anonymous even when a token is present
-  withr::local_options(reproducible.gdriveNoAuth = TRUE)
-  expect_true(reproducible:::.gdriveShouldGoAnon(hadToken = TRUE))
-})
-
-test_that(".gdriveShouldGoAnon does NOT go anonymous when gargle can auth (regression)", {
-  withr::local_options(reproducible.gdriveNoAuth = NULL)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
-
-  # a configured OAuth email -> authenticate (load cached token), not anonymous
-  withr::local_options(gargle_oauth_email = "someone@example.com")
-  expect_false(reproducible:::.gdriveShouldGoAnon(hadToken = FALSE))
-
-  # a service-account JSON -> authenticate
-  withr::local_options(gargle_oauth_email = NULL)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "/path/to/sa.json")
-  expect_false(reproducible:::.gdriveShouldGoAnon(hadToken = FALSE))
-
-  # ...but an explicit gdriveNoAuth still forces anonymous
-  withr::local_options(gargle_oauth_email = "someone@example.com",
-                       reproducible.gdriveNoAuth = TRUE)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "")
-  expect_true(reproducible:::.gdriveShouldGoAnon(hadToken = FALSE))
-})
-
-test_that(".gdriveDeauthForPublic deauthorizes when there is no token (and no auth config)", {
+test_that(".gdriveTryAuthQuietly authenticates via a service-account JSON when present", {
   skip_if_not_installed("googledrive")
-  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = NULL)
-  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  withr::local_options(gargle_oauth_email = NULL)
+  sa <- withr::local_tempfile(fileext = ".json")
+  writeLines("{}", sa)                        # a file that exists
+  withr::local_envvar(GOOGLEDRIVE_AUTH = sa, GARGLE_SERVICE_ACCOUNT = "")
 
-  deauthed <- FALSE
-  testthat::local_mocked_bindings(.gdriveHasToken = function() FALSE)
+  authPath <- NULL
   testthat::local_mocked_bindings(
-    drive_deauth = function(...) deauthed <<- TRUE,
-    drive_token = function(...) stop("must not fetch a token"),
+    drive_auth = function(...) { authPath <<- list(...)$path; invisible() },
+    drive_has_token = function(...) TRUE,
     .package = "googledrive"
   )
-
-  res <- reproducible:::.gdriveDeauthForPublic()
-  expect_true(res$deauthed)
-  expect_null(res$token)        # nothing to restore (there was no token)
-  expect_true(deauthed)         # googledrive::drive_deauth() was called
+  expect_true(reproducible:::.gdriveTryAuthQuietly())
+  # it honoured GOOGLEDRIVE_AUTH by passing path = the service-account JSON
+  expect_identical(normalizePath(authPath, mustWork = FALSE),
+                   normalizePath(sa, mustWork = FALSE))
 })
 
-test_that(".gdriveDeauthForPublic is a no-op when a token is present (no opt-in)", {
+test_that(".gdriveTryAuthQuietly fails QUIETLY (no prompt) when no token is available", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(gargle_oauth_email = NULL)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  # gargle errors (rather than prompting) under forced non-interactive when it has
+  # no token; emulate that here.
+  testthat::local_mocked_bindings(
+    drive_auth = function(...) stop("Can't get Google credentials"),
+    drive_has_token = function(...) FALSE,
+    .package = "googledrive"
+  )
+  expect_false(reproducible:::.gdriveTryAuthQuietly())
+})
+
+test_that(".gdrivePrepareAuth: a loaded token -> 'token' (no auth attempt, no deauth)", {
   skip_if_not_installed("googledrive")
   withr::local_options(reproducible.gdriveNoAuth = NULL)
-
-  deauthed <- FALSE
-  testthat::local_mocked_bindings(.gdriveHasToken = function() TRUE)
+  deauthed <- FALSE; tried <- FALSE
   testthat::local_mocked_bindings(
-    drive_deauth = function(...) deauthed <<- TRUE,
-    .package = "googledrive"
-  )
-
-  res <- reproducible:::.gdriveDeauthForPublic()
-  expect_false(res$deauthed)
-  expect_false(deauthed)        # a cloud writer's token is left untouched
+    .gdriveHasToken = function() TRUE,
+    .gdriveTryAuthQuietly = function() { tried <<- TRUE; FALSE })
+  testthat::local_mocked_bindings(drive_deauth = function(...) deauthed <<- TRUE,
+                                  .package = "googledrive")
+  expect_identical(reproducible:::.gdrivePrepareAuth(), "token")
+  expect_false(tried)        # already authenticated; no need to try
+  expect_false(deauthed)     # token left intact
 })
 
-test_that(".gdriveDeauthForPublic preserves a token to restore when gdriveNoAuth forces anon", {
+test_that(".gdrivePrepareAuth: no token + quiet auth succeeds -> 'token'", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL)
+  deauthed <- FALSE
+  testthat::local_mocked_bindings(
+    .gdriveHasToken = function() FALSE,
+    .gdriveTryAuthQuietly = function() TRUE)
+  testthat::local_mocked_bindings(drive_deauth = function(...) deauthed <<- TRUE,
+                                  .package = "googledrive")
+  expect_identical(reproducible:::.gdrivePrepareAuth(), "token")
+  expect_false(deauthed)
+})
+
+test_that(".gdrivePrepareAuth: no token + quiet auth fails -> deauthorize, 'anon'", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL)
+  deauthed <- FALSE
+  testthat::local_mocked_bindings(
+    .gdriveHasToken = function() FALSE,
+    .gdriveTryAuthQuietly = function() FALSE)
+  testthat::local_mocked_bindings(drive_deauth = function(...) deauthed <<- TRUE,
+                                  .package = "googledrive")
+  expect_identical(reproducible:::.gdrivePrepareAuth(), "anon")
+  expect_true(deauthed)      # fell back to anonymous/public
+})
+
+test_that(".gdrivePrepareAuth: gdriveNoAuth=TRUE + no token -> 'anon' without trying auth", {
   skip_if_not_installed("googledrive")
   withr::local_options(reproducible.gdriveNoAuth = TRUE)
-
-  deauthed <- FALSE
-  testthat::local_mocked_bindings(.gdriveHasToken = function() TRUE)
+  deauthed <- FALSE; tried <- FALSE
   testthat::local_mocked_bindings(
-    drive_deauth = function(...) deauthed <<- TRUE,
-    drive_token = function(...) "TOKEN",
-    .package = "googledrive"
-  )
-
-  res <- reproducible:::.gdriveDeauthForPublic()
-  expect_true(res$deauthed)
-  expect_identical(res$token, "TOKEN")  # caller restores this on.exit
+    .gdriveHasToken = function() FALSE,
+    .gdriveTryAuthQuietly = function() { tried <<- TRUE; TRUE })
+  testthat::local_mocked_bindings(drive_deauth = function(...) deauthed <<- TRUE,
+                                  .package = "googledrive")
+  expect_identical(reproducible:::.gdrivePrepareAuth(), "anon")
+  expect_false(tried)        # forced anon never attempts auth
   expect_true(deauthed)
 })
 
