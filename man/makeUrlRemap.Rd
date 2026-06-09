@@ -29,6 +29,12 @@ is no match it returns \code{NULL}, so the original URL is kept.
 The manifest itself — and the responsibility for keeping it current — lives
 with the user (for example, a community-maintained mirror manifest);
 \code{reproducible} hard-codes no mirror URLs.
+
+Calling \code{makeUrlRemap()} yourself is optional: you can also assign the manifest
+\code{data.frame} (or a CSV path/URL) directly to the option, e.g.
+\code{options(reproducible.urlRemap = read.csv("manifest.csv"))}, and \code{reproducible}
+will build (and cache) the remap function internally. See the \code{urlRemap} entry
+in \code{\link[=reproducibleOptions]{reproducibleOptions()}}.
 }
 \examples{
 \donttest{
