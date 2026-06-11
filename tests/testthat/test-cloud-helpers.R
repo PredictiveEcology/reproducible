@@ -51,11 +51,12 @@ test_that("Cache() keyed on a non-reserved arg yields distinct entries", {
   # key arg must produce distinct cache entries. (A regression here is what made
   # showSimilar list only one cloud item.)
   skip_on_cran()
+  skip_if_not_installed("terra") # Cache()'s .wrap path needs terra even for a data.table
   tmp <- file.path(tempdir(), paste0("ccloud-key-", Sys.getpid()))
-  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  oldOpts <- options(reproducible.cachePath = tmp, reproducible.useDBI = FALSE,
+                     reproducible.showSimilar = FALSE, reproducible.verbose = -1)
+  on.exit({options(oldOpts); unlink(tmp, recursive = TRUE)}, add = TRUE)
   dir.create(tmp, recursive = TRUE, showWarnings = FALSE)
-  withr::local_options(reproducible.cachePath = tmp, reproducible.useDBI = FALSE,
-                       reproducible.showSimilar = FALSE, reproducible.verbose = -1)
   f <- function(id, hash) data.table::data.table(v = hash)
   got <- vapply(c("h1", "h2", "h3"), function(h)
     (f(id = "same", hash = h) |>
