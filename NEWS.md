@@ -4,6 +4,12 @@
 
 ## bug fixes
 
+* `prepInputsCOG()` (the COG `/vsicurl/` fast-path) now shows terra's native
+  progress bar during the windowed remote read, which previously ran silently
+  for minutes. The windowed crop is written through terra's block loop so the
+  bar advances as remote tiles are fetched; it is shown only when
+  `verbose > 0`.
+
 * A public Google Drive file could still launch an interactive OAuth prompt when
   a service account was configured via the `GOOGLEDRIVE_AUTH` environment variable
   (or any case where "auth is configured" did not mean "auth will actually
