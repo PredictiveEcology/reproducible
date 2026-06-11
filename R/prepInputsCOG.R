@@ -77,9 +77,18 @@ prepInputsCOG <- function(url,
     return("NULL")
 
   # ---- Window-crop: GDAL fetches only tile blocks intersecting to_ext ------
+  # The /vsicurl/ windowed read can take minutes with no feedback. Writing the
+  # crop to a temp file routes it through terra's block loop (one block per
+  # source tile-row), which surfaces terra's native progress bar as the remote
+  # tiles are fetched -- mirroring the download progress users see on the
+  # non-COG path. Enable the bar only when verbose > 0; a very high `progress`
+  # threshold suppresses it otherwise. Save/restore the global terra option.
+  oldProgress <- terra::terraOptions(print = FALSE)$progress
+  on.exit(try(terra::terraOptions(progress = oldProgress), silent = TRUE), add = TRUE)
+  terra::terraOptions(progress = if (isTRUE(verbose > 0)) 1L else .Machine$integer.max)
   r_windowed <- tryCatch({
     terra::window(r_meta) <- to_ext
-    terra::crop(r_meta, to_ext)
+    terra::crop(r_meta, to_ext, filename = tempfile(fileext = ".tif"), overwrite = TRUE)
   }, error = function(e) NULL)
 
   if (is.null(r_windowed) || terra::ncell(r_windowed) == 0L)
