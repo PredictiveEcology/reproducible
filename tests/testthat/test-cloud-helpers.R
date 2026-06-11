@@ -35,6 +35,35 @@ test_that("isOrHasRaster recurses into lists and environments", {
   expect_true(any(unlist(outE)))
 })
 
+test_that(".downloadCloudDBFile keys on a non-reserved arg (not cacheId)", {
+  # showCacheCloud() wraps .downloadCloudDBFile() in Cache() to memoise each
+  # remote .dbFile by its content hash. If the keying arg were named `cacheId`
+  # (which is in .defaultCacheOmitArgs) Cache() would drop it from the digest
+  # and collapse every file onto one entry -- listing only one similar item.
+  fmls <- names(formals(reproducible:::.downloadCloudDBFile))
+  expect_true("hash" %in% fmls)
+  expect_false("cacheId" %in% fmls)
+  expect_false("hash" %in% reproducible:::.defaultCacheOmitArgs)
+})
+
+test_that("Cache() keyed on a non-reserved arg yields distinct entries", {
+  # Guards the assumption behind showCacheCloud's memo: varying the (non-reserved)
+  # key arg must produce distinct cache entries. (A regression here is what made
+  # showSimilar list only one cloud item.)
+  skip_on_cran()
+  tmp <- file.path(tempdir(), paste0("ccloud-key-", Sys.getpid()))
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  dir.create(tmp, recursive = TRUE, showWarnings = FALSE)
+  withr::local_options(reproducible.cachePath = tmp, reproducible.useDBI = FALSE,
+                       reproducible.showSimilar = FALSE, reproducible.verbose = -1)
+  f <- function(id, hash) data.table::data.table(v = hash)
+  got <- vapply(c("h1", "h2", "h3"), function(h)
+    (f(id = "same", hash = h) |>
+       Cache(cachePath = tmp, omitArgs = "id", .functionName = "m", verbose = -1))$v,
+    character(1))
+  expect_identical(unname(got), c("h1", "h2", "h3"))
+})
+
 test_that("mergeShownCacheCloud is a no-op when there is no cloud metadata", {
   local <- data.table::data.table(
     cacheId = "aaa", tagKey = c("function", "x"),
