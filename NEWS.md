@@ -20,6 +20,19 @@
   resolves with no prompt; `reproducible.gdriveNoAuth = TRUE` still forces the
   public path.
 
+* A regression in that no-prompt change: a user who had *configured* gargle auth
+  (`gargle_oauth_email` set) but had not yet run `drive_auth()` was silently
+  downgraded to anonymous — the auth attempt forced `rlang_interactive = FALSE`
+  unconditionally, so with no cached token it failed quietly and `assessGoogle()`
+  deauthorized `googledrive`. That 404'd their private Drive files (e.g. a Drive
+  *folder*, which has no public-mirror remap) and, because `drive_deauth()` is a
+  global state change, poisoned later *direct* `googledrive` calls in the same
+  session. Now the auth attempt only forces non-interactive when *no* auth is
+  configured (the public-file case, which must never prompt); when a service
+  account or `gargle_oauth_email` is configured, the session's own interactivity
+  is respected, so a missing token loads from cache or completes OAuth — no manual
+  `drive_auth()` step needed.
+
 ## new features
 
 * `reproducible.urlRemap` manifests may now carry an optional **`id` column** (the
@@ -30,6 +43,18 @@
   Drive URL whose id is in the manifest is redirected to the (public) mirror by
   `prepInputs()` **before** the Drive metadata lookup, so the download needs no
   Google authentication at all. Manifests without an `id` column are unchanged.
+
+* `reproducible.urlRemap` manifests may now carry an optional **`type` column**
+  (`"file"`/`"dir"`) for **directory remaps**: a `"dir"` row maps a Google Drive
+  *folder* id to a bucket prefix-listing URL (e.g.
+  `<base>/?prefix=<key>/&delimiter=/`). When `preProcess()` downloads such a
+  folder, it enumerates the folder's files from that public S3 listing (parsed
+  with base R, no `xml2` dependency) and downloads each from its mirror URL,
+  instead of `googledrive::drive_ls()` — so listing a Drive folder needs no
+  authentication. The folder is also recognised as a directory from the manifest
+  alone, avoiding the `drive_get()` (auth) probe in `isGoogleDriveDirectory()`.
+  `buckethost::makeMirrorManifest(directories = TRUE)` emits such a manifest.
+  Manifests without a `type` column are unchanged.
 
 ## bug fixes
 

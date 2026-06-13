@@ -11,7 +11,10 @@ makeUrlRemap(manifest)
 columns \code{filename} and \code{url}. \code{filename} is matched against the basename of
 the file being downloaded. An optional \code{id} column (Google Drive file id) is
 matched secondarily, by the id parsed from the Drive \code{url}, when no filename
-is available (e.g. an unauthenticated Drive download).}
+is available (e.g. an unauthenticated Drive download). An optional \code{type}
+column (\code{"file"}/\code{"dir"}) marks directory-remap rows (a Drive folder id ->
+bucket prefix-listing URL), used to enumerate a Drive folder from the public
+bucket without authentication.}
 }
 \value{
 A function of \verb{(url, filename)} returning a replacement URL, or \code{NULL}
@@ -34,6 +37,15 @@ match by id: when the resolved \code{filename} is unavailable — e.g. an
 unauthenticated session that cannot read a Drive file's metadata — the id is
 parsed from the Drive \code{url} and matched against this column. This lets a
 download be redirected to the (public) mirror with no authentication at all.
+
+An optional \code{type} column (\code{"file"}/\code{"dir"}) enables \strong{directory remaps}: a
+\code{"dir"} row maps a Google Drive \emph{folder} id (\code{id} column) to a bucket
+prefix-listing URL (its \code{url}). When \code{preProcess()} downloads such a folder, it
+enumerates the folder's files from that public listing instead of
+\code{googledrive::drive_ls()}, so listing the folder needs no authentication. Rows
+without a \code{type} column (or with \code{type = "file"}) are ordinary file remaps,
+unchanged. \code{buckethost::makeMirrorManifest(directories = TRUE)} emits such a
+manifest.
 
 The manifest itself — and the responsibility for keeping it current — lives
 with the user (for example, a community-maintained mirror manifest);

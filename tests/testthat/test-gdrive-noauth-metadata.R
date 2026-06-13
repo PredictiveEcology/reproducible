@@ -49,6 +49,37 @@ test_that(".gdrivePrepareAuth: a loaded token -> 'token' (no auth attempt, no de
   expect_false(deauthed)     # token left intact
 })
 
+test_that(".gdriveTryAuthQuietly: a configured gargle email is NOT forced non-interactive", {
+  skip_if_not_installed("googledrive")
+  # The user has set gargle_oauth_email but has not yet run drive_auth(). The auth
+  # attempt must respect the session's interactivity so a missing token can
+  # complete OAuth (or load a cached token) -- NOT be forced to a quiet failure
+  # that downgrades a private Drive folder to an anonymous 404.
+  withr::local_options(gargle_oauth_email = "someone@example.com", rlang_interactive = TRUE)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  seenInteractive <- NA
+  testthat::local_mocked_bindings(
+    drive_auth = function(...) { seenInteractive <<- getOption("rlang_interactive"); invisible() },
+    drive_has_token = function(...) TRUE,
+    .package = "googledrive")
+  expect_true(reproducible:::.gdriveTryAuthQuietly())
+  expect_true(isTRUE(seenInteractive))   # interactivity preserved -> OAuth can complete
+})
+
+test_that(".gdriveTryAuthQuietly: an unconfigured session IS forced non-interactive", {
+  skip_if_not_installed("googledrive")
+  # No email, no service account -> the public-file case: never prompt.
+  withr::local_options(gargle_oauth_email = NULL, rlang_interactive = TRUE)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  seenInteractive <- NA
+  testthat::local_mocked_bindings(
+    drive_auth = function(...) { seenInteractive <<- getOption("rlang_interactive"); invisible() },
+    drive_has_token = function(...) TRUE,
+    .package = "googledrive")
+  expect_true(reproducible:::.gdriveTryAuthQuietly())
+  expect_false(isTRUE(seenInteractive))  # forced FALSE -> a public file never prompts
+})
+
 test_that(".gdrivePrepareAuth: no token + quiet auth succeeds -> 'token'", {
   skip_if_not_installed("googledrive")
   withr::local_options(reproducible.gdriveNoAuth = NULL)

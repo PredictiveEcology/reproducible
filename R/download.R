@@ -618,22 +618,35 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(tryCatch(googledrive::drive_has_token(), error = function(e) FALSE))
 }
 
-# Attempt googledrive authentication WITHOUT ever prompting. In order:
+# Attempt googledrive authentication on the user's behalf (no manual
+# `drive_auth()` step required). In order:
 #   1. a service-account JSON in `GOOGLEDRIVE_AUTH` (reproducible's convention) or
 #      `GARGLE_SERVICE_ACCOUNT` -- `drive_auth(path = ...)`, fully non-interactive;
-#   2. otherwise a cached user token -- `drive_auth()` with `rlang_interactive`
-#      forced FALSE, so a missing token ERRORS quietly instead of launching OAuth.
-# If nothing usable is available the attempt fails quietly (returns FALSE). Plain
-# `drive_auth()` does NOT itself consult `GOOGLEDRIVE_AUTH` (that is reproducible's
-# own env var), so step 1 is what actually honours a configured service account.
-# Returns TRUE iff a token is loaded afterwards.
+#   2. otherwise a cached user token -- `drive_auth()`.
+# Whether a *missing* token may launch OAuth depends on whether the user has
+# *configured* auth: a service account, or a gargle OAuth email
+# (`gargle_oauth_email`). When configured, the session's own interactivity is
+# respected, so a user whose email is set but who has not yet run `drive_auth()`
+# completes the normal OAuth flow (or silently loads a cached token) -- rather than
+# being forced quietly to failure and downgraded to an anonymous 404 on their
+# private files. When NOT configured, `rlang_interactive` is forced FALSE so a
+# missing token errors *quietly* instead of prompting -- the public-file case must
+# never see an OAuth prompt. Either way a failure returns FALSE (caller then reads
+# the public file anonymously). Plain `drive_auth()` does NOT itself consult
+# `GOOGLEDRIVE_AUTH` (reproducible's own env var), so step 1 is what honours a
+# configured service account. Returns TRUE iff a token is loaded afterwards.
 .gdriveTryAuthQuietly <- function() {
   if (!requireNamespace("googledrive", quietly = TRUE)) return(FALSE)
-  op <- options(rlang_interactive = FALSE)
-  on.exit(options(op), add = TRUE)
   saPath <- Sys.getenv("GOOGLEDRIVE_AUTH", Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
+  hasSA <- nzchar(saPath) && file.exists(path.expand(saPath))
+  email <- getOption("gargle_oauth_email")
+  authConfigured <- hasSA || (!is.null(email) && !isFALSE(email))
+  if (!authConfigured) {
+    op <- options(rlang_interactive = FALSE)
+    on.exit(options(op), add = TRUE)
+  }
   isTRUE(tryCatch({
-    if (nzchar(saPath) && file.exists(path.expand(saPath))) {
+    if (hasSA) {
       suppressMessages(googledrive::drive_auth(path = path.expand(saPath)))
     } else {
       suppressMessages(googledrive::drive_auth())
@@ -646,12 +659,14 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 # prompting, and report which path to take ("token" or "anon"):
 #   * a token is already loaded            -> "token" (works public + private);
 #   * `reproducible.gdriveNoAuth = TRUE`    -> deauthorize, "anon" (public only);
-#   * otherwise *try* to authenticate quietly (a cached token / service account
-#     loads silently). If that succeeds -> "token"; if it fails (nothing usable,
-#     and we never prompt) -> deauthorize and "anon" (read the PUBLIC file).
-# This replaces guessing from gargle options ("is an email set?") with an actual,
-# non-prompting attempt -- so a public file always resolves with no prompt, while
-# a configured user's cached token is still used for private files.
+#   * otherwise *try* to authenticate (a cached token / service account loads
+#     silently; a configured-but-uncached user completes OAuth -- see
+#     `.gdriveTryAuthQuietly()`). If that succeeds -> "token"; if it fails (nothing
+#     usable, and an unconfigured session never prompts) -> deauthorize and "anon"
+#     (read the PUBLIC file).
+# This replaces guessing from gargle options ("is an email set?") with an actual
+# attempt -- so a public file always resolves with no prompt, while a configured
+# user authenticates for their private files instead of silently going anonymous.
 .gdrivePrepareAuth <- function() {
   if (!requireNamespace("googledrive", quietly = TRUE)) return("anon")
   if (.gdriveHasToken()) return("token")
@@ -814,6 +829,15 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' parsed from the Drive `url` and matched against this column. This lets a
 #' download be redirected to the (public) mirror with no authentication at all.
 #'
+#' An optional `type` column (`"file"`/`"dir"`) enables **directory remaps**: a
+#' `"dir"` row maps a Google Drive *folder* id (`id` column) to a bucket
+#' prefix-listing URL (its `url`). When `preProcess()` downloads such a folder, it
+#' enumerates the folder's files from that public listing instead of
+#' `googledrive::drive_ls()`, so listing the folder needs no authentication. Rows
+#' without a `type` column (or with `type = "file"`) are ordinary file remaps,
+#' unchanged. `buckethost::makeMirrorManifest(directories = TRUE)` emits such a
+#' manifest.
+#'
 #' The manifest itself — and the responsibility for keeping it current — lives
 #' with the user (for example, a community-maintained mirror manifest);
 #' `reproducible` hard-codes no mirror URLs.
@@ -828,7 +852,10 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #'   columns `filename` and `url`. `filename` is matched against the basename of
 #'   the file being downloaded. An optional `id` column (Google Drive file id) is
 #'   matched secondarily, by the id parsed from the Drive `url`, when no filename
-#'   is available (e.g. an unauthenticated Drive download).
+#'   is available (e.g. an unauthenticated Drive download). An optional `type`
+#'   column (`"file"`/`"dir"`) marks directory-remap rows (a Drive folder id ->
+#'   bucket prefix-listing URL), used to enumerate a Drive folder from the public
+#'   bucket without authentication.
 #'
 #' @return A function of `(url, filename)` returning a replacement URL, or `NULL`
 #'   to keep the original.
@@ -851,8 +878,21 @@ makeUrlRemap <- function(manifest) {
     stop("'manifest' must be a data.frame with columns 'filename' and 'url'")
   }
   urls <- as.character(manifest[["url"]])
-  byName <- urls
-  names(byName) <- basename2(as.character(manifest[["filename"]]))
+
+  # Optional `type` column marks *directory remap* rows: a Drive folder id mapped
+  # to the bucket's prefix-listing URL (so a folder can be enumerated from the
+  # public bucket, no auth). These are matched ONLY by folder id, via the `byDir`
+  # map exposed as an attribute on the returned function (see `.driveDirRemap()`);
+  # they are kept out of the file maps below so a folder id/name never remaps as
+  # if it were a single downloadable file.
+  isDirRow <- rep(FALSE, length(urls))
+  if ("type" %in% colnames(manifest)) {
+    isDirRow <- tolower(as.character(manifest[["type"]])) %in% "dir"
+  }
+  fileRow <- !isDirRow
+
+  byName <- urls[fileRow]
+  names(byName) <- basename2(as.character(manifest[["filename"]])[fileRow])
   # Drop rows with empty/NA key or value up front.
   keepN <- nzchar(names(byName)) & !is.na(byName) & nzchar(byName)
   byName <- byName[keepN]
@@ -864,15 +904,22 @@ makeUrlRemap <- function(manifest) {
   idCol <- intersect(c("id", "googledriveId", "googledrive_id", "driveId", "gid"),
                      colnames(manifest))
   byId <- character(0)
+  byDir <- character(0)
   if (length(idCol)) {
     ids <- as.character(manifest[[idCol[[1]]]])
-    byId <- urls
-    names(byId) <- ids
+    byId <- urls[fileRow]
+    names(byId) <- ids[fileRow]
     keepI <- nzchar(names(byId)) & names(byId) != "NA" & !is.na(byId) & nzchar(byId)
     byId <- byId[keepI]
+
+    # Directory remap: folder id -> bucket prefix-listing URL.
+    byDir <- urls[isDirRow]
+    names(byDir) <- ids[isDirRow]
+    keepD <- nzchar(names(byDir)) & names(byDir) != "NA" & !is.na(byDir) & nzchar(byDir)
+    byDir <- byDir[keepD]
   }
 
-  function(url, filename) {
+  fn <- function(url, filename) {
     # Primary: match on the basename of the resolved filename (a single file). A
     # length != 1 `filename` (e.g. a Drive directory of several files) has no
     # single mirror URL, so it is skipped here.
@@ -891,6 +938,110 @@ makeUrlRemap <- function(manifest) {
     }
     NULL
   }
+  # Directory-remap lookup (folder id -> prefix-listing URL) travels as an
+  # attribute, since the remap function's contract returns a single file URL.
+  # `.driveDirRemap()` reads it to enumerate a Drive folder from the bucket.
+  attr(fn, "byDir") <- byDir
+  fn
+}
+
+# The bucket prefix-listing URL for a Drive folder `url`, from the active
+# `reproducible.urlRemap`'s directory map (`makeUrlRemap()`'s `byDir`), or NA
+# when the folder is not in the manifest. Matches by the id parsed from the url,
+# so it needs no googledrive token.
+.driveDirRemap <- function(url, fn = .urlRemapFn()) {
+  if (is.null(fn)) return(NA_character_)
+  byDir <- attr(fn, "byDir", exact = TRUE)
+  if (is.null(byDir) || !length(byDir) || length(url) != 1L || is.na(url)) {
+    return(NA_character_)
+  }
+  id <- .extractDriveId(url)
+  if (is.na(id) || !nzchar(id)) return(NA_character_)
+  hit <- byDir[id]
+  if (length(hit) == 1L && !is.na(hit)) unname(hit) else NA_character_
+}
+
+# Enumerate the files directly under a bucket "directory" from its S3
+# prefix-listing URL (`<base>/?prefix=.../&delimiter=/`). Parses the
+# `ListBucketResult` XML's `<Contents>` entries with base regex (no xml2
+# dependency); subfolders (`<CommonPrefixes>`) are ignored. Returns one row per
+# file -- `name` (object key basename), `url` (the file's public URL), `size`
+# (bytes) -- or a 0-row data.frame when the listing is empty/unreachable.
+.bucketDirList <- function(listUrl, verbose = getOption("reproducible.verbose", 1)) {
+  empty <- data.frame(name = character(0), url = character(0), size = numeric(0),
+                      stringsAsFactors = FALSE)
+  xml <- tryCatch(paste(readLines(listUrl, warn = FALSE), collapse = "\n"),
+                  error = function(e) NA_character_)
+  if (is.na(xml) || !nzchar(xml)) return(empty)
+  keys <- regmatches(xml, gregexpr("<Key>(.*?)</Key>", xml, perl = TRUE))[[1]]
+  keys <- sub("</Key>$", "", sub("^<Key>", "", keys))
+  if (!length(keys)) return(empty)
+  szs <- regmatches(xml, gregexpr("<Size>(.*?)</Size>", xml, perl = TRUE))[[1]]
+  szs <- suppressWarnings(as.numeric(sub("</Size>$", "", sub("^<Size>", "", szs))))
+  if (length(szs) != length(keys)) szs <- rep(NA_real_, length(keys))
+  if (isTRUE(grepl("<IsTruncated>true</IsTruncated>", xml, fixed = FALSE))) {
+    messagePreProcess("Bucket directory listing was truncated (>1000 objects); ",
+                      "only the first page is used.", verbose = verbose)
+  }
+  # The file's public URL is `<base>/<key>`; `<base>/` is the listUrl up to '?'.
+  baseSlash <- sub("\\?.*$", "", listUrl)
+  data.frame(name = basename2(keys), url = paste0(baseSlash, keys),
+             size = szs, stringsAsFactors = FALSE)
+}
+
+#' List a Google Drive folder, using a mirror listing when remapped
+#'
+#' A remap-aware alternative to `googledrive::drive_ls()` for *listing* a Google
+#' Drive folder's files. When the folder id is in the `reproducible.urlRemap`
+#' manifest as a *directory remap* (a `type = "dir"` row; see [makeUrlRemap()]),
+#' the files are enumerated from the public bucket listing with **no Google
+#' authentication**. Otherwise it falls back to `googledrive::drive_ls()` (which
+#' authenticates as usual). It is meant as a near drop-in for the common
+#' `as.data.table(drive_ls(url))` pattern: filter the returned `name`s, then pass
+#' the corresponding `url`s to [prepInputs()].
+#'
+#' @param url A Google Drive folder URL or bare id.
+#' @param pattern Optional regular expression; only files whose `name` matches are
+#'   kept (applied to both the mirror and Drive paths).
+#' @param verbose Numeric verbosity level.
+#'
+#' @return A `data.table` with columns `name` (file name), `id` (the Google Drive
+#'   file id when listed from Drive; `NA` on the mirror path), and `url` -- a URL
+#'   to hand to [prepInputs()]: the public mirror URL when remapped, otherwise the
+#'   Drive file URL. A 0-row table when the folder is empty/unreachable.
+#'
+#' @seealso [makeUrlRemap()] for the directory-remap manifest;
+#'   `buckethost::makeMirrorManifest(directories = TRUE)` to build one.
+#' @export
+#' @examples
+#' \dontrun{
+#' # With a directory-remap manifest set, this lists the folder from the public
+#' # mirror -- no drive_auth() needed:
+#' options(reproducible.urlRemap = "arbutus_manifest_SCANFI_v2_clean.csv")
+#' files <- listGoogleDriveFolder("https://drive.google.com/drive/folders/<id>")
+#' spp <- files[grepl("SCANFI_sps", name)]
+#' prepInputs(url = spp$url[[1]], destinationPath = tempdir())
+#' }
+listGoogleDriveFolder <- function(url, pattern = NULL,
+                                  verbose = getOption("reproducible.verbose", 1)) {
+  listUrl <- .driveDirRemap(url)
+  if (!is.na(listUrl)) {
+    messagePreProcess("Listing Google Drive folder from its mirror (no auth):\n  ",
+                      url, "\n  -> ", listUrl, verbose = verbose)
+    bf <- .bucketDirList(listUrl, verbose = verbose)
+    out <- data.table::data.table(name = bf$name, id = NA_character_, url = bf$url)
+  } else {
+    .requireNamespace("googledrive", stopOnFALSE = TRUE)
+    d <- as.data.table(googledrive::with_drive_quiet(
+      googledrive::drive_ls(googledrive::as_id(url))))
+    out <- data.table::data.table(
+      name = d$name, id = d$id,
+      url = paste0("https://drive.google.com/file/d/", d$id))
+  }
+  if (!is.null(pattern) && length(pattern) == 1L && nzchar(pattern)) {
+    out <- out[grepl(pattern, out$name)]
+  }
+  out[]
 }
 
 # Extract a Google Drive file/folder id from a Drive URL or a bare id. Returns
@@ -1693,8 +1844,25 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
           teamDrive <- getTeamDrive(dots)
 
-          if (isGoogleDriveDirectory(url)) {
-            drive_files <- googledrive::drive_ls(googledrive::as_id(url))
+          # If the folder is in the `reproducible.urlRemap` manifest as a
+          # directory remap, enumerate its files from the public bucket listing
+          # (no googledrive auth) instead of drive_ls(); each file then carries
+          # its own mirror URL, downloaded directly below. This is checked first
+          # (and short-circuits) so a manifest-listed folder is recognised as a
+          # directory WITHOUT auth -- `isGoogleDriveDirectory()` on a bare folder
+          # id otherwise calls drive_get(), which needs a token.
+          dirListUrl <- .driveDirRemap(url)
+          fromMirror <- !is.na(dirListUrl)
+          if (fromMirror || isGoogleDriveDirectory(url)) {
+            if (fromMirror) {
+              messagePreProcess("Listing Google Drive folder from its mirror (no auth):\n  ",
+                                url, "\n  -> ", dirListUrl, verbose = verbose)
+              bf <- .bucketDirList(dirListUrl, verbose = verbose)
+              drive_files <- data.frame(name = bf$name, id = bf$url,
+                                        stringsAsFactors = FALSE)
+            } else {
+              drive_files <- googledrive::drive_ls(googledrive::as_id(url))
+            }
             if (!is.null(alsoExtract) && length(alsoExtract) > 0) {
               fileIndex <- seq_len(NROW(drive_files))
               if (length(alsoExtract) > 1)
@@ -1719,14 +1887,23 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
             }
 
             ids <- drive_files$id
-            downloadResults <- lapply(ids, function(ids)
-              dlGoogle(
-                url = ids, archive = archive, # targetFile = targetFile,
-                checkSums = checkSums, messSkipDownload = messSkipDownload, destinationPath = .tempPath,
-                overwrite = overwrite, needChecksums = needChecksums, verbose = verbose,
-                team_drive = teamDrive, ...
-              )
-            )
+            downloadResults <- lapply(ids, function(ids) {
+              if (isTRUE(fromMirror)) {
+                # `ids` is the file's public mirror URL; fetch over plain HTTPS
+                # (no Drive token). dlGeneric() returns only destFile, so add the
+                # needChecksums field to match the dlGoogle() result shape.
+                res <- dlGeneric(url = ids, destinationPath = .tempPath,
+                                 applyRemap = FALSE, verbose = verbose)
+                list(destFile = res$destFile, needChecksums = needChecksums)
+              } else {
+                dlGoogle(
+                  url = ids, archive = archive, # targetFile = targetFile,
+                  checkSums = checkSums, messSkipDownload = messSkipDownload, destinationPath = .tempPath,
+                  overwrite = overwrite, needChecksums = needChecksums, verbose = verbose,
+                  team_drive = teamDrive, ...
+                )
+              }
+            })
             if (length(downloadResults)) {
               downloadResults <- list(destFile = vapply(downloadResults, function(x) x$destFile, FUN.VALUE = character(1)),
                                       needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))

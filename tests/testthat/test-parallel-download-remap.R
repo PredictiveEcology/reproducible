@@ -104,6 +104,130 @@ test_that("makeUrlRemap without an id column behaves exactly as before", {
                     NA_character_))
 })
 
+# --- directory remaps (a Drive folder id -> bucket prefix-listing URL) ---
+
+test_that("makeUrlRemap: a 'type' column routes dir rows to byDir, out of the file maps", {
+  fileId <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  dirId  <- "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi"
+  manifest <- data.frame(
+    filename = c("a.tif", "2020"),
+    url = c("https://mirror/SCANFI_v2/2020/a.tif",
+            "https://mirror/?prefix=SCANFI_v2%2F2020%2F&delimiter=/"),
+    id = c(fileId, dirId),
+    type = c("file", "dir"),
+    stringsAsFactors = FALSE
+  )
+  remap <- reproducible::makeUrlRemap(manifest)
+
+  # the file row still resolves (by name and by id)
+  expect_identical(remap("gd://x", "a.tif"), "https://mirror/SCANFI_v2/2020/a.tif")
+  expect_identical(remap(fileId, NA_character_), "https://mirror/SCANFI_v2/2020/a.tif")
+  # the dir row does NOT pollute the file maps: its folder name/id never remaps
+  # as if it were a single file
+  expect_null(remap("gd://x", "2020"))
+  expect_null(remap(dirId, NA_character_))
+  # ...it lives only in byDir
+  byDir <- attr(remap, "byDir", exact = TRUE)
+  expect_identical(unname(byDir[dirId]),
+                   "https://mirror/?prefix=SCANFI_v2%2F2020%2F&delimiter=/")
+})
+
+test_that(".driveDirRemap resolves a Drive folder url to its listing URL via byDir", {
+  dirId <- "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi"
+  listUrl <- "https://mirror/?prefix=SCANFI_v2%2F2020%2F&delimiter=/"
+  manifest <- data.frame(
+    filename = "2020", url = listUrl, id = dirId, type = "dir",
+    stringsAsFactors = FALSE
+  )
+  withr::local_options(reproducible.urlRemap = manifest)
+  # matches by the id parsed from a /folders/ url, and from a bare id
+  expect_identical(
+    reproducible:::.driveDirRemap(paste0("https://drive.google.com/drive/folders/", dirId)),
+    listUrl)
+  expect_identical(reproducible:::.driveDirRemap(dirId), listUrl)
+  # a folder not in the manifest -> NA
+  expect_true(is.na(reproducible:::.driveDirRemap(
+    "https://drive.google.com/drive/folders/NOPEnopeNOPEnopeNOPEnope12345")))
+})
+
+test_that(".driveDirRemap is NA when no dir rows / no remap is set", {
+  withr::local_options(reproducible.urlRemap = NULL)
+  expect_true(is.na(reproducible:::.driveDirRemap("anything")))
+  # a manifest with only file rows -> no byDir -> NA
+  manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
+                         id = "someid", stringsAsFactors = FALSE)
+  withr::local_options(reproducible.urlRemap = manifest)
+  expect_true(is.na(reproducible:::.driveDirRemap("someid")))
+})
+
+test_that(".bucketDirList parses S3 ListBucketResult <Contents> into name/url/size", {
+  xml <- paste0(
+    "<?xml version=\"1.0\"?><ListBucketResult><Name>predictiveecology</Name>",
+    "<Prefix>SCANFI_v2/2020/</Prefix><Delimiter>/</Delimiter><IsTruncated>false</IsTruncated>",
+    "<Contents><Key>SCANFI_v2/2020/age.tif</Key><Size>123</Size></Contents>",
+    "<Contents><Key>SCANFI_v2/2020/biomass.tif</Key><Size>456</Size></Contents>",
+    "<CommonPrefixes><Prefix>SCANFI_v2/2020/sub/</Prefix></CommonPrefixes>",
+    "</ListBucketResult>")
+  # Write the listing to a dir whose path ends in '/', so the derived file URLs
+  # (<base>/<key>) read like the real https://host/container/<key> form.
+  d <- withr::local_tempdir()
+  base <- paste0(normalizePath(d, winslash = "/"), "/")
+  f <- paste0(base, "listing")              # the "?prefix=..." is dropped by readLines
+  writeLines(xml, f)
+  res <- reproducible:::.bucketDirList(f)
+
+  expect_equal(res$name, c("age.tif", "biomass.tif"))    # CommonPrefixes ignored
+  expect_equal(res$size, c(123, 456))
+  # public file url = <base>/<key>, where <base> is the listUrl up to '?'
+  expect_equal(res$url, paste0(f, c("SCANFI_v2/2020/age.tif",
+                                    "SCANFI_v2/2020/biomass.tif")))
+})
+
+test_that("listGoogleDriveFolder lists from the mirror (no drive_ls) when remapped", {
+  skip_if_not_installed("googledrive")
+  dirId <- "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi"
+  listUrl <- "https://mirror/?prefix=SCANFI_v2%2F2020%2F&delimiter=/"
+  manifest <- data.frame(filename = "2020", url = listUrl, id = dirId, type = "dir",
+                         stringsAsFactors = FALSE)
+  withr::local_options(reproducible.urlRemap = manifest)
+  testthat::local_mocked_bindings(
+    .bucketDirList = function(u, verbose = 1) data.frame(
+      name = c("a.tif", "b.tif"),
+      url = c("https://mirror/SCANFI_v2/2020/a.tif", "https://mirror/SCANFI_v2/2020/b.tif"),
+      size = c(1, 2), stringsAsFactors = FALSE))
+  # the whole point: Drive is never touched (no auth) when the folder is remapped
+  testthat::local_mocked_bindings(
+    drive_ls = function(...) stop("drive_ls must not be called for a remapped folder"),
+    .package = "googledrive")
+
+  out <- reproducible::listGoogleDriveFolder(dirId, verbose = 0)
+  expect_s3_class(out, "data.table")
+  expect_identical(out$name, c("a.tif", "b.tif"))
+  expect_identical(out$url, c("https://mirror/SCANFI_v2/2020/a.tif",
+                              "https://mirror/SCANFI_v2/2020/b.tif"))
+  expect_true(all(is.na(out$id)))
+  # `pattern` filters on name
+  expect_identical(reproducible::listGoogleDriveFolder(dirId, pattern = "^a", verbose = 0)$name,
+                   "a.tif")
+})
+
+test_that("listGoogleDriveFolder falls back to drive_ls (Drive file urls) when not remapped", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.urlRemap = NULL)
+  testthat::local_mocked_bindings(
+    as_id = function(x) x,
+    with_drive_quiet = function(code) code,
+    drive_ls = function(...) data.frame(name = c("x.tif", "y.tif"),
+                                        id = c("ID1", "ID2"), stringsAsFactors = FALSE),
+    .package = "googledrive")
+  out <- reproducible::listGoogleDriveFolder(
+    "https://drive.google.com/drive/folders/SOMEID", verbose = 0)
+  expect_identical(out$name, c("x.tif", "y.tif"))
+  expect_identical(out$id, c("ID1", "ID2"))
+  expect_identical(out$url, c("https://drive.google.com/file/d/ID1",
+                              "https://drive.google.com/file/d/ID2"))
+})
+
 test_that(".remapUrlEarly redirects a Drive URL by id WITHOUT calling assessGoogle", {
   id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
   manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
