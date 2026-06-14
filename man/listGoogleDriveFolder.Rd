@@ -35,14 +35,24 @@ authenticates as usual). It is meant as a near drop-in for the common
 the corresponding \code{url}s to \code{\link[=prepInputs]{prepInputs()}}.
 }
 \examples{
-\dontrun{
-# With a directory-remap manifest set, this lists the folder from the public
-# mirror -- no drive_auth() needed:
-options(reproducible.urlRemap = "arbutus_manifest_SCANFI_v2_clean.csv")
-files <- listGoogleDriveFolder("https://drive.google.com/drive/folders/<id>")
-spp <- files[grepl("SCANFI_sps", name)]
-prepInputs(url = spp$url[[1]], destinationPath = tempdir())
-}
+# A directory-remap manifest maps a Drive *folder* id to a bucket prefix-listing
+# URL; build it with buckethost::makeMirrorManifest(directories = TRUE), or by
+# hand (a `type = "dir"` row):
+manifest <- data.frame(
+  filename = "2020",
+  url = paste0("https://object-arbutus.cloud.computecanada.ca/",
+               "predictiveecology/?prefix=SCANFI_v2/2020/&delimiter=/"),
+  id = "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi",
+  type = "dir"
+)
+remap <- makeUrlRemap(manifest)  # the "dir" row populates the folder-listing map
+
+# Then, with `options(reproducible.urlRemap = manifest)` set, a call such as
+#   files <- listGoogleDriveFolder(
+#     "https://drive.google.com/drive/folders/15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi")
+# lists that folder from the public mirror with no drive_auth(), returning
+# name/id/url columns to feed to prepInputs(); without a manifest it falls back
+# to googledrive::drive_ls() (which authenticates as usual).
 }
 \seealso{
 \code{\link[=makeUrlRemap]{makeUrlRemap()}} for the directory-remap manifest;
