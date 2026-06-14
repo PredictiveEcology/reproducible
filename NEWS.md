@@ -4,6 +4,12 @@
 
 ## bug fixes
 
+* `prepInputsCOG()` (the COG `/vsicurl/` fast-path) now shows terra's native
+  progress bar during the windowed remote read, which previously ran silently
+  for minutes. The windowed crop is written through terra's block loop so the
+  bar advances as remote tiles are fetched; it is shown only when
+  `verbose > 0`.
+
 * A public Google Drive file could still launch an interactive OAuth prompt when
   a service account was configured via the `GOOGLEDRIVE_AUTH` environment variable
   (or any case where "auth is configured" did not mean "auth will actually
@@ -175,7 +181,12 @@
   It now downloads the small per-`cacheId` metadata files (`.dbFile.*`) from the
   cloud folder, folds them into the local cache listing, and follows the normal
   `showSimilar` path. Only metadata files are fetched (not the cached objects),
-  and `cacheId`s already present locally are skipped.
+  `cacheId`s already present locally are skipped, and each remote metadata file
+  is itself wrapped in `Cache()` (keyed by its `cacheId`) so the many `Cache()`
+  calls in a single run (e.g. a module's `.inputObjects`) do not re-download the
+  same `.dbFile` repeatedly across calls or sessions. That memo lives in a
+  dedicated `cloudMeta` sub-cache, so it does not bloat the main cache's
+  `showCache()` scans.
 
 * New option `reproducible.digestVersion` — a single integer that selects the
   `cacheId` (digest) algorithm, replacing the per-version booleans
