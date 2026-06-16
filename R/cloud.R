@@ -156,6 +156,25 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
   return(cloudFolderID)
 }
 
+# Build a server-side Google Drive query (`q`) that narrows a `drive_ls()` to the
+# files we actually want, instead of paging the ENTIRE folder and filtering names
+# locally. An accumulated cloud cache folder can hold thousands of files, so
+# without this every Cache() call pages the whole folder ("Files retrieved so
+# far: 3500 ...") just to keep the handful that share one cacheId.
+#
+# Cache files are all named `<cacheId>...` (the cacheId is a name PREFIX -- see
+# keyInGdriveLs(), which anchors on `^<cacheId>`), and Drive's `name contains`
+# does prefix matching, so a single-token cacheId `pattern` can be pushed to the
+# server. A `pattern` that is a regex (alternation, a suffix such as the dbFile
+# listing, etc.) is NOT a plain prefix -> return NULL and fall back to the full
+# listing + local filter.
+.cloudNamePrefixQuery <- function(pattern) {
+  if (length(pattern) != 1L) return(NULL)
+  if (is.na(pattern) || !nzchar(pattern)) return(NULL)
+  if (!grepl("^[[:alnum:]]+$", pattern)) return(NULL) # regex metachars -> not a plain name prefix
+  sprintf("name contains '%s'", pattern)
+}
+
 driveLs <- function(cloudFolderID = NULL, pattern = NULL, cachePath = getOption("reproducible.cachePath"),
                     verbose = getOption("reproducible.verbose", 1),
                     team_drive = NULL) {
@@ -171,11 +190,16 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL, cachePath = getOption(
     ) # only deals with NULL case
   }
 
+  # `q` is appended to (ANDed with) the parent-folder clause drive_ls() builds, so
+  # the API returns only this cacheId's files rather than the entire folder. NULL
+  # when `pattern` is not a plain prefix (drive_ls(q = NULL) keeps prior behaviour).
+  nameQuery <- .cloudNamePrefixQuery(pattern)
   messageCache("Retrieving file list in cloud folder", verbose = verbose)
   gdriveLs <- retry(quote({
     googledrive::drive_ls(
       path = cloudFolderID, ## TODO: team drives needs a dribble
-      pattern = paste0(collapse = "|", c(pattern))
+      pattern = paste0(collapse = "|", c(pattern)),
+      q = nameQuery
     )
   }))
   if (is(gdriveLs, "try-error")) {

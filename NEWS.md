@@ -4,6 +4,16 @@
 
 ## bug fixes
 
+* `Cache(useCloud = TRUE)` no longer pages the **entire** cloud-cache Google Drive
+  folder on every call. `driveLs()` filtered file names *locally*, so each lookup
+  asked the API for the whole folder (for an accumulated cache that is thousands
+  of files — "Files retrieved so far: 3500 ...") just to keep the handful sharing
+  one `cacheId`. Because cache files are named `<cacheId>...`, the per-`cacheId`
+  lookup now pushes a server-side `name contains '<cacheId>'` query to
+  `googledrive::drive_ls()`, so Drive returns only the relevant files. Listings
+  whose filter is not a plain name prefix (e.g. the `.dbFile.` metadata sweep used
+  by `showSimilar` across machines) fall back to the previous full listing.
+
 * `prepInputsCOG()` (the COG `/vsicurl/` fast-path) now shows terra's native
   progress bar during the windowed remote read, which previously ran silently
   for minutes. The windowed crop is written through terra's block loop so the
