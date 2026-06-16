@@ -93,9 +93,11 @@ test_that(".gdrivePrepareAuth: no token + quiet auth succeeds -> 'token'", {
   expect_false(deauthed)
 })
 
-test_that(".gdrivePrepareAuth: no token + quiet auth fails -> deauthorize, 'anon'", {
+test_that(".gdrivePrepareAuth: no token + quiet fails + NOT configured -> deauthorize, 'anon'", {
   skip_if_not_installed("googledrive")
-  withr::local_options(reproducible.gdriveNoAuth = NULL)
+  # No auth configured (no email, no service account): the public-file reader.
+  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = NULL)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
   deauthed <- FALSE
   testthat::local_mocked_bindings(
     .gdriveHasToken = function() FALSE,
@@ -104,6 +106,26 @@ test_that(".gdrivePrepareAuth: no token + quiet auth fails -> deauthorize, 'anon
                                   .package = "googledrive")
   expect_identical(reproducible:::.gdrivePrepareAuth(), "anon")
   expect_true(deauthed)      # fell back to anonymous/public
+})
+
+test_that(".gdrivePrepareAuth: no token + quiet fails + CONFIGURED -> 'token', NO deauthorize", {
+  skip_if_not_installed("googledrive")
+  # The user has configured auth (gargle email) but the quiet attempt could not
+  # silently load a token (e.g. cached token minted with a now-changed OAuth
+  # client, or a non-interactive session). We must NOT deauthorize: that would
+  # force the metadata read anonymous and 404 the user's private file. Leave
+  # googledrive untouched so the real drive_get()/drive_download() authenticates.
+  withr::local_options(reproducible.gdriveNoAuth = NULL,
+                       gargle_oauth_email = "someone@example.com")
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  deauthed <- FALSE
+  testthat::local_mocked_bindings(
+    .gdriveHasToken = function() FALSE,
+    .gdriveTryAuthQuietly = function() FALSE)
+  testthat::local_mocked_bindings(drive_deauth = function(...) deauthed <<- TRUE,
+                                  .package = "googledrive")
+  expect_identical(reproducible:::.gdrivePrepareAuth(), "token")
+  expect_false(deauthed)     # configured user is NOT downgraded to anonymous
 })
 
 test_that(".gdrivePrepareAuth: gdriveNoAuth=TRUE + no token -> 'anon' without trying auth", {

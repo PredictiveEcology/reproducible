@@ -39,6 +39,18 @@
   is respected, so a missing token loads from cache or completes OAuth — no manual
   `drive_auth()` step needed.
 
+* A further case of that same regression: when a *configured* user's quiet auth
+  attempt could not silently load a token — e.g. the cached token was minted with
+  an OAuth client googledrive has since changed (`tidyverse-erato` → `tidyverse-clio`),
+  or the session is non-interactive — `assessGoogle()` still called
+  `drive_deauth()` and read anonymously, 404ing their private file ("File not
+  found") and poisoning later `googledrive` calls. `.gdrivePrepareAuth()` now
+  deauthorizes **only** when auth is *not* configured (the public-file reader) or
+  `reproducible.gdriveNoAuth = TRUE`. A configured user whose quiet attempt fails
+  is left untouched, so the real `drive_get()`/`drive_download()` runs its normal
+  auth — completing OAuth in an interactive session, or raising gargle's clear
+  "non-interactive auth" error instead of a misleading 404.
+
 ## new features
 
 * `reproducible.urlRemap` manifests may now carry an optional **`id` column** (the
