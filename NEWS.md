@@ -4,18 +4,21 @@
 
 ## bug fixes
 
-* `prepInputs()` no longer authenticates to Google Drive as a **service account**
-  when the user has also configured a personal OAuth identity. If `GOOGLEDRIVE_AUTH`
-  (or `GARGLE_SERVICE_ACCOUNT`) named a service-account JSON — commonly set
-  globally in `.Renviron` for a storage bucket or CI — `.gdriveTryAuthQuietly()`
-  preferred it over a configured `gargle_oauth_email`. It then authenticated as the
-  service account, which usually cannot see the user's *personal* Drive files, so a
-  file the user owns came back as a `404 "File not found"` (and the service-account
-  token, left loaded globally, broke every later `googledrive` call in the session).
-  A configured `gargle_oauth_email` now takes precedence and authenticates as the
-  user; the service account is used only when it is the sole configured identity
-  (no OAuth email — the headless case). This makes `prepInputs()` perform the
-  authentication itself from the gargle options, with no manual `drive_auth()` step.
+* `prepInputs()` now establishes Google Drive auth with a **verified fallback
+  cascade** instead of guessing from gargle options. For a configured identity it
+  no longer assumes "an email is set" means it works; it authenticates and then
+  *probes the actual file* (`drive_get()`), accepting an identity only when it can
+  read that resource. Order: a token already loaded (manual `drive_auth()`) wins;
+  otherwise a configured `gargle_oauth_email` (the user's *personal* Drive — common
+  case), then a service-account JSON named by `GOOGLEDRIVE_AUTH` /
+  `GARGLE_SERVICE_ACCOUNT`, then anonymous/public. A rung whose prerequisite is
+  absent (no email option, no service-account file) is skipped; an identity that
+  authenticates but cannot read the file is deauthorized before the next is tried,
+  so a service-account token never poisons later `googledrive` calls. Each trial is
+  silent and non-interactive (no OAuth prompt mid-cascade); one `Trying …` line per
+  rung is emitted at `verbose`. This fixes a configured service account (often set
+  globally in `.Renviron` for a bucket or CI) shadowing the user's own files with a
+  `404 "File not found"`.
 
 * `Cache(useCloud = TRUE)` no longer pages the **entire** cloud-cache Google Drive
   folder on every call. `driveLs()` filtered file names *locally*, so each lookup
