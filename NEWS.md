@@ -4,6 +4,19 @@
 
 ## bug fixes
 
+* `prepInputs()` no longer authenticates to Google Drive as a **service account**
+  when the user has also configured a personal OAuth identity. If `GOOGLEDRIVE_AUTH`
+  (or `GARGLE_SERVICE_ACCOUNT`) named a service-account JSON — commonly set
+  globally in `.Renviron` for a storage bucket or CI — `.gdriveTryAuthQuietly()`
+  preferred it over a configured `gargle_oauth_email`. It then authenticated as the
+  service account, which usually cannot see the user's *personal* Drive files, so a
+  file the user owns came back as a `404 "File not found"` (and the service-account
+  token, left loaded globally, broke every later `googledrive` call in the session).
+  A configured `gargle_oauth_email` now takes precedence and authenticates as the
+  user; the service account is used only when it is the sole configured identity
+  (no OAuth email — the headless case). This makes `prepInputs()` perform the
+  authentication itself from the gargle options, with no manual `drive_auth()` step.
+
 * `Cache(useCloud = TRUE)` no longer pages the **entire** cloud-cache Google Drive
   folder on every call. `driveLs()` filtered file names *locally*, so each lookup
   asked the API for the whole folder (for an accumulated cache that is thousands

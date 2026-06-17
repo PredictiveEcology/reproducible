@@ -634,32 +634,46 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 }
 
 # Attempt googledrive authentication on the user's behalf (no manual
-# `drive_auth()` step required). In order:
-#   1. a service-account JSON in `GOOGLEDRIVE_AUTH` (reproducible's convention) or
-#      `GARGLE_SERVICE_ACCOUNT` -- `drive_auth(path = ...)`, fully non-interactive;
-#   2. otherwise a cached user token -- `drive_auth()`.
+# `drive_auth()` step required). Precedence:
+#   1. a configured gargle OAuth email (`gargle_oauth_email`) -- `drive_auth()`,
+#      which authenticates AS THAT USER. This wins over a service account, because
+#      the email is the user's explicit identity, whereas `GOOGLEDRIVE_AUTH` /
+#      `GARGLE_SERVICE_ACCOUNT` is frequently set globally (e.g. in `.Renviron`)
+#      for *other* resources -- a storage bucket, a CI job -- and that service
+#      account typically CANNOT see the user's personal Drive files, so
+#      authenticating as it 404s them ("File not found"). Letting the SA override a
+#      set email was a real bug: the user's own private file became inaccessible.
+#   2. otherwise a service-account JSON in `GOOGLEDRIVE_AUTH` (reproducible's
+#      convention) or `GARGLE_SERVICE_ACCOUNT` -- `drive_auth(path = ...)`, fully
+#      non-interactive (the headless case with no user email).
+#   3. otherwise a plain `drive_auth()` (cached token / interactive OAuth).
 # Whether a *missing* token may launch OAuth depends on whether the user has
-# *configured* auth: a service account, or a gargle OAuth email
-# (`gargle_oauth_email`). When configured, the session's own interactivity is
-# respected, so a user whose email is set but who has not yet run `drive_auth()`
-# completes the normal OAuth flow (or silently loads a cached token) -- rather than
-# being forced quietly to failure and downgraded to an anonymous 404 on their
-# private files. When NOT configured, `rlang_interactive` is forced FALSE so a
+# *configured* auth (a service account or an email). When configured, the session's
+# own interactivity is respected, so a user whose email is set but who has not yet
+# run `drive_auth()` completes the normal OAuth flow (or silently loads a cached
+# token) -- rather than being forced quietly to failure and downgraded to an
+# anonymous 404. When NOT configured, `rlang_interactive` is forced FALSE so a
 # missing token errors *quietly* instead of prompting -- the public-file case must
 # never see an OAuth prompt. Either way a failure returns FALSE (caller then reads
 # the public file anonymously). Plain `drive_auth()` does NOT itself consult
-# `GOOGLEDRIVE_AUTH` (reproducible's own env var), so step 1 is what honours a
+# `GOOGLEDRIVE_AUTH` (reproducible's own env var), so step 2 is what honours a
 # configured service account. Returns TRUE iff a token is loaded afterwards.
 .gdriveTryAuthQuietly <- function() {
   if (!requireNamespace("googledrive", quietly = TRUE)) return(FALSE)
   saPath <- Sys.getenv("GOOGLEDRIVE_AUTH", Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
   hasSA <- nzchar(saPath) && file.exists(path.expand(saPath))
+  email <- getOption("gargle_oauth_email")
+  hasEmail <- (is.character(email) && length(email) == 1L && !is.na(email) && nzchar(email)) ||
+    isTRUE(email)
+  # The service account is used ONLY when it is the sole configured identity (no
+  # OAuth email); a set email always authenticates as the user.
+  useSA <- hasSA && !hasEmail
   if (!.gdriveAuthConfigured()) {
     op <- options(rlang_interactive = FALSE)
     on.exit(options(op), add = TRUE)
   }
   isTRUE(tryCatch({
-    if (hasSA) {
+    if (useSA) {
       suppressMessages(googledrive::drive_auth(path = path.expand(saPath)))
     } else {
       suppressMessages(googledrive::drive_auth())

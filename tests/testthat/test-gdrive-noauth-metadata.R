@@ -21,6 +21,28 @@ test_that(".gdriveTryAuthQuietly authenticates via a service-account JSON when p
                    normalizePath(sa, mustWork = FALSE))
 })
 
+test_that(".gdriveTryAuthQuietly: a configured OAuth email WINS over a service account", {
+  skip_if_not_installed("googledrive")
+  # Both a service-account JSON (GOOGLEDRIVE_AUTH -- often set globally in
+  # .Renviron for a storage bucket / CI) AND a gargle OAuth email are present. The
+  # email is the user's explicit identity and MUST win: authenticating as the
+  # service account 404s the user's own private Drive files (the SA cannot see
+  # them). This is the regression behind "prepInputs 404s a file I have access to".
+  sa <- withr::local_tempfile(fileext = ".json")
+  writeLines("{}", sa)                        # a file that exists
+  withr::local_envvar(GOOGLEDRIVE_AUTH = sa, GARGLE_SERVICE_ACCOUNT = "")
+  withr::local_options(gargle_oauth_email = "eliot@example.com")
+
+  usedServiceAccountPath <- NA
+  testthat::local_mocked_bindings(
+    drive_auth = function(...) { usedServiceAccountPath <<- !is.null(list(...)$path); invisible() },
+    drive_has_token = function(...) TRUE,
+    .package = "googledrive"
+  )
+  expect_true(reproducible:::.gdriveTryAuthQuietly())
+  expect_false(usedServiceAccountPath)        # plain drive_auth() (user OAuth), NOT drive_auth(path = SA)
+})
+
 test_that(".gdriveTryAuthQuietly fails QUIETLY (no prompt) when no token is available", {
   skip_if_not_installed("googledrive")
   withr::local_options(gargle_oauth_email = NULL)
