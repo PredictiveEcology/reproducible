@@ -618,6 +618,21 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(tryCatch(googledrive::drive_has_token(), error = function(e) FALSE))
 }
 
+# Has the user CONFIGURED googledrive auth, i.e. does the session signal an
+# intent to authenticate (as opposed to a pure public-file reader)? TRUE when
+# either a service-account JSON is named (reproducible's `GOOGLEDRIVE_AUTH` or
+# `GARGLE_SERVICE_ACCOUNT`) or a gargle OAuth email (`gargle_oauth_email`) is set.
+# Used to decide (a) whether a missing-token auth attempt may run interactively,
+# and (b) whether a FAILED attempt falls back to anonymous/public access or holds
+# out for real authentication -- a configured user must never be silently
+# downgraded to an anonymous 404 on their private files.
+.gdriveAuthConfigured <- function() {
+  saPath <- Sys.getenv("GOOGLEDRIVE_AUTH", Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
+  hasSA <- nzchar(saPath) && file.exists(path.expand(saPath))
+  email <- getOption("gargle_oauth_email")
+  hasSA || (!is.null(email) && !isFALSE(email))
+}
+
 # Attempt googledrive authentication on the user's behalf (no manual
 # `drive_auth()` step required). In order:
 #   1. a service-account JSON in `GOOGLEDRIVE_AUTH` (reproducible's convention) or
@@ -639,9 +654,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   if (!requireNamespace("googledrive", quietly = TRUE)) return(FALSE)
   saPath <- Sys.getenv("GOOGLEDRIVE_AUTH", Sys.getenv("GARGLE_SERVICE_ACCOUNT", ""))
   hasSA <- nzchar(saPath) && file.exists(path.expand(saPath))
-  email <- getOption("gargle_oauth_email")
-  authConfigured <- hasSA || (!is.null(email) && !isFALSE(email))
-  if (!authConfigured) {
+  if (!.gdriveAuthConfigured()) {
     op <- options(rlang_interactive = FALSE)
     on.exit(options(op), add = TRUE)
   }
@@ -656,23 +669,37 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 }
 
 # Establish the googledrive auth state for a metadata/download operation, NEVER
-# prompting, and report which path to take ("token" or "anon"):
+# prompting unprompted, and report which path the metadata read should take
+# ("token" or "anon"):
 #   * a token is already loaded            -> "token" (works public + private);
 #   * `reproducible.gdriveNoAuth = TRUE`    -> deauthorize, "anon" (public only);
-#   * otherwise *try* to authenticate (a cached token / service account loads
-#     silently; a configured-but-uncached user completes OAuth -- see
-#     `.gdriveTryAuthQuietly()`). If that succeeds -> "token"; if it fails (nothing
-#     usable, and an unconfigured session never prompts) -> deauthorize and "anon"
-#     (read the PUBLIC file).
+#   * otherwise *try* to authenticate quietly (a cached token / service account
+#     loads silently; a configured + interactive session completes OAuth -- see
+#     `.gdriveTryAuthQuietly()`). If that succeeds -> "token".
+#   * if the quiet attempt FAILS, the fallback depends on whether auth is
+#     CONFIGURED (`.gdriveAuthConfigured()`):
+#       - configured (email / service account): the user intends to authenticate,
+#         so do NOT deauthorize -> "token". Deauthorizing would force the metadata
+#         read anonymous, turning a private file into a misleading 404 ("File not
+#         found") and poisoning later googledrive calls in the session. Leaving
+#         googledrive untouched lets the subsequent `drive_get()`/`drive_download()`
+#         run its normal auth: load a cached token, complete OAuth interactively,
+#         or raise gargle's own clear "non-interactive auth" error -- not a 404.
+#       - not configured (the typical public-file reader): deauthorize -> "anon",
+#         so the read uses an API key and never prompts.
 # This replaces guessing from gargle options ("is an email set?") with an actual
-# attempt -- so a public file always resolves with no prompt, while a configured
-# user authenticates for their private files instead of silently going anonymous.
+# attempt -- so a public file resolves with no prompt, while a configured user
+# authenticates for their private files instead of silently going anonymous.
 .gdrivePrepareAuth <- function() {
   if (!requireNamespace("googledrive", quietly = TRUE)) return("anon")
   if (.gdriveHasToken()) return("token")
-  if (!isTRUE(getOption("reproducible.gdriveNoAuth", FALSE)) && isTRUE(.gdriveTryAuthQuietly())) {
-    return("token")
+  if (isTRUE(getOption("reproducible.gdriveNoAuth", FALSE))) {
+    try(googledrive::drive_deauth(), silent = TRUE)
+    return("anon")
   }
+  if (isTRUE(.gdriveTryAuthQuietly())) return("token")
+  # Quiet attempt did not load a token.
+  if (isTRUE(.gdriveAuthConfigured())) return("token")
   try(googledrive::drive_deauth(), silent = TRUE)
   "anon"
 }
