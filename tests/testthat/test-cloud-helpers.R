@@ -9,6 +9,42 @@ test_that("isID rejects strings outside the 32-33 length window", {
   expect_false(reproducible:::isID(""))
 })
 
+test_that(".cloudNamePrefixQuery pushes a single cacheId to the server, NULL otherwise", {
+  # A plain cacheId (the per-Cache lookup) is a name PREFIX -> a `name contains`
+  # query so Drive returns only that cacheId's files, not the whole folder.
+  expect_identical(reproducible:::.cloudNamePrefixQuery("bedb839348d3b36e"),
+                   "name contains 'bedb839348d3b36e'")
+  # Not prefix-safe -> NULL (fall back to full listing + local filter):
+  expect_null(reproducible:::.cloudNamePrefixQuery(".dbFile."))          # a suffix / has metachars
+  expect_null(reproducible:::.cloudNamePrefixQuery("tagA|tagB"))         # regex alternation
+  expect_null(reproducible:::.cloudNamePrefixQuery(c("a", "b")))         # more than one token
+  expect_null(reproducible:::.cloudNamePrefixQuery(NULL))
+  expect_null(reproducible:::.cloudNamePrefixQuery(NA_character_))
+  expect_null(reproducible:::.cloudNamePrefixQuery(""))
+})
+
+test_that("driveLs scopes a cacheId lookup server-side (q), and not a regex pattern", {
+  skip_if_not_installed("googledrive")
+  # Capture the args drive_ls() is called with, without hitting the network.
+  seenQ <- new.env()
+  fakeLs <- function(path, pattern, q, ...) {
+    seenQ$q <- q
+    seenQ$pattern <- pattern
+    googledrive::as_dribble()        # empty dribble (0 rows)
+  }
+  testthat::local_mocked_bindings(drive_ls = fakeLs, .package = "googledrive")
+
+  folder <- googledrive::as_dribble() # an (empty) tbl, so checkAndMakeCloudFolderID is skipped
+
+  # cacheId lookup -> server-side `name contains` query
+  reproducible:::driveLs(folder, pattern = "bedb839348d3b36e", verbose = -1)
+  expect_identical(seenQ$q, "name contains 'bedb839348d3b36e'")
+
+  # dbFile-suffix listing -> no server query (NULL); full listing + local filter
+  reproducible:::driveLs(folder, pattern = reproducible:::suffixMultipleDBFiles(), verbose = -1)
+  expect_null(seenQ$q)
+})
+
 test_that("isOrHasRaster identifies a SpatRaster", {
   skip_if_not_installed("terra")
   r <- terra::rast(terra::ext(0, 1, 0, 1), vals = 1)
