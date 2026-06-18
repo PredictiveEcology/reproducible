@@ -4,6 +4,22 @@
 
 ## bug fixes
 
+* `prepInputs()` now establishes Google Drive auth with a **verified fallback
+  cascade** instead of guessing from gargle options. For a configured identity it
+  no longer assumes "an email is set" means it works; it authenticates and then
+  *probes the actual file* (`drive_get()`), accepting an identity only when it can
+  read that resource. Order: a token already loaded (manual `drive_auth()`) wins;
+  otherwise a configured `gargle_oauth_email` (the user's *personal* Drive — common
+  case), then a service-account JSON named by `GOOGLEDRIVE_AUTH` /
+  `GARGLE_SERVICE_ACCOUNT`, then anonymous/public. A rung whose prerequisite is
+  absent (no email option, no service-account file) is skipped; an identity that
+  authenticates but cannot read the file is deauthorized before the next is tried,
+  so a service-account token never poisons later `googledrive` calls. Each trial is
+  silent and non-interactive (no OAuth prompt mid-cascade); one `Trying …` line per
+  rung is emitted at `verbose`. This fixes a configured service account (often set
+  globally in `.Renviron` for a bucket or CI) shadowing the user's own files with a
+  `404 "File not found"`.
+
 * `cliCol()` (used by `messageColoured()` / `messagePreProcess()`) no longer errors with
   "non-character object(s)" when a `reproducible.messageColour*` option holds a colour
   *function* (e.g. `cli::col_red`) rather than a colour-name string; such functions now
