@@ -508,6 +508,8 @@ messageStripColor <- function(o)
 .txtUnableToAccessIndex <- "unable to access index"
 
 cliCol <- function(col) {
+  if (is.function(col)) # `messageColour*` options may hold a colour function directly
+    return(col)
   if (!startsWith(col, "col_"))
     col <- paste0("col_", col)
   getFromNamespace(col, asNamespace("cli"))
