@@ -4,6 +4,10 @@
 
 ## bug fixes
 
+* `cliCol()` (used by `messageColoured()` / `messagePreProcess()`) no longer errors with
+  "non-character object(s)" when a `reproducible.messageColour*` option holds a colour
+  *function* (e.g. `cli::col_red`) rather than a colour-name string; such functions now
+  pass through unchanged.
 * `Cache(useCloud = TRUE)` no longer pages the **entire** cloud-cache Google Drive
   folder on every call. `driveLs()` filtered file names *locally*, so each lookup
   asked the API for the whole folder (for an accumulated cache that is thousands

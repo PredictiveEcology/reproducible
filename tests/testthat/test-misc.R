@@ -1,3 +1,11 @@
+test_that("cliCol accepts colour names and colour functions", {
+  ## colour-name string (the default `messageColour*` option form)
+  expect_identical(cliCol("red"), cliCol("col_red"))
+  ## a colour function held directly in the option must pass through untouched,
+  ## not be fed to startsWith() (which errors with "non-character object(s)")
+  expect_identical(cliCol(cli::col_red), cli::col_red)
+})
+
 test_that("test miscellaneous fns (part 1)", {
   # ONLY RELEVANT FOR RASTERS
   testInit("raster", tmpFileExt = c(".tif", ".grd"))
