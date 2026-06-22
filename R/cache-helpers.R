@@ -420,7 +420,10 @@ nextNumericName <- function(string) {
   theExt <- fileExt(string)
   saveFilenameSansExt <- filePathSansExt(string)
   finalNumericPattern <- "_[[:digit:]]+$"
-  allSimilarFilesInDir <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
+
+  fns <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
+  allSimilarFilesInDir <- fns[grepl(paste0("^", basename(saveFilenameSansExt), "(_[0-9]+)?$"),
+                                    sub("\\..*$", "", fns))]
   allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
     unique(saveFilenameSansExt)
   } else {
