@@ -26,19 +26,19 @@ jobs:
 
     steps:
       - name: Checkout reproducible
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: reproducible
 
       - name: Checkout SpaDES.core
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: PredictiveEcology/SpaDES.core
           ref: development
           path: SpaDES.core
 
       - name: Checkout SpaDES.project
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: PredictiveEcology/SpaDES.project
           ref: development

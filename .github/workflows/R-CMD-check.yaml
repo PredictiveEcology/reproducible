@@ -47,7 +47,7 @@ jobs:
       R_PKG_INSTALL_RETRIES: 3
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # setup-pandoc occasionally fails with HTTP 5xx (CDN blip).
       # Three attempts with continue-on-error ride out transient failures.
