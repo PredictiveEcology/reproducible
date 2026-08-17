@@ -236,6 +236,19 @@ downloadFile <- function(archive, targetFile, neededFiles,
                   } else {
                     ""
                   }
+                  # CRAN policy: fail gracefully if the resource "has changed".
+                  # A checksum mismatch means the remote file differs from what
+                  # is expected; inside a test *on CRAN*, abort the remainder of
+                  # the block via skip() rather than stop() (see dlErrorHandling()
+                  # for the matching "not available" case, and for the rationale
+                  # behind the NOT_CRAN gate). Elsewhere, fall through to the
+                  # informative stop() below.
+                  if (requireNamespace("testthat", quietly = TRUE) && testthat::is_testing() &&
+                      !identical(Sys.getenv("NOT_CRAN"), "true")) {
+                    testthat::skip(paste0("Downloaded ", url, " no longer matches its expected ",
+                                          "checksum (resource changed); skipping remainder of ",
+                                          "test on CRAN (policy: fail gracefully)"))
+                  }
                   stop(
                     "\nDownloaded version of ",
                     normPath(fileToDownload),
@@ -2252,6 +2265,23 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
   }
 
   if (failed >= numTries) {
+    # CRAN policy: "Packages which use Internet resources should fail gracefully
+    # with an informative message if the resource is not available or has changed
+    # (and not give a check warning nor error)." When this terminal download
+    # failure happens while running a test *on CRAN*, abort the remainder of that
+    # test block via skip() rather than stop(). This needs no pre-flight internet
+    # check (we only get here after a real download attempt has failed), and it
+    # unwinds the call stack before any downstream code (checksums, postProcess,
+    # ...) can choke on the missing file. The NOT_CRAN gate mirrors
+    # testthat::skip_on_cran(): where NOT_CRAN == "true" (local dev, covr and
+    # downstream GHA workflows) a genuine download failure still surfaces as an
+    # error, so regressions are not masked. Outside of tests (normal use) the
+    # is_testing() gate is FALSE, so production behaviour is unchanged.
+    if (requireNamespace("testthat", quietly = TRUE) && testthat::is_testing() &&
+        !identical(Sys.getenv("NOT_CRAN"), "true")) {
+      testthat::skip(paste0("Download of ", url, " failed or is unavailable; ",
+                            "skipping remainder of test on CRAN (policy: fail gracefully)"))
+    }
     isGID <- all(grepl("^[A-Za-z0-9_-]{33}$", url), # Has 33 characters as letters, numbers or - or _
                  !grepl("\\.[^\\.]+$", url)) # doesn't have an extension
     if (isGID) {
