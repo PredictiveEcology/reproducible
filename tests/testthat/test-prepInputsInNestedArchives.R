@@ -2,7 +2,7 @@ test_that("prepInputs in a simple one double nested zip file, passing only desti
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
 
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterNested.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterNested.zip"
   noisyOutput <- capture.output({
     testZip <- reproducible::prepInputs(url = url, destinationPath = tmpdir)
   })
@@ -13,7 +13,7 @@ test_that("prepInputs in a simple one double nested zip file, passing targetFile
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
 
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterNested.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterNested.zip"
   noisyOutput <- capture.output({
     testZip2 <- reproducible::prepInputs(
       url = url,
@@ -28,7 +28,7 @@ test_that("prepInputs in a two files double nested zip file, passing only destin
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
 
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/multiFilesOutter.zip"
   noisyOutput <- capture.output({
     testZip3 <- reproducible::prepInputs(url = url, destinationPath = tmpdir)
   })
@@ -39,7 +39,7 @@ test_that("prepInputs in a two files double nested zip file, passing targetFile"
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
 
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesOutter.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/multiFilesOutter.zip"
   noisyOutput <- capture.output({
     testZip4 <- reproducible::prepInputs(
       url = url,
@@ -60,7 +60,7 @@ test_that(
     testInit("terra", needInternet = TRUE)
 
     # Gets the first file it finds, the shapefile; warns the user about it
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
+    url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/multiFilesMultiLevels.zip"
     # The warning is about the .prj file missing, which is not relevant here -
     #   Capture it and do nothing with it
     noisyOutput <- capture.output({
@@ -82,7 +82,7 @@ test_that(
     skip_on_cran()
     testInit("terra", needInternet = TRUE)
 
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/multiFilesMultiLevels.zip"
+    url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/multiFilesMultiLevels.zip"
     noisyOutput <- capture.output({
       testZip7 <- reproducible::prepInputs(
         url = url,
@@ -108,7 +108,7 @@ test_that(
 
     noisyOutput <- capture.output({
       testRar <- reproducible::prepInputs(
-        url = "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar",
+        url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/nestedRarTxtFiles.rar",
         destinationPath = tmpdir
       )
     })
@@ -128,7 +128,7 @@ test_that(
     skip_on_os("mac") ## TODO: deal with unrar for macOS #266
 
     testInit("terra", needInternet = TRUE)
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
+    url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/nestedRarTxtFiles.rar"
 
     noisyOutput <- capture.output({
       testRar2 <- reproducible::prepInputs(
@@ -154,7 +154,7 @@ test_that(
 
     testInit("terra", needInternet = TRUE)
 
-    url <- "https://github.com/tati-micheletti/host/raw/master/data/nestedRarTxtFiles.rar"
+    url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/nestedRarTxtFiles.rar"
 
     noisyOutput <- capture.output({
       testRar3 <- reproducible::prepInputs(
@@ -177,7 +177,7 @@ test_that("prepInputs works with nested rar file inside internal rar folder", {
 
   testInit("terra", needInternet = TRUE)
 
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/testRasterNested.rar"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/testRasterNested.rar"
   # extractSystemCallPath <- .archiveExtractBinary()
   # if (is.null(extractSystemCallPath)) {
   #   noisyOutput <- capture.output(

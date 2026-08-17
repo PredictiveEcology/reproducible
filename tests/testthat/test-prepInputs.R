@@ -1746,7 +1746,7 @@ test_that("options inputPaths", {
   } else {
     "rasterTest.tif"
   }
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+  url2 <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.tif"
 
   mess1 <- capture_messages({
     test1 <- try(prepInputs(

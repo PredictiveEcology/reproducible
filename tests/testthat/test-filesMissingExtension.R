@@ -5,7 +5,7 @@ test_that("prepInputs works with NULL archive + file without extension, but orig
     noisyOutput <- capture.output({
       testthat::expect_message({
         ras <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
+          url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/unknownExtension",
           alsoExtract = "similar",
           destinationPath = tempdir2(rndstr(1, 6))
         )
@@ -22,7 +22,7 @@ test_that("prepInputs WORKS if the file is not originally a .zip, but archive is
     noisyOutput <- capture.output(
       testthat::expect_message({
         ras <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTAR",
+          url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/unknownTAR",
           alsoExtract = "similar", archive = "unknownTAR.tar",
           destinationPath = tempdir2(rndstr(1, 6))
         )
@@ -40,7 +40,7 @@ test_that("prepInputs WORKS if passing archive .zip", {
     noisyOutput <- capture.output(
       testthat::expect_message({
         ras <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
+          url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/unknownExtension",
           archive = "unknownExtension.zip",
           alsoExtract = "similar", destinationPath = tempdir2(rndstr(1, 6))
         )
@@ -57,7 +57,7 @@ test_that("prepInputs WORKS passing just targetFile that is NOT an archive", {
     noisyOutput <- capture.output({
       testthat::expect_message({
         ras <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/unknownTIF",
+          url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/unknownTIF",
           alsoExtract = "similar", targetFile = "unknownTIF.tif",
           destinationPath = tempdir2(rndstr(1, 6))
         )
@@ -75,7 +75,7 @@ test_that("prepInputs WORKS passing archive + targetFile", {
     noisyOutput <- capture.output({
       testthat::expect_message({
         ras <- reproducible::prepInputs(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/unknownExtension",
+          url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/unknownExtension",
           archive = "unknownExtension.zip", targetFile = "rasterTest.tif",
           alsoExtract = "similar",
           destinationPath = tempdir2(rndstr(1, 6))

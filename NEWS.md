@@ -14,6 +14,12 @@
   downstream CI) a genuine failure still surfaces as an error, so regressions are
   not masked; and outside tests (normal use) the informative `stop()` is unchanged.
 
+* Test fixtures that were downloaded from a third-party personal repository
+  (`github.com/tati-micheletti/host`, the source whose intermittent unavailability
+  led to the CRAN check failure) are now hosted as release assets on
+  `PredictiveEcology/reproducible` (the `v3.1.1` release), a location under this
+  project's control.
+
 * `prepInputs()` now establishes Google Drive auth with a **verified fallback
   cascade** instead of guessing from gargle options. For a configured identity it
   no longer assumes "an email is set" means it works; it authenticates and then

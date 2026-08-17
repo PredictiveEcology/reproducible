@@ -508,13 +508,13 @@ crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
   )
 }
 
-theRasterTests <- "https://github.com/tati-micheletti/host/raw/master/data/"
+theRasterTests <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/"
 theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }
-theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
-theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.rar"
-theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tar"
+theRasterTestZip <- theRasterTestFilename(theRasterTests, "zip") # "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.zip"
+theRasterTestRar <- theRasterTestFilename(theRasterTests, "rar") # "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.rar"
+theRasterTestTar <- theRasterTestFilename(theRasterTests, "tar") # "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.tar"
 
 
 runTestsWithTimings <- function(nameOfOuterList = "ff", envir = parent.frame(), authorizeGoogle = FALSE) {
