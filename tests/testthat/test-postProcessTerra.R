@@ -11,6 +11,10 @@ test_that("testing terra", {
   withr::local_options(reproducible.cachePath = tmpCache)
 
   skip_if_not_installed("terra")
+  # This test opts into the qs2 cache save format (reproducible.cacheSaveFormat
+  # above); skip where qs2 is unavailable (e.g. the macOS runner) rather than
+  # erroring in Cache() -> .requireNamespace(.qs2Format, stopOnFALSE = TRUE).
+  skip_if_not_installed("qs2")
   f <- system.file("ex/elev.tif", package = "terra")
   tf <- tempfile(fileext = ".tif")
   tf1 <- tempfile(fileext = ".tif")
