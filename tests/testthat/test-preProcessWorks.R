@@ -307,7 +307,7 @@ test_that("preProcess works, but gives a warning when supplying pkg", {
 test_that("message when files from archive are already present", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(
       ras <- reproducible::preProcess(
@@ -325,7 +325,7 @@ test_that("message when files from archive are already present", {
 test_that("message when file is a shapefile", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/shapefileTest.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(testthat::expect_message({
       ras <- reproducible::preProcess(url = url, destinationPath = tmpdir)
@@ -336,7 +336,7 @@ test_that("message when file is a shapefile", {
 test_that("preProcess succeeds when targetFile extension is unknown", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/unknownTargetFile.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/unknownTargetFile.zip"
   # preProcess does not load the object, so an unrecognised extension should
   # not error; funChar is left NULL and the file is still extracted.
   noisyOutput <- capture.output(
@@ -351,7 +351,7 @@ test_that("preProcess succeeds when targetFile extension is unknown", {
 test_that("When supplying two files without archive, when archive and files have different names", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/twoKnownFiles.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/twoKnownFiles.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(testthat::expect_error({
       ras <- reproducible::preProcess(
@@ -366,7 +366,7 @@ test_that("When supplying two files without archive, when archive and files have
 test_that("message when archive has two known files (raster and shapefile)", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/knownFiles.zip"
   noisyOutput <- capture.output(
     ccc <- testthat::capture_output(testthat::expect_error({
       ras <- reproducible::preProcess(
@@ -382,7 +382,7 @@ test_that("message when archive has two known files (raster and shapefile)", {
 test_that("message when extracting a file that is already present", {
   skip_on_cran()
   testInit("terra", needInternet = TRUE)
-  url1 <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.zip"
+  url1 <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.zip"
   noisyOutput <- capture.output({
     ccc <- testthat::capture_output({
       ras <- reproducible::preProcess(
@@ -392,13 +392,13 @@ test_that("message when extracting a file that is already present", {
       )
     })
   })
-  url2 <- "https://github.com/tati-micheletti/host/raw/master/data/shapefileTest.zip"
+  url2 <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/shapefileTest.zip"
   noisyOutput <- capture.output({
     ccc <- testthat::capture_output({
       shp <- reproducible::preProcess(url = url2, destinationPath = tmpdir)
     })
   })
-  url3 <- "https://github.com/tati-micheletti/host/raw/master/data/knownFiles.zip"
+  url3 <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/knownFiles.zip"
   noisyOutput <- capture.output({
     ccc <- testthat::capture_output({
       testthat::expect_message({

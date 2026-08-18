@@ -1605,7 +1605,7 @@ test_that("test cache; SpatRaster attributes", {
   dPath <- file.path(tmpdir, "inputs")
 
   targetFile <- "rasterTest.tif"
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest.tif"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest.tif"
 
   testFun <- function(url, targetFile) {
     ras <- prepInputs(

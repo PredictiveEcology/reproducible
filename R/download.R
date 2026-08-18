@@ -236,6 +236,19 @@ downloadFile <- function(archive, targetFile, neededFiles,
                   } else {
                     ""
                   }
+                  # CRAN policy: fail gracefully if the resource "has changed".
+                  # A checksum mismatch means the remote file differs from what
+                  # is expected; inside a test *on CRAN*, abort the remainder of
+                  # the block via skip() rather than stop() (see dlErrorHandling()
+                  # for the matching "not available" case, and for the rationale
+                  # behind reading TESTTHAT/NOT_CRAN directly). Elsewhere, fall
+                  # through to the informative stop() below.
+                  if (identical(Sys.getenv("TESTTHAT"), "true") &&
+                      !identical(Sys.getenv("NOT_CRAN"), "true")) {
+                    testthat::skip(paste0("Downloaded ", url, " no longer matches its expected ",
+                                          "checksum (resource changed); skipping remainder of ",
+                                          "test on CRAN (policy: fail gracefully)"))
+                  }
                   stop(
                     "\nDownloaded version of ",
                     normPath(fileToDownload),
@@ -2237,6 +2250,30 @@ on.exit2 <- function(expr, envir = sys.frame(-2), add = TRUE, after = TRUE) {
 
 dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, url,
                             fileToDownload, destinationPath, targetFile, checksumFile, verbose) {
+  # CRAN policy: "Packages which use Internet resources should fail gracefully
+  # with an informative message if the resource is not available or has changed
+  # (and not give a check warning nor error)." dlErrorHandling() is only reached
+  # after a real download attempt has failed, so when that happens while running
+  # a test *on CRAN*, abort the remainder of that test block via skip() rather
+  # than stop(). This must come before the message-specific stop()s below (e.g.
+  # the "install httr2" path, which fires on the first attempt) so that no
+  # download failure escapes as an error. skip() unwinds the call stack before
+  # any downstream code (checksums, postProcess, ...) can choke on the missing
+  # file, and needs no pre-flight internet check.
+  #
+  # The gate reads Sys.getenv("TESTTHAT")/("NOT_CRAN") directly rather than
+  # testthat::is_testing() so it also works under _R_CHECK_DEPENDS_ONLY_ (the
+  # "nosuggests" check), where requireNamespace("testthat") can be FALSE even
+  # though testthat is loaded to run the tests. Where NOT_CRAN == "true" (local
+  # dev, covr and downstream CI) a genuine failure still surfaces as an error, so
+  # regressions are not masked; outside tests both env vars are unset, so
+  # production behaviour is unchanged.
+  if (identical(Sys.getenv("TESTTHAT"), "true") &&
+      !identical(Sys.getenv("NOT_CRAN"), "true")) {
+    testthat::skip(paste0("Download of ", url, " failed or is unavailable; ",
+                          "skipping remainder of test on CRAN (policy: fail gracefully)"))
+  }
+
   if (isTRUE(grepl(paste("already exists", .txtDownloadFailedFn(".+"), sep = "|"), downloadResults))) {
     stop(downloadResults)
   }

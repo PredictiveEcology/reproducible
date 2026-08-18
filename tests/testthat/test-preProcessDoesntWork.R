@@ -12,7 +12,7 @@ test_that("preProcess fails if user provides non-existing file", {
           co <- capture.output(
             type = "message", {
             reproducible::preProcess(
-              url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+              url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest",
               destinationPath = tmpdir
             )
           })
@@ -40,7 +40,7 @@ test_that("preProcess fails if user provides non-existing file", {
       {
       errMsg <- testthat::capture_error({
         preProcess(
-          url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+          url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest",
           destinationPath = tmpdir
         )
       })
@@ -71,7 +71,7 @@ test_that("preProcess fails if user provides non-existing file", {
           mess <- testthat::capture_messages({
             errMsg <- testthat::capture_error({
               reproducible::preProcess(
-                url = "https://github.com/tati-micheletti/host/raw/master/data/rasterTest",
+                url = "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest",
                 destinationPath = tmpdir
               )
             })
@@ -83,7 +83,7 @@ test_that("preProcess fails if user provides non-existing file", {
   )
   expect_true(sum(grepl("Download failed", errMsg)) == 1)
 
-  url <- "https://github.com/tati-micheletti/host/raw/master/data/rasterTest"
+  url <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/rasterTest"
   withr::local_options("reproducible.interactiveOnDownloadFail" = TRUE)
   zipFilename <- tempfile2(fileext = ".zip")
   testthat::with_mocked_bindings(
