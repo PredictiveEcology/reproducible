@@ -1004,9 +1004,22 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 # mcparallel is fork-based and not available on Windows
 # pkgEnv <- reproducible:::pkgEnv()  # internal environment for package objects [3](https://rdrr.io/cran/reproducible/man/pkgEnv.html)
 ## Idempotent, all-guards-applied wrapper used by Cache() and showCache() to
-## kick off a background showCache scan for `x` the first time the path is
-## touched in a session. Cheap (~10us) when a job already exists -- safe to
-## call from hot paths.
+## kick off (and manage the lifecycle of) a background showCache scan for `x`.
+## The forked child stat()s + reads potentially thousands of flat cache files;
+## it is spawned ONCE per cachePath so an interactive showCache() is instant.
+## Cheap (~6us) when the result is already harvested -- safe to call from hot
+## paths (every Cache() call goes through here).
+##
+## Runs the full lifecycle so forks never leak (a prior version only spawned and
+## relied on showCache() being called to collect(); when it was not -- e.g. a
+## test suite that touches many cachePaths -- one live fork was leaked per path):
+##   (a) result already harvested for this path  -> do nothing
+##   (b) a fork is already pending for this path  -> reap it (non-blocking)
+##   (c) otherwise                                -> spawn the one-time scan
+## This keeps at most one live fork per cachePath and reaps it on the following
+## Cache() call. collect_showCache_async() harvests + drops the job when the
+## child has finished (installing $FileInfo/$sc), so (a) short-circuits from then
+## on; while the child is still scanning, (b) polls without blocking.
 ##
 ## Skipped silently on Windows (no fork), when parallel isn't available, or
 ## when `x` is NULL/non-character.
@@ -1014,8 +1027,29 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
   if (.Platform$OS.type == "windows") return(invisible(NULL))
   if (is.null(x) || !is.character(x) || !nzchar(x[[1L]])) return(invisible(NULL))
   if (!requireNamespace("parallel", quietly = TRUE)) return(invisible(NULL))
-  ## spawn_showCache_async is itself idempotent via its overwrite=FALSE guard
-  spawn_showCache_async(x[[1L]], silent = TRUE, overwrite = FALSE)
+  x <- x[[1L]]
+  pkgEnv <- memoiseEnv(cachePath = x)
+  scAll <- pkgEnv[["shownCache"]]
+
+  ## (a) Result already harvested for this cachePath -> nothing to do.
+  if (is.environment(scAll) && is.environment(scAll[[x]]) &&
+      (exists("FileInfo", envir = scAll[[x]], inherits = FALSE) ||
+       exists("sc", envir = scAll[[x]], inherits = FALSE))) {
+    return(invisible(NULL))
+  }
+
+  ## (b) A pre-warm fork is already pending -> reap it (non-blocking). When the
+  ##     child has finished, collect_showCache_async() harvests it and drops the
+  ##     job (so (a) short-circuits next time); if still running it returns NULL
+  ##     and we retry on the next Cache(). Either way, no new fork is created.
+  if (is.environment(scAll) && is.environment(scAll$shownCache_jobs) &&
+      exists(x, envir = scAll$shownCache_jobs, inherits = FALSE)) {
+    collect_showCache_async(x, wait = FALSE, timeout = 0)
+    return(invisible(NULL))
+  }
+
+  ## (c) Otherwise spawn the one-time background scan.
+  spawn_showCache_async(x, silent = TRUE, overwrite = FALSE)
 }
 
 #' Pre-populate the in-memory `showCache` cache for a given `cachePath`

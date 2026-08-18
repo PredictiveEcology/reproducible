@@ -4,6 +4,16 @@
 
 ## bug fixes
 
+* The background `showCache()` pre-warm fork (spawned by `Cache()` to scan a
+  flat-file cache without blocking) is no longer **leaked**. Previously each
+  distinct `cachePath` spawned one forked R process that was only ever collected
+  if `showCache()` happened to be called, so long-running sessions — and test /
+  coverage runs that touch many cache paths — accumulated live forks (tens of
+  processes, many GB), which could OOM-kill CI runners. `Cache()` now runs the
+  full lifecycle: skip if the result is already harvested, otherwise reap a
+  pending fork (non-blocking) or spawn the one-time scan — at most one live fork
+  per `cachePath`, reaped on the following `Cache()` call.
+
 * Tests that download Internet resources now **fail gracefully on CRAN** per CRAN
   policy: when a download terminally fails (resource unavailable) or a downloaded
   file no longer matches its expected checksum (resource changed), and the code is

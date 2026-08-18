@@ -69,3 +69,51 @@ test_that(".installAsyncShownCache leaves a clean empty env for unsupported inpu
   expect_null(scEnv$sc)
   expect_null(scEnv$FileInfo)
 })
+
+test_that(".maybeSpawnShowCacheAsync spawns once, reaps the fork, no accumulation", {
+  ## Regression for the fork leak: Cache() -> .maybeSpawnShowCacheAsync() forked a
+  ## background showCache scan per cachePath but never collected it unless
+  ## showCache() happened to be called, so one live fork leaked per cachePath
+  ## (a covr run over hundreds of tmpCache paths OOM-killed the CI runner). It
+  ## must now reap the fork on a following call and never re-spawn once the
+  ## result is installed.
+  skip_on_cran()                     # forks real processes; timing-sensitive
+  testthat::skip_on_os("windows")    # no fork backend on Windows
+  skip_if_not_installed("parallel")
+
+  live <- function() length(parallel:::children())
+  ## Never leave stray forks behind for other tests.
+  withr::defer(for (j in parallel:::children())
+    try(parallel::mccollect(j, wait = FALSE, timeout = 0), silent = TRUE))
+
+  base <- live()
+
+  ## (c) first call spawns exactly one background fork
+  cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
+  reproducible:::.maybeSpawnShowCacheAsync(cp)
+  expect_equal(live() - base, 1L)
+
+  ## (b) a later call reaps it once the (empty-cache) child has finished.
+  ##     The leaking, spawn-only version never reaps here, so this fails on it.
+  reaped <- FALSE
+  for (i in 1:100) {
+    reproducible:::.maybeSpawnShowCacheAsync(cp)
+    if (live() <= base) { reaped <- TRUE; break }
+    Sys.sleep(0.05)
+  }
+  expect_true(reaped)
+
+  ## (a) once harvested, further calls neither spawn nor leak
+  for (i in 1:20) reproducible:::.maybeSpawnShowCacheAsync(cp)
+  expect_lte(live() - base, 0L)
+
+  ## across many distinct cachePaths the forks must not accumulate
+  for (p in 1:6) {
+    cpp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
+    for (k in 1:6) {
+      reproducible:::.maybeSpawnShowCacheAsync(cpp)
+      Sys.sleep(0.03)
+    }
+  }
+  expect_lte(live() - base, 2L)      # bounded, not ~6
+})
