@@ -1,153 +1,24 @@
+# Thin caller — shared logic lives in PredictiveEcology/actions (reusable workflow).
 on:
   push:
-    branches:
-      - master
-      - development
+    branches: [master, development]
   pull_request:
-    branches:
-      - master
-      - development
+    branches: [master, development]
 
 name: R-CMD-check
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   R-CMD-check:
-    runs-on: ${{ matrix.config.os }}
-
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }}, nosuggests ${{ matrix.config.nosuggests }})
-
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - {os: macOS-latest,   nosuggests: false, r: 'release'}
-          - {os: windows-latest, nosuggests: false, r: 'devel', http-user-agent: 'release'}
-          - {os: windows-latest, nosuggests: false, r: 'release'}
-          - {os: windows-latest, nosuggests: false, r: 'oldrel-1'}
-          - {os: windows-latest, nosuggests: false, r: 'oldrel-2'}
-          - {os: ubuntu-latest,  nosuggests: false,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,  nosuggests: false,   r: 'release'}
-          - {os: ubuntu-latest,  nosuggests: true,   r: 'release'}
-          - {os: ubuntu-latest,  nosuggests: false,   r: 'oldrel-1'}
-          - {os: ubuntu-latest,  nosuggests: false, r: 'oldrel-2'}
-
-    env:
-      _R_CHECK_DEPENDS_ONLY_: ${{ matrix.config.nosuggests }}
-      _SP_EVOLUTION_STATUS_: 2
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
-      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      R_REPRODUCIBLE_RUN_ALL_EXAMPLES: true
-      R_REPRODUCIBLE_RUN_ALL_TESTS: true
-      R_VERSION_LABEL: ${{ matrix.config.r }}
-      # pak respects this for individual download retries on transient errors.
-      R_PKG_INSTALL_RETRIES: 3
-
-    steps:
-      - uses: actions/checkout@v4
-
-      # setup-pandoc occasionally fails with HTTP 5xx (CDN blip).
-      # Three attempts with continue-on-error ride out transient failures.
-      - id: pandoc1
-        continue-on-error: true
-        uses: r-lib/actions/setup-pandoc@v2
-      - if: steps.pandoc1.outcome == 'failure'
-        id: pandoc2
-        continue-on-error: true
-        uses: r-lib/actions/setup-pandoc@v2
-      - if: steps.pandoc1.outcome == 'failure' && steps.pandoc2.outcome == 'failure'
-        uses: r-lib/actions/setup-pandoc@v2
-
-      # On Linux we used to install the ubuntugis-unstable PPA via
-      # PredictiveEcology/actions/install-spatial-deps@v0.2. Launchpad's
-      # CDN (ppa.launchpadcontent.net) has been intermittently unreachable
-      # for hours at a time, and even a 3-attempt × 60 s retry can't cover
-      # it. The Ubuntu 24.04 (Noble) GHA runner image already preinstalls
-      # libgdal-dev, libproj-dev, libgeos-dev, libudunits2-dev (GDAL 3.8 /
-      # PROJ 9.4), which is recent enough for everything reproducible needs.
-      # So skip the PPA entirely on Linux and just `apt-get install` the
-      # canonical names from stock Noble — idempotent if already present,
-      # and immune to Launchpad outages.
-      - if: runner.os != 'Linux'
-        uses: PredictiveEcology/actions/install-spatial-deps@v0.2
-
-      - if: runner.os == 'Linux'
-        name: Install spatial deps (Linux, stock Noble)
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -f -y || true
-          sudo apt-get install -y --fix-missing \
-            libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev
-
-      # On macOS the system GDAL/PROJ install (via Homebrew) does not always
-      # leave `proj.db` on PROJ's default search path. Without that file, every
-      # `terra::project()` / `terra::crs()` call emits
-      #   PROJ: proj_identify: Cannot find proj.db (GDAL error 1)
-      # and reprojections fail outright. Point PROJ at Homebrew's data dir
-      # explicitly so spatial tests can run.
-      - name: Configure PROJ data path (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          PROJ_PREFIX="$(brew --prefix proj 2>/dev/null || true)"
-          PROJ_DATA="$PROJ_PREFIX/share/proj"
-          if [ ! -d "$PROJ_DATA" ]; then PROJ_DATA="/usr/local/share/proj"; fi
-          if [ ! -d "$PROJ_DATA" ]; then PROJ_DATA="/opt/homebrew/share/proj"; fi
-          echo "PROJ_DATA=$PROJ_DATA" >> "$GITHUB_ENV"
-          echo "PROJ_LIB=$PROJ_DATA"  >> "$GITHUB_ENV"
-          echo "Using PROJ_DATA=$PROJ_DATA"
-          ls -1 "$PROJ_DATA" | head -5 || true
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          http-user-agent: ${{ matrix.config.http-user-agent }}
-          Ncpus: 2
-          r-version: ${{ matrix.config.r }}
-          # Posit Public Package Manager — pre-built Windows + macOS binaries
-          # served from a CDN. Far more reliable than CRAN mirrors for the
-          # binary-download step that has been failing intermittently on the
-          # Windows runner under `pak`.
-          use-public-rspm: true
-
-      - id: deps
-        continue-on-error: true
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          # Pin pak to its stable channel; the action defaults to devel which
-          # occasionally regresses on Windows.
-          pak-version: stable
-          extra-packages: |
-            any::rcmdcheck
-            rspatial/geodata
-
-      # Fallback: when setup-r-dependencies fails (most often a transient
-      # binary-fetch failure under pak on Windows oldrel), retry the install
-      # via a fresh pak-stable install + pkg_install loop, up to 3 attempts
-      # with 60s backoff. continue-on-error: true on the primary step lets
-      # this step run and decide the job's actual success/failure.
-      - name: Install R deps (retry fallback)
-        if: steps.deps.outcome == 'failure'
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 30
-          max_attempts: 3
-          retry_wait_seconds: 60
-          retry_on: error
-          # `nick-fields/retry` validates `shell` against bash|pwsh|sh|python|
-          # cmd|powershell — `Rscript` is rejected even though native GitHub
-          # Actions steps accept it. Use `bash` (available on every runner,
-          # incl. Windows via Git Bash) and invoke Rscript via heredoc.
-          shell: bash
-          command: |
-            Rscript --no-save <<'EOF'
-            install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
-            pak::local_install_dev_deps(ask = FALSE, dependencies = TRUE)
-            pak::pkg_install(c("any::rcmdcheck", "rspatial/geodata"), ask = FALSE)
-            EOF
-
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
-          upload-snapshots: true
+    uses: PredictiveEcology/actions/.github/workflows/R-CMD-check.yaml@main
+    secrets: inherit
+    with:
+      extra-packages: |
+        rspatial/geodata
+      # Run \dontrun / \donttest examples the way CRAN's incoming checks do.
+      check-args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
+      # Keep the windows oldrel-2 (R 4.4) leg reproducible tested before migrating.
+      extra-config: '[{"config":{"os":"windows-latest","nosuggests":false,"r":"oldrel-2"}}]'
