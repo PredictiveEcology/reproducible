@@ -1,18 +1,22 @@
 # Thin caller — shared logic lives in PredictiveEcology/actions (reusable workflow).
 on:
-  # Coverage runs on push to the integration branches only (a PR merge IS a push
-  # to `development`), NOT per-PR: per-PR runs kept recomputing refs/pull/N/merge
-  # on the busy `development` base and cancelling the in-progress covr run.
+  # Run on push to the integration branches (a PR merge IS a push to
+  # `development`) AND per-PR, so coverage is known before merging.
   push:
+    branches: [master, development]
+  pull_request:
     branches: [master, development]
 
 name: test-coverage
 
 concurrency:
-  # Do NOT cancel in-progress coverage runs: covr takes ~25 min and merges land
-  # minutes apart; cancelling the previous run surfaced as spurious red.
+  # Group by ref so a PR run (refs/pull/N/merge) and a development-push run
+  # (refs/heads/development) never share a group -> they never cancel each other.
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  # Cancel a PR's own superseded runs (only the latest commit matters), but NEVER
+  # cancel a push/merge run: covr takes ~25 min and merges land minutes apart, so
+  # cancelling a development-push coverage run surfaced as spurious red.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test-coverage:
