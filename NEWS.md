@@ -5,16 +5,19 @@
 ## bug fixes
 
 * The background `showCache()` pre-warm fork (spawned by `Cache()` to scan a
-  flat-file cache without blocking) is no longer **leaked**. Previously each
-  distinct `cachePath` spawned one forked R process that was only ever collected
-  if `showCache()` happened to be called, so long-running sessions — and test /
-  coverage runs that touch many cache paths — accumulated live forks (tens of
-  processes, many GB), which could OOM-kill CI runners. `Cache()` now runs the
-  full lifecycle: skip if the result is already harvested, otherwise reap a
-  pending fork (non-blocking) or spawn the one-time scan — at most one live fork
-  per `cachePath`, reaped on the following `Cache()` call. Additionally, the fork
-  is now skipped entirely under a DBI backend (`useDBI(TRUE)`), where `showCache()`
-  is answered from an index and no flat-file scan is needed.
+  flat-file cache without blocking) is no longer **leaked**. It is now spawned
+  only when it will actually be consumed — i.e. when `Cache(showSimilar = TRUE)`,
+  the only path that later calls `showCache()` to harvest it — and never under a
+  DBI backend (`useDBI(TRUE)`, answered from an index, no flat-file scan). The
+  default `showSimilar = FALSE` path spawns nothing. Previously every distinct
+  `cachePath` spawned a fork that was collected only if `showCache()` happened to
+  run, so long sessions — and coverage runs touching many cache paths —
+  accumulated live forks (measured at ~50 processes / tens of GB), which
+  OOM-killed CI runners (`exit code 143`). When a fork *is* spawned it follows a
+  reap lifecycle (skip if already harvested, else reap a pending fork
+  non-blocking, else spawn once): at most one live fork per `cachePath`, reaped on
+  the following `Cache()` call. Explicit pre-warming via `prepopulateCacheAsync()`
+  is unchanged.
 
 * Tests that download Internet resources now **fail gracefully on CRAN** per CRAN
   policy: when a download terminally fails (resource unavailable) or a downloaded

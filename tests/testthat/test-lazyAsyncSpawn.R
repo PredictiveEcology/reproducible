@@ -1,69 +1,78 @@
-test_that("Cache() lazily spawns the async showCache job for the cachePath used", {
-  ## Regression for: .onLoad-only spawn missed the user's real cachePath
-  ## (set later by setupProject), so showCache() ran a 60s sync scan on
-  ## first call. The lazy spawn from Cache() now targets whichever
-  ## cachePath the caller actually uses.
+## Helper: does a spawn job exist for `cachePath` in its pkgEnv?
+.hasSpawnJob <- function(cachePath) {
+  pe <- reproducible:::memoiseEnv(cachePath = cachePath)
+  exists("shownCache", envir = pe) &&
+    is.environment(pe[["shownCache"]]$shownCache_jobs) &&
+    exists(cachePath, envir = pe[["shownCache"]]$shownCache_jobs, inherits = FALSE)
+}
+
+test_that("default Cache() does not leak background showCache forks", {
+  ## Leak regression (the exit-143 CI OOM): showSimilar=FALSE (the default) never
+  ## calls showCache(), so the pre-warm fork it used to spawn was never harvested
+  ## -- one lingering child per distinct cachePath until session end (measured at
+  ## ~50 forks / ~46 GB across the suite). The fix spawns only on the
+  ## showSimilar=TRUE path, so the default path adds zero children. Asserted on
+  ## the actual leak metric: the live-child count must not grow.
   skip_on_cran()
   if (.Platform$OS.type == "windows")
     skip("forking-based; not relevant on Windows")
   if (!requireNamespace("parallel", quietly = TRUE))
     skip("parallel not available")
 
-  tmpCache <- file.path(tempdir(), basename(tempfile("rcache_lazy_")))
-  dir.create(tmpCache, showWarnings = FALSE, recursive = TRUE)
-  withr::local_options(reproducible.cachePath  = tmpCache,
-                       reproducible.useMemoise = FALSE,
+  withr::local_options(reproducible.useMemoise = FALSE,
+                       reproducible.useDBI     = FALSE,
                        reproducible.verbose    = 0)
 
-  ## Pre-condition: no spawn job exists yet for this cachePath
-  pkgEnv <- reproducible:::memoiseEnv(cachePath = tmpCache)
-  expect_false(exists("shownCache", envir = pkgEnv) &&
-               !is.null(pkgEnv[["shownCache"]]$shownCache_jobs) &&
-               exists(tmpCache, envir = pkgEnv[["shownCache"]]$shownCache_jobs,
-                      inherits = FALSE),
-               info = "Pre-condition: no async job before Cache() is called")
-
-  ## Calling Cache() should kick off the spawn
-  invisible(Cache(rnorm, 1, cachePath = tmpCache,
-                  cacheId = "lazy_v1", useCloud = FALSE))
-
-  ## Post-condition: a spawn job is now registered for this cachePath
-  expect_true(exists("shownCache", envir = pkgEnv),
-              info = "Cache() should have created the shownCache env")
-  jobsEnv <- pkgEnv[["shownCache"]]$shownCache_jobs
-  expect_true(is.environment(jobsEnv),
-              info = "shownCache_jobs should be an environment")
-  expect_true(exists(tmpCache, envir = jobsEnv, inherits = FALSE),
-              info = "A spawn job should be registered for the cachePath")
+  baseChildren <- length(parallel:::children())
+  for (i in seq_len(6L)) {
+    cp <- file.path(tempdir(), basename(tempfile("rcache_leak_")))
+    dir.create(cp, showWarnings = FALSE, recursive = TRUE)
+    invisible(Cache(rnorm, 1, cachePath = cp, cacheId = paste0("leak_", i),
+                    useCloud = FALSE))               # default showSimilar = FALSE
+    expect_false(.hasSpawnJob(cp),
+                 info = "default Cache() must not spawn a pre-warm fork")
+  }
+  expect_equal(length(parallel:::children()), baseChildren,
+               info = "6 default Cache() calls must not leak any background forks")
 })
 
-test_that("prepopulateCacheAsync() is exported and idempotent", {
+## NB: the helper-level contract for .maybeSpawnShowCacheAsync() -- spawns once
+## on a direct call for a flat-file path, reaps on the next call, and never forks
+## under a DBI backend -- is covered in test-showCacheAsyncInstall.R. Here we only
+## assert the Cache() *call-site* gating that decides whether to call it at all.
+
+test_that("prepopulateCacheAsync() is exported and schedules one flat-file scan", {
   skip_on_cran()
   if (.Platform$OS.type == "windows")
     skip("forking-based; not relevant on Windows")
   if (!requireNamespace("parallel", quietly = TRUE))
     skip("parallel not available")
 
-  tmpCache <- file.path(tempdir(), basename(tempfile("rcache_prep_")))
-  dir.create(tmpCache, showWarnings = FALSE, recursive = TRUE)
+  ## Flat-file backend: the DBI backend has nothing to pre-warm (see
+  ## test-showCacheAsyncInstall.R), so pin it off to exercise the fork path.
+  withr::local_options(reproducible.useDBI = FALSE)
 
   ## Exported
   expect_true(exists("prepopulateCacheAsync",
                      envir = asNamespace("reproducible"),
                      inherits = FALSE))
 
-  ## First call schedules a job
-  reproducible::prepopulateCacheAsync(tmpCache)
-  pkgEnv <- reproducible:::memoiseEnv(cachePath = tmpCache)
-  jobsEnv <- pkgEnv[["shownCache"]]$shownCache_jobs
-  expect_true(exists(tmpCache, envir = jobsEnv, inherits = FALSE))
-  job1 <- get(tmpCache, envir = jobsEnv, inherits = FALSE)
+  tmpCache <- file.path(tempdir(), basename(tempfile("rcache_prep_")))
+  dir.create(tmpCache, showWarnings = FALSE, recursive = TRUE)
 
-  ## Second call reuses the same job (idempotent: spawn_showCache_async
-  ## returns the existing job under overwrite = FALSE)
+  ## First call schedules a background scan job for this path.
   reproducible::prepopulateCacheAsync(tmpCache)
-  job2 <- get(tmpCache, envir = jobsEnv, inherits = FALSE)
-  expect_identical(job1$pid, job2$pid)
+  expect_true(.hasSpawnJob(tmpCache),
+              info = "prepopulateCacheAsync() should schedule a job")
+
+  ## Idempotent: a repeat call must not spawn a *second* fork for the same path
+  ## (the helper reaps/reuses the existing one -- see the lifecycle tests in
+  ## test-showCacheAsyncInstall.R). Asserted on the live-child count.
+  base <- length(parallel:::children())
+  reproducible::prepopulateCacheAsync(tmpCache)
+  expect_lte(length(parallel:::children()), base)
+
+  reproducible:::collect_showCache_async(tmpCache, wait = TRUE, timeout = 10)
 })
 
 test_that("prepopulateCacheAsync() is a no-op for invalid inputs", {
