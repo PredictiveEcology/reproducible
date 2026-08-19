@@ -39,4 +39,19 @@ if (nzchar(Sys.getenv("R_REPRO_TEST_FULL_MATRIX")) &&
   ## Covers ~95% of the test surface; alternate raster/DBI paths are
   ## still exercised by individual test files that explicitly opt in.
   test_check("reproducible")
+
+  ## On CI only (NOT CRAN -- keeps CRAN's check within its time budget), add a
+  ## focused pass of just the Cache() tests (test-cache*.R, via `filter`) under
+  ## the SQLite (useDBI) backend. Only cache storage/retrieval depends on the
+  ## backend, so there is no need to re-run prepInputs()/postProcess()/etc.
+  ## `CI` is set by GitHub Actions but not by CRAN; RSQLite + DBI are required
+  ## for the backend (skipped if a nosuggests run lacks them). The option is set
+  ## directly (the R_REPRODUCIBLE_USE_DBI env var is only read at package load).
+  if (isTRUE(as.logical(Sys.getenv("CI", "false"))) &&
+      requireNamespace("RSQLite", quietly = TRUE) &&
+      requireNamespace("DBI", quietly = TRUE)) {
+    options(reproducible.useDBI = TRUE)
+    Sys.setenv(R_REPRODUCIBLE_USE_DBI = "true")
+    test_check("reproducible", filter = "^cache")
+  }
 }

@@ -233,8 +233,14 @@ test_that("test file-backed raster caching", {
       sc <- showCache(tmpCache)
       origFile <- sc[tagKey == "origFilename"]$cacheId
       hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
+      ## On-disk file count is backend-dependent. Both backends write the object
+      ## .rds and the file-backed .tif (2 files). The flat-file backend ALSO
+      ## writes the tag store and the filename-tag file to disk, whereas useDBI()
+      ## keeps those in the SQLite DB -- so gate both flat-file-only files on
+      ## !useDBI(). (Previously `hasFilenameInCache` was added unconditionally,
+      ## over-counting by one under useDBI = TRUE.)
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (1 + hasFilenameInCache + as.integer(!useDBI()) + 2 * savePreDigest + 1L))
+                    (2L + as.integer(!useDBI()) * (hasFilenameInCache + 1L) + 2L * savePreDigest))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 
