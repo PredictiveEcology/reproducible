@@ -12,7 +12,9 @@
   processes, many GB), which could OOM-kill CI runners. `Cache()` now runs the
   full lifecycle: skip if the result is already harvested, otherwise reap a
   pending fork (non-blocking) or spawn the one-time scan — at most one live fork
-  per `cachePath`, reaped on the following `Cache()` call.
+  per `cachePath`, reaped on the following `Cache()` call. Additionally, the fork
+  is now skipped entirely under a DBI backend (`useDBI(TRUE)`), where `showCache()`
+  is answered from an index and no flat-file scan is needed.
 
 * Tests that download Internet resources now **fail gracefully on CRAN** per CRAN
   policy: when a download terminally fails (resource unavailable) or a downloaded

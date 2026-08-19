@@ -81,6 +81,7 @@ test_that(".maybeSpawnShowCacheAsync spawns once, reaps the fork, no accumulatio
   testthat::skip_on_os("windows")    # no fork backend on Windows
   skip_if_not_installed("parallel")
 
+  withr::local_options(reproducible.useDBI = FALSE)  # exercise the flat-file fork path
   live <- function() length(parallel:::children())
   ## Never leave stray forks behind for other tests.
   withr::defer(for (j in parallel:::children())
@@ -116,4 +117,24 @@ test_that(".maybeSpawnShowCacheAsync spawns once, reaps the fork, no accumulatio
     }
   }
   expect_lte(live() - base, 2L)      # bounded, not ~6
+})
+
+test_that(".maybeSpawnShowCacheAsync never forks under a DBI backend", {
+  ## A DBI backend answers showCache() from an index, so the flat-file pre-warm
+  ## fork is pointless there and must be skipped entirely.
+  skip_on_cran()
+  testthat::skip_on_os("windows")
+  skip_if_not_installed("parallel")
+  skip_if_not_installed("RSQLite")
+  skip_if_not_installed("DBI")
+
+  live <- function() length(parallel:::children())
+  withr::defer(for (j in parallel:::children())
+    try(parallel::mccollect(j, wait = FALSE, timeout = 0), silent = TRUE))
+  withr::local_options(reproducible.useDBI = TRUE)
+
+  base <- live()
+  cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
+  for (i in 1:10) reproducible:::.maybeSpawnShowCacheAsync(cp)
+  expect_equal(live() - base, 0L)    # no fork ever spawned under useDBI(TRUE)
 })

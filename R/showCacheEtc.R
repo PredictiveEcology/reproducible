@@ -1026,6 +1026,10 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 .maybeSpawnShowCacheAsync <- function(x = getOption("reproducible.cachePath")) {
   if (.Platform$OS.type == "windows") return(invisible(NULL))
   if (is.null(x) || !is.character(x) || !nzchar(x[[1L]])) return(invisible(NULL))
+  ## A DBI backend (SQLite/Postgres, opt-in via useDBI(TRUE)) answers showCache()
+  ## from an indexed query, so the flat-file pre-warm scan -- the only thing the
+  ## fork does -- is unnecessary there. Skip it entirely.
+  if (isTRUE(useDBI())) return(invisible(NULL))
   if (!requireNamespace("parallel", quietly = TRUE)) return(invisible(NULL))
   x <- x[[1L]]
   pkgEnv <- memoiseEnv(cachePath = x)
