@@ -41,9 +41,13 @@ if (nzchar(Sys.getenv("R_REPRO_TEST_FULL_MATRIX")) &&
   test_check("reproducible")
 
   ## On CI only (NOT CRAN -- keeps CRAN's check within its time budget), add a
-  ## focused pass of just the Cache() tests (test-cache*.R, via `filter`) under
-  ## the SQLite (useDBI) backend. Only cache storage/retrieval depends on the
-  ## backend, so there is no need to re-run prepInputs()/postProcess()/etc.
+  ## focused pass under the SQLite (useDBI) backend of every test file that
+  ## touches the cache metadata store. This is deliberately wider than
+  ## test-cache*.R: urlLog tags cacheIds, the cloud code round-trips metadata
+  ## between the two backends, and showCache/clearCache read it. Narrowing this
+  ## to "^cache" is what let urlLog sit silently disabled under DBI -- nothing
+  ## in the DBI pass covered it. Anything with a `useDBI()` branch behind it
+  ## belongs here; prepInputs()/postProcess()/gis tests do not.
   ## `CI` is set by GitHub Actions but not by CRAN; RSQLite + DBI are required
   ## for the backend (skipped if a nosuggests run lacks them). The option is set
   ## directly (the R_REPRODUCIBLE_USE_DBI env var is only read at package load).
@@ -52,6 +56,19 @@ if (nzchar(Sys.getenv("R_REPRO_TEST_FULL_MATRIX")) &&
       requireNamespace("DBI", quietly = TRUE)) {
     options(reproducible.useDBI = TRUE)
     Sys.setenv(R_REPRODUCIBLE_USE_DBI = "true")
-    test_check("reproducible", filter = "^cache")
+    dbiBackedTests <- c(
+      "cache",       # cache, cacheGeo, cacheHelpers, cachePath-lazy
+      "cloud",       # cloud, cloud-helpers, cloudFolderID-offline, cloudUploadNonFatal
+      "useCloud",    # useCloudPullPush
+      "showCache",   # showCacheAsyncInstall, showCacheCorruptFile
+      "urlLog",
+      "multipleCacheRepo",
+      "preDigestDump",
+      "lazyAsyncSpawn",
+      "cluster",
+      "misc"
+    )
+    test_check("reproducible",
+               filter = paste(paste0("^", dbiBackedTests), collapse = "|"))
   }
 }

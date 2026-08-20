@@ -346,3 +346,83 @@ test_that("test miscellaneous unit tests cache-helpers", {
   mess <- capture_messages(clearCache(cachePath = tmpCache))
   expect_true(any(grepl("x not specified, but cachePath is", mess)))
 })
+
+test_that("cache tag values containing quotes round-trip through both backends", {
+  testInit()
+
+  ## Both backends where possible; the DBI one is where the bug lived.
+  backends <- if (.requireNamespace("RSQLite") && .requireNamespace("DBI")) {
+    c(FALSE, TRUE)
+  } else {
+    FALSE
+  }
+
+  for (ud in backends) {
+    withr::local_options(reproducible.useDBI = ud)
+    expect_identical(useDBI(), ud)
+
+    cp <- file.path(tmpdir, paste0("quoteTags", ud))
+    a <- Cache(rnorm, 1, cachePath = cp)
+    cid <- gsub("cacheId:", "", grep("cacheId:", attr(a, "tags"), value = TRUE))
+
+    ## A single quote in a tagValue used to be pasted straight into the SQL,
+    ## making it invalid. Because that failure is deterministic, the retry() in
+    ## .addTagsRepo re-ran it 250 times before erroring -- a multi-minute hang.
+    tricky <- "/home/o'brien/Ian's \"data\".tif"
+    .addTagsRepo(cid, cp, tagKey = "origFilename", tagValue = tricky)
+    sc <- showCacheFast(cid, cp, strict = FALSE)
+    expect_identical(extractFromCache(sc, "origFilename"), tricky)
+
+    ## .updateTagsRepo: both the update-in-place and the add-if-absent branches.
+    tricky2 <- paste0(tricky, "'v2")
+    .updateTagsRepo(cid, cp, tagKey = "origFilename", tagValue = tricky2)
+    .updateTagsRepo(cid, cp, tagKey = "quotedNewKey", tagValue = tricky2, add = TRUE)
+    sc <- showCacheFast(cid, cp, strict = FALSE)
+    expect_identical(extractFromCache(sc, "origFilename"), tricky2)
+    expect_identical(extractFromCache(sc, "quotedNewKey"), tricky2)
+
+    ## showCacheFast returns only the requested cacheId (the DBI branch queries
+    ## for it; the file-backed one reads that cacheId's metadata file).
+    b <- Cache(rnorm, 2, cachePath = cp)
+    expect_identical(unique(showCacheFast(cid, cp, strict = FALSE)[["cacheId"]]), cid)
+  }
+})
+
+test_that("CacheIsACache does not rename another cachePath's table (DBI)", {
+  skip_if_not_installed("RSQLite")
+  skip_if_not_installed("DBI")
+  testInit()
+  withr::local_options(reproducible.useDBI = TRUE)
+  skip_if_not(useDBI())
+
+  drv <- getDrv(NULL)
+  cpA <- file.path(tmpdir, "repoA")
+  cpB <- file.path(tmpdir, "repoB")
+  invisible(Cache(rnorm, 1, cachePath = cpA))
+  invisible(Cache(rnorm, 2, cachePath = cpB))
+
+  connA <- dbConnectAll(drv, cachePath = cpA)
+  on.exit(try(DBI::dbDisconnect(connA), silent = TRUE), add = TRUE)
+  tableA <- DBI::dbListTables(connA)
+
+  ## A connection for repoA paired with repoB's cachePath is a *normal*
+  ## occurrence -- `conn` defaults to the single global reproducible.conn, and
+  ## Cache() may span several cachePaths. The table-name mismatch that follows
+  ## must NOT be read as "this repo moved": movedCache() would ALTER TABLE ...
+  ## RENAME repoA's table to repoB's name, silently corrupting repoA.
+  expect_false(CacheIsACache(cpB, drv = drv, conn = connA))
+  expect_identical(DBI::dbListTables(connA), tableA)
+
+  ## ... but a genuinely moved repo (same database file, stale table name) must
+  ## still self-repair, which is what movedCache() is for.
+  cpMoved <- file.path(tmpdir, "repoMoved")
+  checkPath(file.path(cpMoved, "cacheOutputs"), create = TRUE)
+  froms <- dir(cpA, recursive = TRUE, full.names = TRUE)
+  file.copy(froms, gsub(basename(cpA), basename(cpMoved), froms), overwrite = TRUE)
+
+  connMoved <- dbConnectAll(drv, cachePath = cpMoved)
+  on.exit(try(DBI::dbDisconnect(connMoved), silent = TRUE), add = TRUE)
+  expect_identical(DBI::dbListTables(connMoved), tableA) # stale name, pre-repair
+  suppressWarnings(CacheIsACache(cpMoved, drv = drv, conn = connMoved))
+  expect_identical(DBI::dbListTables(connMoved), CacheDBTableName(cpMoved, drv = drv))
+})

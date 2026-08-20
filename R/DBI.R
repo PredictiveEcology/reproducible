@@ -526,30 +526,24 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
     }
 
     if (useDBI()) {
+      # Cache() passes its whole named list of connections; pick this repo's, as
+      # saveToCache()/searchInRepos() do.
+      if (is.list(conn)) conn <- conn[[cachePath]]
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
         on.exit(DBI::dbDisconnect(conn))
       }
 
-      # This is what the next code pair of lines does
-      # dt <- data.table("cacheId" = cacheId, "tagKey" = "accessed",
-      #                 "tagValue" = as.character(Sys.time()),
-      #                 "createdDate" = as.character(Sys.time()))
-      #
-      # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-      rs <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        DBI::dbSendStatement(
-          conn,
-          paste0(
-            "insert into \"", CacheDBTableName(cachePath, drv), "\"",
-            " (\"cacheId\", \"tagKey\", \"tagValue\", \"createdDate\") values ",
-            "('", cacheId,
-            "', '", tagKey, "', '", tagValue, "', '", curTime, "')"
-          )
-        )
+      # Same insert as saveToCache(): dbAppendTable binds the values rather than
+      # pasting them into the statement. A tagValue is arbitrary user text -- a
+      # file path, a userTag, a url -- and one containing a single quote used to
+      # produce invalid SQL here. Because that failure is deterministic, retry()
+      # then re-ran it 250 times before giving up, turning one apostrophe into a
+      # multi-minute hang.
+      dt <- metadataDT(cacheId, tagKey, tagValue)
+      retry(retries = 250, exponentialDecayBase = 1.01, quote(
+        DBI::dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt)
       ))
-
-      DBI::dbClearResult(rs)
     } else {
       dt <- list(
         "cacheId" = cacheId, "tagKey" = tagKey,
@@ -632,6 +626,9 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
     }
     if (length(cacheId) > 1) stop(".updateTagsRepo can only handle updating 1 tag at a time")
     if (useDBI()) {
+      # Cache() passes its whole named list of connections; pick this repo's, as
+      # saveToCache()/searchInRepos() do.
+      if (is.list(conn)) conn <- conn[[cachePath]]
       if (is.null(conn)) {
         conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
         on.exit(DBI::dbDisconnect(conn))
@@ -643,15 +640,20 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       #                 "createdDate" = as.character(Sys.time()))
       #
       # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
+      # glue_sql escapes the values (same idiom as rmFromCache/getHashFromDB);
+      # see the note in .addTagsRepo() -- an unescaped single quote in `tagValue`
+      # would otherwise produce invalid SQL.
+      qry <- glue::glue_sql(
+        "UPDATE {DBI::SQL(glue::double_quote(dbTabName))} SET \"tagValue\" = {tagValue}",
+        " WHERE \"cacheId\" = ({cacheId}) AND \"tagKey\" = ({tagKey})",
+        dbTabName = CacheDBTableName(cachePath, drv),
+        tagValue = as.character(tagValue),
+        cacheId = cacheId,
+        tagKey = tagKey,
+        .con = conn
+      )
       rs <- # retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        DBI::dbSendStatement(
-          conn,
-          paste0(
-            "update \"", CacheDBTableName(cachePath, drv), "\"",
-            " set \"tagValue\" = '", tagValue, "' where ",
-            " \"cacheId\" = '", cacheId, "'", " AND \"tagKey\" = '", tagKey, "'"
-          )
-        )
+        DBI::dbSendStatement(conn, qry)
       # ))
       affectedAnyRows <- DBI::dbGetRowsAffected(rs) > 0
       DBI::dbClearResult(rs)
@@ -882,6 +884,31 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
 #' - `CacheIsACache()` returns a logical indicating whether the `cachePath` is currently
 #' a `reproducible` cache database;
 #'
+## Is `conn` actually a connection to `cachePath`'s database file?
+##
+## `conn` defaults to the single global `getOption("reproducible.conn")` in most
+## of the DBI helpers, and `Cache()` may work across several `cachePath`s, so a
+## connection belonging to a *different* repo reaches these functions routinely.
+## That matters in CacheIsACache(): there, a table-name mismatch is taken as
+## evidence of a moved repository and triggers movedCache(), i.e. an
+## `ALTER TABLE ... RENAME` -- which, if `conn` simply points somewhere else,
+## silently renames the OTHER repo's table and corrupts it. A mismatch is only
+## meaningful when the connection really is this cachePath's database.
+##
+## Returns FALSE when it cannot tell (no dbname, non-file backend, error), so
+## the destructive branch stays opt-in on positive evidence.
+connIsForCachePath <- function(conn, cachePath,
+                               drv = getDrv(getOption("reproducible.drv", NULL))) {
+  connDBFile <- tryCatch(DBI::dbGetInfo(conn)$dbname, error = function(e) NULL)
+  if (is.null(connDBFile) || !is.character(connDBFile) || !nzchar(connDBFile[1])) {
+    return(FALSE)
+  }
+  expected <- tryCatch(CacheDBFile(cachePath, drv = drv, conn = conn),
+                       error = function(e) NULL)
+  if (is.null(expected)) return(FALSE)
+  isTRUE(normPath(connDBFile[1]) == normPath(expected))
+}
+
 #' @export
 #' @rdname CacheHelpers
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,
@@ -913,7 +940,8 @@ CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), creat
       )
       tableShouldBe <- CacheDBTableName(cachePath)
       if (length(tablesInDB) == 1) {
-        if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite")) {
+        if (!any(tablesInDB %in% tableShouldBe) && grepl(type, "SQLite") &&
+            connIsForCachePath(conn, cachePath, drv)) {
           warning(paste0(
             "The table in the Cache repo does not match the cachePath. ",
             "If this is because of a moved repository (i.e., files ",

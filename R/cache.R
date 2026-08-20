@@ -1631,8 +1631,14 @@ createConns <- function(cachePath, conns, drv,
     drv <- getDrv(drv)
     if (is.null(conns[[cachePath]])) {
       conns[[cachePath]] <- dbConnectAll(drv, cachePath = cachePath)
-      RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
-      RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
+      # PRAGMA is SQLite-specific syntax. `reproducible.drv`/`reproducible.conn`
+      # accept any DBI backend (RPostgres is the documented other one), and those
+      # error on PRAGMA, so gate on the connection actually being SQLite. Also
+      # skips safely when dbConnectAll() failed and returned NULL.
+      if (is(conns[[cachePath]], "SQLiteConnection")) {
+        RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA busy_timeout=5000;"))
+        RSQLite::dbClearResult(RSQLite::dbSendQuery(conns[[cachePath]], "PRAGMA journal_mode=WAL;"))
+      }
     }
   }
 
