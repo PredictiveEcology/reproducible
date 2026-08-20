@@ -217,6 +217,11 @@ test_that("test miscellaneous fns (part 2)", {
   ## directory makes the derived name unique per job.
   withr::local_options(reproducible.cachePath = tmpCache)
 
+  ## Likewise unique per run. "testy" was a fixed folder name created at the
+  ## Drive ROOT by every concurrent job, so resolving it by name could find
+  ## zero, one or several folders depending on who else was mid-run.
+  testyName <- paste0("testy", rndstr(1, 6))
+
   ras <- terra::rast(terra::ext(0, 1, 0, 1), resolution = 1, vals = 1)
   ras <- terra::writeRaster(ras, filename = tmpfile[1], overwrite = TRUE)
 
@@ -226,9 +231,9 @@ test_that("test miscellaneous fns (part 2)", {
   tmpCloudFolderID <- checkAndMakeCloudFolderID(create = TRUE)
   gdriveLs <- driveLs(cloudFolderID = NULL, "sdfsdf")
   expect_true(NROW(gdriveLs) == 0)
-  expect_true(is(checkAndMakeCloudFolderID("testy"), "dribble") ||
-    is(checkAndMakeCloudFolderID("testy"), "character"))
-  cloudFolderID <- checkAndMakeCloudFolderID("testy", create = TRUE)
+  expect_true(is(checkAndMakeCloudFolderID(testyName), "dribble") ||
+    is(checkAndMakeCloudFolderID(testyName), "character"))
+  cloudFolderID <- checkAndMakeCloudFolderID(testyName, create = TRUE)
   testthat::with_mocked_bindings(
     retry = function(..., retries = 1) TRUE,
     {
@@ -254,7 +259,7 @@ test_that("test miscellaneous fns (part 2)", {
   mess1 <- capture_messages(expect_error(expect_warning({
     a <- cloudDownload(
       outputHash = "sdfsd", newFileName = "test.tif",
-      gdriveLs = gdriveLs1, cloudFolderID = "testy", cachePath = tmpCache
+      gdriveLs = gdriveLs1, cloudFolderID = testyName, cachePath = tmpCache
     )
   })))
   expect_true(sum(grepl("Downloading cloud copy of test\\.tif", mess1)) == 1)
