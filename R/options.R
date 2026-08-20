@@ -584,7 +584,10 @@ reproducibleOptions <- function() {
     reproducible.shapefileRead = "sf::st_read",
     reproducible.showCachePreWarm = as.logical(getEnv(
       "R_REPRODUCIBLE_SHOWCACHE_PREWARM",
-      default = "true", allowed = c("true", "false")
+      # Mirror useDBI: reflect a value already set (e.g. FALSE by tests/covr) so
+      # reproducibleOptions() stays identical to options() (see test-misc.R).
+      default = getOption("reproducible.showCachePreWarm", TRUE),
+      allowed = c("true", "false")
     )),
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
