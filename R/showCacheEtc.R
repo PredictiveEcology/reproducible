@@ -984,15 +984,23 @@ showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath
   ## filters in R, on a path that runs on every prepInputs cache hit.
   if (useDBI()) {
     if (is.list(conn)) conn <- conn[[cachePath]]
-    if (is.null(conn)) {
+    tbl <- CacheDBTableName(cachePath, drv = drv)
+    ## The caller's `conn` does not necessarily belong to `cachePath`: with
+    ## several cachePaths, Cache() hands us the connection for whichever repo it
+    ## was working in, while callers such as .maybeRecordUrlForCache() pass
+    ## cachePaths[[1]]. Only use it when it actually holds this repo's table;
+    ## otherwise open (and close) our own for `cachePath`.
+    ## NB: deliberately NOT CacheIsACache() -- that repairs as well as checks,
+    ## and on a table/cachePath mismatch it calls movedCache(), which would
+    ## ALTER TABLE ... RENAME the *other* repo's table.
+    if (is.null(conn) || !isTRUE(tbl %in% DBI::dbListTables(conn))) {
       conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
       if (is.null(conn)) return(.emptyCacheTable)
       on.exit(DBI::dbDisconnect(conn), add = TRUE)
+      if (!isTRUE(tbl %in% DBI::dbListTables(conn))) return(.emptyCacheTable)
     }
-    if (!CacheIsACache(cachePath, drv = drv, conn = conn)) return(.emptyCacheTable)
     sc <- getHashFromDB(tries = 1, conn = conn, drv = drv, repo = cachePath,
-                        dbTabNam = CacheDBTableName(cachePath, drv = drv),
-                        outputHash = cacheId)
+                        dbTabNam = tbl, outputHash = cacheId)
     return(sc[])
   }
 
