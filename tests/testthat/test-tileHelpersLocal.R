@@ -14,6 +14,14 @@
 ## A small raster plus its tiles. 20x20 over a 100x100 extent split 2x2 keeps
 ## the whole fixture well under a millisecond of I/O.
 mkTiledFixture <- function(dir, nx = 2, ny = 2) {
+  ## tile_raster_write_auto() tiles via parallel::mclapply(), sizing itself with
+  ## min(getOption("mc.cores"), numCoresToUse(...)). R CMD check sets
+  ## _R_CHECK_LIMIT_CORES_, under which mclapply refuses more than two processes:
+  ##   Error in .check_ncores(cores): 3 simultaneous processes spawned
+  ## Passes locally and fails on every CI leg without this. One core is also
+  ## plenty for four tiny tiles.
+  withr::local_options(mc.cores = 1, .local_envir = parent.frame())
+
   r <- terra::rast(
     nrows = 20, ncols = 20, xmin = 0, xmax = 100, ymin = 0, ymax = 100,
     crs = "EPSG:3347", vals = seq_len(400)
