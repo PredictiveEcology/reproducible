@@ -64,10 +64,20 @@ if (isNamespaceLoaded("googledrive"))
       tok <- tryCatch(readRDS(oauthTokenFile), error = function(e) {
         message("GDRIVE_OAUTH_TOKEN could not be read: ", conditionMessage(e)); NULL
       })
-      if (!is.null(tok))
+      if (!is.null(tok)) {
+        ## Drop the token's own cache_path before using it. drive_auth()
+        ## writes the refreshed token back to that path, which is wherever
+        ## the token was MINTED (e.g. ~/.secret on a dev machine). On a CI
+        ## runner that directory does not exist, the write fails, and gargle
+        ## surfaces it as the maximally unhelpful "Can't get Google
+        ## credentials" -- indistinguishable from having no credential at
+        ## all. A runner should not be persisting a credential to disk
+        ## anyway, so this is the right behaviour regardless.
+        tok$cache_path <- NULL
         tryCatch(googledrive::drive_auth(token = tok),
                  error = function(e)
                    message("GDRIVE_OAUTH_TOKEN was not usable: ", conditionMessage(e)))
+      }
     }
     gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
     if (!googledrive::drive_has_token() && nzchar(gauthEnv)) {
