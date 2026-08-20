@@ -44,7 +44,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   ## CI runners (exit 143). Direct showCache() users can still pre-warm explicitly
   ## via prepopulateCacheAsync(). The DBI backend is skipped inside the helper
   ## (indexed query, nothing to pre-warm). Targets the cachePath actually being
-  ## used (not the default at .onLoad time).
+  ## used (not the default at .onLoad time). The helper is also a hard off-switch
+  ## via options(reproducible.showCachePreWarm = FALSE) -- see reproducibleOptions()
+  ## and the note in .maybeSpawnShowCacheAsync().
   if (isTRUE(showSimilar)) .maybeSpawnShowCacheAsync(cachePath)
 
   # Capture and match call so it can be manipulated

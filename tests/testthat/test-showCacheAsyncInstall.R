@@ -80,8 +80,14 @@ test_that(".maybeSpawnShowCacheAsync spawns once, reaps the fork, no accumulatio
   skip_on_cran()                     # forks real processes; timing-sensitive
   testthat::skip_on_os("windows")    # no fork backend on Windows
   skip_if_not_installed("parallel")
+  ## Under covr the pre-warm fork is disabled (memory); forking here would
+  ## re-introduce the very covr OOM the option prevents. The fork path is
+  ## exercised on the plain R CMD check legs instead.
+  skip_if(isTRUE(as.logical(Sys.getenv("R_COVR", "false"))),
+          "showCache pre-warm fork disabled under covr")
 
-  withr::local_options(reproducible.useDBI = FALSE)  # exercise the flat-file fork path
+  withr::local_options(reproducible.useDBI = FALSE,          # exercise the flat-file fork path
+                       reproducible.showCachePreWarm = TRUE) # force ON (default under R CMD check)
   live <- function() length(parallel:::children())
   ## Never leave stray forks behind for other tests.
   withr::defer(for (j in parallel:::children())
@@ -131,7 +137,8 @@ test_that(".maybeSpawnShowCacheAsync never forks under a DBI backend", {
   live <- function() length(parallel:::children())
   withr::defer(for (j in parallel:::children())
     try(parallel::mccollect(j, wait = FALSE, timeout = 0), silent = TRUE))
-  withr::local_options(reproducible.useDBI = TRUE)
+  withr::local_options(reproducible.useDBI = TRUE,
+                       reproducible.showCachePreWarm = TRUE) # so the useDBI guard is what blocks the fork
 
   base <- live()
   cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)

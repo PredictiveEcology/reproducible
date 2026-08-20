@@ -26,8 +26,18 @@ opts <- options(
   warnPartialMatchArgs = TRUE, # This gives false positives for `raster::stack`
   warnPartialMatchAttr = TRUE,
   warnPartialMatchDollar = TRUE,
-  reproducible.useCacheV3 = !isFALSE(getOption("reproducible.useCacheV3"))#,
-  #reproducible.useDBI = FALSE  # done TF  = c(691, 764.1), TT c(793,874), FF = c(875.5s, 876s), FT = c(1024.8,934)
+  reproducible.useCacheV3 = !isFALSE(getOption("reproducible.useCacheV3")),
+  ## Under covr (covr::package_coverage sets R_COVR=true; the workflow also sets
+  ## USING_COVR), disable the automatic showCache pre-warm fork. covr runs the
+  ## whole suite in ONE process that touches many distinct cachePaths, so the
+  ## per-path forks accumulate to ~38 / ~23 GB and OOM-kill the 16 GB runner
+  ## (the months-long test-coverage exit-143). Plain R CMD check still exercises
+  ## the fork (it stays on there). This is the documented
+  ## `reproducible.showCachePreWarm` advanced option.
+  reproducible.showCachePreWarm = !(
+    isTRUE(as.logical(Sys.getenv("R_COVR", "false"))) ||
+      isTRUE(as.logical(Sys.getenv("USING_COVR", "false")))
+  )
 )
 
 # if (Sys.info()["user"] %in% "emcintir") {

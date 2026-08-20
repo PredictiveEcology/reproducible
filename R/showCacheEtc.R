@@ -973,7 +973,28 @@ isTRUEorForce <- function(cond) {
 
 showCacheFast <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
                           dtFile, strict = TRUE, # cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                          drv, conn, verbose = getOption("reproducible.verbose")) {
+                          drv = getDrv(getOption("reproducible.drv", NULL)),
+                          conn = getOption("reproducible.conn", NULL),
+                          verbose = getOption("reproducible.verbose")) {
+
+  ## DBI backend: answer from a targeted single-cacheId query. The per-cacheId
+  ## metadata file this function normally reads is only written by the
+  ## file-backed backend, so without this branch a DBI cache fell through to
+  ## `showCache(userTags = cacheId)` below -- which reads the whole table and
+  ## filters in R, on a path that runs on every prepInputs cache hit.
+  if (useDBI()) {
+    if (is.list(conn)) conn <- conn[[cachePath]]
+    if (is.null(conn)) {
+      conn <- dbConnectAll(drv, cachePath = cachePath, create = FALSE)
+      if (is.null(conn)) return(.emptyCacheTable)
+      on.exit(DBI::dbDisconnect(conn), add = TRUE)
+    }
+    if (!CacheIsACache(cachePath, drv = drv, conn = conn)) return(.emptyCacheTable)
+    sc <- getHashFromDB(tries = 1, conn = conn, drv = drv, repo = cachePath,
+                        dbTabNam = CacheDBTableName(cachePath, drv = drv),
+                        outputHash = cacheId)
+    return(sc[])
+  }
 
   if (missing(dtFile)) {
     # dtFile <- CacheDBFileSingle(cachePath, cacheId, cacheSaveFormat = "check")
@@ -1026,6 +1047,12 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 .maybeSpawnShowCacheAsync <- function(x = getOption("reproducible.cachePath")) {
   if (.Platform$OS.type == "windows") return(invisible(NULL))
   if (is.null(x) || !is.character(x) || !nzchar(x[[1L]])) return(invisible(NULL))
+  ## Hard off-switch (advanced): options(reproducible.showCachePreWarm = FALSE)
+  ## disables the pre-warm fork entirely -- both the automatic Cache() spawn and
+  ## explicit prepopulateCacheAsync(). Set automatically under covr, where a
+  ## single process touches many distinct cachePaths and the per-path forks
+  ## accumulate to ~38 / ~23 GB and OOM-kill a 16 GB runner. See reproducibleOptions().
+  if (!isTRUE(getOption("reproducible.showCachePreWarm", TRUE))) return(invisible(NULL))
   ## A DBI backend (SQLite/Postgres, opt-in via useDBI(TRUE)) answers showCache()
   ## from an indexed query, so the flat-file pre-warm scan -- the only thing the
   ## fork does -- is unnecessary there. Skip it entirely.

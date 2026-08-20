@@ -36,6 +36,42 @@ test_that("default Cache() does not leak background showCache forks", {
                info = "6 default Cache() calls must not leak any background forks")
 })
 
+test_that("reproducible.showCachePreWarm = FALSE disables the auto pre-warm fork", {
+  ## The advanced off-switch: even on the showSimilar=TRUE path (which normally
+  ## pre-warms), showCachePreWarm=FALSE must spawn nothing. Used under covr, where
+  ## per-path forks otherwise accumulate to ~38 / ~23 GB and OOM the runner.
+  skip_on_cran()
+  if (.Platform$OS.type == "windows")
+    skip("forking-based; not relevant on Windows")
+  if (!requireNamespace("parallel", quietly = TRUE))
+    skip("parallel not available")
+
+  withr::local_options(reproducible.useMemoise      = FALSE,
+                       reproducible.useDBI           = FALSE,
+                       reproducible.showCachePreWarm = FALSE,
+                       reproducible.verbose          = 0)
+
+  base <- length(parallel:::children())
+
+  ## (1) auto path: Cache(showSimilar=TRUE) must not spawn.
+  cp <- file.path(tempdir(), basename(tempfile("rcache_prewarmoff_")))
+  dir.create(cp, showWarnings = FALSE, recursive = TRUE)
+  invisible(Cache(rnorm, 1, cachePath = cp, cacheId = "prewarmoff_v1",
+                  useCloud = FALSE, showSimilar = TRUE))
+  expect_false(.hasSpawnJob(cp),
+               info = "showCachePreWarm=FALSE must not spawn even with showSimilar=TRUE")
+
+  ## (2) hard off-switch: even explicit prepopulateCacheAsync() must not spawn.
+  cp2 <- file.path(tempdir(), basename(tempfile("rcache_prewarmoff2_")))
+  dir.create(cp2, showWarnings = FALSE, recursive = TRUE)
+  reproducible::prepopulateCacheAsync(cp2)
+  expect_false(.hasSpawnJob(cp2),
+               info = "showCachePreWarm=FALSE is a hard off-switch: prepopulateCacheAsync() too")
+
+  expect_equal(length(parallel:::children()), base,
+               info = "no background fork when the pre-warm is disabled")
+})
+
 ## NB: the helper-level contract for .maybeSpawnShowCacheAsync() -- spawns once
 ## on a direct call for a flat-file path, reaps on the next call, and never forks
 ## under a DBI backend -- is covered in test-showCacheAsyncInstall.R. Here we only
@@ -47,10 +83,16 @@ test_that("prepopulateCacheAsync() is exported and schedules one flat-file scan"
     skip("forking-based; not relevant on Windows")
   if (!requireNamespace("parallel", quietly = TRUE))
     skip("parallel not available")
+  ## Under covr the pre-warm fork is disabled (memory); spawning here would
+  ## re-introduce the covr OOM. The spawn path is exercised on R CMD check legs.
+  skip_if(isTRUE(as.logical(Sys.getenv("R_COVR", "false"))),
+          "showCache pre-warm fork disabled under covr")
 
   ## Flat-file backend: the DBI backend has nothing to pre-warm (see
   ## test-showCacheAsyncInstall.R), so pin it off to exercise the fork path.
-  withr::local_options(reproducible.useDBI = FALSE)
+  ## Force the pre-warm ON (default under R CMD check; covr is skipped above).
+  withr::local_options(reproducible.useDBI = FALSE,
+                       reproducible.showCachePreWarm = TRUE)
 
   ## Exported
   expect_true(exists("prepopulateCacheAsync",

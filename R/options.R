@@ -285,6 +285,18 @@
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
+#'   \item{`showCachePreWarm`}{
+#'     Default `TRUE` (override with environment variable
+#'     `R_REPRODUCIBLE_SHOWCACHE_PREWARM`). When `TRUE`, a `Cache(showSimilar = TRUE)`
+#'     call spawns a one-time background process (a fork; not on Windows) that
+#'     pre-scans the flat-file cache so the subsequent `showCache()`/`showSimilar`
+#'     lookup returns quickly for large caches. This is skipped automatically under
+#'     a DBI backend (`useDBI(TRUE)`), which is answered from an index. **Advanced
+#'     option:** set to `FALSE` to disable the automatic pre-warm entirely -- useful
+#'     in memory-constrained runners that touch many distinct `cachePath`s in one
+#'     session (e.g. `covr::package_coverage()`), where the per-path forks can
+#'     accumulate. Explicit `prepopulateCacheAsync()` calls are unaffected.
+#'   }
 #'   \item{`preDigestDump`}{
 #'     Default: `NULL` (off). A diagnostic for "why is my `cacheId` different on
 #'     this machine than that one?" (e.g. a cloud cache that will not share across
@@ -390,9 +402,23 @@
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
 #'   \item{`useDBI`}{
-#'     Default: `TRUE` if \pkg{DBI} is available.
-#'     Default value can be overridden by setting environment variable `R_REPRODUCIBLE_USE_DBI`.
-#'     As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
+#'     Default: `FALSE`, i.e., the file-backed cache metadata backend, which writes
+#'     one small metadata file per `cacheId` alongside the cached object in
+#'     `cacheOutputs/`. This needs no database packages, works on network
+#'     filesystems (e.g., NFS, CIFS), where `SQLite` file locking is unreliable, and
+#'     makes cloud caching straightforward because each entry's metadata is a
+#'     self-contained, uploadable file.
+#'     If `TRUE`, cache metadata are instead kept in a \pkg{DBI} database --
+#'     `SQLite` (`cache.db`) by default, or any \pkg{DBI} backend supplied via
+#'     `reproducible.drv`/`reproducible.conn`. This answers `showCache()` from the
+#'     database rather than by scanning the cache directory, which is faster on
+#'     large cache repositories. It requires both \pkg{DBI} and \pkg{RSQLite};
+#'     if either is missing, the option silently reverts to `FALSE` with a message.
+#'     Switching this option on an existing cache repository is supported: the
+#'     metadata are converted to the other backend on first use, without loss.
+#'     Default value can be overridden by setting environment variable
+#'     `R_REPRODUCIBLE_USE_DBI` to `"true"` or `"false"`.
+#'     As of version 0.3, the database backend is \pkg{DBI} instead of \pkg{archivist}.
 #'   }
 #'   \item{`useGdown`}{
 #'     Default: `FALSE`. If a user provides a Google Drive url to `preProcess`/`prepInputs`,
@@ -556,6 +582,10 @@ reproducibleOptions <- function() {
       allowed = c("terra::rast", "raster::raster")
     ),
     reproducible.shapefileRead = "sf::st_read",
+    reproducible.showCachePreWarm = as.logical(getEnv(
+      "R_REPRODUCIBLE_SHOWCACHE_PREWARM",
+      default = "true", allowed = c("true", "false")
+    )),
     reproducible.showSimilar = FALSE,
     reproducible.showSimilarDepth = 3,
     reproducible.tempPath = file.path(tempdir(), "reproducible"),
