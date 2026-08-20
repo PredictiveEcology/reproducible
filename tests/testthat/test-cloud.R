@@ -72,7 +72,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
 
   withr::local_options("reproducible.cloudFolderID" = NULL)
   # on.exit(try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir))), add = TRUE)
-  # Try two different cloud folders -- based on tmpdir and tmpCache
+  ## The "no cloudFolderID set" notice fires once per session; clear the flag so
+  ## it is emitted into mess5 below regardless of what ran before this test.
+  .pkgEnv$.cloudFolderUnsetEmitted <- NULL
   warn5 <- capture_warnings({
     mess5 <- capture_messages({
       a2 <- Cache(rnorm, 3, cachePath = tmpdir, useCloud = TRUE)
@@ -80,7 +82,14 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   })
   options("reproducible.cloudFolderID" = NULL)
 
-  expect_true(any(grepl("Uploading", mess5)))
+  ## No cloudFolderID -> cloud caching is deliberately SKIPPED, not auto-created
+  ## (abb3fc22). A folder derived from the local cachePath differs across
+  ## machines and would silently break sharing, so reproducible refuses and says
+  ## so. These expectations previously asserted the old auto-create behaviour;
+  ## they went unnoticed for years because the tests never ran -- the configured
+  ## credential was a service account, which cannot upload at all. See #541.
+  expect_true(any(grepl("no cloudFolderID is set", mess5)))
+  expect_false(any(grepl("Uploading", mess5)))
   expect_false(any(grepl("Download", mess5)))
 
 
@@ -91,7 +100,9 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     })
   })
 
-  expect_true(any(grepl("Uploading", mess6)))
+  ## As above: skipped, not uploaded. The one-per-session notice has already
+  ## fired for mess5, so only the behaviour is asserted here.
+  expect_false(any(grepl("Uploading", mess6)))
   expect_false(any(grepl("Download", mess6)))
   expect_false(any(grepl(.message$LoadedCacheResult(), mess6)))
   expect_true(isTRUE(all.equal(length(warn6), 0)))
