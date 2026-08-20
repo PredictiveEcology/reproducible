@@ -208,6 +208,15 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
             NULL
           })
           if (!is.null(tok)) {
+            ## Drop the token's own cache_path before using it. drive_auth()
+            ## writes the refreshed token back to that path, which is wherever
+            ## the token was MINTED (e.g. ~/.secret on a dev machine). On a CI
+            ## runner that directory does not exist, the write fails, and gargle
+            ## surfaces it as the maximally unhelpful "Can't get Google
+            ## credentials" -- indistinguishable from having no credential at
+            ## all. A runner should not be persisting a credential to disk
+            ## anyway, so this is the right behaviour regardless.
+            tok$cache_path <- NULL
             tryCatch(googledrive::drive_auth(token = tok),
                      error = function(e)
                        message("GDRIVE_OAUTH_TOKEN was not usable: ", conditionMessage(e)))
@@ -595,13 +604,59 @@ expect_match_noSlashN <- function(object, regexp, ...) {
 
 }
 
-googleSetupForUseCloud <- function(cloudFolderID, tmpdir, tmpCache) {
-  testsForPkgs <- "testsForPkgs"
-  if (isTRUE(tryCatch(googledrive::drive_ls(testsForPkgs), error = function(e) TRUE))) {
-    testsForPkgsDir <- retry(quote(googledrive::drive_mkdir(name = testsForPkgs)))
-    on.exit2(googledrive::drive_rm(testsForPkgsDir))
+## Root Drive folder for THIS test session, created once and reused.
+##
+## The suite previously used a fixed folder literally named "testsForPkgs", and
+## every job deleted it wholesale on teardown. Local cachePaths are random, and
+## so are the working subfolders -- but their shared *parent* was not, so the
+## first job to finish destroyed every concurrent job's working folder mid-run.
+## With 8 R-CMD-check matrix legs plus the coverage job all starting together,
+## that surfaced as `drive_rm()` 404s ("File not found") and as uploads being
+## skipped because another job had already put the object there.
+##
+## The name carries the GHA run and job when available, so a folder left behind
+## by a cancelled run can be traced back to it; a random suffix keeps concurrent
+## local runs apart too.
+.cloudTestRootName <- local({
+  nm <- NULL
+  function() {
+    if (is.null(nm)) {
+      tag <- paste(Filter(nzchar, c(Sys.getenv("GITHUB_RUN_ID"), Sys.getenv("GITHUB_JOB"))),
+                   collapse = "-")
+      nm <<- paste0("testsForPkgs-", if (nzchar(tag)) paste0(tag, "-") else "", rndstr(1, 6))
+    }
+    nm
   }
+})
+
+## The dribble for this session's root folder, creating it on first use.
+##
+## Self-healing on purpose: googleSetupForUseCloud() removes this root in its
+## teardown, so a later test_that() in the same session finds it gone. Without
+## the existence check, drive_mkdir(path = <deleted folder>) fails, retries five
+## times and reports "Failed after 5 attempts". (The old fixed-name code got
+## this right by accident, re-creating "testsForPkgs" whenever it was missing.)
+.cloudTestRoot <- local({
+  dir <- NULL
+  function() {
+    stillThere <- !is.null(dir) &&
+      isTRUE(tryCatch({
+        googledrive::drive_get(id = dir$id)
+        TRUE
+      }, error = function(e) FALSE))
+    if (!stillThere) {
+      dir <<- retry(quote(googledrive::drive_mkdir(name = .cloudTestRootName())))
+    }
+    dir
+  }
+})
+
+googleSetupForUseCloud <- function(cloudFolderID, tmpdir, tmpCache) {
+  testsForPkgsDir <- .cloudTestRoot()
   on.exit2({
+    ## Teardown is best-effort: removing this session's own root takes its
+    ## subfolders with it, and a 404 here means something already went. Never
+    ## fail a test on cleanup.
     try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
     try(googledrive::drive_rm(cloudFolderID), silent = TRUE)
     try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir)), silent = TRUE)
