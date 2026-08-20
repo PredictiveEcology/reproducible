@@ -205,6 +205,18 @@ test_that("test miscellaneous fns (part 2)", {
     add = TRUE
   )
 
+  ## Give this test its own derived cloud folder name.
+  ##
+  ## cloudFolderFromCacheRepo() is basename(dirname(x))_basename(x), so for the
+  ## default session cache (<tempdir>/reproducible/cache) it strips the random
+  ## tempdir and yields the CONSTANT "reproducible_cache" -- identical on every
+  ## machine and every CI job. With 9 jobs running concurrently against one
+  ## Drive account they each create a folder of that name at the Drive root, and
+  ## the drive_ls() below then fails with "Doesn't uniquely identify exactly one
+  ## folder or shared drive". Pointing cachePath at this test's own random
+  ## directory makes the derived name unique per job.
+  withr::local_options(reproducible.cachePath = tmpCache)
+
   ras <- terra::rast(terra::ext(0, 1, 0, 1), resolution = 1, vals = 1)
   ras <- terra::writeRaster(ras, filename = tmpfile[1], overwrite = TRUE)
 
