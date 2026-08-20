@@ -604,48 +604,77 @@ expect_match_noSlashN <- function(object, regexp, ...) {
 
 }
 
-## Root Drive folder for THIS test session, created once and reused.
+## Drive layout for the test suite:
 ##
-## The suite previously used a fixed folder literally named "testsForPkgs", and
-## every job deleted it wholesale on teardown. Local cachePaths are random, and
-## so are the working subfolders -- but their shared *parent* was not, so the
-## first job to finish destroyed every concurrent job's working folder mid-run.
-## With 8 R-CMD-check matrix legs plus the coverage job all starting together,
-## that surfaced as `drive_rm()` 404s ("File not found") and as uploads being
-## skipped because another job had already put the object there.
+##   testsForPkgs/                        <- stable parent, NEVER deleted
+##     run-<GHA run>-<job>-<rnd>/         <- one per test SESSION, removed on teardown
+##       <per-test working folders>
 ##
-## The name carries the GHA run and job when available, so a folder left behind
-## by a cancelled run can be traced back to it; a random suffix keeps concurrent
-## local runs apart too.
+## The suite originally used "testsForPkgs" itself as the working root and
+## deleted it wholesale on teardown. Local cachePaths are random, and so are the
+## per-test working folders -- but their shared *parent* was not, so the first
+## job to finish destroyed every concurrent job's workspace mid-run. With 8
+## R-CMD-check matrix legs plus the coverage job all starting together, that
+## surfaced as drive_rm() 404s ("File not found") and as uploads being skipped
+## because another job had already put the object there.
+##
+## Session folders are nested rather than sitting at the Drive root, so the root
+## does not accumulate one folder per run. Their names carry the GHA run and job
+## when available, so anything left behind by a cancelled run (which cannot run
+## its own teardown) is traceable; the random suffix keeps concurrent local runs
+## apart too.
+
+## The stable parent. Fetched if it exists, created once if not, and never
+## removed -- deleting it is precisely the bug described above.
+.cloudTestParent <- local({
+  dir <- NULL
+  function() {
+    stillThere <- !is.null(dir) && isTRUE(tryCatch({
+      googledrive::drive_get(id = dir$id); TRUE
+    }, error = function(e) FALSE))
+    if (!stillThere) {
+      found <- tryCatch(googledrive::drive_get(path = "testsForPkgs/"),
+                        error = function(e) NULL)
+      dir <<- if (!is.null(found) && NROW(found) > 0) {
+        ## Concurrent jobs can each create one before either sees the other;
+        ## settling on the first keeps every job in the same place.
+        found[1, ]
+      } else {
+        retry(quote(googledrive::drive_mkdir(name = "testsForPkgs")))
+      }
+    }
+    dir
+  }
+})
+
 .cloudTestRootName <- local({
   nm <- NULL
   function() {
     if (is.null(nm)) {
       tag <- paste(Filter(nzchar, c(Sys.getenv("GITHUB_RUN_ID"), Sys.getenv("GITHUB_JOB"))),
                    collapse = "-")
-      nm <<- paste0("testsForPkgs-", if (nzchar(tag)) paste0(tag, "-") else "", rndstr(1, 6))
+      nm <<- paste0("run-", if (nzchar(tag)) paste0(tag, "-") else "", rndstr(1, 6))
     }
     nm
   }
 })
 
-## The dribble for this session's root folder, creating it on first use.
+## This session's working folder, inside the stable parent.
 ##
-## Self-healing on purpose: googleSetupForUseCloud() removes this root in its
-## teardown, so a later test_that() in the same session finds it gone. Without
-## the existence check, drive_mkdir(path = <deleted folder>) fails, retries five
+## Self-healing on purpose: googleSetupForUseCloud() removes it in its teardown,
+## so a later test_that() in the same session finds it gone. Without the
+## existence check, drive_mkdir(path = <deleted folder>) fails, retries five
 ## times and reports "Failed after 5 attempts". (The old fixed-name code got
 ## this right by accident, re-creating "testsForPkgs" whenever it was missing.)
 .cloudTestRoot <- local({
   dir <- NULL
   function() {
-    stillThere <- !is.null(dir) &&
-      isTRUE(tryCatch({
-        googledrive::drive_get(id = dir$id)
-        TRUE
-      }, error = function(e) FALSE))
+    stillThere <- !is.null(dir) && isTRUE(tryCatch({
+      googledrive::drive_get(id = dir$id); TRUE
+    }, error = function(e) FALSE))
     if (!stillThere) {
-      dir <<- retry(quote(googledrive::drive_mkdir(name = .cloudTestRootName())))
+      dir <<- retry(quote(googledrive::drive_mkdir(name = .cloudTestRootName(),
+                                                   path = .cloudTestParent())))
     }
     dir
   }
