@@ -54,13 +54,31 @@ opts <- options(
 # Whatever files are on googledrive must be shared with this google service account
 if (isNamespaceLoaded("googledrive"))
   if ((!googledrive::drive_has_token())) {
+    ## Prefer a user OAuth token, as testInit() does -- a service account
+    ## authenticates but has no Drive quota on user-owned folders, so it cannot
+    ## complete an upload round-trip. GDRIVE_OAUTH_TOKEN is a path to a
+    ## serialized token, set by the reusable workflow when the GOOGLEDRIVE_AUTH
+    ## secret holds one. See helper-allEqual.R.
+    oauthTokenFile <- Sys.getenv("GDRIVE_OAUTH_TOKEN")
+    if (nzchar(oauthTokenFile) && file.exists(oauthTokenFile)) {
+      tok <- tryCatch(readRDS(oauthTokenFile), error = function(e) {
+        message("GDRIVE_OAUTH_TOKEN could not be read: ", conditionMessage(e)); NULL
+      })
+      if (!is.null(tok))
+        tryCatch(googledrive::drive_auth(token = tok),
+                 error = function(e)
+                   message("GDRIVE_OAUTH_TOKEN was not usable: ", conditionMessage(e)))
+    }
     gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
-    if (nzchar(gauthEnv)) {
+    if (!googledrive::drive_has_token() && nzchar(gauthEnv)) {
       ## drive_auth(path =) accepts a JSON file path OR the JSON contents
       ## directly. On GHA the secret holds JSON; locally it's a path.
       ## see helper-allEqual.R: tolerate revoked / rotated service-account keys
+      ## Report the reason rather than discarding it: a revoked credential is
+      ## otherwise indistinguishable from no credential at all.
       tryCatch(googledrive::drive_auth(path = gauthEnv),
-               error = function(e) invisible(NULL))
+               error = function(e)
+                 message("GOOGLEDRIVE_AUTH was not usable: ", conditionMessage(e)))
     }
   }
 
