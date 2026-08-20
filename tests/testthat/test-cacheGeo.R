@@ -10,8 +10,14 @@ test_that("lightweight tests for code coverage", {
   dPath2 <- checkPath(file.path(tempdir2()), create = TRUE)
 
   cloudFolderID <- "https://drive.google.com/drive/folders/1An8s2YLFPopQKr4BWK9o06fLSXx-Zggw"
-  targetFile <- "fireSenseParams.rds"
-  targetFile2 <- "fireSenseParams2.gpkg"
+  ## Unique per run. These files live in a Drive folder shared by every job,
+  ## and the suite deletes by NAME -- so with fixed names, concurrent runs (8
+  ## R-CMD-check matrix legs plus the coverage job all start together) delete
+  ## each other's files mid-test. That surfaced as drive_rm() 404s: drive_ls()
+  ## listed a file, another job removed it, drive_rm() then could not find it.
+  rnd <- rndstr(1, 6)
+  targetFile <- paste0("fireSenseParams_", rnd, ".rds")
+  targetFile2 <- paste0("fireSenseParams2_", rnd, ".gpkg")
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer
@@ -136,11 +142,16 @@ test_that("lightweight tests for code coverage", {
   alreadyThere <- gls$name %in% c(targetFile, targetFile2)
 
   if (any(alreadyThere)) {
-    googledrive::drive_rm(gls$id[which(alreadyThere)])
+    try(googledrive::drive_rm(gls$id[which(alreadyThere)]), silent = TRUE)
   }
   on.exit({
-    gls <- googledrive::drive_ls(cloudFolderID)
-    googledrive::drive_rm(gls[gls$name %in% c(targetFile, targetFile2), ])
+    ## Best-effort: a 404 here means the file is already gone, which is the
+    ## desired end state, not a failure.
+    try({
+      gls <- googledrive::drive_ls(cloudFolderID)
+      hits <- gls[gls$name %in% c(targetFile, targetFile2), ]
+      if (NROW(hits)) googledrive::drive_rm(hits)
+    }, silent = TRUE)
   })
 
   iter <- 0

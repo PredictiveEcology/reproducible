@@ -19,9 +19,10 @@ test_that("test Cache(useCloud=TRUE, ...)", {
   clearCache(x = tmpCache)
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 
-  testsForPkgs <- "testsForPkgs"
-  tryCatch(googledrive::drive_ls(testsForPkgs), error = function(x)
-    googledrive::drive_mkdir(name = testsForPkgs))
+  ## Session-scoped root (see .cloudTestRoot in helper-allEqual.R). A fixed
+  ## "testsForPkgs" folder was shared by every concurrent job, and each deleted
+  ## it wholesale on teardown -- taking other jobs' working subfolders with it.
+  testsForPkgs <- .cloudTestRoot()
   newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = testsForPkgs)))
   cloudFolderID <- newDir
 
@@ -164,7 +165,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
   # )
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
-  newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
+  newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = .cloudTestRoot())))
   cloudFolderID <- newDir
 
   testRasterInCloud(".tif",
@@ -174,7 +175,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
 
   retry(quote(googledrive::drive_rm(googledrive::as_id(newDir$id))))
   clearCache(x = tmpdir)
-  newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = "testsForPkgs")))
+  newDir <- retry(quote(googledrive::drive_mkdir(name = rndstr(1, 6), path = .cloudTestRoot())))
   cloudFolderID <- newDir
 
   ## the 3 raster files include the .grd, .gri, and .grd.aux.xml
@@ -198,7 +199,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
   withr::local_options(reproducible.cachePath = tmpdir)
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
-  newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = "testsForPkgs")))
+  newDir <- retry(quote(googledrive::drive_mkdir(name = basename2(tmpdir), path = .cloudTestRoot())))
   cloudFolderID <- newDir
 
   testRasterInCloud(".tif",
@@ -221,7 +222,7 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
   withr::local_options(reproducible.cachePath = tmpdir)
   clearCache(x = tmpCache)
   clearCache(x = tmpdir)
-  newDir <- retry(quote(googledrive::drive_mkdir(name = tempdir2(), path = "testsForPkgs")))
+  newDir <- retry(quote(googledrive::drive_mkdir(name = tempdir2(), path = .cloudTestRoot())))
   cloudFolderID <- newDir
 
   testRasterInCloud(".tif",
