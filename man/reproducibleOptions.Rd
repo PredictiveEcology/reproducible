@@ -294,6 +294,18 @@ it will use \code{raster::shapefile}
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
 }
+\item{\code{showCachePreWarm}}{
+Default \code{TRUE} (override with environment variable
+\code{R_REPRODUCIBLE_SHOWCACHE_PREWARM}). When \code{TRUE}, a \code{Cache(showSimilar = TRUE)}
+call spawns a one-time background process (a fork; not on Windows) that
+pre-scans the flat-file cache so the subsequent \code{showCache()}/\code{showSimilar}
+lookup returns quickly for large caches. This is skipped automatically under
+a DBI backend (\code{useDBI(TRUE)}), which is answered from an index. \strong{Advanced
+option:} set to \code{FALSE} to disable the automatic pre-warm entirely -- useful
+in memory-constrained runners that touch many distinct \code{cachePath}s in one
+session (e.g. \code{covr::package_coverage()}), where the per-path forks can
+accumulate. Explicit \code{prepopulateCacheAsync()} calls are unaffected.
+}
 \item{\code{preDigestDump}}{
 Default: \code{NULL} (off). A diagnostic for "why is my \code{cacheId} different on
 this machine than that one?" (e.g. a cloud cache that will not share across
@@ -398,9 +410,23 @@ be identical to using a previous version of \verb{reproducible (<3.0)}.
 Default \code{FALSE}. Passed to \code{Cache}.
 }
 \item{\code{useDBI}}{
-Default: \code{TRUE} if \pkg{DBI} is available.
-Default value can be overridden by setting environment variable \code{R_REPRODUCIBLE_USE_DBI}.
-As of version 0.3, the backend is now \pkg{DBI} instead of \pkg{archivist}.
+Default: \code{FALSE}, i.e., the file-backed cache metadata backend, which writes
+one small metadata file per \code{cacheId} alongside the cached object in
+\verb{cacheOutputs/}. This needs no database packages, works on network
+filesystems (e.g., NFS, CIFS), where \code{SQLite} file locking is unreliable, and
+makes cloud caching straightforward because each entry's metadata is a
+self-contained, uploadable file.
+If \code{TRUE}, cache metadata are instead kept in a \pkg{DBI} database --
+\code{SQLite} (\code{cache.db}) by default, or any \pkg{DBI} backend supplied via
+\code{reproducible.drv}/\code{reproducible.conn}. This answers \code{showCache()} from the
+database rather than by scanning the cache directory, which is faster on
+large cache repositories. It requires both \pkg{DBI} and \pkg{RSQLite};
+if either is missing, the option silently reverts to \code{FALSE} with a message.
+Switching this option on an existing cache repository is supported: the
+metadata are converted to the other backend on first use, without loss.
+Default value can be overridden by setting environment variable
+\code{R_REPRODUCIBLE_USE_DBI} to \code{"true"} or \code{"false"}.
+As of version 0.3, the database backend is \pkg{DBI} instead of \pkg{archivist}.
 }
 \item{\code{useGdown}}{
 Default: \code{FALSE}. If a user provides a Google Drive url to \code{preProcess}/\code{prepInputs},

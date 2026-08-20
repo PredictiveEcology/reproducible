@@ -35,10 +35,19 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   validateUseCloud(useCloud)
 
-  ## Lazy showCache async pre-populate: idempotent, ~10us when already spawned.
-  ## See R/showCacheEtc.R::.maybeSpawnShowCacheAsync. Targets the cachePath
-  ## actually being used (not the default at .onLoad time).
-  .maybeSpawnShowCacheAsync(cachePath)
+  ## Lazy showCache async pre-populate, but ONLY when this call will actually
+  ## consume it. showSimilar=TRUE is the sole Cache() path that calls showCache()
+  ## (which harvests + reaps the fork at showCacheEtc.R). With the default
+  ## showSimilar=FALSE nothing ever harvests it, so an unconditional spawn leaks
+  ## one background process per cachePath for the life of the session -- measured
+  ## at ~50 lingering forks / ~46 GB across the test suite, which OOM-kills small
+  ## CI runners (exit 143). Direct showCache() users can still pre-warm explicitly
+  ## via prepopulateCacheAsync(). The DBI backend is skipped inside the helper
+  ## (indexed query, nothing to pre-warm). Targets the cachePath actually being
+  ## used (not the default at .onLoad time). The helper is also a hard off-switch
+  ## via options(reproducible.showCachePreWarm = FALSE) -- see reproducibleOptions()
+  ## and the note in .maybeSpawnShowCacheAsync().
+  if (isTRUE(showSimilar)) .maybeSpawnShowCacheAsync(cachePath)
 
   # Capture and match call so it can be manipulated
   callList <- matchCall2(sys.function(0), sys.call(0), envir = .callingEnv, FUN = FUN)

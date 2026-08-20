@@ -5,16 +5,66 @@
 ## bug fixes
 
 * The background `showCache()` pre-warm fork (spawned by `Cache()` to scan a
-  flat-file cache without blocking) is no longer **leaked**. Previously each
-  distinct `cachePath` spawned one forked R process that was only ever collected
-  if `showCache()` happened to be called, so long-running sessions — and test /
-  coverage runs that touch many cache paths — accumulated live forks (tens of
-  processes, many GB), which could OOM-kill CI runners. `Cache()` now runs the
-  full lifecycle: skip if the result is already harvested, otherwise reap a
-  pending fork (non-blocking) or spawn the one-time scan — at most one live fork
-  per `cachePath`, reaped on the following `Cache()` call. Additionally, the fork
-  is now skipped entirely under a DBI backend (`useDBI(TRUE)`), where `showCache()`
-  is answered from an index and no flat-file scan is needed.
+  flat-file cache without blocking) is no longer **leaked**. It is now spawned
+  only when it will actually be consumed — i.e. when `Cache(showSimilar = TRUE)`,
+  the only path that later calls `showCache()` to harvest it — and never under a
+  DBI backend (`useDBI(TRUE)`, answered from an index, no flat-file scan). The
+  default `showSimilar = FALSE` path spawns nothing. Previously every distinct
+  `cachePath` spawned a fork that was collected only if `showCache()` happened to
+  run, so long sessions — and coverage runs touching many cache paths —
+  accumulated live forks (measured at ~50 processes / tens of GB), which
+  OOM-killed CI runners (`exit code 143`). When a fork *is* spawned it follows a
+  reap lifecycle (skip if already harvested, else reap a pending fork
+  non-blocking, else spawn once): at most one live fork per `cachePath`, reaped on
+  the following `Cache()` call.
+
+* New advanced option `reproducible.showCachePreWarm` (default `TRUE`; env var
+  `R_REPRODUCIBLE_SHOWCACHE_PREWARM`) is a **hard off-switch** for the pre-warm
+  fork above — set it `FALSE` to disable the fork entirely, both the automatic
+  `Cache(showSimilar = TRUE)` spawn and explicit `prepopulateCacheAsync()`. It is
+  needed for memory-constrained runs that touch **many distinct `cachePath`s in
+  one process**: there the per-path (non-blocking) reap cannot keep up and the
+  forks accumulate (measured under `covr` at ~38 concurrent / ~23 GB, which
+  OOM-killed the 16 GB `test-coverage` runner — the months-long `exit 143`). The
+  package's own test setup turns it off automatically under `covr`. Normal use (a
+  few reused cachePaths, which reap fine) keeps the pre-warm and its speed-up, so
+  the default is unchanged.
+
+* Cache tag values containing a single quote no longer break the `useDBI(TRUE)`
+  (SQLite/DBI) backend. `.addTagsRepo()` and `.updateTagsRepo()` pasted the value
+  straight into the SQL statement, so an apostrophe in any tag value — a file
+  path (`Ian's data.tif`), a `userTags` string, a url — produced invalid SQL.
+  Because that failure is deterministic, the `retry()` around the insert then
+  re-ran it 250 times with exponential backoff before giving up, so a single
+  apostrophe surfaced as a **multi-minute hang**, not an error. The two functions
+  now reuse the package's existing safe idioms (`DBI::dbAppendTable()`, as
+  `saveToCache()` does, and `glue::glue_sql()`, as `rmFromCache()` does).
+
+* `.addTagsRepo()` and `.updateTagsRepo()` now accept the named list of
+  connections that `Cache()` passes around, selecting the one for the relevant
+  `cachePath` as `saveToCache()`/`searchInRepos()` already did. Previously a list
+  reached `DBI` unmodified and the write failed; because both call sites wrap the
+  write in `try(silent = TRUE)`, the tag was simply dropped with no message.
+
+* URL logging (`reproducible.urlLog`, the `reproducible.url*` `cacheId` tags) now
+  works under `useDBI(TRUE)`. It was disabled outright on that backend, because
+  `showCacheFast()` — used to read a single `cacheId`'s tags — only knew how to
+  read the file-backed per-`cacheId` metadata file. It now answers from a
+  targeted query (reusing `getHashFromDB()`) when a DBI backend is in use, and
+  its `drv`/`conn` arguments have package-standard defaults so callers that omit
+  them (the `cacheChaining` paths) work on both backends.
+
+* The `useDBI` entry in `?reproducibleOptions` documented the default as "`TRUE`
+  if DBI is available"; the default is in fact `FALSE` (the file-backed backend).
+  Both backends are now described, including why the file-backed one is the
+  default (no database dependency, works on network filesystems where `SQLite`
+  locking is unreliable, and self-contained per-entry metadata for cloud caching).
+
+* The CI pass that runs the test suite under `useDBI(TRUE)` was filtered to
+  `test-cache*.R` only, on the assumption that nothing else depends on the
+  backend. It now covers every test file that touches the cache metadata store
+  (cloud, showCache, urlLog, multipleCacheRepo, cluster, ...). The narrow filter
+  is why URL logging could sit silently disabled on that backend.
 
 * Tests that download Internet resources now **fail gracefully on CRAN** per CRAN
   policy: when a download terminally fails (resource unavailable) or a downloaded
