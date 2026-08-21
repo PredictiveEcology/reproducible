@@ -8,7 +8,7 @@ utils::globalVariables(c(
 #' Saves a wide variety function call outputs to disk and optionally RAM, for recovery later
 #'
 #' @description
-#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' `r lifecycle::badge("stable")`
 #'
 #' A function that can be used to wrap around other functions to cache function calls
 #' for later use. This is normally most effective when the function to cache is
