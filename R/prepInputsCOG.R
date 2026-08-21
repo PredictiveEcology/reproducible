@@ -1,8 +1,6 @@
 #' Fast spatial subsetting of Cloud Optimized GeoTiff (COG) files
 #'
 #' @description
-#' `r lifecycle::badge("experimental")`
-#'
 #' An alternative fast-path inside [prepInputs()] for remote Cloud Optimized GeoTiffs.
 #' When a URL points to a COG and the user has specified a spatial subsetting argument
 #' (`to`, `cropTo`, or `maskTo`), this function reads only the spatial window of interest
