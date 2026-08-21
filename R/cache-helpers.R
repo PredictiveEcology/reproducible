@@ -75,8 +75,7 @@ asPath.NULL <- function(obj, nParentDirs = 0) { # nolint
 #' So, using `asPath` directly (e.g., `asPath("string", 0))`) is preferred.
 #' @export
 #' @importFrom methods new
-#' @rdname Path-class
-#' @name asPath
+#' @noRd
 setAs(from = "character", to = "Path", function(from) {
   asPath(from, 0)
 })
