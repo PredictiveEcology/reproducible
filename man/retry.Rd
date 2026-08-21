@@ -47,3 +47,8 @@ reasons that do not persist.
 \details{
 Based on \url{https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525}.
 }
+\examples{
+# retries a flaky expression; here it simply succeeds on the first try
+retry(rnorm(1), retries = 3)
+
+}

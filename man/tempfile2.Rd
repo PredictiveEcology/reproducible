@@ -27,6 +27,12 @@ sub-directory of the \code{tempdir()}. This file will likely not exist yet.
 \description{
 Make a temporary file in a temporary (sub-)directory
 }
+\examples{
+tf <- tempfile2("myProject", fileext = ".csv")
+basename(tf)
+unlink(dirname(tf), recursive = TRUE)
+
+}
 \seealso{
 \link{tempdir2}
 }

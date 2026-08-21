@@ -2442,6 +2442,17 @@ runDlFun <- function(args, dlFun) {
 #' @export
 #' @return NULL. Run for its side effect, namely, and file removed from the \file{CHECKSUMS.txt}
 #'   file.
+#' @examples
+#' # Set up a small CHECKSUMS.txt-like file, then purge one entry
+#' tf <- tempfile(fileext = ".txt")
+#' data.table::fwrite(
+#'   data.table::data.table(file = c("a.tif", "b.tif"), checksum = c("x1", "x2")),
+#'   tf
+#' )
+#' purgeChecksums(tf, "a.tif")
+#' data.table::fread(tf)
+#' unlink(tf)
+#'
 purgeChecksums <- function(checksumFile, fileToRemove) {
   dt <- data.table::fread(checksumFile)
   toPurge <- dt[file %in% fileToRemove]

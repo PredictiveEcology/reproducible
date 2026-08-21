@@ -204,6 +204,9 @@ isInteractive <- function() interactive()
 #' @param x A character vector of paths
 #' @export
 #' @return Same as [base::basename()]
+#' @examples
+#' basename2(NULL)
+#' basename2("/home/user/file.txt")
 #'
 basename2 <- function(x) {
   if (is.null(x)) {
@@ -239,6 +242,10 @@ basename2 <- function(x) {
 #'
 #' @return
 #' As with `try`, so the successfully returned `return()` from the `expr` or a `try-error`.
+#'
+#' @examples
+#' # retries a flaky expression; here it simply succeeds on the first try
+#' retry(rnorm(1), retries = 3)
 #'
 #' @export
 retry <- function(expr, envir = parent.frame(), retries = 5,
@@ -554,6 +561,10 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 #' @return
 #' A function, that will be the evaluated, parsed character
 #' string, e.g., `eval(parse(text = "terra::rast"))`
+#' @examplesIf requireNamespace("terra", quietly = TRUE)
+#' # returns the function named by getOption("reproducible.rasterRead")
+#' rr <- getOption("reproducible.rasterRead")
+#' rr
 rasterRead <- function(...) {
   eval(parse(text = getOption("reproducible.rasterRead")))(...)
 }
@@ -726,6 +737,10 @@ prefixCacheId <- function(cacheId) {
 #' @param obj Any R object
 #'
 #' @return The `cacheId` if this was part of a `Cache` call. Otherwise `NULL`
+#'
+#' @examples
+#' # An object that was never Cached has no cacheId
+#' cacheId(1:10)
 #'
 #' @export
 cacheId <- function(obj) {

@@ -15,3 +15,8 @@ logical
 \description{
 Has a cached object has been updated?
 }
+\examples{
+# An object not returned from Cache is not "updated"
+isUpdated(1:10)
+
+}

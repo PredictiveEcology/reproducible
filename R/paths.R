@@ -485,6 +485,11 @@ checkRelative <- function(files, absolutePrefix, knownRelativeFiles,
 #' sub-directory of the `tempdir()`.
 #'
 #' @seealso [tempfile2]
+#' @examples
+#' td <- tempdir2("myProject")
+#' dir.exists(td)
+#' unlink(td, recursive = TRUE)
+#'
 #' @export
 tempdir2 <- function(sub = "",
                      tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),
@@ -509,6 +514,11 @@ tempdir2 <- function(sub = "",
 #' @return
 #' A character string of a path to a file in a
 #' sub-directory of the `tempdir()`. This file will likely not exist yet.
+#' @examples
+#' tf <- tempfile2("myProject", fileext = ".csv")
+#' basename(tf)
+#' unlink(dirname(tf), recursive = TRUE)
+#'
 #' @export
 tempfile2 <- function(sub = "",
                       tempdir = getOption("reproducible.tempPath", .reproducibleTempPath()),

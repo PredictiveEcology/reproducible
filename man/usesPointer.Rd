@@ -15,3 +15,7 @@ logical
 \description{
 Does an object use a pointer?
 }
+\examples{
+usesPointer(1:10) # FALSE for an ordinary vector
+
+}

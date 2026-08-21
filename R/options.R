@@ -9,6 +9,10 @@
 #' This function returns a list of all the options that the `reproducible` package
 #' sets and uses. See below for details of each.
 #'
+#' @examples
+#' # See all reproducible options and their defaults
+#' str(reproducibleOptions(), max.level = 1, list.len = 5)
+#'
 #' @details
 #'
 #' Below are options that can be set with `options("reproducible.xxx" = newValue)`,

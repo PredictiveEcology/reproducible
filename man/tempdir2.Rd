@@ -27,6 +27,12 @@ sub-directory of the \code{tempdir()}.
 \description{
 Create a temporary subdirectory in \code{getOption("reproducible.tempPath")}.
 }
+\examples{
+td <- tempdir2("myProject")
+dir.exists(td)
+unlink(td, recursive = TRUE)
+
+}
 \seealso{
 \link{tempfile2}
 }

@@ -21,3 +21,15 @@ This is a manual way of achieving \code{prepInputs(..., purge = 7)}, useful in c
 where \code{prepInputs} is not called directly by the user, so it would be difficult
 to set \code{purge = 7}.
 }
+\examples{
+# Set up a small CHECKSUMS.txt-like file, then purge one entry
+tf <- tempfile(fileext = ".txt")
+data.table::fwrite(
+  data.table::data.table(file = c("a.tif", "b.tif"), checksum = c("x1", "x2")),
+  tf
+)
+purgeChecksums(tf, "a.tif")
+data.table::fread(tf)
+unlink(tf)
+
+}

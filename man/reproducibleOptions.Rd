@@ -545,3 +545,8 @@ User agent for downloads using this package.
 }
 }
 
+\examples{
+# See all reproducible options and their defaults
+str(reproducibleOptions(), max.level = 1, list.len = 5)
+
+}

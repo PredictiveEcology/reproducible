@@ -635,6 +635,10 @@ unwrapSpatVector <- function(obj) {
 #'
 #' @return logical
 #'
+#' @examples
+#' # An object not returned from Cache is not "updated"
+#' isUpdated(1:10)
+#'
 #' @export
 isUpdated <- function(x) {
   cond1 <- isTRUE(attr(x, ".Cache")[["newCache"]])
