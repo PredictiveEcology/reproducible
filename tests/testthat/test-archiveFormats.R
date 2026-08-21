@@ -11,9 +11,13 @@
 ## Archives are built on the fly rather than committed as fixtures: no binaries
 ## in git, nothing counting against package size, and the inputs are visible in
 ## the test. zip/tar/tar.gz/gz are exactly knownInternalArchiveExtensions, all
-## creatable with base R. rar/7z/cab need external binaries that CI may lack, so
-## the 7z case is guarded and rar/cab are left alone (rar cannot be *created*
-## by any commonly available tool anyway -- unrar only extracts).
+## creatable with base R and handled without any Suggests.
+##
+## 7z needs BOTH the 7z binary (to build the fixture) and the `archive` package
+## (to extract), so it is guarded on both -- the nosuggests CI leg has the
+## binary but not the package. rar and cab are left alone: neither can be
+## *created* by commonly available tools (unrar only extracts), so a committed
+## fixture would be the only option and would go stale untested.
 ##
 ## No network, no Drive.
 
@@ -63,7 +67,13 @@ test_that("prepInputs extracts from every archive format base R can build", {
 })
 
 test_that("prepInputs extracts a 7z archive", {
+  ## Two preconditions, both required. The 7z BINARY builds the fixture, but
+  ## extraction goes through .whichExtractFn, which for 7z -- a
+  ## knownSystemArchiveExtensions -- needs the `archive` PACKAGE and errors with
+  ## "Please install.packages('archive')" without it. The nosuggests CI leg has
+  ## the binary but not the package, so guarding on the binary alone fails there.
   skip_if_not(nzchar(Sys.which("7z")), "7z binary not available")
+  skip_if_not_installed("archive")
   testInit()
 
   root <- checkPath(file.path(tmpdir, "sevenz"), create = TRUE)
