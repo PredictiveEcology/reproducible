@@ -94,3 +94,47 @@ test_that("wrapSpatRaster requires named dots", {
     wrapSpatRaster(r, cachePath = tmpdir, cacheId = NULL, list(cachePath = tmpdir))
   )
 })
+
+test_that("Cache reports the multi-step message for braced code, with or without other args", {
+  testInit()
+
+  msg <- "does not yet support multi-step caching"
+
+  ## Cache cannot attribute a multi-statement braced block to a cacheId, so it
+  ## refuses rather than caching under a wrong key.
+  expect_error(Cache({
+    a <- 1
+    a + 1
+  }), msg)
+
+  ## Same unsupported code, merely with another argument. This shape used to
+  ## reach `[[-1]]` on the braced block before the length check and surfaced
+  ## R's opaque "invalid negative subscript in get1index <real>" instead.
+  expect_error(Cache({
+    a <- 1
+    a + 1
+  }, cachePath = tmpCache), msg)
+
+  ## A single-statement braced block is supported and must keep working.
+  expect_no_error(Cache({
+    rnorm(1)
+  }, cachePath = tmpCache))
+})
+
+test_that(".file.move deprecation names the real replacement", {
+  testInit()
+
+  from <- file.path(tmpdir, "src.txt")
+  to <- file.path(tmpdir, "dst.txt")
+  writeLines("payload", from)
+
+  ## The message must name a function that actually exists -- it previously said
+  ## "hardLinkeOrCopy", which does not, so anyone following the advice failed.
+  expect_warning(.file.move(from, to), "hardLinkOrCopy")
+  expect_true(exists("hardLinkOrCopy", envir = asNamespace("reproducible")))
+
+  ## And it really moves: the copy lands, the original goes.
+  expect_true(file.exists(to))
+  expect_false(file.exists(from))
+  expect_identical(readLines(to, warn = FALSE), "payload")
+})
