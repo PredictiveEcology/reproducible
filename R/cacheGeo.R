@@ -77,7 +77,8 @@ extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj,
 
 #' Cache-like function for spatial domains
 #'
-#' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
+#' @description
+#' `r lifecycle::badge("experimental")`
 #'
 #' This function is a combination of `Cache` and `prepInputs` but for spatial
 #' domains. This differs from `Cache` in that the current function call doesn't

@@ -25,6 +25,8 @@ to hand to \code{\link[=prepInputs]{prepInputs()}}: the public mirror URL when r
 Drive file URL. A 0-row table when the folder is empty/unreachable.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
 A remap-aware alternative to \code{googledrive::drive_ls()} for \emph{listing} a Google
 Drive folder's files. When the folder id is in the \code{reproducible.urlRemap}
 manifest as a \emph{directory remap} (a \code{type = "dir"} row; see \code{\link[=makeUrlRemap]{makeUrlRemap()}}),

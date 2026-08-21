@@ -1,5 +1,8 @@
 #' Alternative to `prepInputs` that can use Spatial Tiles stored locally or on Google Drive
 #'
+#' @description
+#' `r lifecycle::badge("experimental")`
+#'
 #' Downloads, processes and optionally uploads a `SpatRaster` object through a tiling intermediary.
 #' If the original `url` is for a very large object, but `to` is a relatively small subset
 #' of the area represented by the spatial file at `url`, then this function will

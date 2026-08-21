@@ -60,6 +60,8 @@ composed of the necessary tiles.
 If the post-processed file already exists locally, it will be returned directly.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
 Downloads, processes and optionally uploads a \code{SpatRaster} object through a tiling intermediary.
 If the original \code{url} is for a very large object, but \code{to} is a relatively small subset
 of the area represented by the spatial file at \code{url}, then this function will

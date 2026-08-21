@@ -20,14 +20,15 @@ object (in the COG's own CRS), or the character string \code{"NULL"} if any
 pre-condition fails (not HTTP, no spatial arg, network error, empty window, etc.).
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
 An alternative fast-path inside \code{\link[=prepInputs]{prepInputs()}} for remote Cloud Optimized GeoTiffs.
 When a URL points to a COG and the user has specified a spatial subsetting argument
 (\code{to}, \code{cropTo}, or \code{maskTo}), this function reads only the spatial window of interest
 via GDAL's \verb{/vsicurl/} virtual filesystem — no full-file download is needed.
 The returned \code{SpatRaster} is passed back to \code{prepInputs} where the normal
 \code{postProcess} step (mask, reproject, write) completes the pipeline.
-}
-\details{
+
 This function is called automatically from inside \code{\link[=prepInputs]{prepInputs()}} when
 \code{getOption("reproducible.useCOG")} is \code{TRUE} (the default). It can also be
 called directly.

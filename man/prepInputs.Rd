@@ -62,7 +62,7 @@ all matching members are extracted. For example,
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
-will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+will look for \code{archive} or \code{targetFile}.
 To prevent repeated downloads in different locations, the user can also set
 \code{options("reproducible.destinationPathShared")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is
@@ -123,9 +123,8 @@ if it is a GIS object, it may have been cropped, reprojected, "fixed", masked, a
 written to disk.
 }
 \description{
-\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
-}
-\details{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 This function can be used to prepare R objects from remote or local data sources.
 The object of this function is to provide a reproducible version of
 a series of commonly used steps for getting, loading, and processing data.
@@ -135,9 +134,6 @@ objects, this is crop, reproject, mask/intersect).
 To trigger the first stage, provide \code{url} or \code{archive}.
 To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.
 See examples.
-}
-\note{
-This function is still experimental: use with caution.
 }
 \section{Stage 1 - Getting data}{
 
@@ -174,8 +170,6 @@ using \code{buffer(..., width = 0)};
 NOTE: checksumming does not occur during the post-processing stage, as
 there are no file downloads. To achieve fast results, wrap
 \code{prepInputs} with \code{Cache}.
-
-NOTE: \code{sf} objects are still very experimental.
 
 \subsection{postProcessing of \verb{Spat*}, \code{sf}, \verb{Raster*} and \verb{Spatial*} objects:}{
 

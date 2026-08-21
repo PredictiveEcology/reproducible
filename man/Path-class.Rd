@@ -6,6 +6,7 @@
 \alias{asPath}
 \alias{asPath.character}
 \alias{asPath.NULL}
+\alias{coerce,character,Path-method}
 \title{Coerce a character string to a class "Path"}
 \usage{
 asPath(obj, nParentDirs = 0)
@@ -13,12 +14,20 @@ asPath(obj, nParentDirs = 0)
 \method{asPath}{character}(obj, nParentDirs = 0)
 
 \method{asPath}{`NULL`}(obj, nParentDirs = 0)
+
+\S4method{coerce}{character,Path}(from, to = "Path", strict = TRUE)
 }
 \arguments{
 \item{obj}{A character string to convert to a \code{Path}.}
 
 \item{nParentDirs}{A numeric indicating the number of parent directories starting
 from basename(obj) = 0 to keep for the digest}
+
+\item{from}{A character string to coerce to a \code{Path} object.}
+
+\item{to}{The target class, \code{"Path"}.}
+
+\item{strict}{Logical; passed through by the S4 coercion machinery.}
 }
 \value{
 A vector of class \code{Path}, which is similar to a character, but

@@ -36,7 +36,7 @@ that has a geometry column (which can then be converted to \code{sf} with \code{
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
-will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+will look for \code{archive} or \code{targetFile}.
 To prevent repeated downloads in different locations, the user can also set
 \code{options("reproducible.destinationPathShared")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is
@@ -94,9 +94,8 @@ Returns an object that results from \code{FUN}, which will possibly be a subset
 of a larger spatial object that is specified with \code{targetFile}.
 }
 \description{
-\if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
-}
-\details{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
 This function is a combination of \code{Cache} and \code{prepInputs} but for spatial
 domains. This differs from \code{Cache} in that the current function call doesn't
 have to have an identical function call previously run. Instead, it needs
@@ -107,7 +106,8 @@ This is similar to a geospatial operation on a remote GIS server, with 2 differe
 \item This downloads the object first before doing the GIS locally, and 2. it will
 optionally upload an updated object if the geographic area did not yet exist.
 }
-
+}
+\details{
 This has a very specific use case: assess whether an existing \code{sf} polygon
 or multipolygon object (local or remote) covers the spatial
 area of a \code{domain} of interest. If it does, then return only that
