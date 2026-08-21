@@ -13,6 +13,20 @@
 .message$stopNeedArchive <- function(archive)
   paste0("Please install.packages('archive') to extract files from \n", archive)
 
+## `fun` may be a function, a quoted call, a symbol, or the name of a function as
+## a string (optionally "pkg::name"). Each form resolves through a different
+## lookup, and each lookup failing on its own reports only what it happened to
+## hit -- "object 'hello' not found", "there is no package called 'nopkg'", or,
+## for an unresolvable symbol, "use of NULL environment is defunct". None name
+## the argument at fault, which is unhelpful for the mistake that actually
+## produces them: passing a *filename* as `fun`.
+.message$stopFunNotResolvedTxt <-
+  "`fun` should be a valid function, the name of that function, or a quoted call"
+
+.message$stopFunNotResolved <- function(fun)
+  paste0(.message$stopFunNotResolvedTxt, "; could not resolve '",
+         paste(format(fun), collapse = " "), "'")
+
 .message$Greps <- list(
   studyArea_Spatial = "The \\'studyArea\\' provided is not a Spatial\\* object.",
   rasterToMatch_Raster = "The \\'rasterToMatch\\' provided is not a Raster\\* object.",
