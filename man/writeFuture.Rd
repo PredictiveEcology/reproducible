@@ -2,7 +2,7 @@
 % Please edit documentation in R/cache.R
 \name{writeFuture}
 \alias{writeFuture}
-\title{Write to cache repository, using \code{future::future}}
+\title{Write to cache repository, using \code{future::future} (defunct)}
 \usage{
 writeFuture(
   written,
@@ -51,13 +51,10 @@ Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 }
 \value{
-Run for its side effect.
-This will add the \code{objectToSave} to the cache located at \code{cachePath},
-using \code{cacheId} as its id, while
-updating the database entry. It will do this using the future package, so it is
-written in a future.
+Nothing; it signals a defunct error.
 }
 \description{
-This will be used internally if \code{options("reproducible.futurePlan" = TRUE)}.
-This is still experimental.
+Defunct as of version 3.2.2. The future-based cache writing this supported was
+never enabled by default -- \code{reproducible.futurePlan} defaults to \code{FALSE} --
+and has been removed. \code{\link[=Cache]{Cache()}} writes directly.
 }

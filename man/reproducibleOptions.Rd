@@ -105,11 +105,11 @@ receiver's \code{cachePath}} rather than the producing machine's absolute path.
 fallback anchors.
 }
 \item{\code{futurePlan}}{
-Default: \code{FALSE}. On Linux OSes, \code{Cache} and \code{cloudCache} have some
-functionality that uses the \code{future} package.
-Default is to not use these, as they are experimental.
-They may, however, be very effective in speeding up some things, specifically,
-uploading cached elements via \code{googledrive} in \code{cloudCache}.
+\strong{No effect as of version 3.2.2.} Default: \code{FALSE}. This previously
+enabled \code{future}-backed background downloading and cache writing on Linux.
+Those paths were off by default, effectively untested, and have been
+removed; the option is retained only because downstream packages set it,
+and setting it now does nothing.
 }
 \item{\code{gdalwarp}}{
 \strong{Deprecated — do not use.} Default: \code{FALSE}. This option previously
