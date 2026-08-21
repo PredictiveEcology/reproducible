@@ -441,18 +441,6 @@ setMethod(
     # }
 
     # not seeing userTags
-    # Clear the futures that are resolved
-    ## Linux-only: the futurePlan path forks, which macOS is excluded from.
-    if (isLinux() && !isFALSE(getOption("reproducible.futurePlan"))) {
-      if (exists("futureEnv", envir = .reproEnv)) {
-        hasFuture <- .requireNamespace("future",
-                                       messageStart = "To use reproducible.futurePlan, "
-        )
-        if (hasFuture) {
-          checkFutures(verbose)
-        }
-      }
-    }
 
     if (!useDBI()) {
       pkgEnv <- memoiseEnv(cachePath = x)
@@ -859,37 +847,6 @@ setMethod(
 
 #' @keywords internal
 #' @inheritParams Cache
-checkFutures <- function(verbose = getOption("reproducible.verbose")) {
-  # This takes a long time -- can't use it if
-  resol1 <- FALSE
-  count <- 0
-  lsFutureEnv <- ls(.reproEnv$futureEnv)
-
-  anyFutureWrite <- length(lsFutureEnv)
-
-  if (anyFutureWrite > 0) {
-    # objsInReproEnv <- ls(.reproEnv)
-    # objsInReproEnv <- grep("^future|cloudCheckSums", objsInReproEnv, value = TRUE)
-    while (any(!resol1)) {
-      count <- count + 1
-      # numSleeps <<- numSleeps+1
-      if (count > 1) {
-        Sys.sleep(0.001)
-        if (count > 1e3) {
-          messageCache("Future is not resolved after 1 second of waiting. Allowing to proceed.",
-                       verbose = verbose
-          )
-          break
-        }
-      }
-      resol <- future::resolved(.reproEnv$futureEnv)
-      resol1 <- resol[!startsWith(names(resol), "cloudCheckSums")]
-    }
-    if (length(resol) > 0) {
-      .reproEnv$futureEnv[[lsFutureEnv]] <- NULL
-    }
-  }
-}
 
 useDBI <- function(set = NULL, verbose = getOption("reproducible.verbose"), default = TRUE) {
   canSwitch <- TRUE

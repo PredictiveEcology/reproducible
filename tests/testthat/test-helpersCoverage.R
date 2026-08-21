@@ -188,8 +188,8 @@ test_that("isWindows/isUnix/isMac are consistent and mockable", {
   expect_false(isWindows() && isMac())
 
   ## isLinux is NARROWER than isUnix: macOS is unix but not Linux. Keeping them
-  ## distinct matters -- the futurePlan/forking paths are Linux-only, so
-  ## collapsing isLinux() into isUnix() would enable them on macOS.
+  ## distinct matters -- the mcparallel forking path in spawn_showCache_async()
+  ## is Linux-only, so collapsing isLinux() into isUnix() would enable it on macOS.
   expect_type(isLinux(), "logical")
   expect_false(isLinux() && isMac())
   if (isLinux()) expect_true(isUnix())

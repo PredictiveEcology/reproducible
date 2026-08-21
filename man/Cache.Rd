@@ -239,7 +239,7 @@ function call or the cached version (i.e., the result from a previous call
 to this same cached function with identical arguments).
 }
 \description{
-\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 
 A function that can be used to wrap around other functions to cache function calls
 for later use. This is normally most effective when the function to cache is

@@ -8,7 +8,7 @@ utils::globalVariables(c(
 #' Saves a wide variety function call outputs to disk and optionally RAM, for recovery later
 #'
 #' @description
-#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' `r lifecycle::badge("stable")`
 #'
 #' A function that can be used to wrap around other functions to cache function calls
 #' for later use. This is normally most effective when the function to cache is
@@ -479,10 +479,14 @@ CacheV2 <-
 
 
 
-#' Write to cache repository, using `future::future`
+#' Write to cache repository, using `future::future` (defunct)
 #'
-#' This will be used internally if `options("reproducible.futurePlan" = TRUE)`.
-#' This is still experimental.
+#' @description
+#' `r lifecycle::badge("defunct")`
+#'
+#' Defunct as of version 3.2.2. The future-based cache writing this supported was
+#' never enabled by default -- `reproducible.futurePlan` defaults to `FALSE` --
+#' and has been removed. [Cache()] writes directly.
 #'
 #' @param written Integer. If zero or positive then it needs to be written still.
 #'                Should be 0 to start.
@@ -495,32 +499,16 @@ CacheV2 <-
 #' @inheritParams Cache
 #' @inheritParams saveToCache
 #' @return
-#' Run for its side effect.
-#' This will add the `objectToSave` to the cache located at `cachePath`,
-#' using `cacheId` as its id, while
-#' updating the database entry. It will do this using the future package, so it is
-#' written in a future.
+#' Nothing; it signals a defunct error.
 writeFuture <- function(written, outputToSave, cachePath, userTags,
                         drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
                         cacheId, linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
-  counter <- 0
-  if (!CacheIsACache(cachePath = cachePath, drv = drv, conn = conn, verbose = verbose)) {
-    stop("That cachePath does not exist")
-  }
-
-  if (missing(cacheId)) {
-    cacheId <- .robustDigest(outputToSave)
-  }
-  output <- saveToCache(
-    cachePath = cachePath, drv = drv, userTags = userTags,
-    conn = conn, obj = outputToSave, cacheId = cacheId,
-    linkToCacheId = linkToCacheId
-  )
-  saved <- cacheId
-
-  return(saved)
+  .Defunct(msg = paste0(
+    "'writeFuture()' is defunct as of version 3.2.2. The future-based cache ",
+    "writing it supported was never enabled by default and has been removed; ",
+    "'Cache()' writes directly."))
 }
 
 

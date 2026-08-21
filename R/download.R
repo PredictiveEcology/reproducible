@@ -451,118 +451,43 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       )
     }
 
-    if (!isWindows() && requireNamespace("future", quietly = TRUE) && isLargeFile &&
-        !isFALSE(getOption("reproducible.futurePlan"))) {
-      messagePreProcess("Downloading a large file in background using future", verbose = verbose)
-      message("Make sure to set\noptions(gargle_oauth_email = 'youremail@somewhere.edu')\n, and possibly ",
-              "\noptions(gargle_oauth_cache = 'localPathToCache')")
-      fp <- future::plan()
-      if (!is(fp, getOption("reproducible.futurePlan"))) {
-        fpNew <- getOption("reproducible.futurePlan")
-        future::plan(fpNew, workers = 1)
-        on.exit({
-          future::plan(fp)
+    useGoogleDrive <- TRUE
+    if (isTRUE(getOption("reproducible.useGdown", FALSE))) {
+      messForGdownIsTRUE <- "options('reproducible.useGdown') is TRUE"
+      gdown <- "gdown"
+      if (nchar(Sys.which(gdown))) {
+        gdownCall <- paste0(gdown, " ", googledrive::as_id(url), " -O '", destFile, "'")
+        messagePreProcess("Using gdown to get files from GoogleDrive because ", messForGdownIsTRUE)
+
+        b <- try(system(gdownCall))
+        if (!is(b, "try-error")) {# likely because of authentication
+          messagePreProcess(messForGdownIsTRUE, ", but the attempt failed; possibly a private url?\n",
+                            url, "\nUsing googledrive package")
+          useGoogleDrive <- FALSE
+        }
+      } else {
+        messagePreProcess(messForGdownIsTRUE,
+                          ", but gdown is not available at the cmd line; skipping")
+      }
+    }
+
+    if (isTRUE(useGoogleDrive)) {
+      a <- tryCatch(
+        retry(downloadCall, retries = 2),
+        error = function(e) {
+          # Reactive no-auth fallback: the authenticated download failed (e.g.
+          # an expired/absent token). If the file is in fact public, fetch it
+          # silently via the no-auth endpoint and carry on; only if that *also*
+          # fails do we surface the original authentication error.
+          pub <- tryCatch(
+            .dlGooglePublic(url = url, destinationPath = destinationPath,
+                            targetFile = basename2(downloadFilename), verbose = 0),
+            error = function(e2) NULL)
+          if (is.null(pub)) stop(e)
+          messagePreProcess("Downloaded public Google Drive file without authentication.",
+                            verbose = verbose)
+          pub
         })
-      }
-      b <- future::future({
-        options(gargle_oauth_cache = goc,
-                gargle_oauth_email = goe)
-      },
-      globals = list(
-
-      ))
-      a <- future::future(
-        {
-          # Re-authenticate inside the future worker. Prefer a service-account
-          # JSON when one is configured (CI / GOOGLEDRIVE_AUTH path), otherwise
-          # fall back to the user-account email + cache used by the parent.
-          # Interactive auth (no email, no path) would silently hang the
-          # worker — pass the JSON path through globals when available.
-          if (nzchar(gauth_path) && file.exists(gauth_path)) {
-            try(googledrive::drive_auth(path = gauth_path), silent = TRUE)
-          } else {
-            googledrive::drive_auth(email = goe, cache = goc)
-          }
-          retry(retries = 2, downloadCall)
-        },
-        globals = list(
-          # Guard against NULL: getOption("gargle_oauth_cache") defaults to
-          # NULL when unset, and normalizePath(NULL) errors with the cryptic
-          # `path.expand(path) : invalid 'path' argument` inside the future
-          # worker. Pass NULL through — gargle handles an absent cache.
-          goc = local({
-            v <- getOption("gargle_oauth_cache")
-            if (is.null(v) || !nzchar(v)) v else normalizePath(v, mustWork = FALSE)
-          }),
-          goe = getOption("gargle_oauth_email"),
-          gauth_path = Sys.getenv("GOOGLEDRIVE_AUTH", ""),
-          downloadCall = downloadCall,
-          downloadFilename = downloadFilename,
-          download_resumable_httr2 = download_resumable_httr2,
-          drive_download = googledrive::drive_download,
-          as_id = googledrive::as_id,
-          retry = retry,
-          # drive_deauth = googledrive::drive_deauth,
-          url = url,
-          type = type,
-          overwrite = overwrite,
-          destFile = destFile
-        )
-      )
-      cat("\n")
-      notResolved <- TRUE
-      while (notResolved) {
-        Sys.sleep(0.05)
-        notResolved <- !future::resolved(a)
-        fsActual <- file.size(destFile)
-        class(fsActual) <- "object_size"
-        if (!is.na(fsActual)) {
-          cat(
-            format(fsActual, units = "auto"), "of", format(fs, units = "auto"),
-            "downloaded         \r"
-          )
-        }
-      }
-      cat("\nDone!\n")
-    } else {
-      useGoogleDrive <- TRUE
-      if (isTRUE(getOption("reproducible.useGdown", FALSE))) {
-        messForGdownIsTRUE <- "options('reproducible.useGdown') is TRUE"
-        gdown <- "gdown"
-        if (nchar(Sys.which(gdown))) {
-          gdownCall <- paste0(gdown, " ", googledrive::as_id(url), " -O '", destFile, "'")
-          messagePreProcess("Using gdown to get files from GoogleDrive because ", messForGdownIsTRUE)
-
-          b <- try(system(gdownCall))
-          if (!is(b, "try-error")) {# likely because of authentication
-            messagePreProcess(messForGdownIsTRUE, ", but the attempt failed; possibly a private url?\n",
-                              url, "\nUsing googledrive package")
-            useGoogleDrive <- FALSE
-          }
-        } else {
-          messagePreProcess(messForGdownIsTRUE,
-                            ", but gdown is not available at the cmd line; skipping")
-        }
-      }
-
-      if (isTRUE(useGoogleDrive)) {
-        a <- tryCatch(
-          retry(downloadCall, retries = 2),
-          error = function(e) {
-            # Reactive no-auth fallback: the authenticated download failed (e.g.
-            # an expired/absent token). If the file is in fact public, fetch it
-            # silently via the no-auth endpoint and carry on; only if that *also*
-            # fails do we surface the original authentication error.
-            pub <- tryCatch(
-              .dlGooglePublic(url = url, destinationPath = destinationPath,
-                              targetFile = basename2(downloadFilename), verbose = 0),
-              error = function(e2) NULL)
-            if (is.null(pub)) stop(e)
-            messagePreProcess("Downloaded public Google Drive file without authentication.",
-                              verbose = verbose)
-            pub
-          })
-      }
     }
   } else {
     messagePreProcess(messSkipDownload, verbose = verbose)

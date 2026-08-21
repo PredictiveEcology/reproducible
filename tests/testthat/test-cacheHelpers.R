@@ -239,20 +239,11 @@ test_that("test debugCache arg", {
   expect_true(grepl("not list", unlist(.unlistToCharacter(1, 1))))
   expect_true(grepl("not list2", unlist(.unlistToCharacter(1, 0))))
 
-  ## writeFuture
-  comp <- # if (useDBI())
-    .robustDigest("sdf") # else
-  # "dda1fbb70d256e6b3b696ef0176c63de"
-  drvHere <- if (useDBI() && .requireNamespace("RSQLite")) RSQLite::SQLite() else NULL
-
-  expect_true(identical(
-    comp,
-    writeFuture(1, "sdf",
-      cachePath = tmpCache, userTags = "",
-      drv = drvHere
-    )
-  ))
-  expect_error(writeFuture(1, "sdf", cachePath = "sdfd", userTags = ""))
+  ## writeFuture is defunct as of 3.2.2: the future-backed cache writing it
+  ## supported was off by default and has been removed. It stays exported so old
+  ## code gets a message naming the situation rather than "could not find
+  ## function"; that message is now the whole contract.
+  expect_error(writeFuture(1, "sdf", cachePath = tmpCache, userTags = ""), "defunct")
 
   try(silent = TRUE, clearCache(tmpCache, ask = FALSE))
   warn <- capture_warnings(

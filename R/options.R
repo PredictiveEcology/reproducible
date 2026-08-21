@@ -100,11 +100,11 @@
 #'     fallback anchors.
 #'   }
 #'   \item{`futurePlan`}{
-#'     Default: `FALSE`. On Linux OSes, `Cache` and `cloudCache` have some
-#'     functionality that uses the `future` package.
-#'     Default is to not use these, as they are experimental.
-#'     They may, however, be very effective in speeding up some things, specifically,
-#'     uploading cached elements via `googledrive` in `cloudCache`.
+#'     **No effect as of version 3.2.2.** Default: `FALSE`. This previously
+#'     enabled `future`-backed background downloading and cache writing on Linux.
+#'     Those paths were off by default, effectively untested, and have been
+#'     removed; the option is retained only because downstream packages set it,
+#'     and setting it now does nothing.
 #'   }
 #'   \item{`gdalwarp`}{
 #'     **Deprecated — do not use.** Default: `FALSE`. This option previously
@@ -549,7 +549,7 @@ reproducibleOptions <- function() {
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.dryRun = FALSE,
     reproducible.fileBackedAnchors = NULL, # named list of semantic project paths (e.g. SpaDES paths(sim)); used to store/restore file-backed object paths *relative* to a portable anchor
-    reproducible.futurePlan = FALSE, # future::plan("multisession"), #memoise
+    reproducible.futurePlan = FALSE, # no effect as of 3.2.2; kept because downstream sets it
     reproducible.gdalwarpThreads = 2L,
     reproducible.gdriveNoAuth = FALSE,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
