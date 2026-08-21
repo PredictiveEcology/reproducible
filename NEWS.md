@@ -25,6 +25,19 @@
 
 ## bug fixes
 
+* Changing `options(reproducible.cacheSaveFormat)` no longer invalidates the
+  cache. On the file-backed backend (`useDBI = FALSE`, the default) every entry
+  was silently recomputed and both the old and new files were left on disk;
+  under DBI the same change migrated correctly. The cause was
+  `onlyStorageFiles()` building its match pattern from `CacheStoredFile()`
+  without a `cachePath`: with `reproducible.cachePath` unset — the normal state
+  when a caller passes `cachePath=` directly to `Cache()` — that returns
+  `character(0)`, so the pattern matched nothing and the changed-format recovery
+  never fired. Only the `!useDBI()` path used that helper, hence the asymmetry.
+  Two further defects on the same path are fixed alongside it: `loadFile()`
+  errored with `object 'fe' not found` when given `format=`, and the
+  format-retry loop gave up after the first candidate instead of trying the
+  rest.
 * `.archiveExtractBinary()` no longer runs `apt` on macOS. The platform guard
   was `!(isWindows() && !isMac())`, which admits macOS, where
   `system("apt ...", intern = TRUE)` fails outright. It is now `isLinux()`,
