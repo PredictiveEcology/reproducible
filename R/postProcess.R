@@ -145,11 +145,6 @@ postProcess.default <- function(x, ...) {
 #'
 #' @param ... Passed to `[cropTo()]`
 #'
-#' @param useCache Logical, default `getOption("reproducible.useCache", FALSE)`, whether
-#'                 `Cache` is used internally.
-#'
-#' @inheritParams projectInputs
-#'
 #' @author Eliot McIntire, Jean Marchal, Ian Eddy, and Tati Micheletti
 #' @export
 #' @importFrom methods is
@@ -266,6 +261,9 @@ projectInputs.default <- function(x, targetCRS, ...) {
 #'
 #' @param x An object to do a geographic raster::mask/raster::intersect.
 #'          See methods.
+#' @param maskWithRTM Logical. If `TRUE`, the `rasterToMatch` will be used as the
+#'          masking object (masking with its `NA` values); otherwise `studyArea`
+#'          is used.
 #' @param ... Passed to methods. None currently implemented.
 #'
 #' @author Eliot McIntire and Jean Marchal

@@ -65,8 +65,9 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 
 \item{targetCRS}{The CRS of x at the end  of this function (i.e., the goal)}
 
-\item{useCache}{Logical, default \code{getOption("reproducible.useCache", FALSE)}, whether
-\code{Cache} is used internally.}
+\item{maskWithRTM}{Logical. If \code{TRUE}, the \code{rasterToMatch} will be used as the
+masking object (masking with its \code{NA} values); otherwise \code{studyArea}
+is used.}
 }
 \value{
 A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
