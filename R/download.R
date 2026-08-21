@@ -27,7 +27,7 @@ utils::globalVariables(c(
 #' (`targetFile`), placed in `destinationPath`. This file will be checksummed, and
 #' that checksum will be appended to the `checksumFile`.
 #'
-#' @export
+#' @keywords internal
 #' @include checksums.R
 downloadFile <- function(archive, targetFile, neededFiles,
                          destinationPath = getOption("reproducible.destinationPath", "."), quick,

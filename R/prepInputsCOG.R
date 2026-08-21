@@ -24,7 +24,7 @@
 #'   pre-condition fails (not HTTP, no spatial arg, network error, empty window, etc.).
 #'
 #' @seealso [prepInputs()], [prepInputsWithTiles()]
-#' @export
+#' @keywords internal
 prepInputsCOG <- function(url,
                           verbose = getOption("reproducible.verbose", 1),
                           ...) {

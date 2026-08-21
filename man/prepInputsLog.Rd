@@ -21,3 +21,15 @@ modes; \code{clearUrlLog()} empties them. Records written to an environment or
 function sink live there instead and are not retrievable through these
 accessors. Set the option to \code{FALSE} to disable logging entirely.
 }
+\examples{
+\dontshow{if (identical(Sys.getenv("NOT_CRAN"), "true")) withAutoprint(\{ # examplesIf}
+# Every prepInputs()/preProcess() call that resolves a url records it, so a
+# completed run can report exactly which data sources it pulled.
+clearUrlLog()
+prepInputsLog() # empty at the start of a session
+
+# After any prepInputs()/preProcess() work, the log holds one record per url;
+# rbindlist() turns it into a table for reporting.
+# data.table::rbindlist(prepInputsLog())
+\dontshow{\}) # examplesIf}
+}

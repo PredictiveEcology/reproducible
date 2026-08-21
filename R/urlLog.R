@@ -72,6 +72,16 @@
 #'
 #' @rdname prepInputsLog
 #' @export
+#'
+#' @examplesIf identical(Sys.getenv("NOT_CRAN"), "true")
+#' # Every prepInputs()/preProcess() call that resolves a url records it, so a
+#' # completed run can report exactly which data sources it pulled.
+#' clearUrlLog()
+#' prepInputsLog() # empty at the start of a session
+#'
+#' # After any prepInputs()/preProcess() work, the log holds one record per url;
+#' # rbindlist() turns it into a table for reporting.
+#' # data.table::rbindlist(prepInputsLog())
 prepInputsLog <- function() .urlLogEnv$records
 
 #' @rdname prepInputsLog

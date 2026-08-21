@@ -34,3 +34,16 @@ to kick off the spawn early (e.g. inside \code{setupProject()}) so the fork
 has more wall-clock time to complete before the first manual
 \code{showCache()} call.
 }
+\examples{
+\dontshow{if (identical(Sys.getenv("NOT_CRAN"), "true")) withAutoprint(\{ # examplesIf}
+# Scanning a large flat-file cache is slow, so this warms it in the
+# background; a later showCache()/Cache(showSimilar = TRUE) then returns
+# without waiting. Guarded on interactive() because it spawns a process.
+cachePath <- file.path(tempdir(), "prepopulateExample")
+dir.create(cachePath, showWarnings = FALSE)
+
+prepopulateCacheAsync(cachePath = cachePath)
+
+unlink(cachePath, recursive = TRUE)
+\dontshow{\}) # examplesIf}
+}

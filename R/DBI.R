@@ -1081,7 +1081,7 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 #' @param ... Allows `format` for backward compatibility.
 #' @return the object loaded from `file`
 #'
-#' @export
+#' @keywords internal
 loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheFormat
                      drv, conn, verbose = getOption("reproducible.verbose"), ...) {
   if (!is.null(list(...)$format))

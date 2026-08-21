@@ -164,6 +164,20 @@ preProcessParams <- function(n = NULL) {
 #' @author Eliot McIntire
 #' @export
 #' @importFrom data.table fread setDT
+#'
+#' @examplesIf identical(Sys.getenv("NOT_CRAN"), "true")
+#' # preProcess() needs no url: a file already on disk is checksummed, placed in
+#' # destinationPath, and (with fun = NA) reported rather than loaded.
+#' dPath <- file.path(tempdir(), "preProcessExample")
+#' shp <- system.file("ex/luxSmall.shp", package = "reproducible")
+#'
+#' out <- preProcess(targetFile = shp, destinationPath = dPath, fun = NA)
+#' basename(out$targetFilePath)
+#'
+#' # A CHECKSUMS.txt is written, which is what makes a second call cheap.
+#' dir(dPath)
+#'
+#' unlink(dPath, recursive = TRUE)
 preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtract = NULL,
                        destinationPath = getOption("reproducible.destinationPath", "."),
                        fun = NULL, dlFun = NULL,

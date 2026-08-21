@@ -38,7 +38,7 @@ utils::globalVariables(c(
 #'
 #' @return
 #' Returns the character string of the cloud folder ID created or reported
-#' @export
+#' @keywords internal
 checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cloudFolderID", NULL),
                                       cachePath = NULL,
                                       create = FALSE,

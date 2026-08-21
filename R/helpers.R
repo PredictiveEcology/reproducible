@@ -683,7 +683,7 @@ layerNamesDelimiter <- "_%%_"
 #'
 #' @return Logical, `TRUE` if internet site exists, `FALSE` otherwise
 #'
-#' @export
+#' @keywords internal
 #' @name internetExists
 #' @rdname internetExists
 internetExists <- function() {
