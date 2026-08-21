@@ -74,3 +74,55 @@ test_that("list2envAttempts fills a normal environment and returns NULL", {
   expect_identical(e$a, 1)
   expect_identical(e$b, "two")
 })
+
+test_that("robustDigest works for raster objects", {
+  skip_if_not_installed("raster")
+  testInit("raster")
+
+  r <- raster::raster(raster::extent(0, 2, 0, 2), resolution = 1, vals = 1:4)
+  rf <- raster::writeRaster(r, file.path(tmpdir, "r.grd"), overwrite = TRUE)
+
+  ## .digestRasterLayer wrapped its file-slot list in asPath(), which has
+  ## methods for character and NULL only -- so this errored with "no applicable
+  ## method" for EVERY raster, in memory or file-backed, taking Cache() with it.
+  d1 <- .robustDigest(r)
+  d2 <- .robustDigest(rf)
+  expect_type(d1, "character")
+  expect_type(d2, "character")
+
+  ## Deterministic: the same object digests the same way twice. Without this a
+  ## cache would never hit.
+  expect_identical(.robustDigest(r), d1)
+
+  ## Discriminating: different values must not collide, or the cache would
+  ## return the wrong object.
+  rDiff <- raster::raster(raster::extent(0, 2, 0, 2), resolution = 1, vals = c(9, 9, 9, 9))
+  expect_false(identical(.robustDigest(rDiff), d1))
+
+  ## RasterStack takes the multi-layer branch.
+  expect_type(.robustDigest(raster::stack(r, rDiff)), "character")
+})
+
+test_that("Cache round-trips a raster argument and a raster return value", {
+  skip_if_not_installed("raster")
+  testInit("raster")
+
+  r <- raster::raster(raster::extent(0, 2, 0, 2), resolution = 1, vals = 1:4)
+
+  ## A raster passed IN must digest, so the call can be cached at all.
+  f <- function(x) raster::cellStats(x, "sum")
+  first <- Cache(f, r, cachePath = tmpCache)
+  second <- Cache(f, r, cachePath = tmpCache)
+  expect_equal(as.numeric(first), 10)
+  ## Second call is a cache hit and agrees; it carries .Cache attributes, so
+  ## compare values rather than whole objects.
+  expect_equal(as.numeric(second), as.numeric(first))
+
+  ## A raster returned OUT must survive wrap/unwrap through the cache.
+  g <- function() raster::raster(raster::extent(0, 2, 0, 2), resolution = 1, vals = 1:4)
+  out1 <- Cache(g, cachePath = tmpCache)
+  out2 <- Cache(g, cachePath = tmpCache)
+  expect_s4_class(out1, "RasterLayer")
+  expect_s4_class(out2, "RasterLayer")
+  expect_equal(raster::values(out2), raster::values(out1))
+})
