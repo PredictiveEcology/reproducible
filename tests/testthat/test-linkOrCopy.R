@@ -89,3 +89,65 @@ test_that("linkOrCopy handles several files at once", {
   expect_identical(readLines(tos[1], warn = FALSE), "payload1")
   expect_identical(readLines(tos[2], warn = FALSE), "payload2")
 })
+
+test_that("linkOrCopy falls back to copying when hard-linking fails", {
+  testInit()
+
+  ## The fallback normally only fires across filesystems, which a test cannot
+  ## arrange portably. Mocking file.link to fail reaches it deterministically --
+  ## and that IS the real-world case: a destination on another mount.
+  src <- file.path(tmpdir, "src.txt")
+  writeLines("payload", src)
+  to <- file.path(tmpdir, "copied.txt")
+
+  suppressMessages(
+    testthat::with_mocked_bindings(
+      linkOrCopy(src, to, symlink = FALSE, verbose = 0),
+      file.link = function(...) FALSE, .package = "base")
+  )
+
+  ## What a caller depends on: the bytes arrive regardless of the mechanism.
+  expect_true(file.exists(to))
+  expect_identical(readLines(to, warn = FALSE), "payload")
+})
+
+test_that("linkOrCopy copies every file when hard-linking fails for a vector", {
+  testInit()
+
+  ## The fallback path indexes with `from[!result]`, so a partial/whole vector
+  ## failure must still deliver all of them -- an off-by-one here would silently
+  ## drop inputs.
+  srcs <- file.path(tmpdir, c("m1.txt", "m2.txt", "m3.txt"))
+  for (i in seq_along(srcs)) writeLines(paste0("payload", i), srcs[i])
+  tos <- file.path(tmpdir, "multi", c("m1.txt", "m2.txt", "m3.txt"))
+
+  suppressMessages(
+    testthat::with_mocked_bindings(
+      linkOrCopy(srcs, tos, symlink = FALSE, verbose = 0),
+      file.link = function(...) FALSE, .package = "base")
+  )
+
+  expect_true(all(file.exists(tos)))
+  expect_identical(readLines(tos[3], warn = FALSE), "payload3")
+})
+
+test_that("linkOrCopy tries a symlink before copying on unix", {
+  skip_on_os("windows")
+  testInit()
+
+  ## With symlink = TRUE and hard-linking unavailable, the symlink branch runs
+  ## before the copy fallback. Either outcome delivers the content; that is what
+  ## is asserted, not which mechanism won.
+  src <- file.path(tmpdir, "src.txt")
+  writeLines("payload", src)
+  to <- file.path(tmpdir, "linked.txt")
+
+  suppressMessages(
+    testthat::with_mocked_bindings(
+      linkOrCopy(src, to, symlink = TRUE, verbose = 0),
+      file.link = function(...) FALSE, .package = "base")
+  )
+
+  expect_true(file.exists(to))
+  expect_identical(readLines(to, warn = FALSE), "payload")
+})
