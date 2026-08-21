@@ -135,6 +135,9 @@ preProcessParams <- function(n = NULL) {
 
 #' Download, checksum, extract files
 #'
+#' @description
+#' `r lifecycle::badge("stable")`
+#'
 #' This does downloading (via `downloadFile`), checksumming (`Checksums`),
 #' and extracting from archives (`extractFromArchive`), plus cleaning up of input
 #' arguments (e.g., paths, function names).

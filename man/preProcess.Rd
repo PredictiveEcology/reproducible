@@ -127,6 +127,8 @@ after downloading), \code{dots} (cleaned up \code{...}, including deprecated arg
 and \code{targetFilePath} (the fully qualified path to the \code{targetFile}).
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 This does downloading (via \code{downloadFile}), checksumming (\code{Checksums}),
 and extracting from archives (\code{extractFromArchive}), plus cleaning up of input
 arguments (e.g., paths, function names).
