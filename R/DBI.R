@@ -1480,6 +1480,9 @@ dbDisconnectAll <- function(conn) {
 #'
 #' @return logical
 #'
+#' @examples
+#' usesPointer(1:10) # FALSE for an ordinary vector
+#'
 #' @export
 usesPointer <- function(x) {
   UseMethod("usesPointer", x)

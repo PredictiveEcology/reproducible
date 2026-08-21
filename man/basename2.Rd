@@ -17,3 +17,8 @@ Same as \code{\link[base:basename]{base::basename()}}
 \description{
 A version of \code{base::basename} that is \code{NULL} resistant
 }
+\examples{
+basename2(NULL)
+basename2("/home/user/file.txt")
+
+}

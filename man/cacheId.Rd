@@ -17,3 +17,8 @@ Any object that was returned from the Cache or was calculated as part of a
 Cache call will have an attribute, \code{tags} and an entry with \verb{cacheId:} prefix.
 This is a lightweight helper to extract that \code{cacheId}.
 }
+\examples{
+# An object that was never Cached has no cacheId
+cacheId(1:10)
+
+}

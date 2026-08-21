@@ -17,3 +17,10 @@ string, e.g., \code{eval(parse(text = "terra::rast"))}
 \description{
 A helper to \code{getOption("reproducible.rasterRead")}
 }
+\examples{
+\dontshow{if (requireNamespace("terra", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+# returns the function named by getOption("reproducible.rasterRead")
+rr <- getOption("reproducible.rasterRead")
+rr
+\dontshow{\}) # examplesIf}
+}
