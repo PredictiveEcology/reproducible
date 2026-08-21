@@ -14,6 +14,13 @@
 ## Objects are scalar numerics and the cache holds a single entry, so this is a
 ## handful of tiny Drive calls. skip_on_cran() plus the needGoogleDriveAuth
 ## gate in testInit() keep it off CRAN and off any machine without credentials.
+##
+## Deliberately BACKEND-AGNOSTIC: this file's name matches `^showCache`, so
+## tests/test-all.R sweeps it into the second, useDBI = TRUE pass on CI, and it
+## must pass under both backends. Do not pin reproducible.useDBI here. That is
+## not incidental -- running under DBI is what caught cloudUploadFromCache()
+## uploading empty metadata (it called showCache() without cachePath), the same
+## class of silently-dead-under-DBI bug that pass was created to find.
 
 test_that("showSimilar finds a cacheId that only exists in the cloud", {
   skip_on_cran()          ## uploads

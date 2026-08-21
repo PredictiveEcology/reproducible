@@ -414,7 +414,15 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
   if (!any(isInCloud)) {
     cacheIdFileName <- CacheStoredFile(cachePath, outputHash, "check", obj = outputToSave)
     if (useDBI()) {
-      dt <- showCache(userTags = outputHash)
+      ## `cachePath`, NOT the reproducible.cachePath option. Without it this
+      ## reads whatever default cache is configured -- typically a different
+      ## repo, or none -- and returns an empty table, which then gets
+      ## serialized and uploaded as this cacheId's cloud metadata. The upload
+      ## still *looks* fine (the .dbFile.* lands on Drive under the right
+      ## name), so nothing errors; the metadata is simply blank, and
+      ## showCacheCloud() on another machine finds nothing. Only the useDBI
+      ## branch was affected -- the `else` below already used cachePath.
+      dt <- showCache(cachePath, userTags = outputHash)
       td <- tempdir()
       useDBI(FALSE, verbose = -1)
       on.exit(useDBI(TRUE, verbose = -1))
