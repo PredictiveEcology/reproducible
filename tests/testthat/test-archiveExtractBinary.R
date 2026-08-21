@@ -27,7 +27,7 @@ test_that(".archiveExtractBinary finds a system binary when one is installed", {
   if (!is.null(out)) expect_true(file.exists(out))
 })
 
-test_that(".archiveExtractBinary returns NULL on Windows when no binary exists", {
+test_that(".archiveExtractBinary walks the Windows lookup without erroring", {
   testInit()
 
   ## Two mocks, both needed. isWindows() selects the Windows lookup; Sys.which
@@ -43,9 +43,15 @@ test_that(".archiveExtractBinary returns NULL on Windows when no binary exists",
       .package = "base"),
     isWindows = function() TRUE)
 
-  ## NULL, not "" -- callers test with is.null(), and an empty string would slip
-  ## through as a valid-looking path.
-  expect_null(out)
+  ## The contract is a SINGLE usable path, or NULL -- never "" (callers use
+  ## is.null(), and an empty string reads as a valid path) and never a vector.
+  ##
+  ## Length is the assertion that matters here. A real Windows runner has 7-Zip
+  ## under Program Files, so the recursive search returns MORE than one match,
+  ## which is exactly what used to make `x == "" || length(x) == 0` blow up with
+  ## "'length = 2' in coercion to 'logical(1)'". Getting a length-1 result back
+  ## is the evidence that the multi-match handling works.
+  expect_true(is.null(out) || (is.character(out) && length(out) == 1L && nzchar(out)))
 })
 
 test_that(".archiveExtractBinary returns NULL on unix when no binary exists", {
