@@ -442,8 +442,8 @@ setMethod(
 
     # not seeing userTags
     # Clear the futures that are resolved
-    .onLinux <- isLinux() && !isFALSE(getOption("reproducible.futurePlan"))
-    if (.onLinux) {
+    ## Linux-only: the futurePlan path forks, which macOS is excluded from.
+    if (isLinux() && !isFALSE(getOption("reproducible.futurePlan"))) {
       if (exists("futureEnv", envir = .reproEnv)) {
         hasFuture <- .requireNamespace("future",
                                        messageStart = "To use reproducible.futurePlan, "

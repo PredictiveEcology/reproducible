@@ -143,7 +143,6 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   lapply(unique(dirname(to)), checkPath, create = create)
 
-  .onLinux <- isLinux()
   if (!useFileCopy) {
     if (isWindows() && isTRUE(file.size(from) > 1e6)) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
@@ -178,7 +177,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       if (any(!nzchar(useFileCopy))) {
         useFileCopy <- TRUE
       }
-    } else if ((.onLinux)) { # nolint
+    } else if (isLinux()) { # nolint
       if (!identical(basename(from), basename(to))) {
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
