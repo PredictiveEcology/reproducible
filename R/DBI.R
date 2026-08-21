@@ -1084,14 +1084,16 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
 #' @keywords internal
 loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheFormat
                      drv, conn, verbose = getOption("reproducible.verbose"), ...) {
+  ## `fe` is the format implied by the file's extension, and is compared against
+  ## the format that actually read it further down. It must be defined on BOTH
+  ## branches: previously it was set only in the `else`, so supplying `format=`
+  ## -- the only way to reach the swap-on-mismatch code -- failed with
+  ## "object 'fe' not found".
+  fe <- fileExt(file)
   if (!is.null(list(...)$format))
     cacheSaveFormat <- list(...)$format
-  else {
-    # if (is.null(cacheSaveFormat)) {
-    fe <- fileExt(file)
+  else
     cacheSaveFormat <- fe
-  # }
-  }
   qsFormats <- c(.qsFormat, .qs2Format)
   isQsAny <- cacheSaveFormat %in% qsFormats
   # isQs2 <- cacheSaveFormat %in% .qs2Format
@@ -1131,8 +1133,11 @@ loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheForma
         }
         break
       } else {
-        # if (csf %in% tail(csfs, 1))
-        stop(obj) # this will be caught by most outer calls to loadFile
+        ## Only give up once every candidate format has been tried. Stopping on
+        ## the first failure made the loop single-shot, so a file readable by a
+        ## later format in `csfs` was reported as unreadable.
+        if (csf %in% tail(csfs, 1))
+          stop(obj) # this will be caught by most outer calls to loadFile
       }
     }
     # obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
@@ -1222,15 +1227,24 @@ suffixMultipleDBFiles <- function() {
 
 suffixLockFile <- function() ".lock"
 
-onlyStorageFiles <- function(files, cacheId) {
-  # files2 <- grep(gsub("\\.", "\\\\.", paste0(suffixMultipleDBFiles(), "|", suffixLockFile(), "$")),
-  #   files,
-  #   invert = TRUE, value = TRUE
-  # )
-  shouldBeFiles <- unname(sapply(.cacheSaveFormats, function(form)
-    basename(CacheStoredFile(cacheId = cacheId, cacheSaveFormat = form, readOnly = TRUE))))
-  shouldBeFiles <- paste(shouldBeFiles, collapse = "|")
-  grep(shouldBeFiles, files, value = TRUE)
+onlyStorageFiles <- function(files, cacheId, cachePath) {
+  ## `cachePath` is required, and is deliberately NOT defaulted to
+  ## getOption("reproducible.cachePath"): that option is unset whenever the
+  ## caller passes cachePath= straight to Cache(), and CacheStoredFile() then
+  ## returns character(0). The pattern became the literal
+  ## "character(0)|character(0)|character(0)", matched nothing, and
+  ## checkSameCacheId() returned nothing -- so the changed-cacheSaveFormat
+  ## recovery never fired and the entire cache silently re-computed. Requiring
+  ## the argument makes that failure impossible to reintroduce. See
+  ## test-cacheSaveFormatSwitch.R.
+  ##
+  ## CacheStoredFile() is used rather than pasting the names together, so this
+  ## follows automatically if the storage naming convention ever changes.
+  shouldBeFiles <- unname(vapply(.cacheSaveFormats, function(form)
+    basename(CacheStoredFile(cachePath = cachePath, cacheId = cacheId,
+                             cacheSaveFormat = form, readOnly = TRUE)),
+    FUN.VALUE = character(1)))
+  grep(paste(shouldBeFiles, collapse = "|"), files, value = TRUE)
 }
 
 formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
@@ -1433,7 +1447,11 @@ checkSameCacheId <- function(f) {
   sameCacheID <- grep("\\.lock$", dir(dirname(f), pattern = cacheId), invert = TRUE, value = TRUE)
   sameCacheID <- grep(paste0(paste(.cacheSaveFormats, collapse = "|"), "$"), sameCacheID, value = TRUE)
   if (!useDBI() && length(sameCacheID) > 1) {
-    sameCacheID <- onlyStorageFiles(sameCacheID, cacheId)
+    ## dirname(f) is the storage dir (cacheOutputs/), so its parent is the
+    ## cachePath. Derived from `f` rather than from the option, which is unset
+    ## when the caller passed cachePath= directly.
+    sameCacheID <- onlyStorageFiles(sameCacheID, cacheId,
+                                    cachePath = dirname(dirname(f)))
   }
   sameCacheID
 }
