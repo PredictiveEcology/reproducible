@@ -75,7 +75,12 @@ asPath.NULL <- function(obj, nParentDirs = 0) { # nolint
 #' So, using `asPath` directly (e.g., `asPath("string", 0))`) is preferred.
 #' @export
 #' @importFrom methods new
-#' @noRd
+#' @param from A character string to coerce to a `Path` object.
+#' @param to The target class, `"Path"`.
+#' @param strict Logical; passed through by the S4 coercion machinery.
+#' @rdname Path-class
+#' @name asPath
+#' @aliases coerce,character,Path-method
 setAs(from = "character", to = "Path", function(from) {
   asPath(from, 0)
 })
