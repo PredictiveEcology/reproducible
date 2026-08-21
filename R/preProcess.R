@@ -1212,6 +1212,10 @@ pp_finalize <- function(ctx) {
       possFun <- get0(fun, envir = envir)
       if (is.null(possFun)) {
         env <- .whereInStack(fun)
+        ## .whereInStack returns NULL when the symbol is nowhere on the stack;
+        ## get(envir = NULL) would report the environment, not the argument.
+        if (is.null(env))
+          stop(.message$stopFunNotResolved(fun), call. = FALSE)
         fun <- get(fun, envir = env)
       }
     }
@@ -1223,11 +1227,15 @@ pp_finalize <- function(ctx) {
         if (!is.function(fun)) {
           if (any(grepl("::", fun))) {
             fun2 <- strsplit(fun, "::")[[1]]
-            pkg <- fun2[1]
-            fun <- fun2[2]
-            fun <- getFromNamespace(fun, pkg)
+            ## `fun` itself is left alone so the error can quote what the
+            ## caller actually passed, not just the half after "::".
+            fun <- tryCatch(
+              getFromNamespace(fun2[2], fun2[1]),
+              error = function(e) stop(.message$stopFunNotResolved(fun), call. = FALSE))
           } else {
-            fun <- get(fun, envir)
+            fun <- tryCatch(
+              get(fun, envir),
+              error = function(e) stop(.message$stopFunNotResolved(fun), call. = FALSE))
           }
         }
       }
