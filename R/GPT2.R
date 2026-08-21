@@ -2181,7 +2181,11 @@ cacheChainingStep <- function(keyFull, callList, .cacheChaining, cacheChainDetai
             cidToCheck <- names(lll2)[hasAll]
             # cidToCheck <- lll$cacheId2[hasAll]
             if (NROW(cidToCheck) > 1) {
-              browser() # these are now wrong -- should be unnecessary -- there should not ever be >1 of these; so don't need to !keep
+              stop(
+                "Internal error: cache chaining resolved more than one candidate ",
+                "cacheId (", paste(cidToCheck, collapse = ", "), "). Please report ",
+                "this at https://github.com/PredictiveEcology/reproducible/issues"
+              )
             }
             if (NROW(cidToCheck)) {
               if (!keyFull$key %in% cidToCheck) { # no override needed
@@ -2236,7 +2240,10 @@ dealWithCacheRecoveryErrors <- function(memoiseFail, outputTestIntegrity, fns, c
       hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)
       fnsExistAfter <- file.exists(fns)
       if (any(fnsExistAfter %in% FALSE) && isTRUE(any(fnsExistBefore != fnsExistAfter))) # this means that hardLinkOrCopy failed
-        browser()
+        stop(
+          "Failed to restore file-backed cache object(s) from the cache: ",
+          paste(fns[fnsExistAfter %in% FALSE], collapse = ", ")
+        )
     }
   }
   memoiseFail

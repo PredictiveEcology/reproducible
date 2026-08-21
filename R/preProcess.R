@@ -1754,7 +1754,10 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
         }
         result2 <- try(file.copy(from[!result], to[!result], overwrite = overwrite))
-        if (is(result2, "try-error")) browser()
+        if (is(result2, "try-error")) {
+          stop("Failed to copy file(s) to destination: ",
+               attr(result2, "condition")$message)
+        }
 
         toMessCollapsed <- paste(toMess, collapse = "\n")
         fromMessCollapsed <- paste(fromMess, collapse = "\n")
