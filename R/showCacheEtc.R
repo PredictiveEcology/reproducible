@@ -442,7 +442,7 @@ setMethod(
 
     # not seeing userTags
     # Clear the futures that are resolved
-    .onLinux <- .Platform$OS.type == "unix" && unname(Sys.info()["sysname"]) == "Linux" &&
+    .onLinux <- isUnix() && unname(Sys.info()["sysname"]) == "Linux" &&
       !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv)) {
@@ -1053,7 +1053,7 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 ## Skipped silently on Windows (no fork), when parallel isn't available, or
 ## when `x` is NULL/non-character.
 .maybeSpawnShowCacheAsync <- function(x = getOption("reproducible.cachePath")) {
-  if (.Platform$OS.type == "windows") return(invisible(NULL))
+  if (isWindows()) return(invisible(NULL))
   if (is.null(x) || !is.character(x) || !nzchar(x[[1L]])) return(invisible(NULL))
   ## Hard off-switch (advanced): options(reproducible.showCachePreWarm = FALSE)
   ## disables the pre-warm fork entirely -- both the automatic Cache() spawn and
@@ -1124,7 +1124,7 @@ spawn_showCache_async <- function(
     silent = TRUE,
     overwrite = FALSE
 ) {
-  if (.Platform$OS.type == "windows") {
+  if (isWindows()) {
     return(NULL)
   }
 
@@ -1185,7 +1185,7 @@ collect_showCache_async <- function(
     wait = FALSE,
     timeout = 10
 ) {
-  if (.Platform$OS.type == "windows") {
+  if (isWindows()) {
     return(NULL)
     # stop("parallel::mccollect is not available on Windows (forking backend).")
   }

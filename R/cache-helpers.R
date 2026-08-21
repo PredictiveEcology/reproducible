@@ -139,7 +139,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   lapply(unique(dirname(to)), checkPath, create = create)
 
   os <- tolower(Sys.info()[["sysname"]])
-  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
+  .onLinux <- isUnix() && unname(os) == "linux"
   if (!useFileCopy) {
     if (isWindows() && isTRUE(file.size(from) > 1e6)) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part

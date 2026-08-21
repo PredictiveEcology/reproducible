@@ -176,3 +176,34 @@ test_that(".getDataPath and .getDataPathRecursive delegate to the shared path", 
   expect_identical(.getDataPath(), .getDestinationPathShared())
   expect_identical(.getDataPathRecursive(), .getDestinationPathSharedRecursive())
 })
+
+test_that("isWindows/isUnix/isMac are consistent and mockable", {
+  testInit()
+
+  ## .Platform$OS.type is only ever "unix" or "windows", so these are exact
+  ## complements. Asserted so a future edit cannot leave them disagreeing.
+  expect_type(isWindows(), "logical")
+  expect_type(isUnix(), "logical")
+  expect_identical(isUnix(), !isWindows())
+  expect_false(isWindows() && isMac())
+
+  ## The reason these are functions rather than inline .Platform checks: tests
+  ## can override them, so platform-specific branches are reachable everywhere.
+  local_mocked_bindings(isWindows = function() TRUE, isUnix = function() FALSE)
+  expect_true(isWindows())
+  expect_false(isUnix())
+})
+
+test_that("mocked platform helpers reach package-internal callers", {
+  testInit()
+
+  ## The mock must apply inside the package namespace, not just this frame --
+  ## otherwise migrating .Platform checks to helpers would buy nothing.
+  probe <- function() if (isWindows()) "win" else "nix"
+  environment(probe) <- asNamespace("reproducible")
+
+  expect_identical(probe(), if (isWindows()) "win" else "nix")
+
+  local_mocked_bindings(isWindows = function() TRUE)
+  expect_identical(probe(), "win")
+})
