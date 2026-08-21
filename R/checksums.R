@@ -427,7 +427,6 @@ setMethod(
         # BUT don't use `try` for all/any digests as it is too slow to run all/any time
         fss2 <- try(eval(evalThis), silent = TRUE)
         if (is(fss2, "try-error")) {
-          browser()
           fss2 <- character(length(file))
           file <- file[nonZeroSize]
           fss2[nonZeroSize] <- eval(evalThis)

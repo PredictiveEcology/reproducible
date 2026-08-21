@@ -69,7 +69,10 @@ absoluteBase <- function(relToWhere, cachePath = getOption("reproducible.cachePa
     } else {
       ab <- try(possRelPaths[[1]])
     }
-    if (is(ab, "try-error")) browser()
+    if (is(ab, "try-error")) {
+      stop("Could not resolve a relative path from cachePath = ", cachePath,
+           " (relToWhere = ", relToWhere, "): ", attr(ab, "condition")$message)
+    }
   }
 
   ab

@@ -110,7 +110,6 @@ setMethod(
       }
     } else if (inherits(obj, "RasterLayer")) {
       fns <- raster::filename(obj)
-      if (exists("._Filenames_1")) browser()
       if (length(fns) == 0 || all(nchar(fns) == 0)) {
         fns <- NULL
       }

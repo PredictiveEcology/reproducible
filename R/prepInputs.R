@@ -1652,7 +1652,10 @@ process <- function(out, funCaptured,
         ## Don't cache the reading of a raster
         ## -- normal reading of raster on disk is fast b/c only reads metadata
         outProcess <- try(do.call(theFun, append(list(asPath(out$targetFilePath)), args)))
-        if (is(outProcess, "try-error")) browser()
+        if (is(outProcess, "try-error")) {
+          stop("Failed to read ", out$targetFilePath, " with the supplied function: ",
+               attr(outProcess, "condition")$message)
+        }
       } else {
         if (identical(theFun, base::load)) {
           if (is.null(args$envir)) {

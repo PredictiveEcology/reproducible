@@ -1442,7 +1442,11 @@ searchInRepos <- function(cachePaths, outputHash, drv, conn, verbose = getOption
             unlink(csf)
             dtFile <- NULL
           } else if (length(fe) > 1) { # has both the qs2 and rds dbFile
-            browser()
+            stop(
+              "Internal error: found both a qs2 and rds cache database file for ",
+              outputHash, " in ", repo, ". Please report this at ",
+              "https://github.com/PredictiveEcology/reproducible/issues"
+            )
           }
         }
 
