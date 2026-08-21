@@ -5,14 +5,14 @@
 \alias{Path-class}
 \alias{asPath}
 \alias{asPath.character}
-\alias{asPath.null}
+\alias{asPath.NULL}
 \title{Coerce a character string to a class "Path"}
 \usage{
 asPath(obj, nParentDirs = 0)
 
 \method{asPath}{character}(obj, nParentDirs = 0)
 
-\method{asPath}{null}(obj, nParentDirs = 0)
+\method{asPath}{`NULL`}(obj, nParentDirs = 0)
 }
 \arguments{
 \item{obj}{A character string to convert to a \code{Path}.}

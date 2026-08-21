@@ -442,8 +442,7 @@ setMethod(
 
     # not seeing userTags
     # Clear the futures that are resolved
-    .onLinux <- isUnix() && unname(Sys.info()["sysname"]) == "Linux" &&
-      !isFALSE(getOption("reproducible.futurePlan"))
+    .onLinux <- isLinux() && !isFALSE(getOption("reproducible.futurePlan"))
     if (.onLinux) {
       if (exists("futureEnv", envir = .reproEnv)) {
         hasFuture <- .requireNamespace("future",

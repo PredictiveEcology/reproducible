@@ -69,6 +69,16 @@ test_that("isDirectory/isFile and asPath reject wrong types", {
   ## asPath has no method for a list, so passing one is an error naming the
   ## class -- useful, because the usual cause is forgetting to unlist().
   expect_error(asPath(list("a")), "asPath")
+
+  ## NULL is explicitly supported and returns NULL, so callers can pass an
+  ## optional path straight through. This requires the method to be named
+  ## asPath.NULL: class(NULL) is the string "NULL" and S3 dispatch is
+  ## case-sensitive, so the previous asPath.null was unreachable and this
+  ## errored with "no applicable method".
+  expect_null(asPath(NULL))
+
+  ## The working cases are unaffected.
+  expect_s3_class(asPath("a/b"), "Path")
 })
 
 test_that("wrapSpatRaster requires named dots", {

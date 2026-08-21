@@ -187,11 +187,21 @@ test_that("isWindows/isUnix/isMac are consistent and mockable", {
   expect_identical(isUnix(), !isWindows())
   expect_false(isWindows() && isMac())
 
+  ## isLinux is NARROWER than isUnix: macOS is unix but not Linux. Keeping them
+  ## distinct matters -- the futurePlan/forking paths are Linux-only, so
+  ## collapsing isLinux() into isUnix() would enable them on macOS.
+  expect_type(isLinux(), "logical")
+  expect_false(isLinux() && isMac())
+  if (isLinux()) expect_true(isUnix())
+  if (isMac()) expect_true(isUnix())
+
   ## The reason these are functions rather than inline .Platform checks: tests
   ## can override them, so platform-specific branches are reachable everywhere.
-  local_mocked_bindings(isWindows = function() TRUE, isUnix = function() FALSE)
+  local_mocked_bindings(isWindows = function() TRUE, isUnix = function() FALSE,
+                        isLinux = function() FALSE)
   expect_true(isWindows())
   expect_false(isUnix())
+  expect_false(isLinux())
 })
 
 test_that("mocked platform helpers reach package-internal callers", {

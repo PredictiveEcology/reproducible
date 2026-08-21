@@ -348,6 +348,18 @@ isWindows <- function() identical(.Platform$OS.type, "windows")
 #' @keywords internal
 isUnix <- function() identical(.Platform$OS.type, "unix")
 
+#' Test whether system is Linux specifically
+#'
+#' Distinct from [isUnix()], which is TRUE on macOS too. Use `isUnix()` where
+#' something needs any unix-alike, and this where it must be Linux -- e.g. the
+#' `futurePlan` and forking paths, which are enabled on Linux only.
+#' @keywords internal
+isLinux <- function() {
+  Sys.info()[["sysname"]] |>
+    tolower() |>
+    identical("linux")
+}
+
 #' @keywords internal
 isMac <- function() {
   Sys.info()[["sysname"]] |>

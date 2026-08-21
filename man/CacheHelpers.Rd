@@ -122,9 +122,6 @@ Essentially, during transition, \code{qs} objects can be read, but not saved.
 If \code{TRUE} then the \code{CacheStoredFile} can return a \code{.qs} file; if \code{FALSE},
 then this will not be able to return \code{qs}; instead it will return \code{qs2}
 files.}
-
-\item{create}{Logical. Currently only affects non \pkg{RSQLite} default drivers.
-If \code{TRUE} and there is no Cache database, the function will create one.}
 }
 \value{
 \itemize{
@@ -164,11 +161,6 @@ This can be loaded to memory with e.g., \code{\link[=loadFile]{loadFile()}}.;
 \itemize{
 \item \code{CacheDBTableName()} returns the name of the table inside the SQL database, if that
 is being used;
-}
-
-\itemize{
-\item \code{CacheIsACache()} returns a logical indicating whether the \code{cachePath} is currently
-a \code{reproducible} cache database;
 }
 }
 \description{

@@ -62,7 +62,12 @@ asPath.character <- function(obj, nParentDirs = 0) { # nolint
 
 #' @export
 #' @rdname Path-class
-asPath.null <- function(obj, nParentDirs = 0) { # nolint
+#' @method asPath NULL
+asPath.NULL <- function(obj, nParentDirs = 0) { # nolint
+  ## Must be `.NULL`, not `.null`: S3 dispatches on class(NULL), which is the
+  ## string "NULL", and dispatch is case-sensitive. Registered as
+  ## S3method(asPath,"NULL") -- the lowercase form was never reachable, so
+  ## asPath(NULL) raised "no applicable method" instead of returning NULL.
   return(NULL)
 }
 
@@ -138,8 +143,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   lapply(unique(dirname(to)), checkPath, create = create)
 
-  os <- tolower(Sys.info()[["sysname"]])
-  .onLinux <- isUnix() && unname(os) == "linux"
+  .onLinux <- isLinux()
   if (!useFileCopy) {
     if (isWindows() && isTRUE(file.size(from) > 1e6)) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
