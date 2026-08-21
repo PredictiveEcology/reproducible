@@ -13,6 +13,8 @@ asPath(obj, nParentDirs = 0)
 \method{asPath}{character}(obj, nParentDirs = 0)
 
 \method{asPath}{`NULL`}(obj, nParentDirs = 0)
+
+\S4method{coerce}{character,Path}(from, to = "Path", strict = TRUE)
 }
 \arguments{
 \item{obj}{A character string to convert to a \code{Path}.}

@@ -53,9 +53,6 @@ The character string of the path of \code{cacheTo}, i.e., not the
 objects themselves.
 }
 \description{
-\if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
-}
-\details{
 All the \code{cacheFrom} artifacts will be put into \code{cacheTo}
 repository. All \code{userTags} will be copied verbatim, including
 \code{accessed}, with 1 exception: \code{date} will be the

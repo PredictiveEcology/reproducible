@@ -57,6 +57,7 @@ Imports:
     filelock (>= 1.0.3),
     fpCompare,
     fs,
+    lifecycle,
     lobstr,
     methods,
     stats,
@@ -96,7 +97,7 @@ VignetteBuilder: knitr, rmarkdown
 BugReports: https://github.com/PredictiveEcology/reproducible/issues
 ByteCompile: yes
 Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
 Collate: 
     'DBI.R'
     'messages.R'

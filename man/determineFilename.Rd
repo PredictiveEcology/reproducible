@@ -40,7 +40,7 @@ option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
 \item{prefix}{The character string to prepend to \code{filename1}, if \code{filename2}
 not provided.}
 
-\item{...}{Passed into \code{\link[=writeTo]{writeTo()}}}
+\item{...}{Passed to methods. None currently implemented.}
 }
 \description{
 Determine the filename, given various combinations of inputs.

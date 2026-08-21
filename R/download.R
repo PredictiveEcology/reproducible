@@ -1039,6 +1039,9 @@ makeUrlRemap <- function(manifest) {
 
 #' List a Google Drive folder, using a mirror listing when remapped
 #'
+#' @description
+#' `r lifecycle::badge("experimental")`
+#'
 #' A remap-aware alternative to `googledrive::drive_ls()` for *listing* a Google
 #' Drive folder's files. When the folder id is in the `reproducible.urlRemap`
 #' manifest as a *directory remap* (a `type = "dir"` row; see [makeUrlRemap()]),

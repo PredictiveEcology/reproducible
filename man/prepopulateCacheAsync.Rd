@@ -15,13 +15,14 @@ Invisibly returns the spawn job handle, or \code{NULL} if the spawn
 was skipped.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
 Forks a background process that runs \code{showCache()} against \code{cachePath};
 subsequent \code{showCache()} / \code{Cache()->showSimilar()} calls in the same R
 session can then harvest the result instead of re-scanning the cache
 directory synchronously. Useful for very large caches (tens of thousands
 of entries) where the cold first scan can take a minute or more.
-}
-\details{
+
 Idempotent: a second call with the same \code{cachePath} reuses the existing
 job. Skipped silently on Windows (forking-based) and when the \code{parallel}
 package isn't available.

@@ -115,10 +115,19 @@ postProcess.default <- function(x, ...) {
 
 
 
-#' Crop a `Spatial*` or `Raster*` object
+#' Superseded `postProcess` input functions
 #'
-#' This function is deprecated. Use `cropTo`. If used, all arguments will be passed
-#' to `cropTo` anyway.
+#' @description
+#' `r lifecycle::badge("superseded")`
+#'
+#' Development on `cropInputs()`, `projectInputs()`, and `maskInputs()` is
+#' complete. For new code, use [cropTo()], [projectTo()], and [maskTo()]
+#' respectively (or the all-in-one [postProcessTo()]). These functions are
+#' retained and continue to work by delegating to their successors.
+#'
+#' @details
+#' `cropInputs()` crops a `Spatial*` or `Raster*` object. If used, all arguments
+#' will be passed to `cropTo` anyway.
 #'
 #' @param x A `Spatial*`, `sf`, or `Raster*` object.
 #'
@@ -145,14 +154,14 @@ postProcess.default <- function(x, ...) {
 #' @importFrom methods is
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately cropped.
-#' @rdname deprecated
-#' @name deprecated
+#' @rdname postProcessInputsSuperseded
+#' @name postProcessInputsSuperseded
 cropInputs <- function(x, studyArea, rasterToMatch, verbose = getOption("reproducible.verbose", 1), ...) {
   UseMethod("cropInputs")
 }
 
 #' @export
-#' @rdname deprecated
+#' @rdname postProcessInputsSuperseded
 cropInputs.default <- function(x, ...) {
   cropTo(x, ...)
 }
@@ -211,7 +220,8 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 
 #' Project `Raster*` or `Spatial*` or `sf` objects
 #'
-#' Deprecated. Use [projectTo()].
+#' @details
+#' `projectInputs()` reprojects a `Raster*`, `Spatial*`, or `sf` object.
 #'
 #' @param x A `Raster*`, `Spatial*` or `sf` object
 #'
@@ -229,7 +239,7 @@ fixErrors.default <- function(x, objectName, attemptErrorFixes = TRUE,
 #'
 #' @export
 #' @inheritParams prepInputs
-#' @rdname deprecated
+#' @rdname postProcessInputsSuperseded
 #' @seealso [projectTo()]
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately reprojected.
@@ -239,7 +249,7 @@ projectInputs <- function(x, targetCRS, verbose = getOption("reproducible.verbos
 }
 
 #' @export
-#' @rdname deprecated
+#' @rdname postProcessInputsSuperseded
 projectInputs.default <- function(x, targetCRS, ...) {
   projectTo(x, projectTo = targetCRS, ...)
 }
@@ -250,18 +260,17 @@ projectInputs.default <- function(x, targetCRS, ...) {
 
 #' Mask module inputs
 #'
-#' `maskInputs` is deprecated. Use [maskTo()]
+#' @details
+#' `maskInputs()` masks a raster or vector object to a study area.
 #'
 #' @param x An object to do a geographic raster::mask/raster::intersect.
 #'          See methods.
 #' @param ... Passed to methods. None currently implemented.
 #'
-#' @inheritParams cropInputs
-#'
 #' @author Eliot McIntire and Jean Marchal
 #' @export
 #' @importFrom utils capture.output
-#' @rdname deprecated
+#' @rdname postProcessInputsSuperseded
 #' @return A GIS file (e.g., RasterLayer, SpatRaster etc.) that has been
 #' appropriately masked.
 #' @seealso [maskTo()], [postProcessTo()] for related examples
@@ -271,6 +280,7 @@ maskInputs <- function(x, studyArea, ...) {
 
 
 #' @export
+#' @rdname postProcessInputsSuperseded
 maskInputs.default <- function(x, studyArea, rasterToMatch = NULL, maskWithRTM = NULL,
                                verbose = getOption("reproducible.verbose", 1), ...) {
   if (!is.null(maskWithRTM) && !is.null(rasterToMatch))

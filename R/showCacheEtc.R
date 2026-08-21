@@ -763,7 +763,6 @@ setMethod(
 
 #' Merge two cache repositories together
 #'
-#' \if{html}{\figure{lifecycle-experimental.svg}{options: alt="experimental"}}
 #'
 #' All the `cacheFrom` artifacts will be put into `cacheTo`
 #' repository. All `userTags` will be copied verbatim, including
@@ -1091,6 +1090,9 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 }
 
 #' Pre-populate the in-memory `showCache` cache for a given `cachePath`
+#'
+#' @description
+#' `r lifecycle::badge("experimental")`
 #'
 #' Forks a background process that runs `showCache()` against `cachePath`;
 #' subsequent `showCache()` / `Cache()->showSimilar()` calls in the same R

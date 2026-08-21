@@ -1,7 +1,7 @@
 #' The `reproducible` package
 #'
 #' @description
-#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' `r lifecycle::badge("stable")`
 #'
 #' This package aims at making
 #' high-level, robust, machine and OS independent tools for making deeply
@@ -41,4 +41,5 @@
 #' [options()] to configure behaviour.
 #'
 #' @import methods
+#' @importFrom lifecycle deprecated
 "_PACKAGE"
