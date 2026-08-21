@@ -269,7 +269,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
   ##########################################
   # Remote file using `url`
   ##########################################
-  if (internetExists()) {
+  if (identical(Sys.getenv("NOT_CRAN"), "true")) {
     data.table::setDTthreads(2)
     origDir <- getwd()
     # download a zip file from internet, unzip all files, load as shapefile, Cache the call
