@@ -1316,12 +1316,26 @@ CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbos
 }
 
 convertCallWithSquigglyBraces <- function(call, usesDots) {
-  if (length(call) == 2) {
-    if (length(call[[-1]]) > 2)
+  ## `x[[-1]]` is only valid when length(x) == 2 -- there it unambiguously means
+  ## "the other element". On a longer object R raises the opaque
+  ## "invalid negative subscript in get1index <real>". A braced block with more
+  ## than one statement is exactly that longer object, so it must be rejected
+  ## with the informative message BEFORE any [[-1]] is attempted. Previously
+  ## only the length-2 call shape checked, so `Cache({a <- 1; a + 1})` reported
+  ## the intended message while `Cache({a <- 1; a + 1}, cachePath = x)` -- the
+  ## same unsupported code, merely with another argument -- surfaced the
+  ## subscript error instead.
+  stopIfMultiStep <- function(braced) {
+    if (length(braced) > 2)
       stop("Cache does not yet support multi-step caching unless using the pipe (|>)")
-    call <- as.call(c(call[[1]], call[[-1]][[-1]]))
+    braced
+  }
+  if (length(call) == 2) {
+    braced <- stopIfMultiStep(call[[-1]])
+    call <- as.call(c(call[[1]], braced[[-1]]))
   } else if ((length(call) > 2) && isFALSE(usesDots)) {
-    call <- as.call(c(call[[1]], FUN = as.list(call[-1])[[1]][[-1]], as.list(call[-1])[-1]))
+    braced <- stopIfMultiStep(as.list(call[-1])[[1]])
+    call <- as.call(c(call[[1]], FUN = braced[[-1]], as.list(call[-1])[-1]))
   }
   call
 }

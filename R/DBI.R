@@ -877,13 +877,6 @@ CacheDBTableName <- function(cachePath = getOption("reproducible.cachePath"),
   return(newPath)
 }
 
-#' @param create Logical. Currently only affects non \pkg{RSQLite} default drivers.
-#'        If `TRUE` and there is no Cache database, the function will create one.
-#'
-#' @return
-#' - `CacheIsACache()` returns a logical indicating whether the `cachePath` is currently
-#' a `reproducible` cache database;
-#'
 ## Is `conn` actually a connection to `cachePath`'s database file?
 ##
 ## `conn` defaults to the single global `getOption("reproducible.conn")` in most
@@ -909,6 +902,13 @@ connIsForCachePath <- function(conn, cachePath,
   isTRUE(normPath(connDBFile[1]) == normPath(expected))
 }
 
+#' @param create Logical. Currently only affects non \pkg{RSQLite} default drivers.
+#'        If `TRUE` and there is no Cache database, the function will create one.
+#'
+#' @return
+#' - `CacheIsACache()` returns a logical indicating whether the `cachePath` is currently
+#' a `reproducible` cache database;
+#'
 #' @export
 #' @rdname CacheHelpers
 CacheIsACache <- function(cachePath = getOption("reproducible.cachePath"), create = FALSE,

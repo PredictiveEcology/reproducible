@@ -294,7 +294,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
-  if (.Platform$OS.type == "unix" && requireNamespace("parallel")) {
+  if (isUnix() && requireNamespace("parallel")) {
     numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = length(tile_specs)))
     results <- parallel::mclapply(
       tile_specs, process_tile,
@@ -358,7 +358,7 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   }
 
   # Upload in parallel on Linux/macOS, sequential on Windows
-  if (.Platform$OS.type == "unix" && requireNamespace("parallel")) {
+  if (isUnix() && requireNamespace("parallel")) {
     numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = 7))
     # numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
                          # tends to be slower; but this will depend on connection speed

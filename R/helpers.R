@@ -339,6 +339,27 @@ isCI <- function() {
 #' @keywords internal
 isWindows <- function() identical(.Platform$OS.type, "windows")
 
+#' Test whether system is unix-alike (macOS, Linux, BSD, ...)
+#'
+#' `.Platform$OS.type` is only ever "unix" or "windows", so this is the exact
+#' complement of [isWindows()]. Provided as a helper so tests can override it
+#' with `testthat::local_mocked_bindings()`, which is impossible when the check
+#' is written inline against `.Platform`.
+#' @keywords internal
+isUnix <- function() identical(.Platform$OS.type, "unix")
+
+#' Test whether system is Linux specifically
+#'
+#' Distinct from [isUnix()], which is TRUE on macOS too. Use `isUnix()` where
+#' something needs any unix-alike, and this where it must be Linux -- e.g. the
+#' `futurePlan` and forking paths, which are enabled on Linux only.
+#' @keywords internal
+isLinux <- function() {
+  Sys.info()[["sysname"]] |>
+    tolower() |>
+    identical("linux")
+}
+
 #' @keywords internal
 isMac <- function() {
   Sys.info()[["sysname"]] |>
@@ -741,7 +762,7 @@ cacheId <- function(obj) {
 #'
 #' @export
 detectActiveCores <- function(pattern = "", minCPU = 50) {
-  if (!identical(.Platform$OS.type, "windows")) {
+  if (!isWindows()) {
     a0 <- system("ps -ef", intern = TRUE)[-1]
     a4 <- grep(pattern, a0, value = TRUE)
     a5 <- gsub("^.*[[:digit:]]* [[:digit:]]* ([[:digit:]]{1,3}) .*$",
