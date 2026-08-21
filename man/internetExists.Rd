@@ -22,3 +22,4 @@ A lightweight function that may be less reliable than more purpose built solutio
 such as checking a specific web page using \code{RCurl::url.exists}. However, this is
 slightly faster and is sufficient for many uses.
 }
+\keyword{internal}

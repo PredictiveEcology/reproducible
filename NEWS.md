@@ -2,7 +2,38 @@
 
 * development version.
 
+## behaviour changes
+
+* Five functions are **no longer exported**. Each is an implementation detail
+  with a better-maintained equivalent elsewhere on CRAN, or no use outside this
+  package; all continue to work unchanged internally, so nothing in
+  `reproducible` behaves differently:
+    * `internetExists()` — use `curl::has_internet()`.
+    * `downloadFile()` — use `curl::curl_download()`, `utils::download.file()`,
+      or `httr2`; `prepInputs()`/`preProcess()` remain the supported entry
+      points for downloading *with* checksums and caching.
+    * `loadFile()`, `checkAndMakeCloudFolderID()`, `prepInputsCOG()` — internal
+      machinery of the cache and `prepInputs()`; call `prepInputs()`,
+      `preProcess()` or `Cache()` instead.
+* `writeFuture()` is **defunct**. It supported `future`-backed cache writing,
+  which was never enabled by default and has now been removed; `Cache()` writes
+  directly.
+* The `future`-backed background download and cache-write paths are removed.
+  They were gated behind `reproducible.futurePlan`, which defaults to `FALSE`,
+  so they never ran unless deliberately switched on. `reproducible.futurePlan`
+  is retained (downstream packages set it) but **has no effect as of 3.2.2**.
+
 ## bug fixes
+
+* `.archiveExtractBinary()` no longer runs `apt` on macOS. The platform guard
+  was `!(isWindows() && !isMac())`, which admits macOS, where
+  `system("apt ...", intern = TRUE)` fails outright. It is now `isLinux()`,
+  since `apt` is Debian/Ubuntu-only.
+* `.archiveExtractBinary()` no longer errors on Windows when more than one
+  archive binary is present. `list.files()` over `C:/Program Files` returns a
+  vector, so `x == "" || length(x) == 0` raised
+  `'length = 2' in coercion to 'logical(1)'` on R >= 4.3 whenever both `7z.exe`
+  and `unrar.exe` were installed. Length is now tested before the value.
 
 * The background `showCache()` pre-warm fork (spawned by `Cache()` to scan a
   flat-file cache without blocking) is no longer **leaked**. It is now spawned

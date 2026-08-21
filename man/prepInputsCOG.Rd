@@ -20,8 +20,6 @@ object (in the COG's own CRS), or the character string \code{"NULL"} if any
 pre-condition fails (not HTTP, no spatial arg, network error, empty window, etc.).
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 An alternative fast-path inside \code{\link[=prepInputs]{prepInputs()}} for remote Cloud Optimized GeoTiffs.
 When a URL points to a COG and the user has specified a spatial subsetting argument
 (\code{to}, \code{cropTo}, or \code{maskTo}), this function reads only the spatial window of interest
@@ -36,3 +34,4 @@ called directly.
 \seealso{
 \code{\link[=prepInputs]{prepInputs()}}, \code{\link[=prepInputsWithTiles]{prepInputsWithTiles()}}
 }
+\keyword{internal}

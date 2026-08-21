@@ -38,3 +38,4 @@ the object loaded from \code{file}
 \description{
 Load a file from the cache
 }
+\keyword{internal}

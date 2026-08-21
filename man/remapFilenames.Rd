@@ -19,3 +19,27 @@ remapFilenames(obj, tags, cachePath = getOption("reproducible.cachePath"), ...)
 Update file path metadata for file-backed objects (e.g., \code{SpatRasters}).
 Useful when moving saved objects between projects or machines.
 }
+\examples{
+\dontshow{if (identical(Sys.getenv("NOT_CRAN"), "true")) withAutoprint(\{ # examplesIf}
+# A file-backed object cached on one machine records where its files lived.
+# remapFilenames() translates those to where they belong on THIS machine,
+# using the anchors (e.g. inputPath) supplied in `paths`.
+inputDir <- file.path(tempdir(), "remapExample")
+dir.create(inputDir, showWarnings = FALSE)
+
+tags <- c(
+  "origFilename:dem.tif",
+  "origRelName:dem.tif",
+  "relToWhere:inputPath", # the anchor the file was stored relative to
+  "filesToLoad:/some/other/machine/inputs/dem.tif"
+)
+
+newFiles <- remapFilenames(
+  tags = tags, cachePath = NULL,
+  paths = list(inputPath = inputDir)
+)
+newFiles$newName # now under THIS machine's inputPath
+
+unlink(inputDir, recursive = TRUE)
+\dontshow{\}) # examplesIf}
+}

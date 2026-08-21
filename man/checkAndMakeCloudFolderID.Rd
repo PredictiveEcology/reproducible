@@ -40,3 +40,4 @@ Returns the character string of the cloud folder ID created or reported
 Will check for presence of a \code{cloudFolderID} and make a new one
 if one not present on Google Drive, with a warning.
 }
+\keyword{internal}

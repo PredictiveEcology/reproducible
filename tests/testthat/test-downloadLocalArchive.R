@@ -8,13 +8,14 @@
 ## fail by attempting a real download rather than silently passing. `.invalid`
 ## is IANA-reserved, so it cannot resolve even behind wildcard DNS.
 ##
-## NOTE ON ENTRY POINT: these drive the exported downloadFile() directly rather
+## NOTE ON ENTRY POINT: these drive downloadFile() directly rather
 ## than prepInputs(). Going through prepInputs does NOT reach this block --
 ## preProcess runs pp_resolve_needed_files() (which extracts from a local
 ## archive via .tryExtractFromArchive) a full phase before pp_download(), so by
 ## the time downloadFile() is called nothing is missing and the shortcut is
 ## skipped. Verified by tracing .listFilesInArchive: 0 calls via prepInputs,
-## 2 via downloadFile(). downloadFile() is exported, so this is public API.
+## 2 via downloadFile(). downloadFile() is no longer exported, but test_check()
+## runs tests inside the package namespace, so calling it directly is fine.
 ##
 ## No network, no Drive.
 

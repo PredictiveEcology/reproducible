@@ -1073,6 +1073,17 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
 #' @return Invisibly returns the spawn job handle, or `NULL` if the spawn
 #'   was skipped.
 #' @export
+#'
+#' @examplesIf identical(Sys.getenv("NOT_CRAN"), "true")
+#' # Scanning a large flat-file cache is slow, so this warms it in the
+#' # background; a later showCache()/Cache(showSimilar = TRUE) then returns
+#' # without waiting. Guarded on interactive() because it spawns a process.
+#' cachePath <- file.path(tempdir(), "prepopulateExample")
+#' dir.create(cachePath, showWarnings = FALSE)
+#'
+#' prepopulateCacheAsync(cachePath = cachePath)
+#'
+#' unlink(cachePath, recursive = TRUE)
 prepopulateCacheAsync <- function(cachePath = getOption("reproducible.cachePath")) {
   invisible(.maybeSpawnShowCacheAsync(cachePath))
 }
