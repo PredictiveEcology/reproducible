@@ -482,6 +482,8 @@ CacheV2 <-
 #' Write to cache repository, using `future::future` (defunct)
 #'
 #' @description
+#' `r lifecycle::badge("defunct")`
+#'
 #' Defunct as of version 3.2.2. The future-based cache writing this supported was
 #' never enabled by default -- `reproducible.futurePlan` defaults to `FALSE` --
 #' and has been removed. [Cache()] writes directly.
