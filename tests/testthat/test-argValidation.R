@@ -148,3 +148,48 @@ test_that(".file.move deprecation names the real replacement", {
   expect_false(file.exists(from))
   expect_identical(readLines(to, warn = FALSE), "payload")
 })
+
+test_that(".extractFunction names the offending argument when `fun` cannot be resolved", {
+  testInit()
+
+  ## `fun` is the loader for the target file, so it must be a function, the name
+  ## of one, or a quoted call -- NOT a filename, which is the mistake that
+  ## actually lands here. Each accepted form resolves through a different
+  ## lookup, and each used to surface that lookup's own internal complaint
+  ## ("object 'hello' not found", "there is no package called 'nopkg'", or for a
+  ## symbol "use of NULL environment is defunct"), none of which say which
+  ## argument was wrong.
+  ## Matched against the .message entry rather than a copy of the string, so a
+  ## reword updates the code and the test together (R/messages.R).
+  msg <- .message$stopFunNotResolvedTxt
+
+  ## Plain string naming nothing.
+  expect_error(.extractFunction("hello"), msg, fixed = TRUE)
+  ## The full string is quoted back, so the caller can see what was passed.
+  expect_error(.extractFunction("hello"), "hello", fixed = TRUE)
+
+  ## "pkg::name": missing package, and present package but missing object.
+  expect_error(.extractFunction("nopkg::nofun"), msg, fixed = TRUE)
+  expect_error(.extractFunction("stats::nofun"), msg, fixed = TRUE)
+  ## Quoted whole, not just the half after "::".
+  expect_error(.extractFunction("nopkg::nofun"), "nopkg::nofun", fixed = TRUE)
+
+  ## An unresolvable symbol: .whereInStack() finds nothing and returns NULL.
+  expect_error(.extractFunction(quote(hello), envir = new.env()), msg, fixed = TRUE)
+})
+
+test_that(".extractFunction still resolves every valid form of `fun`", {
+  testInit()
+
+  ## The guard must not have narrowed what is accepted.
+  expect_true(is.function(.extractFunction("readRDS")))
+  expect_true(is.function(.extractFunction("base::readRDS")))
+  expect_true(is.function(.extractFunction(readRDS)))
+
+  ## A quoted call is passed through untouched -- it is evaluated later, not now.
+  expect_true(is.call(.extractFunction(quote(readRDS(x)))))
+
+  ## NA means "do not load"; NULL means "nothing supplied". Neither is a lookup.
+  expect_true(is.na(.extractFunction(NA)))
+  expect_null(.extractFunction(NULL))
+})
