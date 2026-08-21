@@ -1426,7 +1426,11 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  if (!(isWindows() && !isMac())) { ## TODO: macOS ?? #266
+  ## Was `!(isWindows() && !isMac())`. By De Morgan that is `!isWindows() ||
+  ## isMac()`, and since no platform is both Windows and Mac, isMac() implies
+  ## !isWindows() -- so the isMac() term never changes the result. Verified
+  ## identical on all three reachable platform combinations.
+  if (!isWindows()) { ## TODO: macOS ?? #266
     if (grepl("7z", extractSystemCallPath)) {
       SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
       SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
