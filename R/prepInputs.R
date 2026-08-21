@@ -1423,11 +1423,13 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  ## Was `!(isWindows() && !isMac())`. By De Morgan that is `!isWindows() ||
-  ## isMac()`, and since no platform is both Windows and Mac, isMac() implies
-  ## !isWindows() -- so the isMac() term never changes the result. Verified
-  ## identical on all three reachable platform combinations.
-  if (!isWindows()) { ## TODO: macOS ?? #266
+  ## `apt` is Debian/Ubuntu, i.e. Linux-only, so this is guarded on isLinux().
+  ## It was `!(isWindows() && !isMac())`, which by De Morgan is `!isWindows() ||
+  ## isMac()` -- that admits macOS, where system("apt ...", intern = TRUE) errors
+  ## with "error in running command". Nothing had ever called this function on
+  ## macOS, so it went unnoticed until a test did. (The old `## TODO: macOS ??
+  ## #266` marker sat on this very line.)
+  if (isLinux()) {
     if (grepl("7z", extractSystemCallPath)) {
       SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
       SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
@@ -1453,14 +1455,18 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                             all.files = TRUE,
                                             full.names = TRUE
         )
-        if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
+        ## length(), THEN the value: list.files() can return several matches
+        ## (a real Windows runner has both 7z.exe and unrar.exe under Program
+        ## Files), and `x == ""` on a length-2 vector makes `||` error with
+        ## "'length = 2' in coercion to 'logical(1)'" on R >= 4.3.
+        if (length(extractSystemCallPath) == 0 || !nzchar(extractSystemCallPath[1])) {
           extractSystemCallPath <- list.files(dirname(Sys.getenv("SystemRoot")),
                                               pattern = "unrar.exe|7z.exe",
                                               recursive = TRUE,
                                               all.files = TRUE,
                                               full.names = TRUE
           )
-          if (extractSystemCallPath == "" || length(extractSystemCallPath) == 0) {
+          if (length(extractSystemCallPath) == 0 || !nzchar(extractSystemCallPath[1])) {
             extractSystemCallPath <- NULL
             messagePreProcess(missingUnrarMess, verbose = verbose)
           } else {

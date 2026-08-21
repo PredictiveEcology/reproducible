@@ -6,6 +6,12 @@
 ## CI/dev platforms where coverage is measured. isWindows() is mockable, which
 ## is what makes it testable at all; see the isWindows/isUnix helpers.
 ##
+## Being the first caller of this function on macOS and Windows is what turned
+## up two latent bugs: `apt` was being invoked on macOS (the guard admitted it),
+## and `list.files()` returning MORE than one match on a real Windows runner
+## made `x == "" || length(x) == 0` error with "'length = 2' in coercion to
+## 'logical(1)'". Both are fixed; these tests are what keep them fixed.
+##
 ## No network, no Drive.
 
 test_that(".archiveExtractBinary finds a system binary when one is installed", {
@@ -14,6 +20,8 @@ test_that(".archiveExtractBinary finds a system binary when one is installed", {
   testInit()
 
   ## The contract: an absolute path to something usable, or NULL. Never "".
+  ## On Linux this also walks the p7zip-rar advisory (an `apt` call, which is
+  ## why that block is guarded on isLinux() rather than !isWindows()).
   out <- .archiveExtractBinary(verbose = 0)
   expect_true(is.null(out) || (is.character(out) && nzchar(out)))
   if (!is.null(out)) expect_true(file.exists(out))
