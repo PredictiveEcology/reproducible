@@ -5,7 +5,8 @@ utils::globalVariables(c(
 
 #' Download and optionally post-process files
 #'
-#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' @description
+#' `r lifecycle::badge("stable")`
 #'
 #' This function can be used to prepare R objects from remote or local data sources.
 #' The object of this function is to provide a reproducible version of
@@ -16,8 +17,6 @@ utils::globalVariables(c(
 #' To trigger the first stage, provide `url` or `archive`.
 #' To trigger the second stage, provide `studyArea` or `rasterToMatch`.
 #' See examples.
-#'
-#' @note This function is still experimental: use with caution.
 #'
 #' @section Stage 1 - Getting data:
 #'
@@ -51,8 +50,6 @@ utils::globalVariables(c(
 #'   NOTE: checksumming does not occur during the post-processing stage, as
 #'   there are no file downloads. To achieve fast results, wrap
 #'   `prepInputs` with `Cache`.
-#'
-#'   NOTE: `sf` objects are still very experimental.
 #'
 #' \subsection{postProcessing of `Spat*`, `sf`, `Raster*` and `Spatial*` objects:}{
 #'
@@ -156,7 +153,7 @@ utils::globalVariables(c(
 #'
 #' @param destinationPath Character string of a directory in which to download
 #'   and save the file that comes from `url` and is also where the function
-#'   will look for `archive` or `targetFile`. NOTE (still experimental):
+#'   will look for `archive` or `targetFile`.
 #'   To prevent repeated downloads in different locations, the user can also set
 #'   `options("reproducible.destinationPathShared")` to one or more local file paths to
 #'   search for the file before attempting to download. Default for that option is

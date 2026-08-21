@@ -33,7 +33,7 @@ A GIS file (e.g., \code{RasterLayer}, \code{SpatRaster} etc.) that has been
 appropriately cropped, reprojected, masked, depending on the inputs.
 }
 \description{
-\if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 
 The method for GIS objects (terra \verb{Spat*} & sf classes) will
 crop, reproject, and mask, in that order.

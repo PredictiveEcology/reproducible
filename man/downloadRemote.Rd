@@ -61,7 +61,7 @@ custom downloading, in addition to loading into R. Still experimental.}
 
 \item{destinationPath}{Character string of a directory in which to download
 and save the file that comes from \code{url} and is also where the function
-will look for \code{archive} or \code{targetFile}. NOTE (still experimental):
+will look for \code{archive} or \code{targetFile}.
 To prevent repeated downloads in different locations, the user can also set
 \code{options("reproducible.destinationPathShared")} to one or more local file paths to
 search for the file before attempting to download. Default for that option is

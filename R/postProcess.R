@@ -1,6 +1,7 @@
 #' Generic function to post process objects
 #'
-#' \if{html}{\figure{lifecycle-maturing.svg}{options: alt="maturing"}}
+#' @description
+#' `r lifecycle::badge("stable")`
 #'
 #' @export
 #' @param x  A GIS object of postProcessing,
