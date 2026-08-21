@@ -8,7 +8,7 @@
 #' @return Logical indicating whether operation succeeded.
 #'
 .file.move <- function(from, to, overwrite = FALSE) {
-  .Deprecated("hardLinkeOrCopy")
+  .Deprecated("hardLinkOrCopy")
   hardLinkOrCopy(from, to, overwrite)
   file.remove(from)
 }

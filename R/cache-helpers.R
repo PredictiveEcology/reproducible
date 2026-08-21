@@ -62,7 +62,12 @@ asPath.character <- function(obj, nParentDirs = 0) { # nolint
 
 #' @export
 #' @rdname Path-class
-asPath.null <- function(obj, nParentDirs = 0) { # nolint
+#' @method asPath NULL
+asPath.NULL <- function(obj, nParentDirs = 0) { # nolint
+  ## Must be `.NULL`, not `.null`: S3 dispatches on class(NULL), which is the
+  ## string "NULL", and dispatch is case-sensitive. Registered as
+  ## S3method(asPath,"NULL") -- the lowercase form was never reachable, so
+  ## asPath(NULL) raised "no applicable method" instead of returning NULL.
   return(NULL)
 }
 
@@ -138,8 +143,6 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   lapply(unique(dirname(to)), checkPath, create = create)
 
-  os <- tolower(Sys.info()[["sysname"]])
-  .onLinux <- .Platform$OS.type == "unix" && unname(os) == "linux"
   if (!useFileCopy) {
     if (isWindows() && isTRUE(file.size(from) > 1e6)) {
       if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
@@ -174,7 +177,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
       if (any(!nzchar(useFileCopy))) {
         useFileCopy <- TRUE
       }
-    } else if ((.onLinux)) { # nolint
+    } else if (isLinux()) { # nolint
       if (!identical(basename(from), basename(to))) {
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
@@ -255,7 +258,16 @@ copyFile <- Vectorize(copySingleFile, vectorize.args = c("from", "to"))
     sn <- slotNames(object@file)
     sn <- sn[!(sn %in% c("name"))]
     fileSlotsToDigest <- lapply(sn, function(s) slot(object@file, s))
-    digFile <- .robustDigest(asPath(fileSlotsToDigest),
+    ## NB no asPath() here. These are the file slots OTHER than "name" -- byte
+    ## order, nodata value, block dimensions and so on -- not paths; "name" is
+    ## excluded just above precisely because the filename is digested separately
+    ## below, via asPath(fns, 2). Wrapping this list in asPath() asked for a
+    ## method that does not exist (asPath has methods for character and NULL
+    ## only), so .digestRasterLayer ALWAYS errored and robustDigest() -- hence
+    ## Cache() -- was broken for every raster object, in memory or file-backed.
+    ## The two sibling blocks above digest their slot lists directly; this one
+    ## now matches them.
+    digFile <- .robustDigest(fileSlotsToDigest,
                              length = length, quick = quick,
                              algo = algo
     ) # don't include object@file -- these are volatile

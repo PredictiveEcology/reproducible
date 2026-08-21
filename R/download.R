@@ -2475,7 +2475,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     }
   }
 
-  if ( (isGD &&  (.Platform$OS.type == "windows")) || nzchar(Sys.which("curl")) %in% FALSE ||
+  if ( (isGD &&  isWindows()) || nzchar(Sys.which("curl")) %in% FALSE ||
       fileSize < 1e9) { # i.e., < 1GB can just use the simpler httr2 progress
     ## Google Drive download using httr2 (no resume support)
     ## Retry once on 401: the token may have expired mid-session; refresh and retry.
@@ -2509,7 +2509,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
     }
 
   } else {
-    if (.Platform$OS.type != "windows" && nzchar(Sys.which("curl"))) {
+    if (!isWindows() && nzchar(Sys.which("curl"))) {
       # Use download.file with curl on Linux/macOS
       method <- "curl"
       if (!isGD) {
