@@ -47,12 +47,13 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     a1 <- Cache(rnorm, 1, cloudFolderID = cloudFolderID, cachePath = tmpCache, useCloud = TRUE)
   })
 
-  # it is actually both loaded & saved locally; so should be loadedCachedResult and saved
-  if (!useDBI()) {
-    expect_true(any(grepl(.message$LoadedCacheResult(), mess3)))
-  } else {
-    expect_false(any(grepl(.message$LoadedCacheResult(), mess3)))
-  }
+  # it is actually both loaded & saved locally; so should be loadedCachedResult and saved.
+  # Asserted for BOTH backends. This used to be branched on useDBI(), with the DBI
+  # side asserting the opposite -- but that was not a real backend difference, it
+  # was cloudUploadFromCache() uploading an empty metadata table (it called
+  # showCache() without cachePath), so under DBI there was nothing to restore from
+  # and no "Loaded!" message ever appeared. Fixed in R/cloud.R; the backends agree.
+  expect_true(any(grepl(.message$LoadedCacheResult(), mess3)))
   expect_false(any(grepl("Uploaded", mess3)))
   expect_true(any(grepl("Downloading", mess3)))
 
