@@ -551,6 +551,16 @@ crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 }
 
 theRasterTests <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/"
+
+## The Canadian ecozones shapefile, cropped for testing. The upstream source
+## (sis.agr.gc.ca) is a third-party federal server that has failed CI
+## intermittently -- the same class of unavailability that got this package
+## archived from CRAN -- so a simplified copy is hosted with the other fixtures.
+## Same 25 features, same 7 fields, same CRS and same internal layout
+## (Ecozones/ecozones.*) as upstream; geometry simplified from 115,300 vertices
+## to 1,184, which takes it from 1.44 MB to 15 kB. Also shipped at
+## inst/ex/ecozone_shp.zip for provenance and offline use.
+theEcozoneUrl <- paste0(theRasterTests, "ecozone_shp.zip")
 theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }
