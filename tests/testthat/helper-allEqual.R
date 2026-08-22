@@ -561,6 +561,14 @@ theRasterTests <- "https://github.com/PredictiveEcology/reproducible/releases/do
 ## to 1,184, which takes it from 1.44 MB to 15 kB. Also shipped at
 ## inst/ex/ecozone_shp.zip for provenance and offline use.
 theEcozoneUrl <- paste0(theRasterTests, "ecozone_shp.zip")
+
+## A tiny stand-in for the 215 MB SCANFI tif on ftp.maps.canada.ca. Same CRS
+## (NAD_1983_Canada_Lambert), same 30 m resolution and same INT1U type, 1024x1024
+## with 128 px internal tiles and a full overview pyramid -- so it is a genuine
+## COG and the windowed /vsicurl/ read is exercised for real, not stubbed. The
+## values are constant, which is why it compresses to ~6 kB (225 MB -> 6 kB).
+## Also at inst/ex/SCANFI_small.tif for provenance.
+theCOGUrl <- paste0(theRasterTests, "SCANFI_small.tif")
 theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }

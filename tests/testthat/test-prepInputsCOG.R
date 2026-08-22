@@ -1,4 +1,8 @@
-templateURL <- "https://ftp.maps.canada.ca/pub/nrcan_rncan/Forests_Foret/SCANFI/v1/SCANFI_sps_douglasFir_SW_2020_v1.2.tif"
+## A ~6 kB COG hosted with the other fixtures, standing in for the 215 MB SCANFI
+## tif on ftp.maps.canada.ca -- a third-party federal server whose intermittent
+## unavailability is the same class of failure that got this package archived
+## from CRAN. See theCOGUrl in helper-allEqual.R.
+templateURL <- theCOGUrl
 
 # Small polygon in BC in geographic coordinates
 studyAreaBC <- function() {
