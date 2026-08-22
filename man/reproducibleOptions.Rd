@@ -105,7 +105,7 @@ receiver's \code{cachePath}} rather than the producing machine's absolute path.
 fallback anchors.
 }
 \item{\code{futurePlan}}{
-\strong{No effect as of version 3.2.2.} Default: \code{FALSE}. This previously
+\strong{No effect as of version 3.2.0.} Default: \code{FALSE}. This previously
 enabled \code{future}-backed background downloading and cache writing on Linux.
 Those paths were off by default, effectively untested, and have been
 removed; the option is retained only because downstream packages set it,

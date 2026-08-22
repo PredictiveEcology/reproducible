@@ -52,10 +52,22 @@ skip_on_transient_http <- function(expr) {
 ## stream). Returns the result of `expr` so the caller can chain assertions
 ## on it. Non-transient warnings are re-emitted so they remain visible in
 ## test output instead of being silently muffled.
+## Deliberately does NOT match a bare "GDAL error". GDAL appends "(GDAL error N)"
+## to nearly every diagnostic it emits, including ones that must stay red -- a
+## 404, "Cannot open file", a permissions problem -- and including purely local
+## configuration noise such as "PROJ: file is not a database (GDAL error 1)".
+## Matching it meant any GDAL complaint at all was reported as a transient
+## upstream failure and the test silently skipped. Match the actual transient
+## signatures instead.
 .transientStreamPattern <- paste(
+  ## truncated or failed streaming reads of a remote raster
   "TIFFFillTile", "TIFFReadEncodedTile", "IReadBlock failed",
-  "GDAL error", "HTTP 5\\d\\d", "Bad Gateway",
-  "Service Unavailable", "Gateway Timeout",
+  ## server-side transients (5xx only -- 4xx means we asked for the wrong thing)
+  "HTTP response code: 5\\d\\d", "HTTP 5\\d\\d",
+  "Bad Gateway", "Service Unavailable", "Gateway Timeout",
+  ## transport-level transients
+  "Connection timed out", "Connection reset", "Could not resolve host",
+  "Operation timed out", "SSL connection timeout",
   sep = "|"
 )
 
@@ -551,6 +563,24 @@ crsToUse <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84"
 }
 
 theRasterTests <- "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/"
+
+## The Canadian ecozones shapefile, cropped for testing. The upstream source
+## (sis.agr.gc.ca) is a third-party federal server that has failed CI
+## intermittently -- the same class of unavailability that got this package
+## archived from CRAN -- so a simplified copy is hosted with the other fixtures.
+## Same 25 features, same 7 fields, same CRS and same internal layout
+## (Ecozones/ecozones.*) as upstream; geometry simplified from 115,300 vertices
+## to 1,184, which takes it from 1.44 MB to 15 kB. Also shipped at
+## inst/ex/ecozone_shp.zip for provenance and offline use.
+theEcozoneUrl <- paste0(theRasterTests, "ecozone_shp.zip")
+
+## A tiny stand-in for the 215 MB SCANFI tif on ftp.maps.canada.ca. Same CRS
+## (NAD_1983_Canada_Lambert), same 30 m resolution and same INT1U type, 1024x1024
+## with 128 px internal tiles and a full overview pyramid -- so it is a genuine
+## COG and the windowed /vsicurl/ read is exercised for real, not stubbed. The
+## values are constant, which is why it compresses to ~6 kB (225 MB -> 6 kB).
+## Also at inst/ex/SCANFI_small.tif for provenance.
+theCOGUrl <- paste0(theRasterTests, "SCANFI_small.tif")
 theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }

@@ -484,7 +484,7 @@ CacheV2 <-
 #' @description
 #' `r lifecycle::badge("defunct")`
 #'
-#' Defunct as of version 3.2.2. The future-based cache writing this supported was
+#' Defunct as of version 3.2.0. The future-based cache writing this supported was
 #' never enabled by default -- `reproducible.futurePlan` defaults to `FALSE` --
 #' and has been removed. [Cache()] writes directly.
 #'
@@ -506,7 +506,7 @@ writeFuture <- function(written, outputToSave, cachePath, userTags,
                         cacheId, linkToCacheId = NULL,
                         verbose = getOption("reproducible.verbose")) {
   .Defunct(msg = paste0(
-    "'writeFuture()' is defunct as of version 3.2.2. The future-based cache ",
+    "'writeFuture()' is defunct as of version 3.2.0. The future-based cache ",
     "writing it supported was never enabled by default and has been removed; ",
     "'Cache()' writes directly."))
 }

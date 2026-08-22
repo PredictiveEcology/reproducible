@@ -27,7 +27,7 @@ test_that("prepInputs doesn't work (part 1)", {
 
     dPath <- file.path(tmpdir, "ecozones")
 
-    url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+    url <- theEcozoneUrl
 
     mess <- capture_messages({
       shpEcozone <- prepInputs(destinationPath = dPath, url = url)
@@ -59,13 +59,15 @@ test_that("prepInputs doesn't work (part 1)", {
     #  specify targetFile, alsoExtract, and fun, wrap with Cache
     ecozoneFilename <- file.path(dPath, "Ecozones/ecozones.shp")
     ## fmt: skip
+    ## No .sbn/.sbx: those are optional ESRI spatial-index sidecars that GDAL
+    ## does not write. Shipping the upstream ones alongside simplified geometry
+    ## would mean an index describing shapes that are no longer there.
     ecozoneFiles <- c(
-      "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-      "ecozones.sbx", "ecozones.shp", "ecozones.shx"
+      "ecozones.dbf", "ecozones.prj", "ecozones.shp", "ecozones.shx"
     )
     shpEcozone2 <- prepInputs(
       targetFile = ecozoneFilename,
-      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      url = theEcozoneUrl,
       alsoExtract = ecozoneFiles,
       destinationPath = dPath
     )
@@ -90,7 +92,7 @@ test_that("prepInputs doesn't work (part 1)", {
       mess <- capture_messages({
         shpEcozoneSm <- Cache(
           prepInputs(
-            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+            url = theEcozoneUrl,
             targetFile = reproducible::asPath(ecozoneFilename),
             alsoExtract = reproducible::asPath(ecozoneFiles),
             studyArea = StudyArea,
@@ -109,7 +111,7 @@ test_that("prepInputs doesn't work (part 1)", {
       warn <- suppressWarningsSpecific(falseWarnings = "attribute variables are assumed to be spatially constant", {
         shpEcozoneSm <- Cache(
           prepInputs(
-            url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+            url = theEcozoneUrl,
             targetFile = reproducible::asPath(ecozoneFilename),
             alsoExtract = reproducible::asPath(ecozoneFiles),
             studyArea = StudyArea,
@@ -140,8 +142,7 @@ test_that("prepInputs doesn't work (part 1)", {
       archive = file.path(dPath, "ecozone_shp.zip"),
       ## fmt: skip
       alsoExtract = c(
-        "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-        "ecozones.sbx", "ecozones.shp", "ecozones.shx"
+        "ecozones.dbf", "ecozones.prj", "ecozones.shp", "ecozones.shx"
       )
     )
     expect_true(is(shpEcozone, vectorType()))
@@ -155,12 +156,11 @@ test_that("prepInputs doesn't work (part 1)", {
     ##   instead of forcing prepInputs to get the file.
     shpEcozone <- prepInputs(
       destinationPath = dPath,
-      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      url = theEcozoneUrl,
       archive = file.path(dPath, "ecozone_shp.zip"),
       ## fmt: skip
       alsoExtract = c(
-        "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-        "ecozones.sbx", "ecozones.shp", "ecozones.shx"
+        "ecozones.dbf", "ecozones.prj", "ecozones.shp", "ecozones.shx"
       )
     )
     expect_true(is(shpEcozone, vectorType()))
@@ -168,7 +168,7 @@ test_that("prepInputs doesn't work (part 1)", {
     ## stops if deprecated arguments used
     expect_error(prepInputs(
       destinationPath = dPath,
-      url = "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip",
+      url = theEcozoneUrl,
       archive = file.path(dPath, "ecozone_shp.zip"),
       studyArea = StudyArea,
       filename2 = "use_writeTo_instead.shp"
@@ -1444,7 +1444,7 @@ test_that("lightweight tests for code coverage", {
     needGoogleDriveAuth = TRUE
   )
 
-  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+  url <- theEcozoneUrl
   globalOutput <- capture.output({
     checkPath(tmpdir, create = TRUE)
     checkSums <- .emptyChecksumsResult
@@ -1504,8 +1504,7 @@ test_that("lightweight tests for code coverage", {
         url = url,
         ## fmt: skip
         neededFiles = c(
-          "ecozones.dbf", "ecozones.prj", "ecozones.sbn",
-          "ecozones.sbx", "ecozones.shp", "ecozones.shx"
+          "ecozones.dbf", "ecozones.prj", "ecozones.shp", "ecozones.shx"
         ),
         checkSums = checkSums,
         targetFile = "ecozones.shp",

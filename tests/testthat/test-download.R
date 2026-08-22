@@ -2,7 +2,7 @@ test_that("dlGeneric works", {
   skip_on_cran()
   skip_if_not_installed("httr")
   testInit(needInternet = TRUE)
-  url <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+  url <- theEcozoneUrl
   noisyOutput <- capture.output({
     res <- skip_on_transient_http(dlGeneric(url, tempdir2(rndstr(1, 6))))
   })

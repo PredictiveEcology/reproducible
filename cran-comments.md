@@ -1,97 +1,83 @@
-<!--
-  REMINDER FOR NEXT SUBMISSION (3.1.2 patch):
-
-  3.1.2 fixes a prepInputs()/preProcess() crash ("missing value where
-  TRUE/FALSE needed") that was latent in the CRAN-accepted 3.1.1, hit
-  whenever a remote advertises no file size. Fixed on development in
-  commit dc1a4080.
-
-  CRAN policy is "no more than every 1-2 months" between updates (there
-  is NO 7-day rule). Submitting 3.1.2 sooner than that is acceptable for
-  a regression bug-fix, but the short interval MUST be justified
-  explicitly here. When rewriting this file for 3.1.2, replace this
-  comment and the 3.1.1 content below with a "Release information"
-  section that states, in plain language:
-
-    - this is a patch release fixing a regression introduced in 3.1.1;
-    - the bug aborts a common prepInputs() workflow (size-less remote);
-    - we are submitting ahead of the usual 1-2 month interval precisely
-      because it breaks existing user code, and apologise for the short
-      gap since 3.1.1.
-
-  Also expect the "Days since last update: N" NOTE and explain it the
-  same way (as the 3.1.1 section below does for its 1-day gap).
--->
-
 ## Release information
 
-This is a patch release (3.1.0 -> 3.1.1) addressing a CRAN-flagged
-check problem (see "CRAN-flagged issue" below).
+This is a resubmission of `reproducible`, which was archived from CRAN on
+2026-07-13 for repeated policy violation. Version 3.2.0 is a minor release: it
+fixes the policy problem that led to the archival, and includes the accumulated
+development work since 3.1.1.
 
-See `NEWS.md` for the full list of changes. There are no user-visible
-changes; no package code was changed and the only functional change is
-to a single test file.
+See `NEWS.md` for the full list of changes.
+
+## Why the package was archived, and what has changed
+
+The package was archived because tests that use Internet resources did not fail
+gracefully. When a remote resource used by a test became unavailable, the test
+errored rather than skipping, producing check failures on CRAN. This violates
+the policy that packages using Internet resources "should fail gracefully with
+an informative message ... and not give a check warning nor error."
+
+We have addressed this in two independent ways, so that neither a transient
+outage nor the permanent loss of a remote resource can produce a check failure
+again.
+
+**1. Downloads that fail now skip, rather than error, when running under CRAN.**
+
+When a download terminally fails, or a downloaded file no longer matches its
+recorded checksum, and the code is executing inside a test on CRAN
+(`TESTTHAT == "true"` and `NOT_CRAN != "true"`), the remainder of that test is
+skipped with an informative message instead of raising an error. `skip()`
+unwinds before any downstream code can fail on the missing file, and it requires
+no pre-flight connectivity check.
+
+Outside of tests -- that is, in normal use of the package -- behaviour is
+unchanged: a failed download still raises an informative error, as users expect.
+Where `NOT_CRAN == "true"` (our own machines and continuous integration) failures
+also still raise errors, so we do not mask real regressions from ourselves.
+
+**2. Tests no longer depend on third-party servers.**
+
+The failures originated with data hosted by third parties over which we have no
+control. Every such resource used by the test suite has now been replaced by a
+small fixture hosted in this project's own GitHub releases:
+
+* test fixtures previously downloaded from a personal third-party repository
+  (the source whose intermittent unavailability triggered the original check
+  failures);
+* a shapefile previously downloaded from a federal government server
+  (1.4 MB, reduced to a 15 kB simplified copy);
+* a 215 MB cloud-optimized GeoTIFF previously read from a federal government
+  server (reduced to a 6 kB fixture that retains the tiling and overview
+  structure the test requires).
+
+The remaining tests that reach the network are all gated with `skip_on_cran()`.
+
+We are grateful for the CRAN team's patience, and we are sorry that this took
+more than one attempt to get right.
 
 ## Test environments
 
-### win-builder (this 3.1.1 build)
-* Windows                 (win-builder), R-oldrelease (R 4.6.0)
-* Windows                 (win-builder), R-release    (R 4.5.3)
-* Windows                 (win-builder), R-devel       (r90061)
+### win-builder
+* Windows (win-builder), R-oldrelease
+* Windows (win-builder), R-release
+* Windows (win-builder), R-devel
 
-### GitHub Actions (development branch)
-* Ubuntu 24.04                 (GitHub), R-release
-* Windows                      (GitHub), R-release
-* Ubuntu 24.04                 (GitHub), R-devel
-* Windows                      (GitHub), R-devel
+### GitHub Actions
+* Ubuntu 24.04 (GitHub), R-release, R-devel, R-oldrel
+* Windows      (GitHub), R-release, R-devel, R-oldrel
+* macOS        (GitHub), R-release
 
 ### Local
-* Linux                         (local), R 4.5.x
+* Linux (local), R 4.5.3
 
 ## R CMD check results
 
-There are no errors or warnings.
-
-All three win-builder builds (oldrelease, release, devel) returned a
-single NOTE:
-
-    Days since last update: 1
-
-This is expected: version 3.1.0 was accepted one day ago. This 3.1.1
-release contains only the fix that the CRAN team requested (see
-"CRAN-flagged issue" below), submitted within the requested timeframe.
-
-## CRAN-flagged issue
-
-Thank you very much for flagging the check problem and for the helpful
-detail in your message.
-
-We have found the cause and can reproduce the issue, and we have
-implemented a fix.
-
-One of our tests checks whether two files are the same physical file by
-comparing their file-system identifiers. On the systems we had tested,
-those identifiers were small enough to be stored as whole numbers, but
-on file systems with very large numbers (such as the one used by the
-CRAN check machine, as you kindly pointed out) the value was too large
-for that storage and was lost, which made the test fail.
-
-We have changed the test to compare these identifiers as text instead,
-which works correctly for values of any size. No functionality in the
-package itself was affected; the change is limited to this single test.
-
-We are grateful for your patience and for the time the CRAN team spent
-on this.
+There are no errors, warnings, or notes.
 
 ## Downstream dependencies
 
-The three reverse dependencies on CRAN (SpaDES, SpaDES.core, SpaDES.tools)
-are all maintained by the same maintainer.
+There are currently none. The three reverse dependencies (SpaDES, SpaDES.core,
+SpaDES.tools) were archived on 2026-07-13 as a consequence of this package's
+archival. They are maintained by the same maintainer and will be resubmitted
+once this package is accepted.
 
-## revdepcheck results
-
-We checked 3 reverse dependencies, comparing R CMD check results across
-CRAN and dev versions of this package.
-
- * We saw 0 new problems
- * We failed to check 0 packages
+`revdepcheck` was therefore not run: no package on CRAN currently depends on
+`reproducible`.
