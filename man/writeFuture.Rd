@@ -56,7 +56,7 @@ Nothing; it signals a defunct error.
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#defunct}{\figure{lifecycle-defunct.svg}{options: alt='[Defunct]'}}}{\strong{[Defunct]}}
 
-Defunct as of version 3.2.2. The future-based cache writing this supported was
+Defunct as of version 3.2.0. The future-based cache writing this supported was
 never enabled by default -- \code{reproducible.futurePlan} defaults to \code{FALSE} --
 and has been removed. \code{\link[=Cache]{Cache()}} writes directly.
 }

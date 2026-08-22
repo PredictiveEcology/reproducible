@@ -1,560 +1,86 @@
-# reproducible 3.1.1.9000
+# reproducible 3.2.0
 
-* development version.
+## CRAN policy compliance
+
+* **Tests using Internet resources now fail gracefully on CRAN**, per CRAN policy
+  — this is the issue that led to the package being archived. When a download
+  terminally fails or a downloaded file no longer matches its checksum, and the
+  code is running inside a test on CRAN (`testthat::is_testing()` and
+  `NOT_CRAN != "true"`), the test is `skip()`-ped rather than erroring. Where
+  `NOT_CRAN == "true"` (local, CI) failures still error, so regressions are not
+  masked; outside tests, behaviour is unchanged.
+* Test fixtures previously downloaded from a third-party personal repository —
+  the source whose intermittent unavailability triggered the check failure — are
+  now release assets on `PredictiveEcology/reproducible`.
+
+## new features
+
+* **URL logging.** `prepInputs()`/`preProcess()` record every file and web
+  access; view with `prepInputsLog()`/`getUrlLog()`. Includes `targetFile`,
+  `archive` and `alsoExtract` columns, per-`Cache` url frames, and cache-hit
+  replay. On by default; `options(reproducible.urlLog = FALSE)` disables.
+* **Faster, more robust downloads.** Parallel ranged downloads with per-part
+  retry; progress, elapsed time and ETA shown in non-interactive/logged
+  sessions; `reproducible.timeout` default raised to 12000.
+* **Download mirrors** via `reproducible.urlRemap`, accepting a manifest
+  `data.frame` or CSV path, with optional `id` (Google Drive) and `type` columns.
+* **Google Drive without authentication** for files and folders shared "anyone
+  with the link"; `showSimilar` is now cloud-aware under `useCloud`.
+* **`reproducible.digestVersion`** selects the hashing scheme; version 4 (the
+  new default) makes `sf`/`SpatVector` digests platform-stable and realizes
+  deferred-string ALTREP vectors before hashing.
+* **Cloud-optimized GeoTiff fast path** (`prepInputsCOG()`): reads only the
+  spatial window of interest via `/vsicurl/`, with terra's native progress bar.
+* New diagnostics: `reproducible.preDigestDump`, improved `showSimilar` output,
+  and a one-time hint pointing at `getUrlLog()`/`showCache()`.
+* `CacheGeo()` handles multiple overlapping (not just contained) domains.
+* User-visible functions now carry `lifecycle` badges.
 
 ## behaviour changes
 
-* Five functions are **no longer exported**. Each is an implementation detail
-  with a better-maintained equivalent elsewhere on CRAN, or no use outside this
-  package; all continue to work unchanged internally, so nothing in
-  `reproducible` behaves differently:
-    * `internetExists()` — use `curl::has_internet()`.
-    * `downloadFile()` — use `curl::curl_download()`, `utils::download.file()`,
-      or `httr2`; `prepInputs()`/`preProcess()` remain the supported entry
-      points for downloading *with* checksums and caching.
-    * `loadFile()`, `checkAndMakeCloudFolderID()`, `prepInputsCOG()` — internal
-      machinery of the cache and `prepInputs()`; call `prepInputs()`,
-      `preProcess()` or `Cache()` instead.
-* `writeFuture()` is **defunct**. It supported `future`-backed cache writing,
-  which was never enabled by default and has now been removed; `Cache()` writes
-  directly.
-* The `future`-backed background download and cache-write paths are removed.
-  They were gated behind `reproducible.futurePlan`, which defaults to `FALSE`,
-  so they never ran unless deliberately switched on. `reproducible.futurePlan`
-  is retained (downstream packages set it) but **has no effect as of 3.2.2**.
+* **Five functions are no longer exported** — `internetExists()`,
+  `downloadFile()`, `loadFile()`, `checkAndMakeCloudFolderID()` and
+  `prepInputsCOG()`. All are implementation details with better-maintained
+  equivalents elsewhere (e.g. `curl::has_internet()`, `curl::curl_download()`)
+  or no use outside this package; they continue to work internally.
+* **`writeFuture()` is defunct**, and the `future`-backed background download
+  and cache-write paths are removed. Both were off by default and effectively
+  untested. `reproducible.futurePlan` is retained because downstream packages
+  set it, but has no effect as of 3.2.0.
+* `options("reproducible.gdalwarp")` is removed; it is no longer needed.
+* `options("reproducible.cachePath")` is no longer pre-set — it resolves lazily
+  on first use.
+* `postProcessTo()` is faster, uses less memory on large rasters, and keeps
+  categorical (factor) rasters categorical.
 
 ## bug fixes
 
-* Changing `options(reproducible.cacheSaveFormat)` no longer invalidates the
-  cache. On the file-backed backend (`useDBI = FALSE`, the default) every entry
-  was silently recomputed and both the old and new files were left on disk;
-  under DBI the same change migrated correctly. The cause was
-  `onlyStorageFiles()` building its match pattern from `CacheStoredFile()`
-  without a `cachePath`: with `reproducible.cachePath` unset — the normal state
-  when a caller passes `cachePath=` directly to `Cache()` — that returns
-  `character(0)`, so the pattern matched nothing and the changed-format recovery
-  never fired. Only the `!useDBI()` path used that helper, hence the asymmetry.
-  Two further defects on the same path are fixed alongside it: `loadFile()`
-  errored with `object 'fe' not found` when given `format=`, and the
-  format-retry loop gave up after the first candidate instead of trying the
-  rest.
-* `.archiveExtractBinary()` no longer runs `apt` on macOS. The platform guard
-  was `!(isWindows() && !isMac())`, which admits macOS, where
-  `system("apt ...", intern = TRUE)` fails outright. It is now `isLinux()`,
-  since `apt` is Debian/Ubuntu-only.
-* `.archiveExtractBinary()` no longer errors on Windows when more than one
-  archive binary is present. `list.files()` over `C:/Program Files` returns a
-  vector, so `x == "" || length(x) == 0` raised
-  `'length = 2' in coercion to 'logical(1)'` on R >= 4.3 whenever both `7z.exe`
-  and `unrar.exe` were installed. Length is now tested before the value.
-
-* The background `showCache()` pre-warm fork (spawned by `Cache()` to scan a
-  flat-file cache without blocking) is no longer **leaked**. It is now spawned
-  only when it will actually be consumed — i.e. when `Cache(showSimilar = TRUE)`,
-  the only path that later calls `showCache()` to harvest it — and never under a
-  DBI backend (`useDBI(TRUE)`, answered from an index, no flat-file scan). The
-  default `showSimilar = FALSE` path spawns nothing. Previously every distinct
-  `cachePath` spawned a fork that was collected only if `showCache()` happened to
-  run, so long sessions — and coverage runs touching many cache paths —
-  accumulated live forks (measured at ~50 processes / tens of GB), which
-  OOM-killed CI runners (`exit code 143`). When a fork *is* spawned it follows a
-  reap lifecycle (skip if already harvested, else reap a pending fork
-  non-blocking, else spawn once): at most one live fork per `cachePath`, reaped on
-  the following `Cache()` call.
-
-* New advanced option `reproducible.showCachePreWarm` (default `TRUE`; env var
-  `R_REPRODUCIBLE_SHOWCACHE_PREWARM`) is a **hard off-switch** for the pre-warm
-  fork above — set it `FALSE` to disable the fork entirely, both the automatic
-  `Cache(showSimilar = TRUE)` spawn and explicit `prepopulateCacheAsync()`. It is
-  needed for memory-constrained runs that touch **many distinct `cachePath`s in
-  one process**: there the per-path (non-blocking) reap cannot keep up and the
-  forks accumulate (measured under `covr` at ~38 concurrent / ~23 GB, which
-  OOM-killed the 16 GB `test-coverage` runner — the months-long `exit 143`). The
-  package's own test setup turns it off automatically under `covr`. Normal use (a
-  few reused cachePaths, which reap fine) keeps the pre-warm and its speed-up, so
-  the default is unchanged.
-
-* Cache tag values containing a single quote no longer break the `useDBI(TRUE)`
-  (SQLite/DBI) backend. `.addTagsRepo()` and `.updateTagsRepo()` pasted the value
-  straight into the SQL statement, so an apostrophe in any tag value — a file
-  path (`Ian's data.tif`), a `userTags` string, a url — produced invalid SQL.
-  Because that failure is deterministic, the `retry()` around the insert then
-  re-ran it 250 times with exponential backoff before giving up, so a single
-  apostrophe surfaced as a **multi-minute hang**, not an error. The two functions
-  now reuse the package's existing safe idioms (`DBI::dbAppendTable()`, as
-  `saveToCache()` does, and `glue::glue_sql()`, as `rmFromCache()` does).
-
-* `.addTagsRepo()` and `.updateTagsRepo()` now accept the named list of
-  connections that `Cache()` passes around, selecting the one for the relevant
-  `cachePath` as `saveToCache()`/`searchInRepos()` already did. Previously a list
-  reached `DBI` unmodified and the write failed; because both call sites wrap the
-  write in `try(silent = TRUE)`, the tag was simply dropped with no message.
-
-* URL logging (`reproducible.urlLog`, the `reproducible.url*` `cacheId` tags) now
-  works under `useDBI(TRUE)`. It was disabled outright on that backend, because
-  `showCacheFast()` — used to read a single `cacheId`'s tags — only knew how to
-  read the file-backed per-`cacheId` metadata file. It now answers from a
-  targeted query (reusing `getHashFromDB()`) when a DBI backend is in use, and
-  its `drv`/`conn` arguments have package-standard defaults so callers that omit
-  them (the `cacheChaining` paths) work on both backends.
-
-* The `useDBI` entry in `?reproducibleOptions` documented the default as "`TRUE`
-  if DBI is available"; the default is in fact `FALSE` (the file-backed backend).
-  Both backends are now described, including why the file-backed one is the
-  default (no database dependency, works on network filesystems where `SQLite`
-  locking is unreliable, and self-contained per-entry metadata for cloud caching).
-
-* The CI pass that runs the test suite under `useDBI(TRUE)` was filtered to
-  `test-cache*.R` only, on the assumption that nothing else depends on the
-  backend. It now covers every test file that touches the cache metadata store
-  (cloud, showCache, urlLog, multipleCacheRepo, cluster, ...). The narrow filter
-  is why URL logging could sit silently disabled on that backend.
-
-* Tests that download Internet resources now **fail gracefully on CRAN** per CRAN
-  policy: when a download terminally fails (resource unavailable) or a downloaded
-  file no longer matches its expected checksum (resource changed), and the code is
-  running inside a test on CRAN (`testthat::is_testing()` and `NOT_CRAN != "true"`),
-  the remainder of the test block is `skip()`-ped instead of raising an error. This
-  unwinds before any downstream code can choke on the missing file and needs no
-  pre-flight internet check. Where `NOT_CRAN == "true"` (local dev, covr and
-  downstream CI) a genuine failure still surfaces as an error, so regressions are
-  not masked; and outside tests (normal use) the informative `stop()` is unchanged.
-
-* Test fixtures that were downloaded from a third-party personal repository
-  (`github.com/tati-micheletti/host`, the source whose intermittent unavailability
-  led to the CRAN check failure) are now hosted as release assets on
-  `PredictiveEcology/reproducible` (the `v3.1.1` release), a location under this
-  project's control.
-
-* `prepInputs()` now establishes Google Drive auth with a **verified fallback
-  cascade** instead of guessing from gargle options. For a configured identity it
-  no longer assumes "an email is set" means it works; it authenticates and then
-  *probes the actual file* (`drive_get()`), accepting an identity only when it can
-  read that resource. Order: a token already loaded (manual `drive_auth()`) wins;
-  otherwise a configured `gargle_oauth_email` (the user's *personal* Drive — common
-  case), then a service-account JSON named by `GOOGLEDRIVE_AUTH` /
-  `GARGLE_SERVICE_ACCOUNT`, then anonymous/public. A rung whose prerequisite is
-  absent (no email option, no service-account file) is skipped; an identity that
-  authenticates but cannot read the file is deauthorized before the next is tried,
-  so a service-account token never poisons later `googledrive` calls. Each trial is
-  silent and non-interactive (no OAuth prompt mid-cascade); one `Trying …` line per
-  rung is emitted at `verbose`. This fixes a configured service account (often set
-  globally in `.Renviron` for a bucket or CI) shadowing the user's own files with a
-  `404 "File not found"`.
-
-* `cliCol()` (used by `messageColoured()` / `messagePreProcess()`) no longer errors with
-  "non-character object(s)" when a `reproducible.messageColour*` option holds a colour
-  *function* (e.g. `cli::col_red`) rather than a colour-name string; such functions now
-  pass through unchanged.
-* `Cache(useCloud = TRUE)` no longer pages the **entire** cloud-cache Google Drive
-  folder on every call. `driveLs()` filtered file names *locally*, so each lookup
-  asked the API for the whole folder (for an accumulated cache that is thousands
-  of files — "Files retrieved so far: 3500 ...") just to keep the handful sharing
-  one `cacheId`. Because cache files are named `<cacheId>...`, the per-`cacheId`
-  lookup now pushes a server-side `name contains '<cacheId>'` query to
-  `googledrive::drive_ls()`, so Drive returns only the relevant files. Listings
-  whose filter is not a plain name prefix (e.g. the `.dbFile.` metadata sweep used
-  by `showSimilar` across machines) fall back to the previous full listing.
-
-* `prepInputsCOG()` (the COG `/vsicurl/` fast-path) now shows terra's native
-  progress bar during the windowed remote read, which previously ran silently
-  for minutes. The windowed crop is written through terra's block loop so the
-  bar advances as remote tiles are fetched; it is shown only when
-  `verbose > 0`.
-
-* A public Google Drive file could still launch an interactive OAuth prompt when
-  a service account was configured via the `GOOGLEDRIVE_AUTH` environment variable
-  (or any case where "auth is configured" did not mean "auth will actually
-  succeed silently"). The previous logic *guessed* from gargle options/env whether
-  authentication was possible, then let `drive_get()` attempt it — but plain
-  `drive_auth()` does not consult `GOOGLEDRIVE_AUTH`, so the guess was a false
-  positive that fell through to the prompt. `assessGoogle()` now *attempts*
-  authentication non-interactively instead of guessing: it tries the
-  `GOOGLEDRIVE_AUTH`/`GARGLE_SERVICE_ACCOUNT` service-account JSON, then a cached
-  user token, with `rlang_interactive` forced `FALSE` so a missing token errors
-  *quietly* rather than prompting; only if nothing usable loads does it
-  deauthorize and read the public file anonymously. Net: a loaded or
-  silently-loadable token (incl. a service account) is used; a public file always
-  resolves with no prompt; `reproducible.gdriveNoAuth = TRUE` still forces the
-  public path.
-
-* A regression in that no-prompt change: a user who had *configured* gargle auth
-  (`gargle_oauth_email` set) but had not yet run `drive_auth()` was silently
-  downgraded to anonymous — the auth attempt forced `rlang_interactive = FALSE`
-  unconditionally, so with no cached token it failed quietly and `assessGoogle()`
-  deauthorized `googledrive`. That 404'd their private Drive files (e.g. a Drive
-  *folder*, which has no public-mirror remap) and, because `drive_deauth()` is a
-  global state change, poisoned later *direct* `googledrive` calls in the same
-  session. Now the auth attempt only forces non-interactive when *no* auth is
-  configured (the public-file case, which must never prompt); when a service
-  account or `gargle_oauth_email` is configured, the session's own interactivity
-  is respected, so a missing token loads from cache or completes OAuth — no manual
-  `drive_auth()` step needed.
-
-* A further case of that same regression: when a *configured* user's quiet auth
-  attempt could not silently load a token — e.g. the cached token was minted with
-  an OAuth client googledrive has since changed (`tidyverse-erato` → `tidyverse-clio`),
-  or the session is non-interactive — `assessGoogle()` still called
-  `drive_deauth()` and read anonymously, 404ing their private file ("File not
-  found") and poisoning later `googledrive` calls. `.gdrivePrepareAuth()` now
-  deauthorizes **only** when auth is *not* configured (the public-file reader) or
-  `reproducible.gdriveNoAuth = TRUE`. A configured user whose quiet attempt fails
-  is left untouched, so the real `drive_get()`/`drive_download()` runs its normal
-  auth — completing OAuth in an interactive session, or raising gargle's clear
-  "non-interactive auth" error instead of a misleading 404.
-
-## new features
-
-* `reproducible.urlRemap` manifests may now carry an optional **`id` column** (the
-  Google Drive file id; also accepted as `googledriveId`/`googledrive_id`/
-  `driveId`/`gid`). It is used as a *secondary* match, by the id parsed from a
-  Drive `url`, when the resolved filename is unavailable — e.g. an
-  unauthenticated session that cannot read a Drive file's metadata. With it, a
-  Drive URL whose id is in the manifest is redirected to the (public) mirror by
-  `prepInputs()` **before** the Drive metadata lookup, so the download needs no
-  Google authentication at all. Manifests without an `id` column are unchanged.
-
-* `reproducible.urlRemap` manifests may now carry an optional **`type` column**
-  (`"file"`/`"dir"`) for **directory remaps**: a `"dir"` row maps a Google Drive
-  *folder* id to a bucket prefix-listing URL (e.g.
-  `<base>/?prefix=<key>/&delimiter=/`). When `preProcess()` downloads such a
-  folder, it enumerates the folder's files from that public S3 listing (parsed
-  with base R, no `xml2` dependency) and downloads each from its mirror URL,
-  instead of `googledrive::drive_ls()` — so listing a Drive folder needs no
-  authentication. The folder is also recognised as a directory from the manifest
-  alone, avoiding the `drive_get()` (auth) probe in `isGoogleDriveDirectory()`.
-  `buckethost::makeMirrorManifest(directories = TRUE)` emits such a manifest.
-  Manifests without a `type` column are unchanged.
-
-## bug fixes
-
-* The public-Drive no-auth metadata read no longer prevents a *configured* user
-  from authenticating. The previous change deauthorized `googledrive` whenever no
-  token was currently *loaded*, but "no token loaded" is not the same as "cannot
-  authenticate": a user with `gargle_oauth_email` (+ `gargle_oauth_cache`) set, or
-  a service-account JSON, can load a cached token silently. `assessGoogle()` now
-  only falls back to anonymous access when token-less **and** gargle has no usable
-  non-interactive auth configured (so `drive_auth()` can silently load the cached
-  token); `reproducible.gdriveNoAuth = TRUE` still forces anonymous.
-* A failed Google Drive access during `prepInputs()` / `preProcess()` now reports
-  the full, browser-pasteable URL instead of only the bare `fileId`. Previously a
-  `googledrive::drive_get()` failure surfaced e.g. `File not found:
-  13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u.`, which cannot be opened in a browser to
-  check the file exists / is shared. `assessGoogle()` now wraps the metadata read
-  and re-raises with `https://drive.google.com/file/d/<id>` (or the original Drive
-  URL), keeping the underlying error detail (e.g. the 404 reason).
-
-* A **public** Google Drive file no longer triggers an interactive OAuth prompt
-  ("Is it OK to cache OAuth access credentials ...") during `prepInputs()` /
-  `preProcess()` when no `googledrive` token is loaded. The no-auth download path
-  (added previously) was defeated by the *metadata* read in `assessGoogle()`:
-  `googledrive::drive_get()` with no cached token launches interactive OAuth even
-  for an "Anyone with the link" file, and that read happens before the download.
-  `assessGoogle()` now deauthorizes `googledrive` for that read when there is no
-  token (the typical "cloud reader" case) or when `reproducible.gdriveNoAuth =
-  TRUE`, so a public file's metadata resolves anonymously via an API key. A
-  loaded token (a "cloud writer", who needs auth to write a shared cloud cache)
-  is left intact; in the edge case of `gdriveNoAuth = TRUE` with a token present,
-  the token is restored after the read.
-
-## new features
-
-* `reproducible.urlRemap` now accepts the mirror **manifest directly**, not only a
-  pre-built function. It may be set to a `function(url, filename)` (as before, e.g.
-  via `makeUrlRemap()`), a `data.frame` manifest with `filename`/`url` columns, or
-  a length-one character path/URL to a CSV with those columns. For the
-  `data.frame`/CSV forms `reproducible` builds the remap function internally (once,
-  then cached), so a novice can simply write
-  `options(reproducible.urlRemap = read.csv("manifest.csv"))` without calling
-  `makeUrlRemap()`. An invalid value is ignored with a warning, so it can never
-  break a download.
-
-## bug fixes
-
-* File-backed objects (e.g. a `terra` `SpatRaster`) are now restored **portably**
-  when a cache entry is shared between machines or users (notably a cloud cache).
-  A file-backed raster embeds an *absolute* path to its backing `.tif`; previously,
-  when another user retrieved such an entry, `Cache()` tried to recreate that path
-  on their machine — e.g. `cannot create dir '/home/<producer>' ... Operation not
-  supported` followed by `[rast] file does not exist`. Three defects in the
-  existing relative-path machinery caused this: `relativeToWhat()` used an inverted
-  "is the file under this anchor?" test (so a raster even one directory below the
-  working directory was stored with its *absolute* path); `unwrapSpatRaster()`
-  reused the producer's embedded path on the normal load path instead of the
-  stored relative tags; and `remapFilenames()` had no safe fallback for an
-  unresolved/absolute path. Now the backing file is stored relative to the most
-  specific matching anchor and rebuilt under the *receiver's* anchor of the same
-  name; when no anchor resolves, the object is made self-contained under the
-  receiver's `cachePath` rather than the producing machine's absolute path.
-
-* New option **`reproducible.fileBackedAnchors`** — a named list of project
-  "anchor" directories (e.g. SpaDES `paths(sim)`) consulted at both cache *save*
-  and *load* so file-backed objects can be stored relative to a semantic,
-  machine-independent anchor (e.g. `inputPath`) and restored to the equivalent
-  location on another machine. See `?reproducibleOptions`.
-
-* `getRelative()` no longer returns `"NA/<basename>"` when a path *is* (or is
-  fully contained in) `relativeToPath`; it now correctly returns `"."`. The old
-  result came from `(max(id) + 1):length(a)` counting backwards when the path
-  matched `relativeToPath` exactly, producing `file.path(NA, last)`. This
-  corrupted the relativized paths stored by `SpaDES.core::saveSimList()` and, now
-  that file-backed objects anchor to those paths, would otherwise surface as an
-  `NA` path segment when restoring a file-backed object.
-
-## new features
-
-* Google Drive files that are shared "Anyone with the link" can now be
-  downloaded by `prepInputs()`/`preProcess()` **without authentication**. This
-  happens automatically in three cases: (1) the supplied `url` is the public
-  web-download form (e.g. `https://drive.google.com/uc?export=download&id=<ID>`);
-  (2) no `googledrive` token is loaded — in which case the file's metadata could
-  only have been read anonymously, which is proof it is public, so the public
-  endpoint is used silently instead of failing with a "no token" error; or
-  (3) the new option **`reproducible.gdriveNoAuth`** is `TRUE`. An authenticated
-  download that fails (e.g. an expired token) also silently falls back to the
-  public endpoint, surfacing the original auth error only if the file turns out
-  not to be public. Large files that return Google's "can't scan for viruses"
-  interstitial are handled by parsing and resubmitting the one-time confirm
-  token. Authenticated workflows (token loaded) are unaffected.
-
-* **Download progress is now visible in non-interactive / logged sessions.**
-  `httr2::req_progress()` draws a cli progress bar that is silent when
-  `!cli::is_dynamic_tty()` (logged runs, CI, a SpaDES `simInit`) and writes
-  straight to the terminal, so a large `preProcess()`/`prepInputs()` download
-  there produced *no* output until it finished. In those sessions the
-  single-stream download now streams the body itself
-  (`httr2::req_perform_connection()`) and reports progress through
-  `messagePreProcess()` -- e.g. `downloaded 45 Mb / 320 Mb (14%) | 12 Mb/s` --
-  which the calling app (e.g. SpaDES.core's logger) timestamps. The cadence is
-  set by the new option `reproducible.downloadProgressInterval` (default `2`
-  seconds). In a dynamic terminal the native in-place cli bar is unchanged.
-
-* New diagnostic option **`reproducible.preDigestDump`** (and
-  `reproducible.preDigestDumpPattern`) to dump the full element-by-element
-  `preDigest` (`name = hash`) that produces each `Cache()` `cacheId`. Unlike
-  `showSimilar` (closest prior call only), `dryRun`, or `verbose`, it covers
-  *every* `Cache()` call -- including ones built deep inside other packages (e.g.
-  SpaDES.core events) -- so two machines' dumps can be `diff`ed to find exactly
-  what splits a `cacheId` across machines/OSs (e.g. a cloud cache that will not
-  share). `TRUE` messages each call's sorted list; a directory path writes one
-  `preDigest_<functionName>[_<n>].txt` per call. See `?reproducibleOptions`.
-* `showSimilar` (the `reproducible.showSimilar` option, also used by dev mode and
-  `dryRun`) is now cloud-aware. When `useCloud` is active, `Cache()` previously
-  compared the current call only against the *local* cache, so similar artifacts
-  cached by other machines sharing the same `cloudFolderID` were never reported.
-  It now downloads the small per-`cacheId` metadata files (`.dbFile.*`) from the
-  cloud folder, folds them into the local cache listing, and follows the normal
-  `showSimilar` path. Only metadata files are fetched (not the cached objects),
-  `cacheId`s already present locally are skipped, and each remote metadata file
-  is itself wrapped in `Cache()` (keyed by its `cacheId`) so the many `Cache()`
-  calls in a single run (e.g. a module's `.inputObjects`) do not re-download the
-  same `.dbFile` repeatedly across calls or sessions. That memo lives in a
-  dedicated `cloudMeta` sub-cache, so it does not bloat the main cache's
-  `showCache()` scans.
-
-* New option `reproducible.digestVersion` — a single integer that selects the
-  `cacheId` (digest) algorithm, replacing the per-version booleans
-  `reproducible.digestV3`/`reproducible.digestV4` (which are still honoured when
-  `digestVersion` is unset). It **defaults to `4`**, a platform-stable digest of
-  `sf` and `SpatVector` objects: geometry is the numeric vertex matrix with
-  coordinates rounded to a fixed precision (plus the geometry type), and
-  attributes are kept in feature order with columns sorted locale-independently.
-  The same vector data therefore produces the same `cacheId` on Windows, macOS
-  and Linux (digest version 3 could differ across operating systems, preventing
-  shared/cloud caching of these objects), and an `sf` object and its `SpatVector`
-  equivalent now digest identically. **Because version 4 is the new default, the
-  `cacheId` of every `sf`/`SpatVector` object differs from the `reproducible`
-  package v3.1.1 and earlier**, so cached results that involved such objects are
-  recomputed once under the new algorithm. Set
-  `options(reproducible.digestVersion = 3)` to keep the previous behaviour and
-  avoid that one-time invalidation. Requires the \pkg{terra} package. See the
-  `digestVersion` entry in `?reproducibleOptions` for the full list of versions.
-
-* Digest version 4 also realizes "deferred-string" ALTREP character vectors before
-  hashing, so character content digests identically regardless of its internal
-  representation. A deferred string (e.g. produced by `rbind`-ing many data.frames,
-  `as.character()` of a factor, etc.) serializes differently from its realized form
-  — and differently across R versions/platforms — which could give the same
-  character content a different `cacheId` on, e.g., Linux vs Windows (seen as a
-  module's parameter table splitting the `.inputObjects` `cacheId`). The
-  realization is a no-op for already-materialized vectors, so existing `cacheId`s
-  are unchanged.
-
-* Downloads can now be transparently redirected to faster mirrors and
-  fetched in parallel. Two cooperating, opt-in features:
-  * **URL remap hook** — a new option `reproducible.urlRemap` accepts a
-    function `function(url, filename)` that is consulted in the download
-    path once the target filename is resolved (for Google Drive URLs,
-    after the `drive_get()` lookup). It may return an alternative URL to
-    download from instead — typically a public mirror that supports HTTP
-    Range requests. Returning `NULL`/the original URL leaves behaviour
-    unchanged, and a remap that errors is ignored (with a warning) so it
-    can never break a download. A new exported helper
-    `makeUrlRemap(manifest)` builds such a function from a `data.frame`
-    with `filename` and `url` columns (matching on basename). This is the
-    opt-in switch for the faster download path; with the default `NULL`,
-    nothing changes.
-  * **Parallel ranged downloads** — once opted in via
-    `reproducible.urlRemap` (with no remap set, downloads are always
-    single-stream), a download that resolves to an HTTPS URL advertising
-    `Accept-Ranges: bytes` and larger than
-    `reproducible.parallel.threshold` (default 10 MiB) is fetched as
-    `reproducible.parallel.streams` (default `48L`) concurrent byte-range
-    requests via `curl`, then reassembled. The result is
-    byte-identical to a single-stream download, so checksums are
-    unaffected. A part that drops mid-transfer is retried individually
-    (not a full re-download); only if a part still cannot complete after a
-    few attempts does it fall back transparently to a single stream (also
-    when ranges are unsupported). Set
-    `reproducible.parallel.streams = 1L` to force single-stream downloads.
-    On networks that shape bandwidth per-connection this is dramatically
-    faster: in one test a 6.1 GB file dropped from ~75 minutes
-    (single-stream) to ~2 minutes (48 streams from a Range-capable
-    mirror).
-
-* `prepInputs()` and `preProcess()` now keep a record of every file and web
-  address (URL) they download. By default, each download is saved as a permanent
-  note on the matching cache entry, which you can look up later with
-  `showCache(userTags = "reproducible.url")`. Set
-  `options(reproducible.urlLog = TRUE)` to also keep an in-memory list for the
-  current session, which you can read with `prepInputsLog()` and empty with
-  `clearUrlLog()`. Set `options(reproducible.urlLog = FALSE)` to turn the
-  recording off. See `?prepInputsLog` and `?reproducibleOptions`.
-
-## behaviour changes
-
-* `postProcessTo()` is now faster and uses less memory on large rasters.
-  A new option `reproducible.terraMemmax` (default `2`, in GB) sets how
-  much memory `terra` is allowed to use per raster during the call; the
-  previous setting is restored when the call finishes. In one test with
-  a 1.8-billion-cell output, this was about 45% faster and used about
-  one-third of the memory of the previous default. Set the option to
-  `NULL` to turn the cap off. If you have already set
-  `terraOptions(memmax)` yourself, that setting is left alone.
-
-* `postProcessTo()` now keeps categorical (factor) rasters categorical.
-  When the input is a factor raster and you have not supplied `method`
-  or `datatype`, the projection step uses nearest-neighbour (so no
-  in-between values are invented) and the output is written with the
-  same data type as the input (for example, `INT1U` stays `INT1U`
-  instead of being promoted to `FLT4S`, which would make the file four
-  times larger and lose the link to the category labels). Anything you
-  pass for `method` or `datatype` is respected as before.
-
-* `options("reproducible.gdalwarp")` is removed. The option was a switch
-  for an experimental alternative dispatch in `postProcessTo()` that used
-  `sf::gdal_utils("gdalwarp")` directly. The branch behind the switch had
-  been fully commented out for some time; the live code path was the same
-  whether the option was `TRUE` or `FALSE`. Any existing
-  `options(reproducible.gdalwarp = ...)` calls in user code are now
-  silently ignored and can be deleted. `options("reproducible.gdalwarpThreads")`
-  (the unrelated thread-count knob for `detectThreads()`) is unaffected.
-
-* `options("reproducible.cachePath")` is no longer pre-set to a
-  session-tempdir path when the package is loaded; the default is now
-  `NULL`. The first call to a user-facing entry point (`Cache()`,
-  `clearCache()`, `showCache()`, `keepCache()`, ...) resolves it lazily
-  via `.checkCacheRepo()`. If still unset at that point, the option is
-  set to `.reproducibleTempCacheDir()` for the rest of the session.
-  This lets project-setup layers (e.g. `SpaDES.project::setupProject()`)
-  detect "unset" cleanly and stops every R session from silently
-  committing to a non-persistent tempdir cache. Users who set
-  `options(reproducible.cachePath = ...)` explicitly (in their `.Rprofile`,
-  in a setup script, or via `withr::local_options()`) see no change.
-
-* `options("reproducible.timeout")` default raised from `1200` (20 min)
-  to `12000` (~3.3 h). The previous default caused failures on large
-  (multi-GB) downloads over slow or congested links well before the
-  transfer could complete; the new default keeps the same wall-clock
-  safety net but at a scale appropriate for the file sizes typically
-  handled by `prepInputs`/`preProcess`. Users who set
-  `options(reproducible.timeout = ...)` explicitly see no change.
-
-## bug fixes
-
-* **A best-effort cloud cache upload no longer aborts the run.** When caching an
-  object whose stored form does not include every file `CacheStoredFile()`
-  predicts from `Filenames()` (e.g. a cached `simList` that *references* its
-  `SpatRaster` backends rather than copying them under the `cacheId`),
-  `cloudUploadFromCache()` previously `stop()`ed with "File(s) to upload are not
-  available" -- crashing a long, already-locally-saved run during the upload
-  step. It now uploads the files that are present, warns about any it skips, and
-  never errors (the local cache is intact regardless).
-
-
-* The **single-stream `preProcess`/`prepInputs` download no longer hangs for
-  hours on a slow or flaky connection**. It was setting curl's `connecttimeout`
-  (the cap on *establishing* a connection) to `reproducible.timeout` — the
-  overall download budget, which defaults to `12000` seconds (3.3 h). A stalled
-  TLS handshake (e.g. a transient `SSL_connect` failure to `opendata.nfis.org`)
-  therefore froze the session for many minutes before erroring. The connect
-  timeout is now a short, dedicated cap, new option `reproducible.connecttimeout`
-  (default `30L` seconds), mirroring `reproducible.parallel.connecttimeout` for
-  the parallel ranged path; `reproducible.timeout` still governs the overall
-  download.
-
-* Parallel ranged downloads are now used **only for URLs that the
-  `reproducible.urlRemap` hook actually redirected** to a mirror, matching the
-  documented intent. Previously, once a remap hook was set, the parallel path
-  engaged for *any* range-capable URL — including direct origin servers that
-  were never redirected. Some such servers (e.g. `opendata.nfis.org`) cap
-  concurrent connections per IP, so most of the parallel streams stalled with 0
-  bytes and timed out, making the download far slower than a single stream before
-  eventually falling back. Two changes: (1) a non-redirected URL now downloads
-  single-stream directly; (2) a redirected mirror that nonetheless caps
-  concurrency is detected on the *first* attempt and falls back to a single
-  stream immediately instead of grinding through every retry. The new threshold
-  for (2) is `reproducible.parallel.minConcurrentFrac` (default `0.25`; `0`
-  disables it).
-
-* Cloud caching no longer silently invents a Google Drive folder when none is
-  specified. Previously, `Cache(useCloud = TRUE)` with no `cloudFolderID` (and
-  no `options(reproducible.cloudFolderID)`) **derived a folder name from the
-  local cache path and created/used it**. That derived name differs from machine
-  to machine, so two machines computing the *identical* `cacheId` each read/write
-  their own cloud folder and never share — the object is recomputed and
-  re-uploaded on every machine, silently. Now:
-  - if no `cloudFolderID` is set (neither the argument nor the option), cloud
-    caching is **skipped** (local cache only) with a one-time message, since a
-    `NULL` `cloudFolderID` means "no cloud target", not "make one up";
-  - a `cloudFolderID` argument of `NULL` now falls back to
-    `options(reproducible.cloudFolderID)` (the documented default) before this
-    check, so a globally-set option is honoured;
-  - when a `cloudFolderID` *is* supplied but cannot be resolved on Drive (not
-    found, or not accessible to the authenticated account), a **warning** is now
-    emitted (previously silent) explaining that the supplied folder was not used
-    and how to fix it (pass the same accessible Drive folder id on every
-    machine). To share a cloud cache across machines, set the same explicit
-    folder on each, e.g.
-    `options(reproducible.cloudFolderID = googledrive::as_id("<id>"))`.
-
-* A direct `preProcess()` call no longer prints the target/fun guessing
-  messages ("targetFile was not specified...", "Trying `fun` on ...",
-  "More than one possible files to load... Picking the last one..."). Because
-  `preProcess()` never loads the object into R (it only returns file paths),
-  those messages were misleading. They are still shown when `preProcess()` is
-  called from `prepInputs()` (where a load follows) and are always suppressed
-  when `fun = NA`. The returned `targetFile`/`fun` are unchanged.
-* `prepInputs`/`preProcess` no longer error with
-  `missing value where TRUE/FALSE needed` in the remote hash check when the
-  remote source advertises no file size (e.g. a server with no
-  `content-length` header). The size comparison now treats a missing remote
-  size as "unknown" and falls through to the normal hash/download path.
-* Parallel ranged downloads (the opt-in `reproducible.urlRemap` path) no longer
-  fail on Windows, where opening all `reproducible.parallel.streams` (e.g. 48)
-  connections at once was refused at connection time, so almost every part
-  failed and the download fell back to a single stream. The number of
-  *simultaneous* connections is now capped (the file is still split into many
-  small parts for cheap retries, but only some download at once); the new option
-  `reproducible.parallel.maxConnections` controls this and defaults to
-  `parallelly::availableCores() - 1` (or `parallel::detectCores() - 1` when the
-  Suggested `parallelly` package is absent). The per-part failure reason (from
-  `curl`) is now reported on each retry and on fallback, instead of being
-  silently discarded. A new option `reproducible.parallel.connecttimeout`
-  (default `30` seconds) sets the per-connection establishment timeout; this was
-  previously mis-derived from `reproducible.timeout` and could collapse to ~1
-  second if that option was lowered.
-
+* **Changing `options(reproducible.cacheSaveFormat)` no longer invalidates the
+  cache.** On the file-backed backend every entry was silently recomputed and
+  both old and new files left on disk; entries are now migrated to the new
+  format. Two related defects on the same path are also fixed (`loadFile()`
+  erroring with `object 'fe' not found` when given `format=`, and the
+  format-retry loop giving up after the first candidate).
+* **The background `showCache()` pre-warm fork is no longer leaked.** It is
+  spawned only when it will be consumed, and never under a DBI backend;
+  previously long sessions accumulated forks and OOM-killed CI runners. New
+  advanced option `reproducible.showCachePreWarm`.
+* **DBI backend:** tag values containing a single quote no longer break inserts;
+  `.addTagsRepo()`/`.updateTagsRepo()` accept a named list of connections; and
+  URL logging is no longer silently disabled under `useDBI(TRUE)`.
+* **Google Drive:** public files no longer trigger an interactive OAuth prompt;
+  authentication uses a verified fallback chain; failures report the actual
+  cause; and `Cache(useCloud = TRUE)` no longer pages the entire cloud-cache
+  folder. A best-effort cloud upload no longer aborts the run.
+* **File-backed objects** (e.g. `terra` `SpatRaster`) are restored portably
+  across machines via the new `reproducible.fileBackedAnchors`.
+* **Platform-specific:** `.archiveExtractBinary()` no longer invokes `apt` on
+  macOS, nor errors on Windows when more than one archive binary is installed.
+* Single-stream downloads no longer hang for certain servers; parallel ranged
+  downloads are used only where the server supports them.
+* Cloud caching no longer invents a Google Drive folder when none is supplied.
+* Assorted message and reporting fixes in `messageColoured()`/`cliCol()`,
+  `getRelative()`, and direct `preProcess()` calls.
 # reproducible 3.1.1
 
 ## bug fixes

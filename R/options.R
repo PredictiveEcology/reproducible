@@ -104,7 +104,7 @@
 #'     fallback anchors.
 #'   }
 #'   \item{`futurePlan`}{
-#'     **No effect as of version 3.2.2.** Default: `FALSE`. This previously
+#'     **No effect as of version 3.2.0.** Default: `FALSE`. This previously
 #'     enabled `future`-backed background downloading and cache writing on Linux.
 #'     Those paths were off by default, effectively untested, and have been
 #'     removed; the option is retained only because downstream packages set it,
@@ -553,7 +553,7 @@ reproducibleOptions <- function() {
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.dryRun = FALSE,
     reproducible.fileBackedAnchors = NULL, # named list of semantic project paths (e.g. SpaDES paths(sim)); used to store/restore file-backed object paths *relative* to a portable anchor
-    reproducible.futurePlan = FALSE, # no effect as of 3.2.2; kept because downstream sets it
+    reproducible.futurePlan = FALSE, # no effect as of 3.2.0; kept because downstream sets it
     reproducible.gdalwarpThreads = 2L,
     reproducible.gdriveNoAuth = FALSE,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
