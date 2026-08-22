@@ -52,10 +52,22 @@ skip_on_transient_http <- function(expr) {
 ## stream). Returns the result of `expr` so the caller can chain assertions
 ## on it. Non-transient warnings are re-emitted so they remain visible in
 ## test output instead of being silently muffled.
+## Deliberately does NOT match a bare "GDAL error". GDAL appends "(GDAL error N)"
+## to nearly every diagnostic it emits, including ones that must stay red -- a
+## 404, "Cannot open file", a permissions problem -- and including purely local
+## configuration noise such as "PROJ: file is not a database (GDAL error 1)".
+## Matching it meant any GDAL complaint at all was reported as a transient
+## upstream failure and the test silently skipped. Match the actual transient
+## signatures instead.
 .transientStreamPattern <- paste(
+  ## truncated or failed streaming reads of a remote raster
   "TIFFFillTile", "TIFFReadEncodedTile", "IReadBlock failed",
-  "GDAL error", "HTTP 5\\d\\d", "Bad Gateway",
-  "Service Unavailable", "Gateway Timeout",
+  ## server-side transients (5xx only -- 4xx means we asked for the wrong thing)
+  "HTTP response code: 5\\d\\d", "HTTP 5\\d\\d",
+  "Bad Gateway", "Service Unavailable", "Gateway Timeout",
+  ## transport-level transients
+  "Connection timed out", "Connection reset", "Could not resolve host",
+  "Operation timed out", "SSL connection timeout",
   sep = "|"
 )
 
