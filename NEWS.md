@@ -79,9 +79,10 @@
   `writeRaster()` allocates a GDAL thread pool of one thread per core that is
   never released; forking such a process (as `prepInputs(numTiles = )` did via
   `mclapply()`) left the children holding GDAL mutexes no surviving thread could
-  release, and they hung indefinitely. The writes `reproducible` controls now
-  pass `NUM_THREADS=1`, and tiling falls back to serial — with a message saying
-  why — if the session is already carrying such a pool.
+  release, and they hung indefinitely. The trigger is the *child* asking GDAL
+  for a worker pool, not the parent having one, so writing the tiles with
+  `NUM_THREADS=1` is sufficient on its own — it holds regardless of what the
+  caller did beforehand, or which version of \pkg{terra} they run.
 * **The last large third-party download is gone from the tests.** `test-gis.R`
   fetched a ~40 MB national fire-point archive from a federal server, on a URL
   that has since been renamed upstream and now 404s. It is replaced by a 2.8 kB
