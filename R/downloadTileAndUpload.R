@@ -265,6 +265,26 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 
   rfull
 }
+## mclapply() signals a dead worker by returning a try-error for EVERY value
+## that worker was given, so a single failure loses a whole slice of the work.
+## Callers that do not inspect the results end up silently missing tiles or
+## uploads. Retry the failed slice serially, and fail loudly if that also fails.
+.retryFailedSerially <- function(results, items, FUN, what, verbose, ...) {
+  failed <- vapply(results, function(x) inherits(x, c("try-error", "error")), logical(1))
+  if (!any(failed)) {
+    return(results)
+  }
+  messagePreProcess(.message$forkChildFailed(sum(failed), what), verbose = verbose)
+  results[failed] <- lapply(items[failed], function(i) {
+    tryCatch(FUN(i, ...), error = function(e) e)
+  })
+  stillFailed <- vapply(results, function(x) inherits(x, c("try-error", "error")), logical(1))
+  if (any(stillFailed)) {
+    stop(.message$forkChildFailedHard(sum(stillFailed), what), call. = FALSE)
+  }
+  results
+}
+
 
 tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_names, nx = 10, ny = 5,
                                    datatype = NULL,
@@ -299,9 +319,23 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
       # isAllNA <- terra::allNA(tile)[1] %in% TRUE
       # if (isAllNA %in% FALSE) {
 
-        terra::writeRaster(tile, spec$path, datatype = datatype,
-                           overwrite = FALSE,
-                           gdal = c("COMPRESS=LZW", "TILED=YES", "NUM_THREADS=1"))
+        ## NUM_THREADS=1 is load-bearing, not a tuning knob. mclapply() forks,
+        ## and fork() carries only the calling thread into the child; a child
+        ## that then asks GDAL for its own worker pool deadlocks on mutex state
+        ## inherited from the parent's pool, and hangs forever. Measured: with a
+        ## default write in the child this deadlocks whenever the parent has
+        ## ever done a plain terra::writeRaster() (which allocates a pool that
+        ## is never released); with NUM_THREADS=1 it completes. The parent
+        ## having a pool is harmless on its own -- it is the child creating one
+        ## that hangs -- so this one option is the whole fix, and it holds
+        ## regardless of what the caller did beforehand or which terra they run.
+        ## `datatype = NULL` together with `gdal =` throws Rcpp::not_compatible
+        ## in terra (>= 1.9.34, still in 1.9.46), so drop the NULL rather than
+        ## pass it -- `datatype` here defaults to NULL.
+        wrArgs <- list(tile, spec$path, overwrite = FALSE,
+                       gdal = c("COMPRESS=LZW", "TILED=YES", "NUM_THREADS=1"))
+        if (!is.null(datatype)) wrArgs$datatype <- datatype
+        do.call(terra::writeRaster, wrArgs)
         return(paste("Saved:", spec$path))
       # }
     } else {
@@ -312,16 +346,15 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
-  if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
+  if (isUnix() && requireNamespace("parallel")) {
     numCoresToUse <- .parallelCores(maxN = length(tile_specs))
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
+    results <- .retryFailedSerially(results, tile_specs, process_tile,
+                                    what = "tiles", verbose = verbose,
+                                    datatype = datatype)
   } else {
-    if (isUnix() && !forkIsSafe()) {
-      messagePreProcess(.message$forkUnsafeSerial(nThreadsSelf(), numSystemCores()),
-                        verbose = verbose)
-    }
     results <- lapply(tile_specs, process_tile, datatype = datatype)
   }
 
@@ -380,13 +413,15 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   }
 
   # Upload in parallel on Linux/macOS, sequential on Windows
-  if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
+  if (isUnix() && requireNamespace("parallel")) {
     ## network-bound, so NOT core-derived and not capped by `mc.cores`: more than
     ## ~7 concurrent uploads tends to be slower, depending on connection speed
     numCoresToUse <- .parallelUpload()
     results <- parallel::mclapply(
       tif_files, upload_one,
       mc.cores = numCoresToUse)
+    results <- .retryFailedSerially(results, tif_files, upload_one,
+                                    what = "uploads", verbose = verbose)
   } else {
     results <- lapply(tif_files, upload_one)
   }
@@ -892,71 +927,6 @@ numCoresToUse <- function(min = 2, max = NULL) {
   if (!is.null(mcc)) n <- min(n, mcc)
   .forkLimit(n)
 }
-
-## Number of threads in the *current* process, or NA where we cannot tell.
-## Linux exposes one directory per thread under /proc/self/task; macOS needs `ps -M`.
-nThreadsSelf <- function() {
-  if (dir.exists("/proc/self/task")) {
-    return(length(dir("/proc/self/task")))
-  }
-  if (isMac()) {
-    return(tryCatch(length(system2("ps", c("-M", "-p", Sys.getpid()), stdout = TRUE)) - 1L,
-                    error = function(e) NA_integer_, warning = function(w) NA_integer_))
-  }
-  NA_integer_
-}
-
-## `mclapply()` forks, and fork() only carries the calling thread into the child:
-## any mutex held by another thread stays locked there forever. A process whose
-## thread count exceeds its core count is carrying a library thread pool (in
-## practice GDAL's, created by a default terra::writeRaster()), and forking it
-## deadlocks. Both pools that matter are sized to the core count, so "more
-## threads than cores" separates the two states with a full core-count of margin.
-## Unknown thread count (NA) forks as before.
-forkIsSafe <- function() {
-  n <- nThreadsSelf()
-  if (is.na(n)) {
-    return(TRUE)
-  }
-  ## A clean process already carries about one thread per core (BLAS) plus the
-  ## main thread, so `n > cores` alone would false-positive on small machines
-  ## (3 threads on 2 cores). A GDAL pool adds another full core's worth, so
-  ## half a core count of headroom separates the two states at every size:
-  ##   2 cores  -> clean 3, poisoned 5, threshold 3
-  ##  80 cores  -> clean 65, poisoned 145, threshold 120
-  cores <- numSystemCores()
-  n <= cores + max(1L, cores %/% 2L)
-}
-
-## The CPU count as the *thread-pool libraries themselves* see it: affinity- and
-## cgroup-aware (so it is 2 inside `taskset -c 0,1` or a 2-CPU container), but
-## deliberately ignoring `mc.cores`. Neither availableCores() nor freeCores()
-## is right here, because both answer "how many workers should I start":
-##   - availableCores() honours `mc.cores`, so `mc.cores = 2` would make a clean
-##     65-thread process look unsafe to fork.
-##   - freeCores() subtracts whatever else is running, so on a busy shared
-##     machine it might return 10 while a clean session still legitimately
-##     carries 64 BLAS threads -- again a false positive.
-## `methods = "system"` is wrong too: it reports the raw CPU count, so inside a
-## CPU-limited container -- i.e. most CI -- it reads 80 while the pools size
-## themselves to 2, and the guard would never fire. Use freeCores() for deciding
-## how much work to start (see .parallelCores), not here.
-numSystemCores <- function() {
-  n <- NA_integer_
-  if (.requireNamespace("parallelly")) {
-    n <- suppressWarnings(tryCatch(
-      as.integer(parallelly::availableCores(
-        ## excludes the "mc.cores" method on purpose; `nproc` honours CPU affinity
-        methods = c("cgroups.cpuset", "cgroups.cpuquota", "nproc", "system")
-      )),
-      error = function(e) NA_integer_))
-  }
-  if (is.na(n) || n < 1L) {
-    n <- suppressWarnings(as.integer(parallel::detectCores()))
-  }
-  if (is.na(n) || n < 1L) 1L else n
-}
-
 
 # Classify a remote-supplied hash string into a content-hash algorithm or
 # "etag-opaque" when no positive trust is possible. Google Drive ETag-shaped
