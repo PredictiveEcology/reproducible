@@ -19,7 +19,7 @@ test_that("prepInputsUrlTiles", {
                        reproducible.inputPath = tmpdir,
                        mc.cores = 2L)# used by tiles
   outerDriveFolder <- "1KuBraAYnBpyxl3Nf0udc05fQlTPds2xY"
-  skip_if_service_account_releaseVer_NotLinux()
+  skip_if_not_releaseVer_Linux()
 
 
 
