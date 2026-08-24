@@ -1747,10 +1747,12 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     "^https?://(?:www[.])?github[.]com/([^/]+)/([^/]+)/raw/(?:refs/(?:heads|tags)/)?([^/]+)/(.*)$",
     "^https?://raw[.]githubusercontent[.]com/([^/]+)/([^/]+)/(?:refs/(?:heads|tags)/)?([^/]+)/(.*)$"
   )
+  base <- getOption("reproducible.githubListingBase", "")
+  if (!length(base) || !nzchar(base)) return(url) # opted out: never contact it
   for (pat in pats) {
     m <- regmatches(url, regexec(pat, url))[[1]]
     if (length(m) == 5L)
-      return(paste0("https://cdn.jsdelivr.net/gh/", m[2], "/", m[3], "@", m[4], "/", m[5]))
+      return(paste0(base, m[2], "/", m[3], "@", m[4], "/", m[5]))
   }
   url
 }

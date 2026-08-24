@@ -307,3 +307,34 @@ test_that(".remoteSiblings finds the sidecars beside a file url", {
                   c("luxSmall.cpg", "luxSmall.dbf", "luxSmall.prj", "luxSmall.shx"))
   expect_false("luxSmall.shp" %in% names(sibs)) # the target itself is not a sibling
 })
+
+test_that(".listableParent rewrites GitHub raw urls, and only those", {
+  testInit()
+  withr::local_options(reproducible.githubListingBase = "https://cdn.jsdelivr.net/gh/")
+  ## every raw form GitHub serves, including the refs/ prefixes
+  expect_identical(.listableParent("https://github.com/O/R/raw/refs/heads/main/a/b/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@main/a/b/")
+  expect_identical(.listableParent("https://github.com/O/R/raw/main/a/b/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@main/a/b/")
+  expect_identical(.listableParent("https://raw.githubusercontent.com/O/R/main/a/b/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@main/a/b/")
+  expect_identical(.listableParent("https://github.com/O/R/raw/refs/tags/v1.0/a/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@v1.0/a/")
+  ## anything else is left alone -- no other host gets redirected anywhere
+  expect_identical(.listableParent("https://example.org/pub/"), "https://example.org/pub/")
+  expect_identical(.listableParent("https://github.com/O/R/tree/main/a/"),
+                   "https://github.com/O/R/tree/main/a/")
+})
+
+test_that("the GitHub listing index can be switched off entirely", {
+  testInit()
+  ## The index is a convenience, not a requirement: with it off, a GitHub url is
+  ## never rewritten and nothing contacts the CDN. The sidecar search then falls
+  ## back to probing by name, which is slower but reaches the same answer.
+  withr::local_options(reproducible.githubListingBase = NULL)
+  expect_identical(.listableParent("https://github.com/O/R/raw/main/a/"),
+                   "https://github.com/O/R/raw/main/a/")
+  withr::local_options(reproducible.githubListingBase = "")
+  expect_identical(.listableParent("https://github.com/O/R/raw/main/a/"),
+                   "https://github.com/O/R/raw/main/a/")
+})
