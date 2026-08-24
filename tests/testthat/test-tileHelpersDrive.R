@@ -19,6 +19,10 @@
 test_that("tiles round-trip through Google Drive", {
   skip_on_cran()
   skip_if_not_installed("terra")
+  ## Upload round-trips hit a shared Drive folder, so run them on exactly one
+  ## runner: several legs doing this at once is needless traffic and can race.
+  ## Nothing here is platform-specific -- the macOS and Linux paths are identical.
+  skip_if_not_releaseVer_Linux()
   testInit(c("terra", "googledrive"), needGoogleDriveAuth = TRUE)
 
   ## --- local fixture: one small raster, cut into 4 tiles --------------------

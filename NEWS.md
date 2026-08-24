@@ -83,6 +83,11 @@
   for a worker pool, not the parent having one, so writing the tiles with
   `NUM_THREADS=1` is sufficient on its own — it holds regardless of what the
   caller did beforehand, or which version of \pkg{terra} they run.
+* **A failed parallel worker no longer silently drops tiles or uploads.**
+  `mclapply()` marks every value a dead worker was given as failed, and those
+  results were not inspected — so a single failing worker quietly produced a
+  half-complete set (observed as 2 of 4 tiles reaching Google Drive). The failed
+  slice is now retried serially, and an error is raised if that also fails.
 * **The last large third-party download is gone from the tests.** `test-gis.R`
   fetched a ~40 MB national fire-point archive from a federal server, on a URL
   that has since been renamed upstream and now 404s. It is replaced by a 2.8 kB
