@@ -80,14 +80,11 @@ file-based caching systems.
 }
 }
 \examples{
-\dontrun{
 a <- Cache(rnorm(1))
 .addTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
              tagKey = "status", tagValue = "processed")
 showCache() # last entry is the above line
-}
 
-\dontrun{
 a <- Cache(rnorm(1))
 # Update an existing tag
 .updateTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
@@ -96,7 +93,6 @@ a <- Cache(rnorm(1))
 # Add a tag if it doesn't exist
 .updateTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
              tagKey = "status", tagValue = "new", add = TRUE)
-}
 
 }
 \seealso{

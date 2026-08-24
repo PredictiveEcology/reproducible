@@ -57,7 +57,6 @@ utils::globalVariables(c(
 #' @rdname Checksums
 #'
 #' @examples
-#' \dontrun{
 #' modulePath <- file.path(tempdir(), "myModulePath")
 #' dir.create(modulePath, recursive = TRUE, showWarnings = FALSE)
 #' moduleName <- "myModule"
@@ -68,7 +67,6 @@ utils::globalVariables(c(
 #'
 #' ## write new CHECKSUMS.txt file
 #' Checksums(files = moduleName, modulePath, write = TRUE)
-#' }
 #'
 setGeneric("Checksums", function(path, write, quickCheck = getOption("reproducible.quickCheck", FALSE),
                                  checksumFile = identifyCHECKSUMStxtFile(path),

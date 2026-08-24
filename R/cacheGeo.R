@@ -137,8 +137,6 @@ extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj,
 #'
 #' @export
 #' @examples
-#' \donttest{
-#'
 #' if (requireNamespace("sf", quietly = TRUE) &&
 #'     requireNamespace("terra", quietly = TRUE)) {
 #'   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
@@ -187,7 +185,6 @@ extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj,
 #'       # , cloudFolderID = "cachedObjects" # to upload/download from cloud
 #'     )
 #'   }
-#' }
 #' }
 CacheGeo <- function(targetFile = NULL,
                      domain,

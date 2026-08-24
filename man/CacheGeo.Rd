@@ -118,8 +118,6 @@ appended to the \code{sf} object as a new entry (feature) or it will replace
 the existing "same extent" entry in the \code{sf} object.
 }
 \examples{
-\donttest{
-
 if (requireNamespace("sf", quietly = TRUE) &&
     requireNamespace("terra", quietly = TRUE)) {
   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
@@ -168,6 +166,5 @@ if (requireNamespace("sf", quietly = TRUE) &&
       # , cloudFolderID = "cachedObjects" # to upload/download from cloud
     )
   }
-}
 }
 }

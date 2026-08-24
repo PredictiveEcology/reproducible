@@ -29,8 +29,7 @@ This function uses the \code{ps -ef} system command and regular expressions
 to parse CPU usage. It may not be portable across all Unix variants.
 }
 \examples{
-\dontrun{
-  detectActiveCores(pattern = "R", minCPU = 30)
-}
-
+\dontshow{if (!identical(.Platform$OS.type, "windows")) withAutoprint(\{ # examplesIf}
+detectActiveCores(pattern = "R", minCPU = 30)
+\dontshow{\}) # examplesIf}
 }
