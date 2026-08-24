@@ -39,16 +39,33 @@ then it will \emph{not} attempt to see it as an archive, even if it has archive-
 file extension (e.g., \code{.zip}). This may be useful when an R function
 is expecting an archive directly.}
 
-\item{alsoExtract}{Optional character string naming files other than
-\code{targetFile} that must be extracted from the \code{archive}. If
-\code{NULL}, the default, then it will extract all files. Other options:
-\code{"similar"} will extract all files with the same filename without
-file extension as \code{targetFile}. \code{NA} will extract nothing other
-than \code{targetFile}. A character string of specific file names will cause
-only those to be extracted. Each element may also be a regular expression:
-if an element does not match any archive member literally (by relative path
-or basename), it is passed to \code{grep()} against the archive's file list and
-all matching members are extracted. For example,
+\item{alsoExtract}{Which files to fetch or extract in addition to
+\code{targetFile}. Spatial data rarely arrives as one file -- a shapefile is
+five or six, and a raster often has a \code{.aux.xml}, \code{.ovr} or \code{.tfw}
+alongside carrying its attribute table, overviews or georeferencing --
+so this controls how much of that company comes along.
+
+The default depends on where the files are coming from, because
+"everything" only means something when a container bounds it:
+
+\tabular{lll}{
+\strong{\code{alsoExtract}} \tab \strong{from an \code{archive}} \tab \strong{from a \code{url}} \cr
+\code{NULL} (default) \tab every file in the archive \tab as for \code{"similar"} \cr
+\code{"similar"} \tab files sharing \code{targetFile}'s name without its extension
+\tab same, discovered by listing the remote directory \cr
+\code{NA} or \code{"none"} \tab \code{targetFile} only \tab \code{targetFile} only \cr
+a character vector \tab those files only \tab those files only \cr
+}
+
+An archive bounds what "all files" can mean, so \code{NULL} extracts all of it.
+A \code{url} has no such bound -- the server may hold thousands of unrelated
+files -- so \code{NULL} there means \code{targetFile} and its companions, never the
+whole remote directory.
+
+Each element of a character vector may also be a regular expression: if an
+element does not match any archive member literally (by relative path or
+basename), it is passed to \code{grep()} against the archive's file list and all
+matching members are extracted. For example,
 \code{alsoExtract = "CMD_sm|CMD_sp"} extracts every file whose name contains
 \code{CMD_sm} or \code{CMD_sp}. See table in \code{\link[=preProcess]{preProcess()}}.}
 
