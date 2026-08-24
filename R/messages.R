@@ -13,6 +13,23 @@
 .message$stopNeedArchive <- function(archive)
   paste0("Please install.packages('archive') to extract files from \n", archive)
 
+## A `terra::writeRaster()` with default options allocates one GDAL worker
+## thread per core, and that pool is never released for the life of the
+## session (not by gc(), not when the SpatRaster is dropped). Forking such a
+## process leaves the children holding GDAL mutexes that no surviving thread
+## can release, so they hang forever. Tiling therefore falls back to serial
+## whenever the process already carries more threads than it has cores.
+.message$forkUnsafeSerialTxt <-
+  "tiling serially: this session has more threads than cores, making fork() unsafe"
+
+.message$forkUnsafeSerial <- function(nThreads, nCores)
+  paste0(
+    .message$forkUnsafeSerialTxt, " (", nThreads, " threads > ", nCores, " cores). ",
+    "An earlier terra::writeRaster() created a GDAL thread pool that is never ",
+    "released. To keep tiling parallel, write with ",
+    "`terra::writeRaster(..., gdal = \"NUM_THREADS=1\")`."
+  )
+
 ## `fun` may be a function, a quoted call, a symbol, or the name of a function as
 ## a string (optionally "pkg::name"). Each form resolves through a different
 ## lookup, and each lookup failing on its own reports only what it happened to

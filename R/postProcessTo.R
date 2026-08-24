@@ -1162,10 +1162,14 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
             ## and `terra` can't overwrite it even if `overwrite = TRUE`
             ## this can happen when multiple modules touch the same object
             if (!any(file.exists(writeTo))) {
-              from <- terra::writeRaster(from,
-                                         filename = writeTo, overwrite = FALSE,
-                                         datatype = datatype
-              )
+              ## NUM_THREADS=1: a default write allocates a GDAL thread pool sized
+              ## to the core count that is never released, which makes any later
+              ## fork() (e.g. tiling) deadlock. `datatype = NULL` together with
+              ## `gdal =` throws Rcpp::not_compatible in terra, so drop the NULL.
+              wrArgs <- list(from, filename = writeTo, overwrite = FALSE,
+                             gdal = "NUM_THREADS=1")
+              if (!is.null(datatype)) wrArgs$datatype <- datatype
+              from <- do.call(terra::writeRaster, wrArgs)
               writeDone <- TRUE
             } else {
               stop("File can't be unlinked for overwrite.")

@@ -286,7 +286,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
 
         terra::writeRaster(tile, spec$path, datatype = datatype,
                            overwrite = FALSE,
-                           gdal = c("COMPRESS=LZW", "TILED=YES"))
+                           gdal = c("COMPRESS=LZW", "TILED=YES", "NUM_THREADS=1"))
         return(paste("Saved:", spec$path))
       # }
     } else {
@@ -297,12 +297,16 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
-  if (isUnix() && requireNamespace("parallel")) {
+  if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
     numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = length(tile_specs)))
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
   } else {
+    if (isUnix() && !forkIsSafe()) {
+      messagePreProcess(.message$forkUnsafeSerial(nThreadsSelf(), numSystemCores()),
+                        verbose = verbose)
+    }
     results <- lapply(tile_specs, process_tile, datatype = datatype)
   }
 
@@ -361,7 +365,7 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   }
 
   # Upload in parallel on Linux/macOS, sequential on Windows
-  if (isUnix() && requireNamespace("parallel")) {
+  if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
     numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = 7))
     # numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
                          # tends to be slower; but this will depend on connection speed
@@ -784,6 +788,51 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #'
 #' @export
 #' @seealso [detectActiveCores()]
+## Number of threads in the *current* process, or NA where we cannot tell.
+## Linux exposes one directory per thread under /proc/self/task; macOS needs `ps -M`.
+nThreadsSelf <- function() {
+  if (dir.exists("/proc/self/task")) {
+    return(length(dir("/proc/self/task")))
+  }
+  if (isMac()) {
+    return(tryCatch(length(system2("ps", c("-M", "-p", Sys.getpid()), stdout = TRUE)) - 1L,
+                    error = function(e) NA_integer_, warning = function(w) NA_integer_))
+  }
+  NA_integer_
+}
+
+## `mclapply()` forks, and fork() only carries the calling thread into the child:
+## any mutex held by another thread stays locked there forever. A process whose
+## thread count exceeds its core count is carrying a library thread pool (in
+## practice GDAL's, created by a default terra::writeRaster()), and forking it
+## deadlocks. Both pools that matter are sized to the core count, so "more
+## threads than cores" separates the two states with a full core-count of margin.
+## Unknown thread count (NA) forks as before.
+forkIsSafe <- function() {
+  n <- nThreadsSelf()
+  if (is.na(n)) {
+    return(TRUE)
+  }
+  n <= numSystemCores()
+}
+
+## The *machine's* core count -- deliberately NOT availableCores(), which honours
+## `mc.cores`/cgroup settings. Those say how many workers the user wants; the
+## library thread pools we are detecting here are sized to the hardware, so a
+## user who sets `mc.cores = 2` must not make a clean 65-thread process look
+## unsafe to fork.
+numSystemCores <- function() {
+  n <- NA_integer_
+  if (.requireNamespace("parallelly")) {
+    n <- suppressWarnings(tryCatch(as.integer(parallelly::availableCores(methods = "system")),
+                                   error = function(e) NA_integer_))
+  }
+  if (is.na(n) || n < 1L) {
+    n <- suppressWarnings(as.integer(parallel::detectCores()))
+  }
+  if (is.na(n) || n < 1L) 1L else n
+}
+
 numCoresToUse <- function(min = 2, max = NULL) {
   if (.requireNamespace("parallelly")) {
     nctu <- max(min, min(max, parallelly::freeCores()))

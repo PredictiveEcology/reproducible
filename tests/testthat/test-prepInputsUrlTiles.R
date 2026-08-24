@@ -36,7 +36,11 @@ test_that("prepInputsUrlTiles", {
   terra::crs(b) <- "epsg:3978"
   extLrg <- terra::extend(b, 1e2)
   terra::crs(extLrg) <- "epsg:3978"
-  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE)
+  ## NUM_THREADS=1: a default write allocates a GDAL thread pool sized to the
+  ##   core count that is never released, which would make the tiling fork()
+  ##   unsafe and send it down the serial fallback instead of the path we test
+  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE,
+                               gdal = "NUM_THREADS=1")
   d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
 
   mess1 <- capture_messages(
@@ -65,7 +69,11 @@ test_that("prepInputsUrlTiles", {
   terra::crs(b) <- "epsg:3978"
   extLrg <- terra::extend(b, 1e2)
   terra::crs(extLrg) <- "epsg:3978"
-  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE)
+  ## NUM_THREADS=1: a default write allocates a GDAL thread pool sized to the
+  ##   core count that is never released, which would make the tiling fork()
+  ##   unsafe and send it down the serial fallback instead of the path we test
+  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE,
+                               gdal = "NUM_THREADS=1")
   d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
   b1 <- prepInputs(url = d$id, to = b, doUploads = TRUE, numTiles = c(2,2))
   withr::local_options(reproducible.prepInputsUrlTiles = NULL)
