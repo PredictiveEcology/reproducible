@@ -829,7 +829,7 @@ numCoresToUse <- function(min = 2, max = NULL) {
   }
   mcc <- .parallelOptInt(getOption("mc.cores", NULL))
   if (!is.null(mcc)) n <- min(n, mcc)
-  max(1L, as.integer(n))
+  .forkLimit(n)
 }
 
 ## Number of threads in the *current* process, or NA where we cannot tell.

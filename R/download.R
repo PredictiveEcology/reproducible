@@ -1484,6 +1484,17 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 ##
 ## `reproducible.parallel.streams`/`.maxConnections` are deprecated in favour of
 ## `reproducible.parallel.download`; the new option wins when both are set.
+## R CMD check sets `_R_CHECK_LIMIT_CORES_`; CRAN policy allows at most 2
+## simultaneous processes, and parallel::mclapply() errors outright above that
+## ("N simultaneous processes spawned"). That is a limit on *processes*, so it
+## binds every fork count we choose -- including the network-bound upload one,
+## which otherwise deliberately ignores CPU settings.
+.forkLimit <- function(n) {
+  lim <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+  if (nzchar(lim) && !identical(tolower(lim), "false")) n <- min(n, 2L)
+  max(1L, as.integer(n))
+}
+
 .parallelOptInt <- function(x, min = 1L) {
   if (is.null(x)) return(NULL)
   x <- suppressWarnings(as.integer(x)[1])
@@ -1499,7 +1510,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 
 .parallelUpload <- function() {
   n <- .parallelOptInt(getOption("reproducible.parallel.upload", NULL))
-  if (is.null(n)) 7L else n
+  .forkLimit(if (is.null(n)) 7L else n)
 }
 
 ## Retained as the name used at the ranged-download call sites; concurrency and
