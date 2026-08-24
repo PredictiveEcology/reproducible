@@ -767,10 +767,8 @@ cacheId <- function(obj) {
 #'   pattern and exceeding the CPU usage threshold. Returns `NULL` with a
 #'   message if run on Windows.
 #'
-#' @examples
-#' \dontrun{
-#'   detectActiveCores(pattern = "R", minCPU = 30)
-#' }
+#' @examplesIf !identical(.Platform$OS.type, "windows")
+#' detectActiveCores(pattern = "R", minCPU = 30)
 #'
 #' @note This function uses the `ps -ef` system command and regular expressions
 #'   to parse CPU usage. It may not be portable across all Unix variants.

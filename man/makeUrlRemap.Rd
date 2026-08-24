@@ -58,7 +58,6 @@ will build (and cache) the remap function internally. See the \code{urlRemap} en
 in \code{\link[=reproducibleOptions]{reproducibleOptions()}}.
 }
 \examples{
-\donttest{
 manifest <- data.frame(
   filename = "SCANFI_att_biomass_2010_v2_20260119.tif",
   url = paste0(
@@ -66,8 +65,15 @@ manifest <- data.frame(
     "SCANFI_v2/2010/SCANFI_att_biomass_2010_v2_20260119.tif"
   )
 )
-options(reproducible.urlRemap = makeUrlRemap(manifest))
-}
+remap <- makeUrlRemap(manifest)
+
+# matched by basename, whatever the original url was
+remap("https://drive.google.com/file/d/abc123/view",
+      "SCANFI_att_biomass_2010_v2_20260119.tif")
+remap("https://example.com/other.tif", "other.tif") # NULL -- keep original
+
+# to apply it to every download in a session:
+#   options(reproducible.urlRemap = remap)
 }
 \seealso{
 \code{\link[=preProcess]{preProcess()}} for the \code{reproducible.urlRemap} option.

@@ -237,7 +237,6 @@ If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
 }
 
 \examples{
-\donttest{
 if (requireNamespace("terra", quietly = TRUE) &&
   requireNamespace("withr", quietly = TRUE)) {
   library(reproducible)
@@ -271,76 +270,68 @@ if (requireNamespace("terra", quietly = TRUE) &&
   ##########################################
   if (identical(Sys.getenv("NOT_CRAN"), "true")) {
     data.table::setDTthreads(2)
-    origDir <- getwd()
-    # download a zip file from internet, unzip all files, load as shapefile, Cache the call
-    # First time: don't know all files - prepInputs will guess, if download file is an archive,
-    #   then extract all files, then if there is a .shp, it will load with sf::st_read
-    dPath <- file.path(tempdir(), "ecozones")
-    shpUrl <- "http://sis.agr.gc.ca/cansis/nsdb/ecostrat/zone/ecozone_shp.zip"
+    # download a zip file from internet, unzip all files, load as shapefile
+    # Don't know all the files -- prepInputs will guess: if the downloaded file is an
+    #   archive, extract all files, then if there is a .shp, load it with sf::st_read
+    dPath <- file.path(tempdir2(), "ecozones")
+    shpUrl <- paste0(
+      "https://github.com/PredictiveEcology/reproducible/releases/download/v3.1.1/",
+      "ecozone_shp.zip"
+    )
 
-    # Wrapped in a try because this particular url can be flaky
-    shpEcozone <- try(prepInputs(
+    # Wrapped in a try because this needs internet
+    shpEcozone <- try(prepInputs(destinationPath = dPath, url = shpUrl))
+
+    ##########################################
+    # Local archive -- the same file, shipped with the package
+    ##########################################
+    # The remaining examples use the copy in `inst/ex`, so they need no internet
+    dPath <- file.path(tempdir2(), "ecozonesLocal")
+    checkPath(dPath, create = TRUE)
+    file.copy(system.file("ex/ecozone_shp.zip", package = "reproducible"), dPath)
+
+    shpEcozone <- prepInputs(destinationPath = dPath, archive = "ecozone_shp.zip")
+
+    # Robust to partial file deletions: the missing files are re-extracted
+    unlink(dir(file.path(dPath, "Ecozones"), full.names = TRUE)[1:2])
+    shpEcozone <- prepInputs(destinationPath = dPath, archive = "ecozone_shp.zip")
+
+    # Once this is done, can be more precise in operational code:
+    #  specify targetFile, alsoExtract, and fun, wrap with Cache
+    ecozoneFilename <- file.path(dPath, "Ecozones", "ecozones.shp")
+    # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
+    #   targetFile is there, it will not re-extract the archive.
+    ecozoneFiles <- c("ecozones.dbf", "ecozones.prj", "ecozones.shp", "ecozones.shx")
+    shpEcozone <- prepInputs(
+      targetFile = ecozoneFilename,
+      archive = "ecozone_shp.zip",
+      fun = "terra::vect",
+      alsoExtract = ecozoneFiles,
+      destinationPath = dPath
+    )
+
+    # Add a study area to Crop and Mask to
+    # Create a "study area"
+    coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
+      .Dim = c(5L, 2L)
+    )
+    studyArea <- terra::vect(coords, "polygons")
+    terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+
+    shpEcozoneSm <- Cache(prepInputs,
+      archive = "ecozone_shp.zip",
+      targetFile = reproducible::asPath(ecozoneFilename),
+      alsoExtract = reproducible::asPath(ecozoneFiles),
+      studyArea = studyArea,
+      fun = "terra::vect",
       destinationPath = dPath,
-      url = shpUrl
-    ))
-    if (!is(shpEcozone, "try-error")) {
-      # Robust to partial file deletions:
-      unlink(dir(dPath, full.names = TRUE)[1:3])
-      shpEcozone <- prepInputs(
-        destinationPath = dPath,
-        url = shpUrl
-      )
-      unlink(dPath, recursive = TRUE)
+      writeTo = "EcozoneFile.shp"
+    ) # passed to determineFilename
 
-      # Once this is done, can be more precise in operational code:
-      #  specify targetFile, alsoExtract, and fun, wrap with Cache
-      ecozoneFilename <- file.path(dPath, "ecozones.shp")
-      ecozoneFiles <- c(
-        "ecozones.dbf", "ecozones.prj",
-        "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"
-      )
-      shpEcozone <- prepInputs(
-        targetFile = ecozoneFilename,
-        url = shpUrl,
-        fun = "terra::vect",
-        alsoExtract = ecozoneFiles,
-        destinationPath = dPath
-      )
-      unlink(dPath, recursive = TRUE)
-
-      # Add a study area to Crop and Mask to
-      # Create a "study area"
-      coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-        .Dim = c(5L, 2L)
-      )
-      studyArea <- terra::vect(coords, "polygons")
-      terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-
-      #  specify targetFile, alsoExtract, and fun, wrap with Cache
-      ecozoneFilename <- file.path(dPath, "ecozones.shp")
-      # Note, you don't need to "alsoExtract" the archive... if the archive is not there, but the
-      #   targetFile is there, it will not redownload the archive.
-      ecozoneFiles <- c(
-        "ecozones.dbf", "ecozones.prj",
-        "ecozones.sbn", "ecozones.sbx", "ecozones.shp", "ecozones.shx"
-      )
-      shpEcozoneSm <- Cache(prepInputs,
-        url = shpUrl,
-        targetFile = reproducible::asPath(ecozoneFilename),
-        alsoExtract = reproducible::asPath(ecozoneFiles),
-        studyArea = studyArea,
-        fun = "terra::vect",
-        destinationPath = dPath,
-        writeTo = "EcozoneFile.shp"
-      ) # passed to determineFilename
-
-      terra::plot(shpEcozone[, 1])
-      terra::plot(shpEcozoneSm[, 1], add = TRUE, col = "red")
-      unlink(dPath)
-    }
+    terra::plot(shpEcozone[, 1])
+    terra::plot(shpEcozoneSm[, 1], add = TRUE, col = "red")
   }
   withr::deferred_run()
-}
 }
 
 ## Using quoted dlFun and fun -- this is not intended to be run but used as a template

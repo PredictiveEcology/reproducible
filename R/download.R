@@ -835,7 +835,6 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' @seealso [preProcess()] for the `reproducible.urlRemap` option.
 #' @export
 #' @examples
-#' \donttest{
 #' manifest <- data.frame(
 #'   filename = "SCANFI_att_biomass_2010_v2_20260119.tif",
 #'   url = paste0(
@@ -843,8 +842,15 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #'     "SCANFI_v2/2010/SCANFI_att_biomass_2010_v2_20260119.tif"
 #'   )
 #' )
-#' options(reproducible.urlRemap = makeUrlRemap(manifest))
-#' }
+#' remap <- makeUrlRemap(manifest)
+#'
+#' # matched by basename, whatever the original url was
+#' remap("https://drive.google.com/file/d/abc123/view",
+#'       "SCANFI_att_biomass_2010_v2_20260119.tif")
+#' remap("https://example.com/other.tif", "other.tif") # NULL -- keep original
+#'
+#' # to apply it to every download in a session:
+#' #   options(reproducible.urlRemap = remap)
 makeUrlRemap <- function(manifest) {
   needed <- c("filename", "url")
   if (!is.data.frame(manifest) || !all(needed %in% colnames(manifest))) {

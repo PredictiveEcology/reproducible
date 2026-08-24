@@ -109,7 +109,8 @@ if (requireNamespace("terra", quietly = TRUE) &&
   # download a (spatial) file from remote url (which often is an archive) load into R
   # need 3 files for this example; 1 from remote, 2 local
   dPath <- file.path(tempdir2())
-  remoteTifUrl <- "https://github.com/rspatial/terra/raw/master/inst/ex/elev.tif"
+  # the `CRAN` tag tracks terra's current CRAN release; `master` moves and is flakier
+  remoteTifUrl <- "https://github.com/rspatial/terra/raw/CRAN/inst/ex/elev.tif"
 
   localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
   localFileLux <- system.file("ex/lux.shp", package = "terra")
@@ -118,37 +119,38 @@ if (requireNamespace("terra", quietly = TRUE) &&
   # 1st step -- get study area
   studyArea <- prepInputs(localFileLuxSm, fun = "terra::vect") # default is sf::st_read
 
-  \donttest{
+  # Requires internet -- gated on NOT_CRAN so CRAN's machines are never asked to
+  #   reach a third-party server, and wrapped in try() for when the server is down
+  if (identical(Sys.getenv("NOT_CRAN"), "true")) {
     # 2nd step: make the input data layer like the studyArea map
-    # Requires internet -- so using try just in case, and kept out of the
-    # timed examples (CRAN does not run \donttest)
     elevForStudy <- try(prepInputs(url = remoteTifUrl, to = studyArea, res = 250,
                                    destinationPath = dPath, useCache = FALSE))
-
-    # Alternate way, one step at a time. Must know each of these steps, and perform for each layer
-    dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
-    file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
-    studyArea2 <- terra::vect(localFileLuxSm)
-    if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
-    tf <- tempfile(fileext = ".tif")
-    download.file(url = remoteTifUrl, destfile = tf, mode = "wb", quiet = TRUE)
-    Checksums(dPath, write = TRUE, files = tf)
-    elevOrig <- terra::rast(tf)
-    studyAreaCrs <- terra::crs(studyArea)
-    # Build an explicit target raster (same CRS as studyArea, res = 250) and
-    # project to it. Avoids the recursive `terra::project(x, char_crs, res = N)`
-    # shorthand that recent terra (~1.9) regressed with
-    # `[write] unknown option(s): xscale,yscale`.
-    elevTarget <- terra::project(terra::rast(elevOrig), studyAreaCrs)
-    elevTarget <- terra::rast(terra::ext(elevTarget),
-                              crs = terra::crs(elevTarget),
-                              resolution = 250)
-    elevForStudy2 <- terra::project(elevOrig, elevTarget) |>
-      terra::mask(studyArea2) |>
-      terra::crop(studyArea2)
-
-    isTRUE(all.equal(elevForStudy, elevForStudy2)) # TRUE!
   }
+
+  ## The single call above is equivalent to all the steps below, which must be known and
+  ##   repeated for every layer. Left commented out: it is an explanation, not a test.
+  ##
+  ## dir.create(dPath, recursive = TRUE, showWarnings = FALSE)
+  ## file.copy(localFileLuxSm, file.path(dPath, basename(localFileLuxSm)))
+  ## studyArea2 <- terra::vect(localFileLuxSm)
+  ## if (!all(terra::is.valid(studyArea2))) studyArea2 <- terra::makeValid(studyArea2)
+  ## tf <- tempfile(fileext = ".tif")
+  ## download.file(url = remoteTifUrl, destfile = tf, mode = "wb", quiet = TRUE)
+  ## Checksums(dPath, write = TRUE, files = tf)
+  ## elevOrig <- terra::rast(tf)
+  ## studyAreaCrs <- terra::crs(studyArea)
+  ## # Build an explicit target raster (same CRS as studyArea, res = 250) and project to
+  ## # it. Avoids the recursive `terra::project(x, char_crs, res = N)` shorthand that
+  ## # recent terra (~1.9) regressed with `[write] unknown option(s): xscale,yscale`.
+  ## elevTarget <- terra::project(terra::rast(elevOrig), studyAreaCrs)
+  ## elevTarget <- terra::rast(terra::ext(elevTarget),
+  ##                           crs = terra::crs(elevTarget),
+  ##                           resolution = 250)
+  ## elevForStudy2 <- terra::project(elevOrig, elevTarget) |>
+  ##   terra::mask(studyArea2) |>
+  ##   terra::crop(studyArea2)
+  ##
+  ## isTRUE(all.equal(elevForStudy, elevForStudy2)) # TRUE!
 
   # sf class
   if (requireNamespace("sf", quietly = TRUE)) {

@@ -12,6 +12,15 @@
 * Test fixtures previously downloaded from a third-party personal repository —
   the source whose intermittent unavailability triggered the check failure — are
   now release assets on `PredictiveEcology/reproducible`.
+* **Every example now runs during `R CMD check`.** All `\dontrun{}` and
+  `\donttest{}` wrappers have been removed, so no example is exempt from being
+  checked. Examples that reach a third-party server are instead gated on
+  `NOT_CRAN`, keeping CRAN's machines off remote resources while local and CI
+  runs still exercise them. The `prepInputs()` example now uses a 15 kB
+  ecozones archive shipped in `inst/ex` (and mirrored as a release asset)
+  rather than repeatedly downloading a 1.44 MB file from a federal server;
+  `prepInputs` went from 7.1 s to 0.07 s and no example exceeds CRAN's 5 s
+  threshold (#437).
 
 ## new features
 

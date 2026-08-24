@@ -91,7 +91,6 @@ To update your \file{CHECKSUMS.txt} files using the new algorithm, see
 \url{https://github.com/PredictiveEcology/SpaDES/issues/295#issuecomment-246513405}.
 }
 \examples{
-\dontrun{
 modulePath <- file.path(tempdir(), "myModulePath")
 dir.create(modulePath, recursive = TRUE, showWarnings = FALSE)
 moduleName <- "myModule"
@@ -102,7 +101,6 @@ Checksums(modulePath, files = moduleName)
 
 ## write new CHECKSUMS.txt file
 Checksums(files = moduleName, modulePath, write = TRUE)
-}
 
 }
 \author{

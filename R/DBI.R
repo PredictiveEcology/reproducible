@@ -501,12 +501,10 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #'
 #' @rdname addTags
 #' @examples
-#' \dontrun{
 #' a <- Cache(rnorm(1))
 #' .addTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
 #'              tagKey = "status", tagValue = "processed")
 #' showCache() # last entry is the above line
-#' }
 #'
 #' @export
 .addTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
@@ -599,7 +597,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #'
 #' @rdname addTags
 #' @examples
-#' \dontrun{
 #' a <- Cache(rnorm(1))
 #' # Update an existing tag
 #' .updateTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
@@ -608,7 +605,6 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
 #' # Add a tag if it doesn't exist
 #' .updateTagsRepo(cacheId = gsub("cacheId:", "", attr(a, "tags")),
 #'              tagKey = "status", tagValue = "new", add = TRUE)
-#' }
 #'
 #' @export
 .updateTagsRepo <- function(cacheId, cachePath = getOption("reproducible.cachePath"),
