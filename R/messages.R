@@ -13,6 +13,16 @@
 .message$stopNeedArchive <- function(archive)
   paste0("Please install.packages('archive') to extract files from \n", archive)
 
+.message$forkChildFailedTxt <- "some parallel workers failed; retrying those serially"
+
+.message$forkChildFailed <- function(n, what)
+  paste0(.message$forkChildFailedTxt, " (", n, " ", what,
+         "). mclapply() marks every value a dead worker was given as failed, so ",
+         "ignoring this would silently drop them.")
+
+.message$forkChildFailedHard <- function(n, what)
+  paste0(n, " ", what, " could not be completed, even serially")
+
 .message$gadmFallbackTxt <- "could not retrieve GADM boundaries"
 
 .message$gadmFallback <- function(tileGrid, path, err = NULL)

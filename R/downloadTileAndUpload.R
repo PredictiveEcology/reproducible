@@ -265,6 +265,26 @@ prepInputsWithTiles <- function(targetFile, url, destinationPath,
 
   rfull
 }
+## mclapply() signals a dead worker by returning a try-error for EVERY value
+## that worker was given, so a single failure loses a whole slice of the work.
+## Callers that do not inspect the results end up silently missing tiles or
+## uploads. Retry the failed slice serially, and fail loudly if that also fails.
+.retryFailedSerially <- function(results, items, FUN, what, verbose, ...) {
+  failed <- vapply(results, function(x) inherits(x, c("try-error", "error")), logical(1))
+  if (!any(failed)) {
+    return(results)
+  }
+  messagePreProcess(.message$forkChildFailed(sum(failed), what), verbose = verbose)
+  results[failed] <- lapply(items[failed], function(i) {
+    tryCatch(FUN(i, ...), error = function(e) e)
+  })
+  stillFailed <- vapply(results, function(x) inherits(x, c("try-error", "error")), logical(1))
+  if (any(stillFailed)) {
+    stop(.message$forkChildFailedHard(sum(stillFailed), what), call. = FALSE)
+  }
+  results
+}
+
 
 tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_names, nx = 10, ny = 5,
                                    datatype = NULL,
@@ -331,6 +351,9 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
+    results <- .retryFailedSerially(results, tile_specs, process_tile,
+                                    what = "tiles", verbose = verbose,
+                                    datatype = datatype)
   } else {
     results <- lapply(tile_specs, process_tile, datatype = datatype)
   }
@@ -397,6 +420,8 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
     results <- parallel::mclapply(
       tif_files, upload_one,
       mc.cores = numCoresToUse)
+    results <- .retryFailedSerially(results, tif_files, upload_one,
+                                    what = "uploads", verbose = verbose)
   } else {
     results <- lapply(tif_files, upload_one)
   }
