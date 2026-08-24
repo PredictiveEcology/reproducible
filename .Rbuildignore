@@ -24,3 +24,5 @@
 ^\.vscode$
 ^\.claude$
 ^dev$
+^\.aider.*$
+^\.ci-logs$
