@@ -18,9 +18,12 @@ test_that("makeTileGridFromGADMcode falls back to a fixed extent when gadm retur
   skip_if_not_installed("geodata")
   testInit("terra")
 
-  out <- testthat::with_mocked_bindings(
-    makeTileGridFromGADMcode("CAN", numTiles = c(2, 2), crs = "EPSG:3347"),
-    gadm = function(...) NULL, .package = "geodata")
+  ## the fallback warns, because it silently changes which area gets tiled
+  expect_warning(
+    out <- testthat::with_mocked_bindings(
+      makeTileGridFromGADMcode("CAN", numTiles = c(2, 2), crs = "EPSG:3347"),
+      gadm = function(...) NULL, .package = "geodata"),
+    .message$gadmFallbackTxt, fixed = TRUE)
 
   ## The contract callers rely on: a usable grid, not an error.
   expect_type(out, "list")
@@ -39,10 +42,45 @@ test_that("makeTileGridFromGADMcode fallback also handles the 'NULL' string", {
 
   ## Cache() can hand back the literal string "NULL" rather than NULL, which is
   ## why the guard tests for both. Same fallback either way.
-  out <- testthat::with_mocked_bindings(
-    makeTileGridFromGADMcode("CAN", numTiles = c(2, 2), crs = "EPSG:3347"),
-    gadm = function(...) "NULL", .package = "geodata")
+  expect_warning(
+    out <- testthat::with_mocked_bindings(
+      makeTileGridFromGADMcode("CAN", numTiles = c(2, 2), crs = "EPSG:3347"),
+      gadm = function(...) "NULL", .package = "geodata"),
+    .message$gadmFallbackTxt, fixed = TRUE)
 
   expect_s4_class(out$tileGrid, "SpatVector")
   expect_equal(nrow(out$tileGrid), 4)
+})
+
+test_that("a gadm() error also falls back, with a warning, rather than propagating", {
+  skip_if_not_installed("terra")
+  skip_if_not_installed("geodata")
+  testInit("terra")
+
+  ## The case that broke CI: no geodata path configured, so gadm() errors
+  ## outright rather than returning NULL.
+  expect_warning(
+    out <- testthat::with_mocked_bindings(
+      makeTileGridFromGADMcode("CAN", numTiles = c(2, 2), crs = "EPSG:3347"),
+      gadm = function(...) stop("you need to provide a path"),
+      .package = "geodata"),
+    .message$gadmFallbackTxt, fixed = TRUE)
+
+  expect_s4_class(out$tileGrid, "SpatVector")
+  expect_equal(nrow(out$tileGrid), 4)
+})
+
+test_that(".gadmPath prefers persistence over tempdir", {
+  skip_if_not_installed("geodata")
+
+  ## with a shared-downloads location set, downloads should land there, not in
+  ## the session temp default
+  shared <- file.path(tempdir(), paste0("shared", sample(1e6, 1)))
+  withr::local_options(reproducible.destinationPathShared = shared,
+                       reproducible.inputPaths = NULL)
+  p <- testthat::with_mocked_bindings(
+    reproducible:::.gadmPath(),
+    geodata_path = function(...) "", .package = "geodata")
+  expect_true(startsWith(normalizePath(p, mustWork = FALSE),
+                         normalizePath(shared, mustWork = FALSE)))
 })

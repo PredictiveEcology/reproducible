@@ -19,6 +19,19 @@
 ## process leaves the children holding GDAL mutexes that no surviving thread
 ## can release, so they hang forever. Tiling therefore falls back to serial
 ## whenever the process already carries more threads than it has cores.
+.message$gadmFallbackTxt <- "could not retrieve GADM boundaries"
+
+.message$gadmFallback <- function(tileGrid, path, err = NULL)
+  paste0(
+    .message$gadmFallbackTxt, " for ", encodeString(tileGrid, quote = "'"),
+    if (!is.null(err) && nzchar(err)) paste0(": ", err) else "",
+    ".\n  Using a fixed Canada-wide extent for the tile grid instead, so the ",
+    "tiles may not match your area of interest.",
+    "\n  Downloads were attempted into: ", path,
+    "\n  To keep them across sessions, set `geodata::geodata_path()` or ",
+    "`options(reproducible.destinationPathShared = )`."
+  )
+
 .message$forkUnsafeSerialTxt <-
   "tiling serially: this session has more threads than cores, making fork() unsafe"
 

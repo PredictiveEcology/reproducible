@@ -25,7 +25,22 @@
 #' @param doUploads Logical. Whether to upload processed tiles.
 #'   Default is `getOption("reproducible.prepInputsDoUploads", FALSE)`.
 #' @param tileGrid Either length 3 character string, such as "CAN", to be sent to `geodata::gadm(...)`
-#'   or an actual `SpatVector` object with a grid of polygons
+#'   or an actual `SpatVector` object with a grid of polygons.
+#'
+#'   When a character code is used, the GADM boundaries must be downloaded, and
+#'   `geodata` requires somewhere to put them. That location is resolved in this
+#'   order, preferring somewhere persistent so the download happens only once:
+#'   \enumerate{
+#'     \item `geodata::geodata_path()`, if the user has configured one;
+#'     \item `getOption("reproducible.destinationPathShared")` (or its
+#'       deprecated alias `reproducible.inputPaths`), the option intended for
+#'       large files reused across projects;
+#'     \item `getOption("reproducible.inputPath")`, the package default, which
+#'       is under `tempdir()` and so is re-downloaded each session.
+#'   }
+#'   If the download cannot be completed -- no path, server outage, no network --
+#'   a warning is issued and a fixed Canada-wide extent is used instead, which
+#'   may not match the area of interest.
 #' @param numTiles Integer. Number of tiles to generate. Optional.
 #' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
 #' @param purge Logical or Integer. `0/FALSE` (default) keeps existing `CHECKSUMS.txt` file and
@@ -503,10 +518,30 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
   ## an error here (no path, server down, network) routes into the same fallback
   ## as a NULL return, just below
-  g <- tryCatch(geodata::gadm(tileGrid, resolution = 2, path = .gadmPath()) |> Cache(),
-                error = function(e) NULL)
+  gadmErr <- NULL
+  ## resolving the location can itself fail (e.g. an unwritable directory), so
+  ## it is inside the same fallback
+  gadmPath <- tryCatch(.gadmPath(), error = function(e) {
+    gadmErr <<- conditionMessage(e)
+    NULL
+  })
+  g <- if (is.null(gadmPath)) {
+    NULL
+  } else {
+    tryCatch(geodata::gadm(tileGrid, resolution = 2, path = gadmPath) |> Cache(),
+             error = function(e) {
+               gadmErr <<- conditionMessage(e)
+               NULL
+             })
+  }
   if (is.null(g) || (is.character(g) && isTRUE(g == "NULL"))) {
-    # most likely geodata server is down
+    ## geodata unavailable: no path configured, server down, or no network. Say
+    ## so -- the fallback silently changes which area gets tiled.
+    warning(.message$gadmFallback(
+      tileGrid,
+      if (is.null(gadmPath)) "<no download location could be resolved>" else gadmPath,
+      gadmErr
+    ), call. = FALSE)
     tileExt <- terra::ext(c(xmin = -2342000, xmax = 3011000, ymin = 5860000, ymax = 9436000))
     tilePoly2 <- tileExt
   } else {

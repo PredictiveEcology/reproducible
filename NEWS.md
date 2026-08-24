@@ -82,6 +82,15 @@
   release, and they hung indefinitely. The writes `reproducible` controls now
   pass `NUM_THREADS=1`, and tiling falls back to serial — with a message saying
   why — if the session is already carrying such a pool.
+* **`prepInputs(numTiles = )` now works without geodata configured.** It builds
+  its tile grid from GADM boundaries, but called `geodata::gadm()` with no
+  `path`, which errors on any machine where `geodata::geodata_path()` has never
+  been set. The download location is now resolved explicitly, preferring
+  somewhere persistent: `geodata_path()`, then
+  `reproducible.destinationPathShared`, then `reproducible.inputPath` (under
+  `tempdir()`). If GADM cannot be retrieved at all, a **warning** now says so
+  and names the fixed extent used instead, rather than failing or silently
+  tiling the wrong area.
 * **Setting `mc.cores` no longer throttles downloads.** Concurrent connections
   defaulted to `parallelly::availableCores() - 1`, and because `availableCores()`
   honours `mc.cores`, capping CPU forking silently reduced downloads to a single
