@@ -135,3 +135,89 @@ test_that(".isRstudioServer is FALSE outside RStudio Server", {
   ## search path, so the answer is FALSE without consulting the API.
   expect_false(.isRstudioServer())
 })
+
+## ---------------------------------------------------------------------------
+## .dirListingUrls() -- parsing an HTML directory index
+##
+## `prepInputs(url = <a directory>)` has to work out which files a remote
+## directory holds. Servers render an index in whatever markup they like, so
+## these fixtures are the real shapes seen in the wild, trimmed: Apache
+## `mod_autoindex` (a table, with sort links and a parent link), nginx
+## `autoindex` (markup starting at column 1), and a CDN that emits
+## root-absolute hrefs. All are offline: the parser is a pure function.
+## ---------------------------------------------------------------------------
+
+test_that(".dirListingUrls reads an Apache mod_autoindex table", {
+  html <- c(
+    '<html><head><title>Index of /rasterDir</title></head><body>',
+    '<h1>Index of /rasterDir</h1><table>',
+    '<tr><th><a href="?C=N;O=D">Name</a></th><th><a href="?C=S;O=A">Size</a></th>',
+    '<th><a href="?C=D;O=A">Description</a></th></tr>',
+    '<tr><td><img alt="[PARENTDIR]"></td><td><a href="/">Parent Directory</a></td></tr>',
+    '<tr><td><img alt="[   ]"></td><td><a href="elev.tif">elev.tif</a></td><td>12K</td></tr>',
+    '<tr><td><img alt="[   ]"></td><td><a href="elev.tif.aux.xml">elev.tif.aux.xml</a></td><td>1K</td></tr>',
+    '<tr><td><img alt="[DIR]"></td><td><a href="sub/">sub/</a></td></tr>',
+    '</table></body></html>')
+  out <- .dirListingUrls(html, "https://example.org/rasterDir/")
+
+  ## the two files, and nothing else: not the parent link, not the `?C=` sort
+  ## links (which the old regex returned as a file called "?C=D;O=A"), not the
+  ## subdirectory
+  expect_identical(names(out), c("elev.tif", "elev.tif.aux.xml"))
+  expect_identical(unname(out[["elev.tif"]]), "https://example.org/rasterDir/elev.tif")
+})
+
+test_that(".dirListingUrls reads an nginx autoindex", {
+  ## nginx puts the anchor at the start of the line. The previous parser
+  ## required at least one character before `<a`, so it returned nothing at all
+  ## for every nginx server.
+  html <- c("<html><head><title>Index of /download/</title></head><body>",
+            "<h1>Index of /download/</h1><hr><pre><a href=\"../\">../</a>",
+            "<a href=\"nginx-1.0.0.tar.gz\">nginx-1.0.0.tar.gz</a>   01-Jan-2026 00:00   1000000",
+            "<a href=\"nginx-1.0.1.tar.gz\">nginx-1.0.1.tar.gz</a>   02-Jan-2026 00:00   1000001",
+            "</pre><hr></body></html>")
+  out <- .dirListingUrls(html, "http://nginx.example/download/")
+
+  expect_identical(names(out), c("nginx-1.0.0.tar.gz", "nginx-1.0.1.tar.gz"))
+  expect_identical(unname(out[[1]]), "http://nginx.example/download/nginx-1.0.0.tar.gz")
+})
+
+test_that(".dirListingUrls resolves root-absolute and protocol-relative hrefs", {
+  ## A CDN (jsDelivr is the case that matters here) links each file by an
+  ## absolute path, not a bare name, so the urls cannot be built by pasting the
+  ## name onto the directory.
+  html <- c('<a href="https://www.example.net/about">About</a>',
+            '<a href="/gh/o/r@abc/ex/dir/">../</a>',
+            '<a href="/gh/o/r@abc/ex/dir/a.tif">a.tif</a>',
+            '<a href="//cdn.example.net/gh/o/r@abc/ex/dir/b.tif">b.tif</a>',
+            '<a href="/gh/o/r@abc/ex/other/c.tif">c.tif</a>')
+  out <- .dirListingUrls(html, "https://cdn.example.net/gh/o/r@abc/ex/dir/")
+
+  ## a.tif by origin + path; b.tif by scheme + //host; the off-site link and
+  ## `c.tif` (a different directory) are both dropped, as is the self link
+  expect_identical(names(out), c("a.tif", "b.tif"))
+  expect_identical(unname(out[["a.tif"]]), "https://cdn.example.net/gh/o/r@abc/ex/dir/a.tif")
+  expect_identical(unname(out[["b.tif"]]), "https://cdn.example.net/gh/o/r@abc/ex/dir/b.tif")
+})
+
+test_that(".dirListingUrls tolerates quoting, case, spacing and a missing slash", {
+  html <- c("<A HREF = 'one.tif'>one.tif</A>",
+            '<a  href="two.tif">two.tif</a>',
+            '<a href="#top">top</a>',
+            '<a href="">empty</a>',
+            '<a href="one.tif">one.tif again</a>')
+  ## no trailing slash on the directory: it should still be treated as one
+  out <- .dirListingUrls(html, "https://example.org/d")
+
+  expect_identical(names(out), c("one.tif", "two.tif")) # deduplicated, anchors dropped
+  expect_identical(unname(out[["two.tif"]]), "https://example.org/d/two.tif")
+})
+
+test_that(".dirListingUrls returns an empty result for a listing of only directories", {
+  html <- c('<a href="../">Parent Directory</a>',
+            '<a href="alpha/">alpha/</a>',
+            '<a href="beta/">beta/</a>')
+  out <- .dirListingUrls(html, "https://example.org/pub/")
+
+  expect_length(out, 0L)
+})

@@ -2128,49 +2128,54 @@ test_that("rasters aren't properly resampled", {
   }
 })
 
-test_that("test prepInputs url when a directory", {
+test_that("prepInputs takes a url that is a directory", {
   skip_on_cran()
   skip_if_not_installed("httr")
   skip_if_not_installed("curl")
+  ## Gate on "is there internet at all", never on "does this fixture respond".
+  ## The previous version of this test probed its own url and skip()ped when it
+  ## was unreachable; when that third-party server started returning 403 the
+  ## test went quietly green while covering nothing.
+  skip_if_offline()
 
   testInit("terra", opts = list(reproducible.inputPaths = NULL, reproducible.overwrite = TRUE))
-  withr::local_options(destinationPath = tmpdir)
+  luxDir <- paste0(theDirListingUrl, "luxSmall/")
+  nonCsum <- function(d) setdiff(dir(d), "CHECKSUMS.txt")
 
-  globalOutput <- capture.output({
-    url <- "http://forestales.ujed.mx/incendios2/cartografia/tematicos/combustibles_y_vegetacion/tipo_combustibles_serie_VI/"
+  ## The headline case: name a directory and nothing else. The listing is
+  ## fetched, the target is guessed from the names in it, and the files similar
+  ## to that target -- here the whole shapefile -- come down as one object.
+  d1 <- checkPath(file.path(tmpdir, "d1"), create = TRUE)
+  v <- prepInputs(url = luxDir, destinationPath = d1, fun = "terra::vect")
+  expect_s4_class(v, "SpatVector")
+  expect_length(v, 4L)
+  expect_setequal(nonCsum(d1),
+                  c("luxSmall.cpg", "luxSmall.dbf", "luxSmall.prj",
+                    "luxSmall.shp", "luxSmall.shx"))
 
-    if (!urlExists(url)) {
-      skip("Mexico url doesn't exist; skipping")
-    }
-    # Nothing specified
-    a <- prepInputs(url = url, fun = "terra::rast")
-    expect_is(a, "SpatRaster")
-    files <- dir(getwd(), pattern = "comb")
-    expect_true(length(files) == 8)
+  ## Naming the target explicitly reaches the same place: `alsoExtract`
+  ## defaults to "similar" for a directory, so the sidecars still come along.
+  d2 <- checkPath(file.path(tmpdir, "d2"), create = TRUE)
+  v2 <- prepInputs(url = luxDir, targetFile = "luxSmall.shp",
+                   destinationPath = d2, fun = "terra::vect")
+  expect_s4_class(v2, "SpatVector")
+  expect_length(nonCsum(d2), 5L)
 
-    unlink(dir(getwd(), recursive = TRUE, full.names = TRUE))
-    a <- prepInputs(url = url, targetFile = "comb_290719.tif", fun = "terra::rast")
-    expect_is(a, "SpatRaster")
-    files <- dir(getwd(), pattern = "comb")
-    expect_true(length(files) == 8)
+  ## `alsoExtract = "none"` means only the target. (A lone .shp cannot then be
+  ## read -- it needs its .dbf/.shx -- so assert on what landed, not on a load.)
+  d3 <- checkPath(file.path(tmpdir, "d3"), create = TRUE)
+  suppressWarnings(try(
+    prepInputs(url = luxDir, targetFile = "luxSmall.shp", alsoExtract = "none",
+               destinationPath = d3, fun = "terra::vect"), silent = TRUE))
+  expect_identical(nonCsum(d3), "luxSmall.shp")
 
-    unlink(dir(getwd(), recursive = TRUE, full.names = TRUE))
-    a <- prepInputs(
-      url = url,
-      targetFile = "comb_290719.tif",
-      alsoExtract = FALSE,
-      fun = "terra::rast"
-    )
-    expect_is(a, "SpatRaster")
-    files <- dir(getwd(), pattern = "comb")
-    expect_true(length(files) == 1)
-
-    unlink(dir(getwd(), recursive = TRUE, full.names = TRUE))
-    a <- prepInputs(url = url, fun = "terra::rast")
-    expect_is(a, "SpatRaster")
-    files <- dir(getwd(), pattern = "comb_290719")
-    expect_true(length(files) == 7)
-  })
+  ## A directory holding unrelated things -- an archive, a raster, and a
+  ## subdirectory -- yields only the target's own group, never everything in it.
+  d4 <- checkPath(file.path(tmpdir, "d4"), create = TRUE)
+  r <- prepInputs(url = theDirListingUrl, targetFile = "SCANFI_small.tif",
+                  destinationPath = d4, fun = "terra::rast")
+  expect_s4_class(r, "SpatRaster")
+  expect_identical(nonCsum(d4), "SCANFI_small.tif")
 })
 
 test_that("test prepInputs url when a gdrive directory", {
