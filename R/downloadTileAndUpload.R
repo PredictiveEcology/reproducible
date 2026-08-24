@@ -815,7 +815,15 @@ numCoresToUse <- function(min = 2, max = NULL) {
 .parallelCores <- function(maxN = NULL) {
   n <- .parallelOptInt(getOption("reproducible.parallel.cores", NULL))
   if (is.null(n)) {
-    n <- numCoresToUse(max = maxN)
+    ## numCoresToUse() returns NULL when the Suggested `parallelly` is absent
+    ## (e.g. an `_R_CHECK_DEPENDS_ONLY_` leg); without a fallback that would
+    ## silently collapse to 1 and serialize all CPU work.
+    n <- .parallelOptInt(numCoresToUse(max = maxN))
+    if (is.null(n)) {
+      dc <- suppressWarnings(as.integer(parallel::detectCores())[1])
+      n <- if (is.na(dc) || dc < 2L) 2L else max(2L, dc - 1L)
+      if (!is.null(maxN)) n <- min(n, maxN)
+    }
   } else if (!is.null(maxN)) {
     n <- min(n, maxN)
   }
