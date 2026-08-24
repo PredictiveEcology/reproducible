@@ -581,6 +581,21 @@ theEcozoneUrl <- paste0(theRasterTests, "ecozone_shp.zip")
 ## values are constant, which is why it compresses to ~6 kB (225 MB -> 6 kB).
 ## Also at inst/ex/SCANFI_small.tif for provenance.
 theCOGUrl <- paste0(theRasterTests, "SCANFI_small.tif")
+
+## A directory listing, served by jsDelivr out of this repo's own `inst/ex`.
+## `prepInputs(url = <a directory>)` needs a real index page to parse, and
+## GitHub cannot provide one: the file browser at github.com/.../tree/... is a
+## React app whose markup no href parser can read, and raw.githubusercontent
+## does not list directories at all. The CDN is what makes a GitHub-hosted
+## folder listable, and it serves the files from the same base url.
+##
+## Pinned to an immutable commit rather than a branch, so the listing cannot
+## change under the test. Update the SHA only when the fixtures themselves move.
+theDirListingSHA <- "795d6ca71fd4d53754c78ddcc440afc2f9648f83"
+theDirListingUrl <- paste0(
+  "https://cdn.jsdelivr.net/gh/PredictiveEcology/reproducible@",
+  theDirListingSHA, "/inst/ex/"
+)
 theRasterTestFilename <- function(pre = "", suff = "") {
   paste0(pre, "rasterTest.", suff)
 }

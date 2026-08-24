@@ -1227,7 +1227,11 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
         }, error = function(e) req)
       }
 
-      reqq <- req |> httr2::req_url_query()
+      # NOTE: do not round-trip the url through httr2::url_parse()/url_build()
+      #   (which an argument-less `req_url_query()` does): it percent-encodes `@`
+      #   in a path, and a CDN that versions by `@` -- jsDelivr's
+      #   /gh/user/repo@ref/file -- then answers 400 Invalid URL.
+      reqq <- req
       resp <- if (streamProg) {
         .dlHttr2Stream(reqq, destFile, verbose = verbose)
       } else {
@@ -1683,6 +1687,36 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   TRUE
 }
 
+# Extract the downloadable files from an HTML directory listing.
+#
+# Every server renders an index differently: Apache `mod_autoindex` (a table,
+# usually with `?C=N;O=D` sort links and a parent link), nginx `autoindex` (bare
+# `<a>` lines whose markup starts at column 1), a CDN such as jsDelivr
+# (root-absolute hrefs). Matching one server's layout -- which is what this used
+# to do, and only Apache's -- misses the rest, so instead take every `href` and
+# keep the ones that resolve to a file inside this directory. That single rule
+# also drops the parent link, sort links and subdirectories without naming them.
+#
+# `url` is the directory. Returns absolute urls, named by file name.
+.dirListingUrls <- function(txt, url) {
+  if (!grepl("/$", url)) url <- paste0(url, "/")
+  one <- paste(txt, collapse = "\n")
+  m <- gregexpr("href[[:space:]]*=[[:space:]]*[\"'][^\"']*[\"']", one, ignore.case = TRUE)
+  hrefs <- regmatches(one, m)[[1]]
+  hrefs <- trimws(sub("^[^\"']*[\"'](.*)[\"']$", "\\1", hrefs))
+  # `?...` sort/query links, `#...` anchors, `..` the parent
+  hrefs <- hrefs[nzchar(hrefs) & !grepl("^[#?]", hrefs) & !grepl("^[.][.]?/?$", hrefs)]
+  origin <- sub("^([a-z][a-z0-9+.-]*://[^/]+).*$", "\\1", url)
+  scheme <- sub("^([a-z][a-z0-9+.-]*:).*$", "\\1", url)
+  full <- ifelse(grepl("^[a-z][a-z0-9+.-]*://", hrefs), hrefs,
+          ifelse(grepl("^//", hrefs), paste0(scheme, hrefs),
+          ifelse(grepl("^/", hrefs), paste0(origin, hrefs), paste0(url, hrefs))))
+  full <- full[startsWith(full, url)] # a file in THIS directory, not elsewhere
+  full <- full[!grepl("/$", full)]    # a file, not a subdirectory
+  full <- unique(full)
+  stats::setNames(full, basename2(full))
+}
+
 #' Download a remote file
 #'
 #' @inheritParams prepInputs
@@ -1922,27 +1956,34 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               curl::handle_setopt(list_files, ftp_use_epsv = TRUE, dirlistonly = TRUE)
               con <- curl::curl(url = url, "r", handle = list_files)
               on.exit(close(con), add = TRUE)
-              filenames <- readLines(con)
-              # This is from NFI example
-              filenames <- grep("href", filenames, value = TRUE)
-              filenames <- grep("\\[PARENTDIR\\]|\\[ICO\\]", filenames, value = TRUE, invert = TRUE)
-              filenames2 <- gsub(".+<a href=\"(.+)\">.+/a>.+", "\\1", filenames)
-              # This was from mexico example from Steve
-              # filenames3 <- gsub(".+<a.+\">(.+)</a>.+", "\\1", filenames)
-              # rm http tags, plus the two files Description and Parent Directory that are in a directory
-              filenames <- grep("<|>|Description|Parent Directory", filenames2, value = TRUE, invert = TRUE)
-              if (isTRUE(nzchar(alsoExtract))) {
-                if (grepl("^sim", alsoExtract)) {
-                  theGrep <- filePathSansExt(targetFile)
-                } else if (grepl("none", alsoExtract)) {
-                  theGrep <- paste0("^", targetFile, "$")
-                } else {
-                  theGrep <- paste(alsoExtract, collapse = "|")
-                }
-                filenames <- grep(theGrep, filenames, value = TRUE)
+              dirListing <- .dirListingUrls(readLines(con, warn = FALSE), url)
+              filenames <- names(dirListing)
+              # The files in a directory usually belong to one object -- a shapefile's
+              #   .shp/.dbf/.prj/..., a raster and its sidecars -- so "similar" is the
+              #   default here; taking the whole directory is too much.
+              if (!(length(alsoExtract) && all(nzchar(alsoExtract)))) alsoExtract <- "similar"
+              # `.guessAtFile()` returns NULL for a directory url because the file
+              #   names do not exist as information until the listing above. They do
+              #   now, so the target can be picked from them.
+              targetInDir <- if (length(targetFile) && all(nzchar(targetFile))) {
+                basename2(targetFile)
+              } else {
+                basename2(.guessAtTargetAndFun(
+                  NULL, destinationPath, filesExtracted = filenames, fun = NULL,
+                  verbose = verbose, messageGuessing = FALSE
+                )$targetFilePath)
               }
+              theGrep <- if (grepl("^sim", alsoExtract[1])) {
+                paste0("^", filePathSansExt(targetInDir))
+              } else if (grepl("none", alsoExtract[1])) {
+                paste0("^", targetInDir, "$")
+              } else {
+                paste(alsoExtract, collapse = "|")
+              }
+              dirListing <- dirListing[grepl(paste(theGrep, collapse = "|"), filenames)]
+              filenames <- names(dirListing)
               # now that we have filenames; need to checksum
-              urls <- file.path(url, filenames)
+              urls <- unname(dirListing)
 
               checkSums <- runChecksums(destinationPath, checkSumFilePath = destinationPath, filenames, verbose)
               checkSums <- checkSums$checkSums[expectedFile %in% filenames]
