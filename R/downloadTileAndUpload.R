@@ -849,24 +849,38 @@ forkIsSafe <- function() {
   if (is.na(n)) {
     return(TRUE)
   }
-  n <= numSystemCores()
+  ## A clean process already carries about one thread per core (BLAS) plus the
+  ## main thread, so `n > cores` alone would false-positive on small machines
+  ## (3 threads on 2 cores). A GDAL pool adds another full core's worth, so
+  ## half a core count of headroom separates the two states at every size:
+  ##   2 cores  -> clean 3, poisoned 5, threshold 3
+  ##  80 cores  -> clean 65, poisoned 145, threshold 120
+  cores <- numSystemCores()
+  n <= cores + max(1L, cores %/% 2L)
 }
 
-## The *machine's* core count. Deliberately neither availableCores() nor
-## freeCores(), both of which answer "how many workers should I start":
+## The CPU count as the *thread-pool libraries themselves* see it: affinity- and
+## cgroup-aware (so it is 2 inside `taskset -c 0,1` or a 2-CPU container), but
+## deliberately ignoring `mc.cores`. Neither availableCores() nor freeCores()
+## is right here, because both answer "how many workers should I start":
 ##   - availableCores() honours `mc.cores`, so `mc.cores = 2` would make a clean
 ##     65-thread process look unsafe to fork.
 ##   - freeCores() subtracts whatever else is running, so on a busy shared
 ##     machine it might return 10 while a clean session still legitimately
 ##     carries 64 BLAS threads -- again a false positive.
-## The pools being detected here (GDAL's, OpenBLAS's) are sized to the hardware,
-## so the hardware count is the only correct comparison. Use freeCores() for
-## deciding how much work to start (see .parallelCores), not here.
+## `methods = "system"` is wrong too: it reports the raw CPU count, so inside a
+## CPU-limited container -- i.e. most CI -- it reads 80 while the pools size
+## themselves to 2, and the guard would never fire. Use freeCores() for deciding
+## how much work to start (see .parallelCores), not here.
 numSystemCores <- function() {
   n <- NA_integer_
   if (.requireNamespace("parallelly")) {
-    n <- suppressWarnings(tryCatch(as.integer(parallelly::availableCores(methods = "system")),
-                                   error = function(e) NA_integer_))
+    n <- suppressWarnings(tryCatch(
+      as.integer(parallelly::availableCores(
+        ## excludes the "mc.cores" method on purpose; `nproc` honours CPU affinity
+        methods = c("cgroups.cpuset", "cgroups.cpuquota", "nproc", "system")
+      )),
+      error = function(e) NA_integer_))
   }
   if (is.na(n) || n < 1L) {
     n <- suppressWarnings(as.integer(parallel::detectCores()))
