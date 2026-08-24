@@ -1723,6 +1723,38 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   readLines(con, warn = FALSE)
 }
 
+# Which of `nms` are "similar" to `base` -- the same file, in the sense that
+# matters to GIS formats. Two conventions, and neither implies the other:
+#   * the extension is replaced  -- luxSmall.shp -> luxSmall.dbf, x.tif -> x.tfw
+#   * a suffix is appended       -- x.tif -> x.tif.aux.xml
+# Deliberately NOT a prefix match on the stem: that makes `species.csv` claim
+# `speciesEcoregion.csv` and `speciesLayers.tif`, which are different data.
+.similarTo <- function(nms, base) {
+  startsWith(nms, paste0(base, ".")) | filePathSansExt(nms) %in% filePathSansExt(base)
+}
+
+# GitHub cannot list a directory in any form a link parser can read: the file
+# browser at github.com/OWNER/REPO/tree/... is a React app whose markup holds no
+# usable hrefs, and raw.githubusercontent 404s on a directory outright. Its
+# content is enumerable through the jsDelivr CDN, though, so translate a raw url
+# into that view *for listing only*. The names that come back are then used
+# against the caller's own url, so files are still fetched from the host they
+# asked for -- jsDelivr is consulted as an index, never substituted as a source.
+#
+# Returns `url` unchanged when it is not a GitHub raw url.
+.listableParent <- function(url) {
+  pats <- c(
+    "^https?://(?:www[.])?github[.]com/([^/]+)/([^/]+)/raw/(?:refs/(?:heads|tags)/)?([^/]+)/(.*)$",
+    "^https?://raw[.]githubusercontent[.]com/([^/]+)/([^/]+)/(?:refs/(?:heads|tags)/)?([^/]+)/(.*)$"
+  )
+  for (pat in pats) {
+    m <- regmatches(url, regexec(pat, url))[[1]]
+    if (length(m) == 5L)
+      return(paste0("https://cdn.jsdelivr.net/gh/", m[2], "/", m[3], "@", m[4], "/", m[5]))
+  }
+  url
+}
+
 # Does this url exist? A HEAD costs no body, and unlike `urlExists()` (which
 # reads a line of the response) it is safe on binary sidecars such as `.ovr`.
 .urlHeadOK <- function(url) {
@@ -1800,8 +1832,16 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 .remoteSiblings <- function(url, targetFile, alsoExtract,
                             verbose = getOption("reproducible.verbose", 1)) {
   none <- stats::setNames(character(), character())
-  if (!(length(alsoExtract) == 1 && is.character(alsoExtract) &&
-        isTRUE(grepl("^sim", alsoExtract)))) return(none)
+  # "similar" is the default beside a file url. Unlike an archive -- where an
+  #   unspecified `alsoExtract` means "extract everything", because the archive
+  #   bounds what "everything" is -- a url has no such bound, so the useful
+  #   reading of "unspecified" here is the target and whatever belongs with it.
+  #   `NA` still means the target alone, and an explicit vector still means
+  #   exactly those files.
+  similar <- length(alsoExtract) == 0 ||
+    (length(alsoExtract) == 1 && is.character(alsoExtract) &&
+       isTRUE(grepl("^sim", alsoExtract)))
+  if (!similar) return(none)
   if (!(.requireNamespace("curl") && .requireNamespace("httr2"))) return(none)
   base <- if (length(targetFile) && isTRUE(nzchar(targetFile[1]))) {
     basename2(targetFile[1])
@@ -1812,22 +1852,39 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   if (!nzchar(stem)) return(none)
   parent <- sub("[^/]+$", "", url)
   if (!nzchar(parent) || identical(parent, url)) return(none)
+  # Nothing to look for, so do not spend a request looking. This is a deny-list
+  #   rather than an allow-list on purpose: a format missing from it is still
+  #   searched, and the cost of that mistake is latency, not a lost file.
+  if (tolower(fileExt(base)) %in% tolower(getOption("reproducible.sidecarProbeSkip", character())))
+    return(none)
 
-  found <- suppressWarnings(tryCatch(.dirListingUrls(.readUrlLines(parent), parent),
+  listFrom <- .listableParent(parent)
+  found <- suppressWarnings(tryCatch(.dirListingUrls(.readUrlLines(listFrom), listFrom),
                                      error = function(e) none))
-  found <- found[startsWith(names(found), stem)]
+  found <- found[.similarTo(names(found), base)]
+  # Siblings live in `parent` by definition, so re-base the names there. A no-op
+  #   when nothing was translated; when something was, it keeps the download on
+  #   the caller's host rather than the index we borrowed.
+  if (length(found)) found <- stats::setNames(paste0(parent, names(found)), names(found))
 
   if (!length(found)) {
-    # `.aux.xml`/`.ovr`/`.msk` append to the whole file name; `.tfw`/`.prj`/...
-    #   replace the extension. Both forms have to be asked for by name.
-    cand <- unique(c(paste0(base, c(".aux.xml", ".ovr", ".msk")),
-                     paste0(stem, c(".tfw", ".wld", ".prj", ".vat.dbf", ".aux"))))
+    # The parent will not enumerate, so the only way left is to ask for
+    #   companions by name. That means a list of names, and a list of names is
+    #   always incomplete -- so it is a deny-list that decides whether to spend
+    #   the requests, not an allow-list that decides whether a format is
+    #   eligible. Getting the deny-list wrong costs a few HEADs; getting an
+    #   allow-list wrong loses data silently, which is the bug being fixed here.
+    #   Both lists are options, so neither needs a release to correct.
+    cands <- getOption("reproducible.sidecarCandidates", list())
+    # `.aux.xml`/`.ovr` append to the whole file name; `.tfw`/`.prj` replace the
+    #   extension. Both forms exist and neither implies the other.
+    cand <- unique(c(paste0(base, cands$append), paste0(stem, cands$replace)))
     if (identical(tolower(fileExt(base)), "shp"))
-      cand <- unique(c(cand, paste0(stem, c(".dbf", ".shx", ".prj", ".cpg", ".sbn", ".sbx"))))
+      cand <- unique(c(cand, paste0(stem, cands$shp)))
     cand <- setdiff(cand, base)
-    urls <- paste0(parent, cand)
-    ok <- vapply(urls, .urlHeadOK, logical(1), USE.NAMES = FALSE)
-    found <- stats::setNames(urls[ok], cand[ok])
+    if (!length(cand)) return(none)
+    ok <- vapply(paste0(parent, cand), .urlHeadOK, logical(1), USE.NAMES = FALSE)
+    found <- stats::setNames(paste0(parent, cand)[ok], cand[ok])
   }
   found <- found[names(found) != base]
   if (length(found))
@@ -2119,14 +2176,14 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                   verbose = verbose, messageGuessing = FALSE
                 )$targetFilePath)
               }
-              theGrep <- if (grepl("^sim", alsoExtract[1])) {
-                paste0("^", filePathSansExt(targetInDir))
+              keep <- if (grepl("^sim", alsoExtract[1])) {
+                .similarTo(filenames, targetInDir)
               } else if (grepl("none", alsoExtract[1])) {
-                paste0("^", targetInDir, "$")
+                filenames %in% targetInDir
               } else {
-                paste(alsoExtract, collapse = "|")
+                grepl(paste(alsoExtract, collapse = "|"), filenames)
               }
-              dirListing <- dirListing[grepl(paste(theGrep, collapse = "|"), filenames)]
+              dirListing <- dirListing[keep]
               filenames <- names(dirListing)
               # now that we have filenames; need to checksum
               urls <- unname(dirListing)

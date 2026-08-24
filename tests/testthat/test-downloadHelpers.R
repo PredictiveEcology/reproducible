@@ -266,13 +266,29 @@ test_that("isDirectory(probe = TRUE) recognises a directory url with no trailing
                            mustExist = FALSE, probe = TRUE, verbose = 0))
 })
 
-test_that(".remoteSiblings only answers for alsoExtract = 'similar'", {
+test_that(".remoteSiblings declines when the caller was explicit", {
   testInit()
-  ## Anything else is the caller being explicit; nothing to infer, no request.
-  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", NULL), 0L)
+  ## "none", NA and a named vector are all the caller saying exactly what they
+  ## want, so there is nothing to infer and no request to make. (`NULL` is NOT
+  ## in this list: unspecified means "similar" beside a url -- see below.)
   expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", "none"), 0L)
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", NA), 0L)
   expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif",
                                 c("a.dbf", "b.prj")), 0L)
+})
+
+test_that(".remoteSiblings does not probe extensions on the deny-list", {
+  testInit()
+  ## The deny-list decides whether spending requests is worthwhile; it is not a
+  ## list of what is eligible. A format missing from it is still probed -- the
+  ## failure mode is a little latency, never a silently dropped companion.
+  withr::local_options(reproducible.sidecarProbeSkip = c("csv", "rds"))
+  ## `.csv` is denied, so this returns without touching the network at all --
+  ## which is why it can assert against an unresolvable host.
+  expect_length(.remoteSiblings("https://example.invalid/d/x.csv", "x.csv", "similar"), 0L)
+  ## An empty candidate list is the other way to spend nothing.
+  withr::local_options(reproducible.sidecarCandidates = list())
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", "similar"), 0L)
 })
 
 test_that(".remoteSiblings finds the sidecars beside a file url", {
