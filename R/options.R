@@ -214,7 +214,31 @@
 #'     Default: `FALSE`. Used in [prepInputs()], [preProcess()],
 #'     [downloadFile()], and [postProcess()].
 #'   }
+#'   \item{`parallel.cores`}{
+#'     Default: `NULL`, meaning `parallelly::freeCores()`. Degree of parallelism
+#'     for **CPU-bound** work, i.e. tiling in [prepInputs()] when `numTiles` is
+#'     supplied. Being CPU work, it is additionally capped by `mc.cores`.
+#'     Setting it to `1L` also disables the background `showCache()` pre-warm
+#'     fork, which costs one extra process (see `showCachePreWarm` below).
+#'   }
+#'   \item{`parallel.download`}{
+#'     Default: `NULL`, meaning `48L`. Number of concurrent ranged connections
+#'     used to fetch a single large file (equivalently, the number of byte-range
+#'     parts it is split into). Deliberately **not** derived from the core count:
+#'     network throughput is bounded by bandwidth and per-connection server
+#'     shaping, not by CPUs, so this is not capped by `mc.cores` either. Set `1L`
+#'     to force the single-stream path. As with the deprecated options it
+#'     replaces, this has no effect unless `reproducible.urlRemap` is set.
+#'   }
+#'   \item{`parallel.upload`}{
+#'     Default: `NULL`, meaning `7L`. Number of concurrent uploads to Google
+#'     Drive. Network-bound like `parallel.download`, so likewise not core-derived
+#'     and not capped by `mc.cores`; more than about 7 tends to be slower,
+#'     depending on connection speed.
+#'   }
 #'   \item{`parallel.streams`}{
+#'     `r lifecycle::badge("deprecated")` Use `parallel.download` instead, which
+#'     takes precedence when both are set. Still honoured when it alone is set.
 #'     Default: `48L`. The number of contiguous byte-range **parts** a single
 #'     large HTTPS file is split into. **This has no effect unless you have opted
 #'     in by setting `reproducible.urlRemap`** (see below): if no remap is set,
@@ -240,9 +264,10 @@
 #'     single-stream download, so checksums are unaffected.
 #'   }
 #'   \item{`parallel.maxConnections`}{
-#'     Default: `NULL`, meaning `parallelly::availableCores() - 1` (or
-#'     `parallel::detectCores() - 1` if the Suggested \pkg{parallelly} package is
-#'     not installed). The maximum
+#'     `r lifecycle::badge("deprecated")` Use `parallel.download` instead, which
+#'     takes precedence when both are set. Still honoured when it alone is set.
+#'     Previously defaulted to `parallelly::availableCores() - 1`, which meant a
+#'     user setting `mc.cores` to limit forking silently throttled downloads. The maximum
 #'     number of ranged parts that download **simultaneously**; the rest queue
 #'     until a connection frees up. This bounds the burst of concurrent TLS
 #'     handshakes, which some stacks (notably Windows) refuse when all
@@ -576,9 +601,12 @@ reproducibleOptions <- function() {
     reproducible.preDigestDump = NULL,              # NULL/FALSE off; TRUE -> message each call's preDigest; or a dir path -> one file per call
     reproducible.preDigestDumpPattern = NULL,       # optional regex on .functionName to limit which calls are dumped
     reproducible.parallel.connecttimeout = 30L,     # seconds; per-connection establishment timeout for ranged streams
-    reproducible.parallel.maxConnections = NULL,    # max simultaneous connections; NULL => parallelly::availableCores() - 1
+    reproducible.parallel.cores = NULL,             # CPU-bound work (tiling); NULL => parallelly::freeCores()
+    reproducible.parallel.download = NULL,          # concurrent ranged download connections; NULL => 48
+    reproducible.parallel.upload = NULL,            # concurrent Drive uploads; NULL => 7
+    reproducible.parallel.maxConnections = NULL,    # DEPRECATED -> reproducible.parallel.download
     reproducible.parallel.minConcurrentFrac = 0.25, # fall back to single stream if 1st attempt completes < this frac of parts
-    reproducible.parallel.streams = 48L,            # number of ranged parts; used only for urlRemap-redirected URLs
+    reproducible.parallel.streams = NULL,           # DEPRECATED -> reproducible.parallel.download
     reproducible.parallel.threshold = 10 * 1024^2,  # bytes; only files larger use the parallel path
     reproducible.quick = FALSE,
     reproducible.rasterRead = getEnv("R_REPRODUCIBLE_RASTER_READ",

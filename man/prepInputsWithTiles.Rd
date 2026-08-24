@@ -40,7 +40,22 @@ that will be used; if it is a relative path, then it will be
 Default is \code{getOption("reproducible.prepInputsDoUploads", FALSE)}.}
 
 \item{tileGrid}{Either length 3 character string, such as "CAN", to be sent to \code{geodata::gadm(...)}
-or an actual \code{SpatVector} object with a grid of polygons}
+or an actual \code{SpatVector} object with a grid of polygons.
+
+When a character code is used, the GADM boundaries must be downloaded, and
+\code{geodata} requires somewhere to put them. That location is resolved in this
+order, preferring somewhere persistent so the download happens only once:
+\enumerate{
+\item \code{geodata::geodata_path()}, if the user has configured one;
+\item \code{getOption("reproducible.destinationPathShared")} (or its
+deprecated alias \code{reproducible.inputPaths}), the option intended for
+large files reused across projects;
+\item \code{getOption("reproducible.inputPath")}, the package default, which
+is under \code{tempdir()} and so is re-downloaded each session.
+}
+If the download cannot be completed -- no path, server outage, no network --
+a warning is issued and a fixed Canada-wide extent is used instead, which
+may not match the area of interest.}
 
 \item{numTiles}{Integer. Number of tiles to generate. Optional.}
 

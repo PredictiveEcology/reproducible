@@ -1,6 +1,14 @@
 test_that("prepInputsUrlTiles", {
   skip_on_cran()
-  skip_on_ci()
+  ## Deliberately NOT skip_on_ci(): skip_if_not_releaseVer_Linux() below confines
+  ## this to the single Linux/release leg, so it runs on CI without racing
+  ## against the other legs on the same Drive folder.
+  ##
+  ## Coverage runs are excluded, though: skip_if_not_releaseVer_Linux() bypasses
+  ## itself under covr, and this test forks and does a Drive round-trip, which is
+  ## exactly what coverage runs should not be carrying.
+  skip_if(isTRUE(requireNamespace("covr", quietly = TRUE) && covr::in_covr()),
+          "excluded from coverage runs")
 
   testInit(needGoogleDriveAuth = TRUE,
            c("terra", "googledrive"),
@@ -19,7 +27,7 @@ test_that("prepInputsUrlTiles", {
                        reproducible.inputPath = tmpdir,
                        mc.cores = 2L)# used by tiles
   outerDriveFolder <- "1KuBraAYnBpyxl3Nf0udc05fQlTPds2xY"
-  skip_if_service_account_releaseVer_NotLinux()
+  skip_if_not_releaseVer_Linux()
 
 
 
@@ -36,19 +44,22 @@ test_that("prepInputsUrlTiles", {
   terra::crs(b) <- "epsg:3978"
   extLrg <- terra::extend(b, 1e2)
   terra::crs(extLrg) <- "epsg:3978"
-  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE)
+  ## NUM_THREADS=1: a default write allocates a GDAL thread pool sized to the
+  ##   core count that is never released, which would make the tiling fork()
+  ##   unsafe and send it down the serial fallback instead of the path we test
+  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE,
+                               gdal = "NUM_THREADS=1")
   d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
 
-  mess1 <- capture_messages(
+  ## wrapped to keep the (very chatty) download/tiling output out of the test log
+  capture_messages(
     warns <- capture_warnings(
       a1 <- prepInputs(url = d$id, to = b, doUploads = TRUE, numTiles = c(2,2))
     )
   )
   expect_is(a1, "SpatRaster")
   withr::local_options(reproducible.prepInputsUrlTiles = NULL)
-  mess2 <- capture_messages(a2 <- prepInputs(url = d$id, to = b, useCache = FALSE))
-  cat(mess2, file = "~/tmp/mess2.txt")
-  cat(mess1, file = "~/tmp/mess1.txt")
+  capture_messages(a2 <- prepInputs(url = d$id, to = b, useCache = FALSE))
   a1b <- .wrap(a1)
   a2b <- .wrap(a2)
   expect_is(a2, "SpatRaster")
@@ -65,13 +76,16 @@ test_that("prepInputsUrlTiles", {
   terra::crs(b) <- "epsg:3978"
   extLrg <- terra::extend(b, 1e2)
   terra::crs(extLrg) <- "epsg:3978"
-  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE)
+  ## NUM_THREADS=1: a default write allocates a GDAL thread pool sized to the
+  ##   core count that is never released, which would make the tiling fork()
+  ##   unsafe and send it down the serial fallback instead of the path we test
+  extLrg <- terra::writeRaster(x = extLrg, filename = fn, overwrite = TRUE,
+                               gdal = "NUM_THREADS=1")
   d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
   b1 <- prepInputs(url = d$id, to = b, doUploads = TRUE, numTiles = c(2,2))
   withr::local_options(reproducible.prepInputsUrlTiles = NULL)
   b2 <- prepInputs(url = d$id, to = b)
   testthat::expect_equivalent(b1, b2)
-  save(a1, a2, b1, b2, file = "~/tmp/objs.rda")
   gls <- googledrive::drive_ls(urlForTiles)
 
   # clean up

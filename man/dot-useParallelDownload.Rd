@@ -6,7 +6,7 @@
 \usage{
 .useParallelDownload(
   url,
-  streams = getOption("reproducible.parallel.streams", 48L),
+  streams = .parallelDownload(),
   threshold = getOption("reproducible.parallel.threshold", 10 * 1024^2),
   verbose = getOption("reproducible.verbose", 1)
 )

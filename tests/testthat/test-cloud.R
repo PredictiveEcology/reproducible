@@ -7,8 +7,8 @@ test_that("test Cache(useCloud=TRUE, ...)", {
     needGoogleDriveAuth = TRUE,
   )
 
-  ## service accounts cannot upload to standard drive folders (no quota)
-  skip_if_service_account_releaseVer_NotLinux()
+  ## slow Drive upload round-trip: one runner only
+  skip_if_not_releaseVer_Linux()
 
   withr::local_options(
     reproducible.cachePath = file.path(tempdir(), rndstr(1, 7)),
@@ -162,8 +162,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- tif and grd
     opts = list(reproducible.ask = FALSE)
   )
 
-  ## service accounts cannot upload to standard drive folders (no quota)
-  skip_if_service_account_releaseVer_NotLinux()
+  ## slow Drive upload round-trip: one runner only
+  skip_if_not_releaseVer_Linux()
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
 
@@ -204,8 +204,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- stack", {
     opts = list(reproducible.ask = FALSE)
   )
 
-  ## service accounts cannot upload to standard drive folders (no quota)
-  skip_if_service_account_releaseVer_NotLinux()
+  ## slow Drive upload round-trip: one runner only
+  skip_if_not_releaseVer_Linux()
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
   withr::local_options(reproducible.cachePath = tmpdir)
@@ -227,8 +227,8 @@ test_that("test Cache(useCloud=TRUE, ...) with raster-backed objs -- brick", {
     opts = list(reproducible.ask = FALSE)
   )
 
-  ## service accounts cannot upload to standard drive folders (no quota)
-  skip_if_service_account_releaseVer_NotLinux()
+  ## slow Drive upload round-trip: one runner only
+  skip_if_not_releaseVer_Linux()
 
   googleSetupForUseCloud(cloudFolderID, tmpdir, tmpCache)
   withr::local_options(reproducible.cachePath = tmpdir)

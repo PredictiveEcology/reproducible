@@ -1021,6 +1021,19 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
   ## fork does -- is unnecessary there. Skip it entirely.
   if (isTRUE(useDBI())) return(invisible(NULL))
   if (!requireNamespace("parallel", quietly = TRUE)) return(invisible(NULL))
+  ## The pre-warm costs one extra process, so it respects the user's CPU
+  ## parallelism setting: `reproducible.parallel.cores = 1` (or `mc.cores = 1`)
+  ## means "no parallel CPU work", and that includes this fork. Anything >= 2
+  ## permits it -- it only ever spawns the single job, however high the setting.
+  ##
+  ## Deliberately keyed on an EXPLICIT setting rather than a detected core
+  ## count: freeCores() can legitimately report 1 on a busy shared machine, and
+  ## it is unavailable entirely without the Suggested `parallelly`, neither of
+  ## which should silently switch the pre-warm off.
+  for (o in c("reproducible.parallel.cores", "mc.cores")) {
+    v <- .parallelOptInt(getOption(o, NULL))
+    if (!is.null(v) && v < 2L) return(invisible(NULL))
+  }
   x <- x[[1L]]
   pkgEnv <- memoiseEnv(cachePath = x)
   scAll <- pkgEnv[["shownCache"]]

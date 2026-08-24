@@ -8,13 +8,6 @@ skip_if_no_token <- function() {
   testthat::skip_if_not(googledrive::drive_has_token(), "No Drive token")
 }
 
-## NOTE: needs to be called after testInit("googledrive", needGoogleDriveAuth = TRUE)
-skip_if_service_account <- function() {
-  ## service accounts cannot upload to standard drive folders (no quota)
-  testthat::skip_if_not(!grepl("gserviceaccount", googledrive::drive_user()$emailAddress),
-                        message =  "Using service account")
-}
-
 ## Run `expr` and convert transient upstream HTTP/network errors into a skip
 ## so flaky CDN behaviour (e.g. GitHub raw returning 5xx during a request)
 ## does not surface as a test FAIL. Non-transient errors propagate unchanged.
@@ -101,37 +94,28 @@ skip_if_transient_stream_warnings <- function(expr) {
   invisible(result)
 }
 
-skip_if_service_account_releaseVer_NotLinux <- function() {
-  ## Service accounts (e.g. eliot-githubauthentication@...gserviceaccount.com)
-  ## have no Drive quota on user-owned folders, so they cannot complete the
-  ## upload-and-roundtrip path these tests exercise. We gate those tests on:
-  ##   (a) we're actually running unattended (CI or R CMD check non-interactive)
-  ##       AND the token currently in use IS a service account, AND
-  ##   (b) the runner is not the supported Linux/release combination.
+skip_if_not_releaseVer_Linux <- function() {
+  ## These tests do real Google Drive upload round-trips. They are slow, and
+  ## several CI legs hitting the same Drive folder at once can race with each
+  ## other, so they run on exactly one runner: Linux on the release R.
   ##
   ## R_VERSION_LABEL is a CI-only signal the team's runners set to declare
   ## "I am a release R job". A local R CMD check won't have it set, and
-  ## absence MUST NOT trigger a skip — only an explicit non-"release" value
-  ## should. Without this guard, every local `R CMD check` against a stored
-  ## service-account token skipped these tests for no good reason.
+  ## absence MUST NOT trigger a skip -- only an explicit non-"release" value
+  ## should, so local runs still exercise these tests.
 
-  on_ci    <- isTRUE(as.logical(Sys.getenv("CI", "false")))
-  isAuto   <- !interactive() || on_ci
-  isSA     <- isAuto && grepl(
-                "gserviceaccount",
-                googledrive::drive_user()$emailAddress)
   notLinux <- Sys.info()[["sysname"]] != "Linux"
   verLabel <- Sys.getenv("R_VERSION_LABEL")
   notRelease <- nzchar(verLabel) && verLabel != "release"
 
-  skip <- isSA && (notLinux || notRelease)
+  skip <- notLinux || notRelease
 
   if (requireNamespace("covr", quietly = TRUE) && covr::in_covr()) {
     skip <- FALSE
   }
   testthat::skip_if(
     skip,
-    "Service-account token + non-Linux or non-release R: skipping Drive upload tests"
+    "Drive upload tests run only on the Linux/release-R runner"
   )
 }
 

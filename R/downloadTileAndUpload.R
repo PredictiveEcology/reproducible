@@ -25,7 +25,22 @@
 #' @param doUploads Logical. Whether to upload processed tiles.
 #'   Default is `getOption("reproducible.prepInputsDoUploads", FALSE)`.
 #' @param tileGrid Either length 3 character string, such as "CAN", to be sent to `geodata::gadm(...)`
-#'   or an actual `SpatVector` object with a grid of polygons
+#'   or an actual `SpatVector` object with a grid of polygons.
+#'
+#'   When a character code is used, the GADM boundaries must be downloaded, and
+#'   `geodata` requires somewhere to put them. That location is resolved in this
+#'   order, preferring somewhere persistent so the download happens only once:
+#'   \enumerate{
+#'     \item `geodata::geodata_path()`, if the user has configured one;
+#'     \item `getOption("reproducible.destinationPathShared")` (or its
+#'       deprecated alias `reproducible.inputPaths`), the option intended for
+#'       large files reused across projects;
+#'     \item `getOption("reproducible.inputPath")`, the package default, which
+#'       is under `tempdir()` and so is re-downloaded each session.
+#'   }
+#'   If the download cannot be completed -- no path, server outage, no network --
+#'   a warning is issued and a fixed Canada-wide extent is used instead, which
+#'   may not match the area of interest.
 #' @param numTiles Integer. Number of tiles to generate. Optional.
 #' @param plot.grid Logical. Whether to plot the tile grid and area of interest. Default is `FALSE`.
 #' @param purge Logical or Integer. `0/FALSE` (default) keeps existing `CHECKSUMS.txt` file and
@@ -286,7 +301,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
 
         terra::writeRaster(tile, spec$path, datatype = datatype,
                            overwrite = FALSE,
-                           gdal = c("COMPRESS=LZW", "TILED=YES"))
+                           gdal = c("COMPRESS=LZW", "TILED=YES", "NUM_THREADS=1"))
         return(paste("Saved:", spec$path))
       # }
     } else {
@@ -297,12 +312,16 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
   messagePreProcess("Creating tiles ...", verbose = verbose)
 
   # Choose parallel or sequential based on OS
-  if (isUnix() && requireNamespace("parallel")) {
-    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = length(tile_specs)))
+  if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
+    numCoresToUse <- .parallelCores(maxN = length(tile_specs))
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
   } else {
+    if (isUnix() && !forkIsSafe()) {
+      messagePreProcess(.message$forkUnsafeSerial(nThreadsSelf(), numSystemCores()),
+                        verbose = verbose)
+    }
     results <- lapply(tile_specs, process_tile, datatype = datatype)
   }
 
@@ -361,10 +380,10 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   }
 
   # Upload in parallel on Linux/macOS, sequential on Windows
-  if (isUnix() && requireNamespace("parallel")) {
-    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = 7))
-    # numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
-                         # tends to be slower; but this will depend on connection speed
+  if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
+    ## network-bound, so NOT core-derived and not capped by `mc.cores`: more than
+    ## ~7 concurrent uploads tends to be slower, depending on connection speed
+    numCoresToUse <- .parallelUpload()
     results <- parallel::mclapply(
       tif_files, upload_one,
       mc.cores = numCoresToUse)
@@ -473,10 +492,56 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
 }
 
 
+## `geodata::gadm()` has no default for `path`: it falls back to geodata_path(),
+## which errors ("you need to provide a path, or set a default path") on any
+## machine where the user has not configured one -- CI, and a new user. Prefer
+## their geodata config if they have one, then reproducible's shared-downloads
+## location (the option meant for exactly this: large files reused across
+## projects), and only then the package's own input default, which is under
+## tempdir() and so is safe to write to without asking.
+.gadmPath <- function() {
+  if (.requireNamespace("geodata")) {
+    p <- tryCatch(geodata::geodata_path(), error = function(e) "")
+    if (length(p) && nzchar(p[1])) {
+      return(p[1])
+    }
+  }
+  shared <- .getDestinationPathShared()
+  base <- if (length(shared) && nzchar(shared[1])) {
+    shared[1]
+  } else {
+    getOption("reproducible.inputPath", file.path(tempdir(), "reproducible", "input"))
+  }
+  checkPath(file.path(base, "geodata"), create = TRUE)
+}
+
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
-  g <- geodata::gadm(tileGrid, resolution = 2) |> Cache()
+  ## an error here (no path, server down, network) routes into the same fallback
+  ## as a NULL return, just below
+  gadmErr <- NULL
+  ## resolving the location can itself fail (e.g. an unwritable directory), so
+  ## it is inside the same fallback
+  gadmPath <- tryCatch(.gadmPath(), error = function(e) {
+    gadmErr <<- conditionMessage(e)
+    NULL
+  })
+  g <- if (is.null(gadmPath)) {
+    NULL
+  } else {
+    tryCatch(geodata::gadm(tileGrid, resolution = 2, path = gadmPath) |> Cache(),
+             error = function(e) {
+               gadmErr <<- conditionMessage(e)
+               NULL
+             })
+  }
   if (is.null(g) || (is.character(g) && isTRUE(g == "NULL"))) {
-    # most likely geodata server is down
+    ## geodata unavailable: no path configured, server down, or no network. Say
+    ## so -- the fallback silently changes which area gets tiled.
+    warning(.message$gadmFallback(
+      tileGrid,
+      if (is.null(gadmPath)) "<no download location could be resolved>" else gadmPath,
+      gadmErr
+    ), call. = FALSE)
     tileExt <- terra::ext(c(xmin = -2342000, xmax = 3011000, ymin = 5860000, ymax = 9436000))
     tilePoly2 <- tileExt
   } else {
@@ -804,6 +869,94 @@ numCoresToUse <- function(min = 2, max = NULL) {
   #            max)
   # max(min, max)
 }
+
+## CPU-bound parallelism (tiling). Unlike the network knobs this one *is* core
+## shaped, and `mc.cores` still applies because it is the standard base-R control
+## for forking. `reproducible.parallel.cores` overrides the detected default.
+.parallelCores <- function(maxN = NULL) {
+  n <- .parallelOptInt(getOption("reproducible.parallel.cores", NULL))
+  if (is.null(n)) {
+    ## numCoresToUse() returns NULL when the Suggested `parallelly` is absent
+    ## (e.g. an `_R_CHECK_DEPENDS_ONLY_` leg); without a fallback that would
+    ## silently collapse to 1 and serialize all CPU work.
+    n <- .parallelOptInt(numCoresToUse(max = maxN))
+    if (is.null(n)) {
+      dc <- suppressWarnings(as.integer(parallel::detectCores())[1])
+      n <- if (is.na(dc) || dc < 2L) 2L else max(2L, dc - 1L)
+      if (!is.null(maxN)) n <- min(n, maxN)
+    }
+  } else if (!is.null(maxN)) {
+    n <- min(n, maxN)
+  }
+  mcc <- .parallelOptInt(getOption("mc.cores", NULL))
+  if (!is.null(mcc)) n <- min(n, mcc)
+  .forkLimit(n)
+}
+
+## Number of threads in the *current* process, or NA where we cannot tell.
+## Linux exposes one directory per thread under /proc/self/task; macOS needs `ps -M`.
+nThreadsSelf <- function() {
+  if (dir.exists("/proc/self/task")) {
+    return(length(dir("/proc/self/task")))
+  }
+  if (isMac()) {
+    return(tryCatch(length(system2("ps", c("-M", "-p", Sys.getpid()), stdout = TRUE)) - 1L,
+                    error = function(e) NA_integer_, warning = function(w) NA_integer_))
+  }
+  NA_integer_
+}
+
+## `mclapply()` forks, and fork() only carries the calling thread into the child:
+## any mutex held by another thread stays locked there forever. A process whose
+## thread count exceeds its core count is carrying a library thread pool (in
+## practice GDAL's, created by a default terra::writeRaster()), and forking it
+## deadlocks. Both pools that matter are sized to the core count, so "more
+## threads than cores" separates the two states with a full core-count of margin.
+## Unknown thread count (NA) forks as before.
+forkIsSafe <- function() {
+  n <- nThreadsSelf()
+  if (is.na(n)) {
+    return(TRUE)
+  }
+  ## A clean process already carries about one thread per core (BLAS) plus the
+  ## main thread, so `n > cores` alone would false-positive on small machines
+  ## (3 threads on 2 cores). A GDAL pool adds another full core's worth, so
+  ## half a core count of headroom separates the two states at every size:
+  ##   2 cores  -> clean 3, poisoned 5, threshold 3
+  ##  80 cores  -> clean 65, poisoned 145, threshold 120
+  cores <- numSystemCores()
+  n <= cores + max(1L, cores %/% 2L)
+}
+
+## The CPU count as the *thread-pool libraries themselves* see it: affinity- and
+## cgroup-aware (so it is 2 inside `taskset -c 0,1` or a 2-CPU container), but
+## deliberately ignoring `mc.cores`. Neither availableCores() nor freeCores()
+## is right here, because both answer "how many workers should I start":
+##   - availableCores() honours `mc.cores`, so `mc.cores = 2` would make a clean
+##     65-thread process look unsafe to fork.
+##   - freeCores() subtracts whatever else is running, so on a busy shared
+##     machine it might return 10 while a clean session still legitimately
+##     carries 64 BLAS threads -- again a false positive.
+## `methods = "system"` is wrong too: it reports the raw CPU count, so inside a
+## CPU-limited container -- i.e. most CI -- it reads 80 while the pools size
+## themselves to 2, and the guard would never fire. Use freeCores() for deciding
+## how much work to start (see .parallelCores), not here.
+numSystemCores <- function() {
+  n <- NA_integer_
+  if (.requireNamespace("parallelly")) {
+    n <- suppressWarnings(tryCatch(
+      as.integer(parallelly::availableCores(
+        ## excludes the "mc.cores" method on purpose; `nproc` honours CPU affinity
+        methods = c("cgroups.cpuset", "cgroups.cpuquota", "nproc", "system")
+      )),
+      error = function(e) NA_integer_))
+  }
+  if (is.na(n) || n < 1L) {
+    n <- suppressWarnings(as.integer(parallel::detectCores()))
+  }
+  if (is.na(n) || n < 1L) 1L else n
+}
+
 
 # Classify a remote-supplied hash string into a content-hash algorithm or
 # "etag-opaque" when no positive trust is possible. Google Drive ETag-shaped

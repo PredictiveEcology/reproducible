@@ -497,13 +497,47 @@ test_that(".parallelMaxConnections returns a positive scalar integer by default"
   expect_gte(mc, 1L)
 })
 
-test_that(".parallelMaxConnections defaults to availableCores() - 1 when parallelly is present", {
-  skip_if_not_installed("parallelly") # parallelly is Suggested, not a hard dependency
-  withr::local_options(reproducible.parallel.maxConnections = NULL)
-  expect_identical(
-    reproducible:::.parallelMaxConnections(),
-    max(1L, as.integer(parallelly::availableCores())[1] - 1L)
+test_that(".parallelMaxConnections default is NOT derived from the core count", {
+  ## It used to default to availableCores() - 1. Because availableCores() honours
+  ## `mc.cores`, a user capping CPU forking silently throttled downloads to a
+  ## single connection. Network concurrency is bounded by bandwidth and
+  ## per-connection server shaping, not by CPUs.
+  withr::local_options(
+    reproducible.parallel.maxConnections = NULL,
+    reproducible.parallel.streams = NULL,
+    reproducible.parallel.download = NULL
   )
+  expect_identical(reproducible:::.parallelMaxConnections(), 48L)
+
+  withr::local_options(mc.cores = 2L)
+  expect_identical(reproducible:::.parallelMaxConnections(), 48L)
+})
+
+test_that("parallel.download supersedes the deprecated streams/maxConnections", {
+  withr::local_options(
+    reproducible.parallel.download = NULL,
+    reproducible.parallel.maxConnections = NULL,
+    reproducible.parallel.streams = 8L
+  )
+  expect_identical(reproducible:::.parallelDownload(), 8L) # deprecated still honoured
+
+  withr::local_options(reproducible.parallel.download = 32L)
+  expect_identical(reproducible:::.parallelDownload(), 32L) # new one wins
+})
+
+test_that("parallel.upload and parallel.cores are independent knobs", {
+  ## these assert the *unconstrained* values; R CMD check sets
+  ## _R_CHECK_LIMIT_CORES_, which caps fork counts at 2 (covered separately below)
+  withr::local_envvar(c("_R_CHECK_LIMIT_CORES_" = NA))
+  withr::local_options(reproducible.parallel.upload = NULL, mc.cores = 2L)
+  expect_identical(reproducible:::.parallelUpload(), 7L) # network: mc.cores must not apply
+
+  withr::local_options(reproducible.parallel.upload = 3L)
+  expect_identical(reproducible:::.parallelUpload(), 3L)
+
+  ## CPU work, by contrast, IS still capped by mc.cores
+  withr::local_options(reproducible.parallel.cores = 8L, mc.cores = 2L)
+  expect_identical(reproducible:::.parallelCores(), 2L)
 })
 
 test_that(".parallelMaxConnections honours an explicit option", {
@@ -714,4 +748,32 @@ test_that("a dropped part is retried (not a full re-download) and still byte-ide
   expect_true(isTRUE(ok)) # retry repaired it; no fall-through to single-stream
   expect_identical(file.size(dest), info$size)
   expect_identical(unname(tools::md5sum(dest)), unname(tools::md5sum(baseFile)))
+})
+
+test_that("fork counts respect _R_CHECK_LIMIT_CORES_, download does not", {
+  ## CRAN policy allows at most 2 simultaneous processes and mclapply() errors
+  ## above that, so every *fork* count must be capped -- including the
+  ## network-bound upload one. Download concurrency is curl connections within
+  ## one process, so it is deliberately left alone.
+  withr::local_options(
+    reproducible.parallel.upload = 7L,
+    reproducible.parallel.cores = 8L,
+    reproducible.parallel.download = 48L,
+    mc.cores = NULL
+  )
+
+  withr::with_envvar(c("_R_CHECK_LIMIT_CORES_" = "TRUE"), {
+    expect_identical(reproducible:::.parallelUpload(), 2L)
+    expect_identical(reproducible:::.parallelCores(), 2L)
+    expect_identical(reproducible:::.parallelDownload(), 48L)
+  })
+
+  withr::with_envvar(c("_R_CHECK_LIMIT_CORES_" = "false"), {
+    expect_identical(reproducible:::.parallelUpload(), 7L)
+    expect_identical(reproducible:::.parallelCores(), 8L)
+  })
+
+  withr::with_envvar(c("_R_CHECK_LIMIT_CORES_" = NA), {
+    expect_identical(reproducible:::.parallelUpload(), 7L)
+  })
 })

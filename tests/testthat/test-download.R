@@ -13,7 +13,7 @@ test_that("dlGeneric works", {
 test_that("prepInputs reads Google Drive spreadsheets", {
   skip_on_cran()
   skip_if_not_installed("googledrive")
-  skip_if_service_account_releaseVer_NotLinux()
+  skip_if_not_releaseVer_Linux()
   testInit(needGoogleDriveAuth = TRUE)
   userDist <- skip_on_transient_http(prepInputs(
     url = "https://docs.google.com/spreadsheets/d/1fOikb83aOuLlFYIn6pjmC7Jydjcy77TH",
