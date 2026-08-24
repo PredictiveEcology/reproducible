@@ -338,3 +338,31 @@ test_that("the GitHub listing index can be switched off entirely", {
   expect_identical(.listableParent("https://github.com/O/R/raw/main/a/"),
                    "https://github.com/O/R/raw/main/a/")
 })
+
+test_that("the url log records the index request and the sidecars", {
+  skip_on_cran()
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  skip_if_offline()
+  testInit("terra")
+
+  ## The log is the record of what a session reached out to. Two of the accesses
+  ## here are ones the caller never named -- an index on another host, and a
+  ## sidecar found through it -- which is precisely why they have to appear.
+  target <- paste0(theDirListingUrl, "luxSmall/luxSmall.shp")
+  fns <- function() vapply(prepInputsLog(), function(r) r$fn, character(1))
+
+  clearUrlLog()
+  d1 <- checkPath(file.path(tmpdir, "logOn"), create = TRUE)
+  invisible(suppressWarnings(prepInputs(url = target, destinationPath = d1,
+                                        fun = "terra::vect")))
+  expect_true(any(grepl("similar", fns()))) # the companions it pulled in
+
+  ## With the index switched off nothing should claim to have used one.
+  clearUrlLog()
+  withr::local_options(reproducible.githubListingBase = NULL)
+  d2 <- checkPath(file.path(tmpdir, "logOff"), create = TRUE)
+  invisible(suppressWarnings(prepInputs(url = target, destinationPath = d2,
+                                        fun = "terra::vect")))
+  expect_false(any(grepl("directory index", fns())))
+})

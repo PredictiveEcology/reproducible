@@ -1861,6 +1861,15 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     return(none)
 
   listFrom <- .listableParent(parent)
+  if (!identical(listFrom, parent)) {
+    # A request to a host the caller did not name. Say so, and record it: the
+    #   url log is the provenance record of what this session touched, and an
+    #   access that does not appear in it is exactly the kind of thing the log
+    #   exists to make visible.
+    messagePreProcess("listing ", parent, " via ", listFrom, verbose = verbose,
+                      verboseLevel = 2)
+    .logUrlAccess("prepInputs (directory index)", url = listFrom)
+  }
   found <- suppressWarnings(tryCatch(.dirListingUrls(.readUrlLines(listFrom), listFrom),
                                      error = function(e) none))
   found <- found[.similarTo(names(found), base)]
@@ -1889,9 +1898,11 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     found <- stats::setNames(paste0(parent, cand)[ok], cand[ok])
   }
   found <- found[names(found) != base]
-  if (length(found))
+  if (length(found)) {
     messagePreProcess("alsoExtract = 'similar': also fetching ",
                       paste(names(found), collapse = ", "), verbose = verbose)
+    for (sibUrl in unname(found)) .logUrlAccess("prepInputs (similar)", url = sibUrl)
+  }
   found
 }
 
