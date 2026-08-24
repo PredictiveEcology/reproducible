@@ -477,8 +477,34 @@ best_square_grid <- function(m, n, min_tiles = 1, max_tiles = 1000) {
 }
 
 
+## `geodata::gadm()` has no default for `path`: it falls back to geodata_path(),
+## which errors ("you need to provide a path, or set a default path") on any
+## machine where the user has not configured one -- CI, and a new user. Prefer
+## their geodata config if they have one, then reproducible's shared-downloads
+## location (the option meant for exactly this: large files reused across
+## projects), and only then the package's own input default, which is under
+## tempdir() and so is safe to write to without asking.
+.gadmPath <- function() {
+  if (.requireNamespace("geodata")) {
+    p <- tryCatch(geodata::geodata_path(), error = function(e) "")
+    if (length(p) && nzchar(p[1])) {
+      return(p[1])
+    }
+  }
+  shared <- .getDestinationPathShared()
+  base <- if (length(shared) && nzchar(shared[1])) {
+    shared[1]
+  } else {
+    getOption("reproducible.inputPath", file.path(tempdir(), "reproducible", "input"))
+  }
+  checkPath(file.path(base, "geodata"), create = TRUE)
+}
+
 makeTileGridFromGADMcode <- function(tileGrid, numTiles = NULL, crs) {
-  g <- geodata::gadm(tileGrid, resolution = 2) |> Cache()
+  ## an error here (no path, server down, network) routes into the same fallback
+  ## as a NULL return, just below
+  g <- tryCatch(geodata::gadm(tileGrid, resolution = 2, path = .gadmPath()) |> Cache(),
+                error = function(e) NULL)
   if (is.null(g) || (is.character(g) && isTRUE(g == "NULL"))) {
     # most likely geodata server is down
     tileExt <- terra::ext(c(xmin = -2342000, xmax = 3011000, ymin = 5860000, ymax = 9436000))
