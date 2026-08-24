@@ -497,13 +497,44 @@ test_that(".parallelMaxConnections returns a positive scalar integer by default"
   expect_gte(mc, 1L)
 })
 
-test_that(".parallelMaxConnections defaults to availableCores() - 1 when parallelly is present", {
-  skip_if_not_installed("parallelly") # parallelly is Suggested, not a hard dependency
-  withr::local_options(reproducible.parallel.maxConnections = NULL)
-  expect_identical(
-    reproducible:::.parallelMaxConnections(),
-    max(1L, as.integer(parallelly::availableCores())[1] - 1L)
+test_that(".parallelMaxConnections default is NOT derived from the core count", {
+  ## It used to default to availableCores() - 1. Because availableCores() honours
+  ## `mc.cores`, a user capping CPU forking silently throttled downloads to a
+  ## single connection. Network concurrency is bounded by bandwidth and
+  ## per-connection server shaping, not by CPUs.
+  withr::local_options(
+    reproducible.parallel.maxConnections = NULL,
+    reproducible.parallel.streams = NULL,
+    reproducible.parallel.download = NULL
   )
+  expect_identical(reproducible:::.parallelMaxConnections(), 48L)
+
+  withr::local_options(mc.cores = 2L)
+  expect_identical(reproducible:::.parallelMaxConnections(), 48L)
+})
+
+test_that("parallel.download supersedes the deprecated streams/maxConnections", {
+  withr::local_options(
+    reproducible.parallel.download = NULL,
+    reproducible.parallel.maxConnections = NULL,
+    reproducible.parallel.streams = 8L
+  )
+  expect_identical(reproducible:::.parallelDownload(), 8L) # deprecated still honoured
+
+  withr::local_options(reproducible.parallel.download = 32L)
+  expect_identical(reproducible:::.parallelDownload(), 32L) # new one wins
+})
+
+test_that("parallel.upload and parallel.cores are independent knobs", {
+  withr::local_options(reproducible.parallel.upload = NULL, mc.cores = 2L)
+  expect_identical(reproducible:::.parallelUpload(), 7L) # network: mc.cores must not apply
+
+  withr::local_options(reproducible.parallel.upload = 3L)
+  expect_identical(reproducible:::.parallelUpload(), 3L)
+
+  ## CPU work, by contrast, IS still capped by mc.cores
+  withr::local_options(reproducible.parallel.cores = 8L, mc.cores = 2L)
+  expect_identical(reproducible:::.parallelCores(), 2L)
 })
 
 test_that(".parallelMaxConnections honours an explicit option", {

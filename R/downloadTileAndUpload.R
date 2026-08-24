@@ -298,7 +298,7 @@ tile_raster_write_auto <- function(raster_path, out_dir, tileGrid, all_tile_name
 
   # Choose parallel or sequential based on OS
   if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
-    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = length(tile_specs)))
+    numCoresToUse <- .parallelCores(maxN = length(tile_specs))
     results <- parallel::mclapply(
       tile_specs, process_tile,
       mc.cores = numCoresToUse, datatype = datatype)
@@ -366,9 +366,9 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   # Upload in parallel on Linux/macOS, sequential on Windows
   if (isUnix() && requireNamespace("parallel") && forkIsSafe()) {
-    numCoresToUse <- min(getOption("mc.cores"), numCoresToUse(max = 7))
-    # numCoresToUse <- numCoresToUse(max = 7) # more than 7 on a fast internet connection
-                         # tends to be slower; but this will depend on connection speed
+    ## network-bound, so NOT core-derived and not capped by `mc.cores`: more than
+    ## ~7 concurrent uploads tends to be slower, depending on connection speed
+    numCoresToUse <- .parallelUpload()
     results <- parallel::mclapply(
       tif_files, upload_one,
       mc.cores = numCoresToUse)
@@ -788,6 +788,42 @@ tryRastThenGetCRS <- function(targetFileFullPath) {
 #'
 #' @export
 #' @seealso [detectActiveCores()]
+numCoresToUse <- function(min = 2, max = NULL) {
+  if (.requireNamespace("parallelly")) {
+    nctu <- max(min, min(max, parallelly::freeCores()))
+    return(nctu)
+  }
+  # if (is.null(.pkgEnv$detectedCores)) {
+  #   ## see <https://parallelly.futureverse.org/#availablecores-vs-paralleldetectcores>
+  #   .pkgEnv$detectedCores <- max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1,
+  #                                logical = FALSE, na.rm = TRUE)
+  # }
+  # dc <- .pkgEnv$detectedCores
+  # if (is.null(max)) {
+  #   max <- dc
+  # }
+  # max <- min(dc -  # total
+  #              1 - # remove one for the current process
+  #              detectActiveCores(), # estimate actively used ones
+  #            max)
+  # max(min, max)
+}
+
+## CPU-bound parallelism (tiling). Unlike the network knobs this one *is* core
+## shaped, and `mc.cores` still applies because it is the standard base-R control
+## for forking. `reproducible.parallel.cores` overrides the detected default.
+.parallelCores <- function(maxN = NULL) {
+  n <- .parallelOptInt(getOption("reproducible.parallel.cores", NULL))
+  if (is.null(n)) {
+    n <- numCoresToUse(max = maxN)
+  } else if (!is.null(maxN)) {
+    n <- min(n, maxN)
+  }
+  mcc <- .parallelOptInt(getOption("mc.cores", NULL))
+  if (!is.null(mcc)) n <- min(n, mcc)
+  max(1L, as.integer(n))
+}
+
 ## Number of threads in the *current* process, or NA where we cannot tell.
 ## Linux exposes one directory per thread under /proc/self/task; macOS needs `ps -M`.
 nThreadsSelf <- function() {
@@ -833,26 +869,6 @@ numSystemCores <- function() {
   if (is.na(n) || n < 1L) 1L else n
 }
 
-numCoresToUse <- function(min = 2, max = NULL) {
-  if (.requireNamespace("parallelly")) {
-    nctu <- max(min, min(max, parallelly::freeCores()))
-    return(nctu)
-  }
-  # if (is.null(.pkgEnv$detectedCores)) {
-  #   ## see <https://parallelly.futureverse.org/#availablecores-vs-paralleldetectcores>
-  #   .pkgEnv$detectedCores <- max(1L, getOption("Ncpus", 1L), parallel::detectCores() - 1,
-  #                                logical = FALSE, na.rm = TRUE)
-  # }
-  # dc <- .pkgEnv$detectedCores
-  # if (is.null(max)) {
-  #   max <- dc
-  # }
-  # max <- min(dc -  # total
-  #              1 - # remove one for the current process
-  #              detectActiveCores(), # estimate actively used ones
-  #            max)
-  # max(min, max)
-}
 
 # Classify a remote-supplied hash string into a content-hash algorithm or
 # "etag-opaque" when no positive trust is possible. Google Drive ETag-shaped

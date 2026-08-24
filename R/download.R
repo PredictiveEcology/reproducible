@@ -1163,7 +1163,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   # below, which is byte-for-byte unchanged, so checksums are unaffected.
   pp <- if (isTRUE(wasRemapped)) .useParallelDownload(url, verbose = verbose) else list(use = FALSE, info = NULL)
   if (isTRUE(pp$use)) {
-    streams <- as.integer(getOption("reproducible.parallel.streams", 48L))
+    streams <- .parallelDownload()
     messagePreProcess("Downloading ", url, " using ", streams,
                       " ranged parts (capped at ",
                       .parallelMaxConnections(), " concurrent connections) ...", verbose = verbose)
@@ -1382,7 +1382,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 #' @keywords internal
 #' @rdname dot-useParallelDownload
 .useParallelDownload <- function(url,
-                                 streams = getOption("reproducible.parallel.streams", 48L),
+                                 streams = .parallelDownload(),
                                  threshold = getOption("reproducible.parallel.threshold", 10 * 1024^2),
                                  verbose = getOption("reproducible.verbose", 1)) {
   # Opt-in gate: the parallel path exists ONLY to accelerate downloads that the
@@ -1479,19 +1479,36 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 # the burst of concurrent TLS handshakes (independent of how many parts the file
 # is split into), which is what some stacks -- notably Windows -- reject when all
 # `reproducible.parallel.streams` open at once.
+## Degree of parallelism, by resource. These are deliberately NOT derived from
+## the core count: network concurrency is bounded by bandwidth and per-connection
+## server shaping, not by CPUs, and deriving it from `availableCores()` meant a
+## user setting `mc.cores` to limit forking silently throttled downloads to one
+## connection.
+##
+## `reproducible.parallel.streams`/`.maxConnections` are deprecated in favour of
+## `reproducible.parallel.download`; the new option wins when both are set.
+.parallelOptInt <- function(x, min = 1L) {
+  if (is.null(x)) return(NULL)
+  x <- suppressWarnings(as.integer(x)[1])
+  if (is.na(x)) NULL else max(min, x)
+}
+
+.parallelDownload <- function() {
+  n <- .parallelOptInt(getOption("reproducible.parallel.download", NULL))
+  if (is.null(n)) n <- .parallelOptInt(getOption("reproducible.parallel.streams", NULL))
+  if (is.null(n)) n <- .parallelOptInt(getOption("reproducible.parallel.maxConnections", NULL))
+  if (is.null(n)) 48L else n
+}
+
+.parallelUpload <- function() {
+  n <- .parallelOptInt(getOption("reproducible.parallel.upload", NULL))
+  if (is.null(n)) 7L else n
+}
+
+## Retained as the name used at the ranged-download call sites; concurrency and
+## part count are now the same quantity.
 .parallelMaxConnections <- function() {
-  mc <- suppressWarnings(as.integer(getOption("reproducible.parallel.maxConnections", NULL))[1])
-  if (is.na(mc)) {
-    mc <- tryCatch({
-      cores <- if (requireNamespace("parallelly", quietly = TRUE)) {
-        parallelly::availableCores()
-      } else {
-        parallel::detectCores() # base package; always available
-      }
-      as.integer(cores)[1] - 1L
-    }, error = function(e) NA_integer_)
-  }
-  if (is.na(mc) || mc < 1L) 1L else mc
+  .parallelDownload()
 }
 
 #' Download a file in parallel using HTTP Range requests

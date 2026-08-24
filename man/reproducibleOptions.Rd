@@ -219,35 +219,31 @@ faster, depending on the objects.
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}}, \code{\link[=preProcess]{preProcess()}},
 \code{\link[=downloadFile]{downloadFile()}}, and \code{\link[=postProcess]{postProcess()}}.
 }
-\item{\code{parallel.streams}}{
-Default: \code{48L}. The number of contiguous byte-range \strong{parts} a single
-large HTTPS file is split into. \strong{This has no effect unless you have opted
-in by setting \code{reproducible.urlRemap}} (see below): if no remap is set,
-downloads are always single-stream, regardless of this value. Once opted
-in, the parallel path is used \strong{only for a URL that the \code{urlRemap} hook
-actually redirected} to a (Range-capable) mirror — \emph{not} for arbitrary
-range-capable origin servers reached without a redirect, since those may
-cap concurrent connections per IP (in which case parallel streams all
-stall and the download is slower than a single stream). For an eligible,
-redirected URL the file is split into this many parts — but only when the
-server advertises \code{Accept-Ranges: bytes} and the file is larger than
-\code{reproducible.parallel.threshold}; otherwise, and on any failure, it
-falls back transparently to a single stream. (A redirected mirror that
-\emph{does} turn out to cap concurrency is detected on the first attempt — see
-\code{reproducible.parallel.minConcurrentFrac} — and also falls back.)
-Splitting into many small
-parts keeps retries cheap (a dropped connection costs only one
-part re-fetch). The number that download \emph{at once} is separately capped by
-\code{reproducible.parallel.maxConnections}. Especially useful on networks that
-shape bandwidth per-connection. Set to \code{1L} to force single-stream
-downloads even when a remap is set. Requires the \pkg{curl} and
-\pkg{httr2} packages. The assembled file is byte-identical to a
-single-stream download, so checksums are unaffected.
+\item{\code{parallel.cores}}{
+Default: \code{NULL}, meaning \code{parallelly::freeCores()}. Degree of parallelism
+for \strong{CPU-bound} work, i.e. tiling in \code{\link[=prepInputs]{prepInputs()}} when \code{numTiles} is
+supplied. Being CPU work, it is additionally capped by \code{mc.cores}.
 }
-\item{\code{parallel.maxConnections}}{
-Default: \code{NULL}, meaning \code{parallelly::availableCores() - 1} (or
-\code{parallel::detectCores() - 1} if the Suggested \pkg{parallelly} package is
-not installed). The maximum
+\item{\code{parallel.download}}{
+Default: \code{NULL}, meaning \code{48L}. Number of concurrent ranged connections
+used to fetch a single large file (equivalently, the number of byte-range
+parts it is split into). Deliberately \strong{not} derived from the core count:
+network throughput is bounded by bandwidth and per-connection server
+shaping, not by CPUs, so this is not capped by \code{mc.cores} either. Set \code{1L}
+to force the single-stream path. As with the deprecated options it
+replaces, this has no effect unless \code{reproducible.urlRemap} is set.
+}
+\item{\code{parallel.upload}}{
+Default: \code{NULL}, meaning \code{7L}. Number of concurrent uploads to Google
+Drive. Network-bound like \code{parallel.download}, so likewise not core-derived
+and not capped by \code{mc.cores}; more than about 7 tends to be slower,
+depending on connection speed.
+}
+\item{\code{parallel.streams}}{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}})\code{Use}parallel.download\verb{instead, which takes precedence when both are set. Still honoured when it alone is set. Default:}48L\verb{. The number of contiguous byte-range **parts** a single large HTTPS file is split into. **This has no effect unless you have opted in by setting }reproducible.urlRemap\verb{** (see below): if no remap is set, downloads are always single-stream, regardless of this value. Once opted in, the parallel path is used **only for a URL that the }urlRemap\verb{hook actually redirected** to a (Range-capable) mirror — *not* for arbitrary range-capable origin servers reached without a redirect, since those may cap concurrent connections per IP (in which case parallel streams all stall and the download is slower than a single stream). For an eligible, redirected URL the file is split into this many parts — but only when the server advertises}Accept-Ranges: bytes\verb{and the file is larger than}reproducible.parallel.threshold\verb{; otherwise, and on any failure, it falls back transparently to a single stream. (A redirected mirror that *does* turn out to cap concurrency is detected on the first attempt — see }reproducible.parallel.minConcurrentFrac\verb{— and also falls back.) Splitting into many small parts keeps retries cheap (a dropped connection costs only one part re-fetch). The number that download *at once* is separately capped by}reproducible.parallel.maxConnections\verb{. Especially useful on networks that shape bandwidth per-connection. Set to }1L\verb{ to force single-stream downloads even when a remap is set. Requires the \pkg{curl} and \pkg{httr2} packages. The assembled file is byte-identical to a single-stream download, so checksums are unaffected. \} \\item\{}parallel.maxConnections\verb{\}\{ \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}})} Use \code{parallel.download} instead, which
+takes precedence when both are set. Still honoured when it alone is set.
+Previously defaulted to \code{parallelly::availableCores() - 1}, which meant a
+user setting \code{mc.cores} to limit forking silently throttled downloads. The maximum
 number of ranged parts that download \strong{simultaneously}; the rest queue
 until a connection frees up. This bounds the burst of concurrent TLS
 handshakes, which some stacks (notably Windows) refuse when all

@@ -47,6 +47,15 @@
 
 ## behaviour changes
 
+* **Parallelism is now controlled by three options, one per resource** —
+  `reproducible.parallel.cores` (CPU-bound work, i.e. tiling),
+  `reproducible.parallel.download` (concurrent ranged download connections) and
+  `reproducible.parallel.upload` (concurrent Google Drive uploads). The network
+  options are deliberately no longer derived from the core count, and are not
+  capped by `mc.cores`; CPU work still is. `reproducible.parallel.streams` and
+  `reproducible.parallel.maxConnections` are deprecated but still honoured, with
+  the new options taking precedence when both are set.
+
 * **Five functions are no longer exported** — `internetExists()`,
   `downloadFile()`, `loadFile()`, `checkAndMakeCloudFolderID()` and
   `prepInputsCOG()`. All are implementation details with better-maintained
@@ -63,6 +72,18 @@
   categorical (factor) rasters categorical.
 
 ## bug fixes
+
+* **Tiling no longer deadlocks after a `terra::writeRaster()`.** A default
+  `writeRaster()` allocates a GDAL thread pool of one thread per core that is
+  never released; forking such a process (as `prepInputs(numTiles = )` did via
+  `mclapply()`) left the children holding GDAL mutexes no surviving thread could
+  release, and they hung indefinitely. The writes `reproducible` controls now
+  pass `NUM_THREADS=1`, and tiling falls back to serial — with a message saying
+  why — if the session is already carrying such a pool.
+* **Setting `mc.cores` no longer throttles downloads.** Concurrent connections
+  defaulted to `parallelly::availableCores() - 1`, and because `availableCores()`
+  honours `mc.cores`, capping CPU forking silently reduced downloads to a single
+  connection.
 
 * **Changing `options(reproducible.cacheSaveFormat)` no longer invalidates the
   cache.** On the file-backed backend every entry was silently recomputed and
