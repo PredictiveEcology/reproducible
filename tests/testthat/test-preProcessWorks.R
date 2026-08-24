@@ -471,7 +471,7 @@ test_that("lightweight tests for preProcess code coverage", {
   expect_true(is.data.frame(preProcessParams(4)))
 
   # test purge
-  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  localFileLuxSm <- system.file("ex/luxSmall/luxSmall.shp", package = "reproducible")
   capture.output(la <- prepInputs(targetFile = localFileLuxSm, destinationPath = tmpdir))
   csf <- dir(pattern = "CHECKSUMS", path = tmpdir, full.names = TRUE)
   a <- file.info(csf)

@@ -10,7 +10,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
   # the `CRAN` tag tracks terra's current CRAN release; `master` moves and is flakier
   remoteTifUrl <- "https://github.com/rspatial/terra/raw/CRAN/inst/ex/elev.tif"
 
-  localFileLuxSm <- system.file("ex/luxSmall.shp", package = "reproducible")
+  localFileLuxSm <- system.file("ex/luxSmall/luxSmall.shp", package = "reproducible")
   localFileLux <- system.file("ex/lux.shp", package = "terra")
 
   # 1 step for each layer

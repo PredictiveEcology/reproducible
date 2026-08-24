@@ -151,7 +151,7 @@ between the \code{url} and the filename used in the \file{CHECKSUMS.txt} file ca
 # preProcess() needs no url: a file already on disk is checksummed, placed in
 # destinationPath, and (with fun = NA) reported rather than loaded.
 dPath <- file.path(tempdir(), "preProcessExample")
-shp <- system.file("ex/luxSmall.shp", package = "reproducible")
+shp <- system.file("ex/luxSmall/luxSmall.shp", package = "reproducible")
 
 out <- preProcess(targetFile = shp, destinationPath = dPath, fun = NA)
 basename(out$targetFilePath)
