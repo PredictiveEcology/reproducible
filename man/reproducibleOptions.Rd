@@ -223,6 +223,8 @@ Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}}, \code{\l
 Default: \code{NULL}, meaning \code{parallelly::freeCores()}. Degree of parallelism
 for \strong{CPU-bound} work, i.e. tiling in \code{\link[=prepInputs]{prepInputs()}} when \code{numTiles} is
 supplied. Being CPU work, it is additionally capped by \code{mc.cores}.
+Setting it to \code{1L} also disables the background \code{showCache()} pre-warm
+fork, which costs one extra process (see \code{showCachePreWarm} below).
 }
 \item{\code{parallel.download}}{
 Default: \code{NULL}, meaning \code{48L}. Number of concurrent ranged connections

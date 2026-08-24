@@ -1021,6 +1021,11 @@ sortedOrRegexp <- c("sorted", "regexp", "ask")
   ## fork does -- is unnecessary there. Skip it entirely.
   if (isTRUE(useDBI())) return(invisible(NULL))
   if (!requireNamespace("parallel", quietly = TRUE)) return(invisible(NULL))
+  ## The pre-warm costs one extra process, so it respects the user's CPU
+  ## parallelism setting: `reproducible.parallel.cores = 1` means "no parallel
+  ## CPU work", and that includes this fork. Anything >= 2 permits it (it only
+  ## ever spawns the single job, regardless of how much higher the setting is).
+  if (.parallelCores() < 2L) return(invisible(NULL))
   x <- x[[1L]]
   pkgEnv <- memoiseEnv(cachePath = x)
   scAll <- pkgEnv[["shownCache"]]

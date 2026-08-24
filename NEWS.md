@@ -55,6 +55,8 @@
   capped by `mc.cores`; CPU work still is. `reproducible.parallel.streams` and
   `reproducible.parallel.maxConnections` are deprecated but still honoured, with
   the new options taking precedence when both are set.
+  `reproducible.parallel.cores = 1L` additionally disables the background
+  `showCache()` pre-warm fork, which costs one extra process.
 
 * **Five functions are no longer exported** — `internetExists()`,
   `downloadFile()`, `loadFile()`, `checkAndMakeCloudFolderID()` and

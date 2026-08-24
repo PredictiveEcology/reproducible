@@ -218,6 +218,8 @@
 #'     Default: `NULL`, meaning `parallelly::freeCores()`. Degree of parallelism
 #'     for **CPU-bound** work, i.e. tiling in [prepInputs()] when `numTiles` is
 #'     supplied. Being CPU work, it is additionally capped by `mc.cores`.
+#'     Setting it to `1L` also disables the background `showCache()` pre-warm
+#'     fork, which costs one extra process (see `showCachePreWarm` below).
 #'   }
 #'   \item{`parallel.download`}{
 #'     Default: `NULL`, meaning `48L`. Number of concurrent ranged connections
