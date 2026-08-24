@@ -1,6 +1,8 @@
 test_that("prepInputsUrlTiles", {
   skip_on_cran()
-  skip_on_ci()
+  ## Deliberately NOT skip_on_ci(): skip_if_not_releaseVer_Linux() below confines
+  ## this to the single Linux/release leg, so it runs on CI without racing
+  ## against the other legs on the same Drive folder.
 
   testInit(needGoogleDriveAuth = TRUE,
            c("terra", "googledrive"),
