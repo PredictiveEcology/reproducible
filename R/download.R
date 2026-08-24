@@ -1471,14 +1471,11 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
 }
 
-# Maximum number of *simultaneous* connections for the parallel ranged download.
-# Controlled by `reproducible.parallel.maxConnections`; when that is unset (NULL)
-# or not a valid number, the ceiling is `availableCores() - 1` -- using
-# `parallelly::availableCores()` when that (Suggested) package is installed, else
-# falling back to base `parallel::detectCores()`. Always at least 1. This bounds
-# the burst of concurrent TLS handshakes (independent of how many parts the file
-# is split into), which is what some stacks -- notably Windows -- reject when all
-# `reproducible.parallel.streams` open at once.
+# Maximum number of *simultaneous* connections for the parallel ranged download,
+# and equivalently the number of byte-range parts the file is split into.
+# Controlled by `reproducible.parallel.download`; always at least 1. This also
+# bounds the burst of concurrent TLS handshakes, which is what some stacks --
+# notably Windows -- reject when too many are opened at once.
 ## Degree of parallelism, by resource. These are deliberately NOT derived from
 ## the core count: network concurrency is bounded by bandwidth and per-connection
 ## server shaping, not by CPUs, and deriving it from `availableCores()` meant a

@@ -852,11 +852,16 @@ forkIsSafe <- function() {
   n <= numSystemCores()
 }
 
-## The *machine's* core count -- deliberately NOT availableCores(), which honours
-## `mc.cores`/cgroup settings. Those say how many workers the user wants; the
-## library thread pools we are detecting here are sized to the hardware, so a
-## user who sets `mc.cores = 2` must not make a clean 65-thread process look
-## unsafe to fork.
+## The *machine's* core count. Deliberately neither availableCores() nor
+## freeCores(), both of which answer "how many workers should I start":
+##   - availableCores() honours `mc.cores`, so `mc.cores = 2` would make a clean
+##     65-thread process look unsafe to fork.
+##   - freeCores() subtracts whatever else is running, so on a busy shared
+##     machine it might return 10 while a clean session still legitimately
+##     carries 64 BLAS threads -- again a false positive.
+## The pools being detected here (GDAL's, OpenBLAS's) are sized to the hardware,
+## so the hardware count is the only correct comparison. Use freeCores() for
+## deciding how much work to start (see .parallelCores), not here.
 numSystemCores <- function() {
   n <- NA_integer_
   if (.requireNamespace("parallelly")) {
