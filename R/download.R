@@ -158,7 +158,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
         message = function(m) {
           messOrig <<- c(messOrig, m$message)
         })
-        if (isTRUE(isDirectory(url, mustExist = FALSE)) && !is(downloadResults, "try-error")) {
+        if (isTRUE(isDirectory(url, mustExist = FALSE, probe = TRUE)) && !is(downloadResults, "try-error")) {
           fileToDownload <- downloadResults$destFile
           neededFiles <- downloadResults$destFile
         }
@@ -1712,6 +1712,130 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   TRUE
 }
 
+# Read a url as text lines, using the same curl handle the directory listing
+# needs. Factored out so `.dirListingUrls()` has one source of input whether the
+# caller is walking a directory url or looking beside a file url.
+.readUrlLines <- function(url) {
+  h <- curl::new_handle()
+  curl::handle_setopt(h, ftp_use_epsv = TRUE, dirlistonly = TRUE)
+  con <- curl::curl(url = url, "r", handle = h)
+  on.exit(try(close(con), silent = TRUE), add = TRUE)
+  readLines(con, warn = FALSE)
+}
+
+# Does this url exist? A HEAD costs no body, and unlike `urlExists()` (which
+# reads a line of the response) it is safe on binary sidecars such as `.ovr`.
+.urlHeadOK <- function(url) {
+  isTRUE(tryCatch({
+    resp <- httr2::request(url) |>
+      httr2::req_method("HEAD") |>
+      httr2::req_error(is_error = function(resp) FALSE) |>
+      httr2::req_perform()
+    httr2::resp_status(resp) < 400L
+  }, error = function(e) FALSE))
+}
+
+# Is this url a directory? A trailing slash already answered "yes" before we get
+# here, so these are the urls that look like they might be one.
+#
+# Signals, cheapest first:
+#   1. a file extension on the last segment -> a file, decided offline;
+#   2. a redirect to this same url plus "/" -- what Apache and nginx answer for
+#      a directory requested without one, and the closest thing to a standard
+#      signal there is;
+#   3. whether the listing can actually be read. This is the only definitive
+#      test: a server that will not enumerate is one we cannot treat as a
+#      directory regardless of what it is.
+# Memoised per session: `preProcess()` asks the same question at several stages
+# and each miss would otherwise cost a request. (Deliberately not `Cache()`d --
+# this is called from a low-level predicate, and `Cache()` would digest its way
+# back through the same call stack.)
+.remoteDirProbe <- function(url, verbose = getOption("reproducible.verbose", 1)) {
+  if (is.null(.pkgEnv$.remoteDirProbe)) .pkgEnv$.remoteDirProbe <- new.env(parent = emptyenv())
+  memo <- .pkgEnv$.remoteDirProbe
+  key <- paste0("u", url)
+  if (!is.null(memo[[key]])) return(memo[[key]])
+
+  ans <- FALSE
+  lastSeg <- basename2(sub("[?#].*$", "", url))
+  hasExt <- nzchar(fileExt(lastSeg))
+  if (!hasExt && .requireNamespace("curl") && .requireNamespace("httr2")) {
+    withSlash <- paste0(url, "/")
+    loc <- tryCatch({
+      resp <- httr2::request(url) |>
+        httr2::req_method("HEAD") |>
+        httr2::req_options(followlocation = FALSE) |>
+        httr2::req_error(is_error = function(resp) FALSE) |>
+        httr2::req_perform()
+      httr2::resp_header(resp, "location")
+    }, error = function(e) NULL)
+    ans <- isTRUE(!is.null(loc) && sub("/$", "", loc) == sub("/$", "", url) && grepl("/$", loc))
+    if (!ans) {
+      # Nothing conclusive from the redirect; the listing itself is the arbiter.
+      # A 404 here is an ordinary outcome of a guess, not something to report.
+      ans <- isTRUE(suppressWarnings(tryCatch(
+        length(.dirListingUrls(.readUrlLines(withSlash), withSlash)) > 0L,
+        error = function(e) FALSE)))
+    }
+    if (ans)
+      messagePreProcess("url has no trailing slash but the server lists it as a directory: ",
+                        url, verbose = verbose, verboseLevel = 2)
+  }
+  memo[[key]] <- ans
+  ans
+}
+
+# The files sitting beside `url` that belong with `targetFile` -- a raster's
+# `.aux.xml`, a shapefile's `.dbf`/`.shx`/`.prj`. `alsoExtract = "similar"` has
+# always meant this, but it was only ever implemented for archives, so on a
+# plain file url it was accepted and silently dropped (#559).
+#
+# Two ways to learn the names, and neither works everywhere:
+#   1. list the parent directory -- exact, since it returns the real filenames,
+#      so it covers both the appending convention (`x.tif.aux.xml`) and the
+#      replacing one (`x.tfw`) without being told about either;
+#   2. failing that -- GitHub's raw urls cannot be listed, and they are common
+#      here -- probe the conventional companion names directly.
+# Returns urls named by file name, never including the target itself.
+.remoteSiblings <- function(url, targetFile, alsoExtract,
+                            verbose = getOption("reproducible.verbose", 1)) {
+  none <- stats::setNames(character(), character())
+  if (!(length(alsoExtract) == 1 && is.character(alsoExtract) &&
+        isTRUE(grepl("^sim", alsoExtract)))) return(none)
+  if (!(.requireNamespace("curl") && .requireNamespace("httr2"))) return(none)
+  base <- if (length(targetFile) && isTRUE(nzchar(targetFile[1]))) {
+    basename2(targetFile[1])
+  } else {
+    basename2(url)
+  }
+  stem <- filePathSansExt(base)
+  if (!nzchar(stem)) return(none)
+  parent <- sub("[^/]+$", "", url)
+  if (!nzchar(parent) || identical(parent, url)) return(none)
+
+  found <- suppressWarnings(tryCatch(.dirListingUrls(.readUrlLines(parent), parent),
+                                     error = function(e) none))
+  found <- found[startsWith(names(found), stem)]
+
+  if (!length(found)) {
+    # `.aux.xml`/`.ovr`/`.msk` append to the whole file name; `.tfw`/`.prj`/...
+    #   replace the extension. Both forms have to be asked for by name.
+    cand <- unique(c(paste0(base, c(".aux.xml", ".ovr", ".msk")),
+                     paste0(stem, c(".tfw", ".wld", ".prj", ".vat.dbf", ".aux"))))
+    if (identical(tolower(fileExt(base)), "shp"))
+      cand <- unique(c(cand, paste0(stem, c(".dbf", ".shx", ".prj", ".cpg", ".sbn", ".sbx"))))
+    cand <- setdiff(cand, base)
+    urls <- paste0(parent, cand)
+    ok <- vapply(urls, .urlHeadOK, logical(1), USE.NAMES = FALSE)
+    found <- stats::setNames(urls[ok], cand[ok])
+  }
+  found <- found[names(found) != base]
+  if (length(found))
+    messagePreProcess("alsoExtract = 'similar': also fetching ",
+                      paste(names(found), collapse = ", "), verbose = verbose)
+  found
+}
+
 # Extract the downloadable files from an HTML directory listing.
 #
 # Every server renders an index differently: Apache `mod_autoindex` (a table,
@@ -1975,13 +2099,10 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         } else if (isTRUE(grepl("onedrive.live.com", url))) {
           stop("Onedrive downloading is currently not supported")
         } else {
-          if (isTRUE(isDirectory(url, mustExist = FALSE))) { # a folder
+          if (isTRUE(isDirectory(url, mustExist = FALSE, probe = TRUE, verbose = verbose))) { # a folder
             if (.requireNamespace("httr") && .requireNamespace("curl")) {
-              list_files <- curl::new_handle()
-              curl::handle_setopt(list_files, ftp_use_epsv = TRUE, dirlistonly = TRUE)
-              con <- curl::curl(url = url, "r", handle = list_files)
-              on.exit(close(con), add = TRUE)
-              dirListing <- .dirListingUrls(readLines(con, warn = FALSE), url)
+              if (!grepl("/$", url)) url <- paste0(url, "/")
+              dirListing <- .dirListingUrls(.readUrlLines(url), url)
               filenames <- names(dirListing)
               # The files in a directory usually belong to one object -- a shapefile's
               #   .shp/.dbf/.prj/..., a raster and its sidecars -- so "similar" is the
@@ -2042,6 +2163,18 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           } else {
 
             downloadResults <- dlGeneric(url = url, destinationPath = .tempPath, verbose = verbose)
+            # `alsoExtract = "similar"` beside a plain file url: which files
+            #   belong with this one is not knowable from the url, so ask the
+            #   server what sits next to it.
+            sibs <- .remoteSiblings(url, targetFile = targetFile,
+                                    alsoExtract = alsoExtract, verbose = verbose)
+            if (length(sibs)) {
+              extra <- unlist(lapply(sibs, function(sibUrl)
+                tryCatch(dlGeneric(sibUrl, destinationPath = .tempPath,
+                                   verbose = verbose)$destFile,
+                         error = function(e) NULL)))
+              downloadResults$destFile <- unique(c(downloadResults$destFile, extra))
+            }
           }
           downloadResults$needChecksums <- needChecksums
         }

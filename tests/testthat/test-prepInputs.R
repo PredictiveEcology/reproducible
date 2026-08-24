@@ -2128,6 +2128,37 @@ test_that("rasters aren't properly resampled", {
   }
 })
 
+test_that("prepInputs fetches similar sidecars beside a plain file url", {
+  skip_on_cran()
+  skip_if_not_installed("httr")
+  skip_if_not_installed("curl")
+  skip_if_offline()
+
+  testInit("terra", opts = list(reproducible.inputPaths = NULL, reproducible.overwrite = TRUE))
+
+  ## A GeoTIFF whose raster attribute table lives in a `.tif.aux.xml` sidecar --
+  ## which is where `terra::writeRaster()` puts it by default. Fetching only the
+  ## target silently returns a non-categorical raster (#559).
+  d <- checkPath(file.path(tmpdir, "sidecar"), create = TRUE)
+  r <- prepInputs(url = paste0(theDirListingUrl, "luxSmall/luxSmall.shp"),
+                  targetFile = "luxSmall.shp", alsoExtract = "similar",
+                  destinationPath = d, fun = "terra::vect")
+  expect_s4_class(r, "SpatVector")
+  ## the shapefile cannot even be read without its companions, so this both
+  ## proves they arrived and that they were the right ones
+  expect_setequal(setdiff(dir(d), "CHECKSUMS.txt"),
+                  c("luxSmall.cpg", "luxSmall.dbf", "luxSmall.prj",
+                    "luxSmall.shp", "luxSmall.shx"))
+
+  ## Without "similar" only the target comes down -- unchanged behaviour.
+  d2 <- checkPath(file.path(tmpdir, "sidecarNone"), create = TRUE)
+  suppressWarnings(try(
+    prepInputs(url = paste0(theDirListingUrl, "luxSmall/luxSmall.shp"),
+               targetFile = "luxSmall.shp", alsoExtract = "none",
+               destinationPath = d2, fun = "terra::vect"), silent = TRUE))
+  expect_identical(setdiff(dir(d2), "CHECKSUMS.txt"), "luxSmall.shp")
+})
+
 test_that("prepInputs takes a url that is a directory", {
   skip_on_cran()
   skip_if_not_installed("httr")

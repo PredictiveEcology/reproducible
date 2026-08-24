@@ -425,7 +425,8 @@ fileExt <- function(x) {
   ifelse(pos > -1L, substring(x, pos + 1L), "")
 }
 
-isDirectory <- function(pathnames, mustExist = TRUE) {
+isDirectory <- function(pathnames, mustExist = TRUE, probe = FALSE,
+                        verbose = getOption("reproducible.verbose", 1)) {
   keep <- is.character(pathnames)
   if (length(pathnames) == 0) {
     return(logical())
@@ -441,6 +442,17 @@ isDirectory <- function(pathnames, mustExist = TRUE) {
       id <- isGoogleDriveDirectory(pathnames)
     } else {
       id <- grepl("/$|\\\\$", pathnames)
+      # A trailing slash is a positive signal, never a negative one: plenty of
+      #   directory urls are written without it. `probe = TRUE` asks the server
+      #   about the ones that look like they could be a directory. Off by
+      #   default so this stays a cheap, offline predicate for every other
+      #   caller.
+      if (isTRUE(probe)) {
+        maybe <- !id & grepl("^[a-z][a-z0-9+.-]*://", pathnames)
+        if (any(maybe))
+          id[maybe] <- vapply(pathnames[maybe], .remoteDirProbe, logical(1),
+                              verbose = verbose, USE.NAMES = FALSE)
+      }
     }
   }
   names(id) <- origPn

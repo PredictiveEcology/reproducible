@@ -221,3 +221,73 @@ test_that(".dirListingUrls returns an empty result for a listing of only directo
 
   expect_length(out, 0L)
 })
+
+## ---------------------------------------------------------------------------
+## isDirectory(probe = TRUE) and .remoteSiblings()
+## ---------------------------------------------------------------------------
+
+test_that("isDirectory(probe = FALSE) is unchanged and needs no network", {
+  testInit()
+  ## the offline contract every other caller relies on
+  expect_true(isDirectory(tempdir()))
+  expect_false(isDirectory("https://example.org/pub", mustExist = FALSE))
+  expect_true(isDirectory("https://example.org/pub/", mustExist = FALSE))
+  expect_length(isDirectory(character(0)), 0L)
+  expect_error(isDirectory(1), "must be character")
+})
+
+test_that("isDirectory(probe = TRUE) decides a file offline, by its extension", {
+  testInit()
+  ## A last segment with an extension is a file; no request is made, so this
+  ## holds with or without a network.
+  expect_false(isDirectory("https://example.invalid/d/x.tif",
+                           mustExist = FALSE, probe = TRUE, verbose = 0))
+  ## A trailing slash still short-circuits to TRUE without asking anyone.
+  expect_true(isDirectory("https://example.invalid/d/",
+                          mustExist = FALSE, probe = TRUE, verbose = 0))
+})
+
+test_that("isDirectory(probe = TRUE) recognises a directory url with no trailing slash", {
+  skip_on_cran()
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  skip_if_offline()
+  testInit()
+
+  ## Apache and nginx both answer a slash-less directory with 301 -> url + "/".
+  ## Without the probe these are all FALSE, which is what made `prepInputs()`
+  ## treat a directory as a file whenever the caller omitted the slash.
+  noSlash <- sub("/$", "", theDirListingUrl)
+  expect_true(isDirectory(noSlash, mustExist = FALSE, probe = TRUE, verbose = 0))
+  expect_false(isDirectory(noSlash, mustExist = FALSE)) # unchanged without probe
+
+  ## A real file on the same host stays FALSE.
+  expect_false(isDirectory(paste0(theDirListingUrl, "SCANFI_small.tif"),
+                           mustExist = FALSE, probe = TRUE, verbose = 0))
+})
+
+test_that(".remoteSiblings only answers for alsoExtract = 'similar'", {
+  testInit()
+  ## Anything else is the caller being explicit; nothing to infer, no request.
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", NULL), 0L)
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", "none"), 0L)
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif",
+                                c("a.dbf", "b.prj")), 0L)
+})
+
+test_that(".remoteSiblings finds the sidecars beside a file url", {
+  skip_on_cran()
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  skip_if_offline()
+  testInit()
+
+  ## The parent here is listable, so the real names come back -- which is how
+  ## both naming conventions are covered without a hard-coded list.
+  sibs <- .remoteSiblings(paste0(theDirListingUrl, "luxSmall/luxSmall.shp"),
+                          targetFile = "luxSmall.shp", alsoExtract = "similar",
+                          verbose = 0)
+  expect_setequal(names(sibs),
+                  c("luxSmall.cpg", "luxSmall.dbf", "luxSmall.prj", "luxSmall.shx"))
+  expect_false("luxSmall.shp" %in% names(sibs)) # the target itself is not a sibling
+})

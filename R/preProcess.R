@@ -1114,7 +1114,7 @@ pp_finalize <- function(ctx) {
     }
   }
 
-  if (isTRUE(isDirectory(ctx$url, mustExist = FALSE)) && is.null(ctx[["targetFile"]])) {
+  if (isTRUE(isDirectory(ctx$url, mustExist = FALSE, probe = TRUE)) && is.null(ctx[["targetFile"]])) {
     messagePrepInputs(
       "url pointed to a directory, but no `targetFile` specified; using targetFilePath:\n",
       paste0(ctx$downloadResult$downloaded, collapse = "\n")
@@ -1266,7 +1266,7 @@ pp_finalize <- function(ctx) {
                          verbose = getOption("reproducible.verbose", 1), team_drive = NULL) {
   # if (is.null(targetFile)) {
   guessedFile <- if (!is.null(url)) {
-    if (isTRUE(isDirectory(url, FALSE))) {
+    if (isTRUE(isDirectory(url, FALSE, probe = TRUE, verbose = verbose))) {
       gf <- NULL
     } else {
       gf <- file.path(destinationPath, basename2(url))
