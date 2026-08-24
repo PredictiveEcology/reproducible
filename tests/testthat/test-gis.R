@@ -25,27 +25,42 @@ test_that("testing prepInputs with deauthorized googledrive", {
   )
   expect_true(is(BCR6_VT, vectorType()))
 
-  if (.requireNamespace("sf", stopOnFALSE = FALSE)) {
-    theQuietVar <- TRUE # test for finding this
-    co <- capture.output(NFDB_PT <-
-      skip_on_transient_http(prepInputs(
-        url = "http://cwfis.cfs.nrcan.gc.ca/downloads/nfdb/fire_pnt/current_version/NFDB_point.zip",
-        overwrite = TRUE,
-        fun = sf::st_read(targetFile, quiet = theQuietVar)
-      ))
-    )
-    expect_is(NFDB_PT, "sf")
-    expect_true(all(c("zip", "sbx", "shp", "xml", "shx", "sbn") %in%
-      fileExt(dir(pattern = "NFDB_point"))))
+})
 
-    noisyOutput <- capture.output({
-      warn <- capture_warnings({
-        NFDB_PT_BCR6 <- Cache(postProcess, NFDB_PT, studyArea = BCR6_VT)
-      })
+test_that("prepInputs with an sf point archive, and a `fun` that reads its calling env", {
+  skip_on_cran()
+  skip_on_ci()
+  skip_if_not_installed("sf")
+
+  testInit("sf", needGoogleDriveAuth = FALSE, needInternet = TRUE)
+  withr::local_dir(tmpdir)
+
+  ## `fun` is an unquoted call whose argument (`theQuietVar`) lives in this
+  ## frame, not in prepInputs() -- resolving it is the point of this test.
+  theQuietVar <- TRUE
+  co <- capture.output(NFDB_PT <-
+    skip_on_transient_http(prepInputs(
+      url = theNFDBpointUrl,
+      overwrite = TRUE,
+      fun = sf::st_read(targetFile, quiet = theQuietVar)
+    ))
+  )
+  expect_is(NFDB_PT, "sf")
+
+  ## the shapefile sidecars all come out of the archive, not just the .shp
+  expect_true(all(c("zip", "shp", "shx", "dbf", "prj") %in%
+    fileExt(dir(pattern = "NFDB_point"))))
+
+  ## sf-only: this test declares sf, and does not need terra for a bbox
+  studyArea <- sf::st_as_sf(sf::st_as_sfc(sf::st_bbox(NFDB_PT)))
+  noisyOutput <- capture.output({
+    warn <- capture_warnings({
+      NFDB_PT_sm <- Cache(postProcess, NFDB_PT, studyArea = studyArea)
     })
-    if (!all(grepl("attribute variables are assumed to be spatially constant", warn))) {
-      warnings(warn)
-    }
+  })
+  expect_is(NFDB_PT_sm, "sf")
+  if (!all(grepl("attribute variables are assumed to be spatially constant", warn))) {
+    warnings(warn)
   }
 })
 

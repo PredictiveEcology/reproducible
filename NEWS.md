@@ -82,6 +82,10 @@
   release, and they hung indefinitely. The writes `reproducible` controls now
   pass `NUM_THREADS=1`, and tiling falls back to serial — with a message saying
   why — if the session is already carrying such a pool.
+* **The last large third-party download is gone from the tests.** `test-gis.R`
+  fetched a ~40 MB national fire-point archive from a federal server, on a URL
+  that has since been renamed upstream and now 404s. It is replaced by a 2.8 kB
+  25-point fixture shipped in `inst/ex` and hosted as a release asset.
 * **`prepInputs(numTiles = )` now works without geodata configured.** It builds
   its tile grid from GADM boundaries, but called `geodata::gadm()` with no
   `path`, which errors on any machine where `geodata::geodata_path()` has never

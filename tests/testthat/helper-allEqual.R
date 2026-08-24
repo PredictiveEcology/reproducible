@@ -557,6 +557,7 @@ theRasterTests <- "https://github.com/PredictiveEcology/reproducible/releases/do
 ## to 1,184, which takes it from 1.44 MB to 15 kB. Also shipped at
 ## inst/ex/ecozone_shp.zip for provenance and offline use.
 theEcozoneUrl <- paste0(theRasterTests, "ecozone_shp.zip")
+theNFDBpointUrl <- paste0(theRasterTests, "NFDB_point_small.zip")
 
 ## A tiny stand-in for the 215 MB SCANFI tif on ftp.maps.canada.ca. Same CRS
 ## (NAD_1983_Canada_Lambert), same 30 m resolution and same INT1U type, 1024x1024
