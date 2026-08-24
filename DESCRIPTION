@@ -100,11 +100,14 @@ Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0
 Collate: 
     'DBI.R'
-    'messages.R'
-    'GPT2.R'
+    'cache-call.R'
+    'cache-digest.R'
     'cache-helpers.R'
     'cache-internals.R'
+    'cache-repo.R'
+    'cache-report.R'
     'robustDigest.R'
+    'messages.R'
     'cache.R'
     'cacheGeo.R'
     'checksums.R'
