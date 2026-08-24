@@ -3,6 +3,12 @@ test_that("prepInputsUrlTiles", {
   ## Deliberately NOT skip_on_ci(): skip_if_not_releaseVer_Linux() below confines
   ## this to the single Linux/release leg, so it runs on CI without racing
   ## against the other legs on the same Drive folder.
+  ##
+  ## Coverage runs are excluded, though: skip_if_not_releaseVer_Linux() bypasses
+  ## itself under covr, and this test forks and does a Drive round-trip, which is
+  ## exactly what coverage runs should not be carrying.
+  skip_if(isTRUE(requireNamespace("covr", quietly = TRUE) && covr::in_covr()),
+          "excluded from coverage runs")
 
   testInit(needGoogleDriveAuth = TRUE,
            c("terra", "googledrive"),
