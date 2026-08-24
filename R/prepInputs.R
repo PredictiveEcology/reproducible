@@ -138,16 +138,33 @@ utils::globalVariables(c(
 #'   `prepInputs` or `preProcess`, comparing the file on hand with the ad hoc
 #'   `CHECKSUMS.txt`. See table in [preProcess()].
 #'
-#' @param alsoExtract Optional character string naming files other than
-#'   `targetFile` that must be extracted from the `archive`. If
-#'   `NULL`, the default, then it will extract all files. Other options:
-#'   `"similar"` will extract all files with the same filename without
-#'   file extension as `targetFile`. `NA` will extract nothing other
-#'   than `targetFile`. A character string of specific file names will cause
-#'   only those to be extracted. Each element may also be a regular expression:
-#'   if an element does not match any archive member literally (by relative path
-#'   or basename), it is passed to `grep()` against the archive's file list and
-#'   all matching members are extracted. For example,
+#' @param alsoExtract Which files to fetch or extract in addition to
+#'   `targetFile`. Spatial data rarely arrives as one file -- a shapefile is
+#'   five or six, and a raster often has a `.aux.xml`, `.ovr` or `.tfw`
+#'   alongside carrying its attribute table, overviews or georeferencing --
+#'   so this controls how much of that company comes along.
+#'
+#'   The default depends on where the files are coming from, because
+#'   "everything" only means something when a container bounds it:
+#'
+#'   \tabular{lll}{
+#'     **`alsoExtract`** \tab **from an `archive`** \tab **from a `url`** \cr
+#'     `NULL` (default) \tab every file in the archive \tab as for `"similar"` \cr
+#'     `"similar"` \tab files sharing `targetFile`'s name without its extension
+#'       \tab same, discovered by listing the remote directory \cr
+#'     `NA` or `"none"` \tab `targetFile` only \tab `targetFile` only \cr
+#'     a character vector \tab those files only \tab those files only \cr
+#'   }
+#'
+#'   An archive bounds what "all files" can mean, so `NULL` extracts all of it.
+#'   A `url` has no such bound -- the server may hold thousands of unrelated
+#'   files -- so `NULL` there means `targetFile` and its companions, never the
+#'   whole remote directory.
+#'
+#'   Each element of a character vector may also be a regular expression: if an
+#'   element does not match any archive member literally (by relative path or
+#'   basename), it is passed to `grep()` against the archive's file list and all
+#'   matching members are extracted. For example,
 #'   `alsoExtract = "CMD_sm|CMD_sp"` extracts every file whose name contains
 #'   `CMD_sm` or `CMD_sp`. See table in [preProcess()].
 #'

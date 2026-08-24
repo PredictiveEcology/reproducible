@@ -266,13 +266,29 @@ test_that("isDirectory(probe = TRUE) recognises a directory url with no trailing
                            mustExist = FALSE, probe = TRUE, verbose = 0))
 })
 
-test_that(".remoteSiblings only answers for alsoExtract = 'similar'", {
+test_that(".remoteSiblings declines when the caller was explicit", {
   testInit()
-  ## Anything else is the caller being explicit; nothing to infer, no request.
-  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", NULL), 0L)
+  ## "none", NA and a named vector are all the caller saying exactly what they
+  ## want, so there is nothing to infer and no request to make. (`NULL` is NOT
+  ## in this list: unspecified means "similar" beside a url -- see below.)
   expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", "none"), 0L)
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", NA), 0L)
   expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif",
                                 c("a.dbf", "b.prj")), 0L)
+})
+
+test_that(".remoteSiblings does not probe extensions on the deny-list", {
+  testInit()
+  ## The deny-list decides whether spending requests is worthwhile; it is not a
+  ## list of what is eligible. A format missing from it is still probed -- the
+  ## failure mode is a little latency, never a silently dropped companion.
+  withr::local_options(reproducible.sidecarProbeSkip = c("csv", "rds"))
+  ## `.csv` is denied, so this returns without touching the network at all --
+  ## which is why it can assert against an unresolvable host.
+  expect_length(.remoteSiblings("https://example.invalid/d/x.csv", "x.csv", "similar"), 0L)
+  ## An empty candidate list is the other way to spend nothing.
+  withr::local_options(reproducible.sidecarCandidates = list())
+  expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", "similar"), 0L)
 })
 
 test_that(".remoteSiblings finds the sidecars beside a file url", {
@@ -290,4 +306,63 @@ test_that(".remoteSiblings finds the sidecars beside a file url", {
   expect_setequal(names(sibs),
                   c("luxSmall.cpg", "luxSmall.dbf", "luxSmall.prj", "luxSmall.shx"))
   expect_false("luxSmall.shp" %in% names(sibs)) # the target itself is not a sibling
+})
+
+test_that(".listableParent rewrites GitHub raw urls, and only those", {
+  testInit()
+  withr::local_options(reproducible.githubListingBase = "https://cdn.jsdelivr.net/gh/")
+  ## every raw form GitHub serves, including the refs/ prefixes
+  expect_identical(.listableParent("https://github.com/O/R/raw/refs/heads/main/a/b/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@main/a/b/")
+  expect_identical(.listableParent("https://github.com/O/R/raw/main/a/b/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@main/a/b/")
+  expect_identical(.listableParent("https://raw.githubusercontent.com/O/R/main/a/b/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@main/a/b/")
+  expect_identical(.listableParent("https://github.com/O/R/raw/refs/tags/v1.0/a/"),
+                   "https://cdn.jsdelivr.net/gh/O/R@v1.0/a/")
+  ## anything else is left alone -- no other host gets redirected anywhere
+  expect_identical(.listableParent("https://example.org/pub/"), "https://example.org/pub/")
+  expect_identical(.listableParent("https://github.com/O/R/tree/main/a/"),
+                   "https://github.com/O/R/tree/main/a/")
+})
+
+test_that("the GitHub listing index can be switched off entirely", {
+  testInit()
+  ## The index is a convenience, not a requirement: with it off, a GitHub url is
+  ## never rewritten and nothing contacts the CDN. The sidecar search then falls
+  ## back to probing by name, which is slower but reaches the same answer.
+  withr::local_options(reproducible.githubListingBase = NULL)
+  expect_identical(.listableParent("https://github.com/O/R/raw/main/a/"),
+                   "https://github.com/O/R/raw/main/a/")
+  withr::local_options(reproducible.githubListingBase = "")
+  expect_identical(.listableParent("https://github.com/O/R/raw/main/a/"),
+                   "https://github.com/O/R/raw/main/a/")
+})
+
+test_that("the url log records the index request and the sidecars", {
+  skip_on_cran()
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  skip_if_offline()
+  testInit("terra")
+
+  ## The log is the record of what a session reached out to. Two of the accesses
+  ## here are ones the caller never named -- an index on another host, and a
+  ## sidecar found through it -- which is precisely why they have to appear.
+  target <- paste0(theDirListingUrl, "luxSmall/luxSmall.shp")
+  fns <- function() vapply(prepInputsLog(), function(r) r$fn, character(1))
+
+  clearUrlLog()
+  d1 <- checkPath(file.path(tmpdir, "logOn"), create = TRUE)
+  invisible(suppressWarnings(prepInputs(url = target, destinationPath = d1,
+                                        fun = "terra::vect")))
+  expect_true(any(grepl("similar", fns()))) # the companions it pulled in
+
+  ## With the index switched off nothing should claim to have used one.
+  clearUrlLog()
+  withr::local_options(reproducible.githubListingBase = NULL)
+  d2 <- checkPath(file.path(tmpdir, "logOff"), create = TRUE)
+  invisible(suppressWarnings(prepInputs(url = target, destinationPath = d2,
+                                        fun = "terra::vect")))
+  expect_false(any(grepl("directory index", fns())))
 })

@@ -643,6 +643,23 @@ reproducibleOptions <- function() {
     reproducible.useGdown = FALSE,
     reproducible.useMemoise = FALSE, # memoise
     reproducible.useragent = "https://github.com/PredictiveEcology/reproducible",
+    # Formats for which a companion file is not a thing: archives, R
+    #   serialisations, documents. Deliberately conservative -- `csv` is absent
+    #   because OGR reads column types from a `.csvt` beside it, which is the
+    #   kind of case a longer list gets wrong.
+    # Index used to enumerate a GitHub directory, which GitHub itself will not
+    #   do in any machine-readable form. Only ever read as an index -- files are
+    #   always fetched from the url the caller gave. Set to NULL to never
+    #   contact it; the sidecar search then falls back to probing by name.
+    reproducible.githubListingBase = "https://cdn.jsdelivr.net/gh/",
+    reproducible.sidecarProbeSkip = c("rds", "qs", "qs2", "rdata", "rda",
+                                      "zip", "tar", "gz", "bz2", "xz", "7z", "rar",
+                                      "pdf", "html", "md", "r", "rmd"),
+    reproducible.sidecarCandidates = list(
+      append  = c(".aux.xml", ".ovr", ".msk"),
+      replace = c(".tfw", ".wld", ".prj", ".vat.dbf", ".aux", ".csvt"),
+      shp     = c(".dbf", ".shx", ".prj", ".cpg", ".sbn", ".sbx")
+    ),
     reproducible.verbose = 1,
     reproducible.digestVersion = NULL, # NULL => 4; the going-forward digest-algorithm selector
     reproducible.digestV3 = TRUE,      # superseded by digestVersion (still honoured when it is unset)
