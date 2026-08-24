@@ -51,16 +51,15 @@ test_that("prepInputsUrlTiles", {
                                gdal = "NUM_THREADS=1")
   d <- googledrive::drive_upload(fn, path = googledrive::as_id(urlForTiles))
 
-  mess1 <- capture_messages(
+  ## wrapped to keep the (very chatty) download/tiling output out of the test log
+  capture_messages(
     warns <- capture_warnings(
       a1 <- prepInputs(url = d$id, to = b, doUploads = TRUE, numTiles = c(2,2))
     )
   )
   expect_is(a1, "SpatRaster")
   withr::local_options(reproducible.prepInputsUrlTiles = NULL)
-  mess2 <- capture_messages(a2 <- prepInputs(url = d$id, to = b, useCache = FALSE))
-  cat(mess2, file = "~/tmp/mess2.txt")
-  cat(mess1, file = "~/tmp/mess1.txt")
+  capture_messages(a2 <- prepInputs(url = d$id, to = b, useCache = FALSE))
   a1b <- .wrap(a1)
   a2b <- .wrap(a2)
   expect_is(a2, "SpatRaster")
@@ -87,7 +86,6 @@ test_that("prepInputsUrlTiles", {
   withr::local_options(reproducible.prepInputsUrlTiles = NULL)
   b2 <- prepInputs(url = d$id, to = b)
   testthat::expect_equivalent(b1, b2)
-  save(a1, a2, b1, b2, file = "~/tmp/objs.rda")
   gls <- googledrive::drive_ls(urlForTiles)
 
   # clean up
