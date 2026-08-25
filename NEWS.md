@@ -129,7 +129,6 @@
   macOS, nor errors on Windows when more than one archive binary is installed.
 * Single-stream downloads no longer hang for certain servers; parallel ranged
   downloads are used only where the server supports them.
-* Cloud caching no longer invents a Google Drive folder when none is supplied.
 * Assorted message and reporting fixes in `messageColoured()`/`cliCol()`,
   `getRelative()`, and direct `preProcess()` calls.
 # reproducible 3.1.1
