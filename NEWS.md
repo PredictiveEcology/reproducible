@@ -17,12 +17,13 @@
   `/` to `_`, so `example.com/my_data/sub_dir` and `example.com/my/data/sub/dir`
   shared one file. Names stay human-readable; sidecars written by earlier
   versions are still found.
-* New `revalidateRemotes()`: walk a directory, ask each recorded URL whether it
-  has changed, and drop the sidecars of those that have, so the next call
-  re-downloads only those. Nothing is downloaded by the call itself. This is
-  the intended way to re-check — a deliberate action rather than
+* New `preProcessCheckURLs()`: walk a directory, ask each recorded URL whether
+  it has changed, and report. `redownload` decides what happens to anything
+  that has: fetch it now (`"immediate"`), remove its sidecar so the next
+  `preProcess()` fetches it (`"nextPreProcess"`), or report only (`"no"`).
+  This is the intended way to re-check — a deliberate action rather than
   `options(reproducible.checkRemoteHash = TRUE)`, which is easy to set once and
-  forget. See `?revalidateRemotes`.
+  forget. See `?preProcessCheckURLs`.
 * `options(reproducible.checkRemoteHash = TRUE)` revalidates such files with a
   conditional `If-None-Match` request: one round-trip, no download. If the
   remote is unreachable the local file is used. The default is still to trust

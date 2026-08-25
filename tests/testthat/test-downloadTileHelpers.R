@@ -292,7 +292,7 @@ test_that("the sidecar records the URL it came from", {
   expect_identical(parsed$etag, "W/\"tok\"")
 })
 
-test_that("revalidateRemotes removes only the sidecars whose remote changed", {
+test_that("preProcessCheckURLs acts only on the sidecars whose remote changed", {
   testInit(verbose = -1)
   url <- "https://example.com/data/target.tif"
   sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
@@ -301,7 +301,7 @@ test_that("revalidateRemotes removes only the sidecars whose remote changed", {
   ## unchanged -> kept
   testthat::with_mocked_bindings(
     .remoteEtagRevalidate = function(...) list(unchanged = TRUE, etag = "W/\"tok\""),
-    { res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1)) }
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1)) }
   )
   expect_identical(res$status, "unchanged")
   expect_true(file.exists(sc))
@@ -309,34 +309,89 @@ test_that("revalidateRemotes removes only the sidecars whose remote changed", {
   ## unreachable -> kept, reported
   testthat::with_mocked_bindings(
     .remoteEtagRevalidate = function(...) list(unchanged = NA, etag = NULL),
-    { res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1)) }
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1)) }
   )
   expect_identical(res$status, "unreachable")
   expect_true(file.exists(sc))
 
-  ## changed, dryRun -> reported but kept
+  ## changed, redownload = "no" -> reported but kept
   testthat::with_mocked_bindings(
     .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
-    { res <- suppressMessages(revalidateRemotes(tmpdir, dryRun = TRUE, verbose = -1)) }
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "no", verbose = -1)) }
   )
   expect_identical(res$status, "changed")
   expect_true(file.exists(sc))
 
-  ## changed -> removed, so the next preProcess() re-downloads just this one
+  ## changed, redownload = "nextPreProcess" -> sidecar removed so the next
+  ## ordinary preProcess() re-downloads just this one
   testthat::with_mocked_bindings(
     .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
-    { res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1)) }
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1)) }
   )
   expect_identical(res$status, "changed")
   expect_false(file.exists(sc))
 })
 
-test_that("revalidateRemotes reports sidecars that predate the recorded URL", {
+test_that("preProcessCheckURLs reports sidecars that predate the recorded URL", {
   testInit(verbose = -1)
   sc <- file.path(tmpdir, ".old_deadbeef.hash")
   writeLines("md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", sc)
 
-  res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1))
+  res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1))
   expect_identical(res$status, "noURL")
   expect_true(file.exists(sc))    # nothing to check against -> left alone
+})
+
+test_that("preProcessCheckURLs redownload = 'immediate' fetches the changed file now", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+  fetched <- 0L
+
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    preProcess = function(...) { fetched <<- fetched + 1L; invisible(NULL) },
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "immediate",
+                                                  verbose = -1)) }
+  )
+
+  expect_identical(res$status, "changed")
+  expect_identical(res$action, "redownloaded")
+  expect_identical(fetched, 1L)
+})
+
+test_that("preProcessCheckURLs reports a failed immediate redownload rather than erroring", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                     algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    preProcess = function(...) stop("remote exploded"),
+    { res <- expect_no_error(
+        suppressMessages(preProcessCheckURLs(tmpdir, redownload = "immediate",
+                                             verbose = -1))) }
+  )
+
+  expect_identical(res$status, "changed")
+  expect_identical(res$action, "redownloadFailed")
+})
+
+test_that("preProcessCheckURLs leaves unchanged files alone whatever redownload says", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  for (rd in c("immediate", "nextPreProcess", "no")) {
+    testthat::with_mocked_bindings(
+      .remoteEtagRevalidate = function(...) list(unchanged = TRUE, etag = "W/\"tok\""),
+      { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = rd, verbose = -1)) }
+    )
+    expect_identical(res$status, "unchanged", info = rd)
+    expect_identical(res$action, "none", info = rd)
+    expect_true(file.exists(sc), info = rd)
+  }
 })

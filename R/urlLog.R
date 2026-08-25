@@ -453,13 +453,12 @@ clearUrlLog <- function() {
   invisible()
 }
 
-#' Re-check downloaded files against their remote sources
+#' Check downloaded files against their remote sources
 #'
 #' Walks the `.hash` sidecars written by [preProcess()] under `path`, asks each
-#' recorded URL whether the file has changed, and removes the sidecars of those
-#' that have. Nothing is downloaded here: the next ordinary
-#' [preProcess()]/[prepInputs()] call re-fetches exactly the files whose
-#' sidecar was removed, and leaves the rest alone.
+#' recorded URL whether the file has changed, and reports what it found. The
+#' check always happens; `redownload` decides what to do about anything that
+#' has changed.
 #'
 #' @details
 #' This exists so that re-checking is something a user *does*, occasionally and
@@ -468,47 +467,57 @@ clearUrlLog <- function() {
 #' project's setup and every run pays for it forever — whereas this is a single
 #' action with no lasting state.
 #'
-#' How each file is checked depends on what its sidecar holds:
-#' an ETag is revalidated with a conditional `If-None-Match` request (one
-#' round-trip, no download); otherwise the recorded digest is compared with the
-#' hash the server currently advertises. Files whose remote cannot be reached
-#' are reported as `"unreachable"` and left untouched.
-#'
-#' Sidecars written before the URL was recorded have nothing to check against
-#' and are reported as `"noURL"`.
+#' How each file is checked depends on what its sidecar holds: an ETag is
+#' revalidated with a conditional `If-None-Match` request (one round-trip, no
+#' download); otherwise the recorded digest is compared with the hash the server
+#' currently advertises. Files whose remote cannot be reached are reported as
+#' `"unreachable"` and left alone, as are sidecars written before the URL was
+#' recorded (`"noURL"`).
 #'
 #' @param path Directory to walk. Typically `inputPath(sim)` or
 #'   `outputPath(sim)`.
+#' @param redownload What to do with files whose remote has changed.
+#'   \describe{
+#'     \item{`"immediate"`}{fetch them now.}
+#'     \item{`"nextPreProcess"`}{remove their sidecars, so the next ordinary
+#'       [preProcess()] call fetches them. Nothing is downloaded here.}
+#'     \item{`"no"`}{report only; change nothing.}
+#'   }
 #' @param recursive Logical; recurse into subdirectories. Default `TRUE`.
-#' @param dryRun Logical; if `TRUE`, report what would happen without removing
-#'   any sidecar. Default `FALSE`.
 #' @param verbose Numeric verbosity.
 #'
 #' @return Invisibly, a `data.frame` with one row per sidecar: `file`, `url`,
-#'   `status` (one of `"unchanged"`, `"changed"`, `"unreachable"`, `"noURL"`)
-#'   and `sidecar`.
+#'   `status` (`"unchanged"`, `"changed"`, `"unreachable"` or `"noURL"`),
+#'   `action` (`"none"`, `"sidecarRemoved"`, `"redownloaded"` or
+#'   `"redownloadFailed"`) and `sidecar`.
 #'
 #' @export
+#' @rdname preProcessCheckURLs
+#'
 #' @examples
 #' \donttest{
-#' # after a run, ask which inputs have changed upstream
-#' revalidateRemotes(tempdir(), dryRun = TRUE)
+#' # what has changed upstream, without touching anything
+#' preProcessCheckURLs(tempdir(), redownload = "no")
 #' }
-revalidateRemotes <- function(path = ".", recursive = TRUE, dryRun = FALSE,
-                              verbose = getOption("reproducible.verbose")) {
+preProcessCheckURLs <- function(path = ".",
+                                redownload = c("immediate", "nextPreProcess", "no"),
+                                recursive = TRUE,
+                                verbose = getOption("reproducible.verbose")) {
+  redownload <- match.arg(redownload)
+
   sidecars <- dir(path, pattern = "\\.hash$", all.files = TRUE,
                   full.names = TRUE, recursive = recursive)
 
   empty <- data.frame(file = character(), url = character(),
-                      status = character(), sidecar = character(),
-                      stringsAsFactors = FALSE)
+                      status = character(), action = character(),
+                      sidecar = character(), stringsAsFactors = FALSE)
   if (!length(sidecars)) return(invisible(empty))
 
   rows <- lapply(sidecars, function(sc) {
     parsed <- .parseRemoteHashFile(sc)
-    mkRow <- function(status, url = NA_character_)
+    mkRow <- function(status, action = "none", url = NA_character_)
       data.frame(file = basename(sc), url = url, status = status,
-                 sidecar = sc, stringsAsFactors = FALSE)
+                 action = action, sidecar = sc, stringsAsFactors = FALSE)
 
     if (is.null(parsed) || is.null(parsed$url) || !nzchar(parsed$url))
       return(mkRow("noURL"))
@@ -527,16 +536,34 @@ revalidateRemotes <- function(path = ".", recursive = TRUE, dryRun = FALSE,
       else "changed"
     }
 
-    if (identical(status, "changed") && !isTRUE(dryRun)) unlink(sc)
-    mkRow(status, url)
+    if (!identical(status, "changed")) return(mkRow(status, "none", url))
+
+    action <- switch(
+      redownload,
+      no = "none",
+      nextPreProcess = { unlink(sc); "sidecarRemoved" },
+      immediate = {
+        # drop the stale sidecar first so preProcess() cannot trust it, then
+        # fetch; preProcess() rewrites the sidecar from the new response
+        unlink(sc)
+        ok <- tryCatch({
+          preProcess(url = url, destinationPath = dirname(sc), verbose = verbose - 1L)
+          TRUE
+        }, error = function(e) FALSE)
+        if (isTRUE(ok)) "redownloaded" else "redownloadFailed"
+      }
+    )
+    mkRow(status, action, url)
   })
 
   out <- do.call(rbind, rows)
   nChanged <- sum(out$status == "changed")
   messagePreProcess(
-    "revalidateRemotes: ", NROW(out), " sidecar(s); ", nChanged, " changed",
-    if (nChanged && !isTRUE(dryRun)) " (sidecars removed; next call re-downloads)"
-    else if (nChanged) " (dryRun: nothing removed)" else "",
+    "preProcessCheckURLs: ", NROW(out), " sidecar(s) checked; ", nChanged, " changed",
+    switch(redownload,
+           no = " (redownload = 'no': nothing changed on disk)",
+           nextPreProcess = if (nChanged) " (sidecars removed; next preProcess() re-downloads)" else "",
+           immediate = if (nChanged) " (re-downloaded now)" else ""),
     verbose = verbose
   )
   invisible(out)
