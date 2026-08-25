@@ -6,25 +6,20 @@
 # and Debian/Ubuntu has apt, so all nine legs of the usual matrix were green.
 # One non-Debian Linux leg would have caught it on the PR.
 #
-# Deliberately R-RELEASE, not R-devel. This leg exists to vary ONE thing -- the
-# distribution -- so it catches "we shelled out to a binary that is not here".
-# R-devel is already covered by the ubuntu and Windows legs, and an r-hub devel
-# container was tried first: it failed building `lobstr`, because its R-devel
-# snapshot runs ahead of CRAN's and `R_envSymbols()` had changed. That is
-# upstream churn unrelated to this package, and a leg that reddens for reasons
-# no one here can fix is worse than no leg at all.
+# This mirrors the `nosuggests` leg of the shared matrix as closely as possible,
+# so the DISTRIBUTION is the only variable and a red here is a real finding:
+#   * dependencies: NA          -- hard dependencies only
+#   * _R_CHECK_DEPENDS_ONLY_    -- so check EXPECTS Suggests to be absent;
+#                                  without it their absence is a WARNING
+#   * VignetteBuilder packages installed explicitly, read out of DESCRIPTION --
+#     R keeps them visible so vignettes can be re-built, and `NA` would leave
+#     them uninstalled ("vignette builder 'knitr' not found")
 #
-# Also deliberately cheap: terra, sf and raster are Suggests, so hard
-# dependencies only. Fedora has no P3M binaries and building the geospatial
-# stack from source would cost far more than this leg is worth -- the failure
-# class it targets needs none of it.
-#
-# NOTE this is a stricter scope than the existing `nosuggests` matrix leg, which
-# INSTALLS everything and merely sets _R_CHECK_DEPENDS_ONLY_ for the check. Here
-# Suggests are genuinely absent, so `knitr` is too -- and DESCRIPTION declares
-# `VignetteBuilder: knitr`, which makes the package unbuildable rather than
-# merely unvignetted. Vignettes are therefore skipped outright: they are covered
-# by the ubuntu legs, and rendering them is not what this leg is for.
+# R-RELEASE deliberately, not R-devel: that is already covered by the ubuntu and
+# Windows legs. An r-hub devel container was tried and failed building `lobstr`,
+# because its R-devel snapshot runs ahead of CRAN's -- upstream churn unrelated
+# to this package, and a leg that reddens for reasons nobody here can fix is
+# worse than no leg at all.
 
 name: R-CMD-check-fedora
 
@@ -42,32 +37,49 @@ jobs:
   fedora:
     runs-on: ubuntu-latest
     container: fedora:41
-    name: fedora (R-release, hard deps only)
+    name: fedora (R-release, no-suggests)
+
+    env:
+      # check expects only hard dependencies; without this, absent Suggests are
+      # reported as a WARNING rather than being the point of the leg
+      _R_CHECK_DEPENDS_ONLY_: true
 
     steps:
       - name: Install R and build tools
         run: |
           dnf -y install --setopt=install_weak_deps=False \
             R-core R-core-devel gcc gcc-c++ gfortran make \
-            git tar which libcurl-devel openssl-devel libxml2-devel
+            git tar which libcurl-devel openssl-devel libxml2-devel \
+            glibc-langpack-en pandoc
           R --version
 
       - uses: actions/checkout@v4
 
+      # Read the VignetteBuilder packages out of DESCRIPTION rather than
+      # hard-coding knitr/rmarkdown, exactly as the shared workflow does.
+      - name: Resolve VignetteBuilder packages
+        id: vignette-builder
+        shell: bash
+        run: |
+          pkgs=$(Rscript -e 'd <- read.dcf("DESCRIPTION"); vb <- if ("VignetteBuilder" %in% colnames(d)) d[1, "VignetteBuilder"] else ""; vb <- trimws(unlist(strsplit(vb, ","))); vb <- vb[nzchar(vb)]; if (length(vb)) cat(paste0("any::", vb), sep = "\n")')
+          echo "VignetteBuilder packages: ${pkgs:-<none>}"
+          {
+            echo "packages<<__EOF__"
+            printf '%s\n' "$pkgs"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # hard deps only; testthat and rcmdcheck added explicitly so the tests
-          # actually run rather than being skipped wholesale.
-          dependencies: '"hard"'
+          pak-version: stable
+          dependencies: 'NA'
           extra-packages: |
             any::rcmdcheck
-            any::testthat
+            ${{ steps.vignette-builder.outputs.packages }}
           cache: always
 
       - uses: r-lib/actions/check-r-package@v2
         with:
-          # no vignettes: knitr is a Suggests and is deliberately not installed
-          args: 'c("--no-manual", "--as-cran", "--no-vignettes")'
-          build_args: 'c("--no-build-vignettes")'
+          args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
           error-on: '"warning"'
           upload-snapshots: true
