@@ -1,0 +1,98 @@
+# A Fedora leg, because our matrix has none and CRAN's does.
+#
+# reproducible 3.2.0 shipped a check ERROR on CRAN's
+# r-devel-linux-x86_64-fedora-{clang,gcc}: a `system("apt ...", intern = TRUE)`
+# call, which *errors* where the command does not exist. macOS never reached it
+# and Debian/Ubuntu has apt, so all nine legs of the usual matrix were green.
+# One non-Debian Linux leg would have caught it on the PR.
+#
+# This mirrors the `nosuggests` leg of the shared matrix as closely as possible,
+# so the DISTRIBUTION is the only variable and a red here is a real finding:
+#   * dependencies: NA          -- hard dependencies only
+#   * _R_CHECK_DEPENDS_ONLY_    -- so check EXPECTS Suggests to be absent;
+#                                  without it their absence is a WARNING
+#   * VignetteBuilder packages installed explicitly, read out of DESCRIPTION --
+#     R keeps them visible so vignettes can be re-built, and `NA` would leave
+#     them uninstalled ("vignette builder 'knitr' not found")
+#
+# p7zip is REQUIRED here, not incidental: .archiveExtractBinary() only reaches
+# the branch that shells out when Sys.which("7z") finds something, and
+# test-archiveExtractBinary.R skips itself when no 7z/unrar exists. Without it
+# this leg silently skips the very code path it was created to cover -- CRAN's
+# Fedora has 7z, which is why the bug fired there.
+#
+# R-RELEASE deliberately, not R-devel: that is already covered by the ubuntu and
+# Windows legs. An r-hub devel container was tried and failed building `lobstr`,
+# because its R-devel snapshot runs ahead of CRAN's -- upstream churn unrelated
+# to this package, and a leg that reddens for reasons nobody here can fix is
+# worse than no leg at all.
+
+name: R-CMD-check-fedora
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fedora:
+    runs-on: ubuntu-latest
+    container: fedora:41
+    name: fedora (R-release, no-suggests)
+
+    env:
+      # check expects only hard dependencies; without this, absent Suggests are
+      # reported as a WARNING rather than being the point of the leg
+      _R_CHECK_DEPENDS_ONLY_: true
+
+    steps:
+      - name: Install R and build tools
+        run: |
+          dnf -y install --setopt=install_weak_deps=False \
+            R-core R-core-devel gcc gcc-c++ gfortran make \
+            git tar which libcurl-devel openssl-devel libxml2-devel \
+            glibc-langpack-en pandoc qpdf ghostscript \
+            p7zip p7zip-plugins
+          R --version
+
+      - uses: actions/checkout@v4
+
+      # Read the VignetteBuilder packages out of DESCRIPTION rather than
+      # hard-coding knitr/rmarkdown, exactly as the shared workflow does.
+      - name: Resolve VignetteBuilder packages
+        id: vignette-builder
+        shell: bash
+        run: |
+          pkgs=$(Rscript -e 'd <- read.dcf("DESCRIPTION"); vb <- if ("VignetteBuilder" %in% colnames(d)) d[1, "VignetteBuilder"] else ""; vb <- trimws(unlist(strsplit(vb, ","))); vb <- vb[nzchar(vb)]; if (length(vb)) cat(paste0("any::", vb), sep = "\n")')
+          echo "VignetteBuilder packages: ${pkgs:-<none>}"
+          {
+            echo "packages<<__EOF__"
+            printf '%s\n' "$pkgs"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      # testthat is a Suggests, so `dependencies: NA` leaves it out and
+      # tests/test-all.R dies at its bare `library(testthat)`: the suite is
+      # skipped entirely and the leg goes green having checked nothing. The
+      # ubuntu nosuggests leg gets testthat from RSPM incidentally; this
+      # container does not, so it is named explicitly below. Do not remove.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          pak-version: stable
+          dependencies: 'NA'
+          extra-packages: |
+            any::rcmdcheck
+            any::testthat
+            ${{ steps.vignette-builder.outputs.packages }}
+          cache: always
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
+          error-on: '"warning"'
+          upload-snapshots: true
