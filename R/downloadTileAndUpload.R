@@ -958,19 +958,42 @@ numCoresToUse <- function(min = 2, max = NULL) {
   if (!file.exists(remoteHashFile)) return(NULL)
   txt <- try(readLines(remoteHashFile, warn = FALSE), silent = TRUE)
   if (is(txt, "try-error") || !length(txt)) return(NULL)
-  line <- txt[[1L]]
-  if (grepl(":", line, fixed = TRUE)) {
+  txt <- txt[nzchar(txt)]
+  if (!length(txt)) return(NULL)
+
+  splitLine <- function(line) {
+    if (!grepl(":", line, fixed = TRUE)) return(NULL)
     parts <- strsplit(line, ":", fixed = TRUE)[[1L]]
-    if (length(parts) >= 2L)
-      return(list(algorithm = parts[[1L]],
-                  hash      = paste(parts[-1L], collapse = ":")))
+    if (length(parts) < 2L) return(NULL)
+    list(key = parts[[1L]], value = paste(parts[-1L], collapse = ":"))
   }
+
+  entries <- Filter(Negate(is.null), lapply(txt, splitLine))
+  keys <- vapply(entries, `[[`, character(1), "key")
+
+  etag <- NULL
+  whEtag <- which(keys == "etag")
+  if (length(whEtag)) etag <- entries[[whEtag[[1L]]]]$value
+
+  # the digest line is any keyed line that is not the etag
+  whDigest <- which(keys != "etag")
+  if (length(whDigest)) {
+    e <- entries[[whDigest[[1L]]]]
+    return(list(algorithm = e$key, hash = e$value, etag = etag))
+  }
+  if (!is.null(etag)) {
+    # ETag only: keep algorithm/hash populated so callers that predate the
+    # `etag` field continue to behave as they did.
+    return(list(algorithm = "etag", hash = etag, etag = etag))
+  }
+
   # Legacy single-hash sidecar: infer algorithm from hash length.
-  list(algorithm = .classifyRemoteHashAlgo(line), hash = line)
+  line <- txt[[1L]]
+  list(algorithm = .classifyRemoteHashAlgo(line), hash = line, etag = NULL)
 }
 
 makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
-                               algorithm = NULL, write = FALSE) {
+                               algorithm = NULL, write = FALSE, etag = NULL) {
   url_no_protocol <- sub("^https?://", "", url)
   # Replace all slashes with underscores
   urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
@@ -979,12 +1002,27 @@ makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
   # match `Shapefile1.zip_drive.google.com_..._.hash` and inflate file counts).
   remoteHashFile <- file.path(destinationPath, paste0(".", urlWithUnderscores, ".hash"))
   if (isTRUE(write) && !file.exists(remoteHashFile)) {
-    if (is.null(algorithm) || is.na(algorithm) || !nzchar(algorithm)) {
+    # A digest and an ETag answer different questions, so record both when the
+    # remote offers both:
+    #   digest -- pins the bytes; can be recomputed locally to confirm that a
+    #             download was not corrupted, and compared to what the server
+    #             advertises later.
+    #   ETag   -- the server's own "you already have this" token; the only
+    #             thing that works when the digest is opaque, via If-None-Match.
+    lines <- character()
+    if (!is.null(algorithm) && !is.na(algorithm) && nzchar(algorithm) &&
+        !identical(algorithm, "etag")) {
+      lines <- c(lines, paste0(algorithm, ":", remoteHash))
+    } else if (is.null(algorithm) || is.na(algorithm) || !nzchar(algorithm)) {
       # Legacy callers: write hash-only line.
-      writeLines(remoteHash, remoteHashFile)
-    } else {
-      writeLines(paste0(algorithm, ":", remoteHash), remoteHashFile)
+      lines <- c(lines, remoteHash)
     }
+    if (!is.null(etag) && !is.na(etag) && nzchar(etag)) {
+      lines <- c(lines, paste0("etag:", etag))
+    } else if (identical(algorithm, "etag")) {
+      lines <- c(lines, paste0("etag:", remoteHash))
+    }
+    if (length(lines)) writeLines(lines, remoteHashFile)
   }
   return(remoteHashFile)
 }
@@ -1042,7 +1080,11 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     timestampOnline <- file$drive_resource[[1]]$modifiedTime
   }
 
-  if (missing(targetFile)) {
+  if (!isGDurl) {
+    # Always ask the remote, even when `targetFile` was supplied. The ETag and
+    # size are wanted for the sidecar regardless of whether the caller needed
+    # help naming the file -- and previously, supplying `targetFile` skipped
+    # this block entirely, leaving `remoteHash` undefined and erroring below.
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
     etagRaw <- httr2::resp_headers(response)[["etag"]]
     remoteHash <- etagRaw |>
@@ -1051,11 +1093,13 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     content_disposition <- httr2::resp_header(response, "content-disposition")
     fileSize <- httr2::resp_header(response, "content-length") |> as.numeric()
     timestampOnline <- httr2::resp_header(response, "Date")
-    if (isTRUE(!(is.na(content_disposition)))) {
-      targetFile <- sub('.*filename="([^"]+)".*', '\\1', content_disposition)
-    } else {
-      # Fallback: extract from URL
-      targetFile <- basename(url)
+    if (missing(targetFile)) {
+      if (isTRUE(!(is.na(content_disposition)))) {
+        targetFile <- sub('.*filename="([^"]+)".*', '\\1', content_disposition)
+      } else {
+        # Fallback: extract from URL
+        targetFile <- basename(url)
+      }
     }
   }
   remoteAlgorithm <- .classifyRemoteHashAlgo(remoteHash, isGDurl = isGDurl)

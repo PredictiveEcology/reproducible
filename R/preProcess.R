@@ -642,7 +642,11 @@ pp_remote_hash_check <- function(ctx) {
     isTRUE(suppressWarnings(file.size(remoteHashFileLocal)) > 0L)
 
   parsedSidecar <- if (haveSidecar) .parseRemoteHashFile(remoteHashFileLocal) else NULL
-  isEtagSidecar <- !is.null(parsedSidecar) && identical(parsedSidecar$algorithm, "etag")
+  # An ETag, when the sidecar has one, is the cheapest way to ask "is this still
+  # what I have?" -- the server answers with 304 and no body. A digest can
+  # answer the same question by comparison (Step 4b), and additionally pins the
+  # bytes, so both are recorded when the remote offers both.
+  sidecarEtag <- if (!is.null(parsedSidecar)) parsedSidecar$etag else NULL
 
   # Default is to TRUST an existing sidecar and do no network at all. That is
   # deliberate: a long-running simulation should not have its caches invalidated
@@ -667,8 +671,8 @@ pp_remote_hash_check <- function(ctx) {
   # an opaque cache validator that only the server can evaluate, via
   # `If-None-Match`. (Digest-backed sidecars are handled at Step 4b below,
   # which compares the recorded hash to what the server now advertises.)
-  if (isEtagSidecar) {
-    reval <- .remoteEtagRevalidate(ctx$url, parsedSidecar$hash)
+  if (!is.null(sidecarEtag) && nzchar(sidecarEtag)) {
+    reval <- .remoteEtagRevalidate(ctx$url, sidecarEtag)
     if (isFALSE(reval$unchanged)) {
       # remote really has changed -- carry the new ETag so pp_download records it
       ctx$remoteEtagToRecord <- reval$etag
@@ -939,7 +943,8 @@ pp_download <- function(ctx) {
           # makeRemoteHashFile() will not overwrite, so clear a stale one first
           if (file.exists(sidecar)) unlink(sidecar)
           makeRemoteHashFile(ctx$url, ctx$destinationPath, basename(dlFile[[1L]]),
-                             recHash, algorithm = recAlgo, write = TRUE)
+                             recHash, algorithm = recAlgo, write = TRUE,
+                             etag = if (haveStrong) meta$etag else NULL)
         }
       }
     }

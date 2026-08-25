@@ -2,12 +2,16 @@
 
 ## enhancements
 
-* `preProcess()` now writes the `.hash` sidecar on the first download, instead
-  of only on a later call that could re-verify the file locally. It records the
-  host's own content hash (md5/sha1/sha256) where there is one, falling back to
-  the opaque ETag otherwise. Hosts whose ETag is not a content hash — including
+* `preProcess()` writes the `.hash` sidecar on the first download, rather than
+  only on a later call that could re-verify the file locally. It records the
+  host's content hash (md5/sha1/sha256) *and* the ETag when both are offered:
+  the hash pins the bytes, the ETag is what the server can answer
+  `If-None-Match` against. Hosts whose ETag is not a content hash — including
   `raw.githubusercontent.com` — previously got no sidecar at all, so every call
   re-downloaded.
+* `getRemoteMetadata()` asks the remote even when `targetFile` is supplied, so
+  the ETag and size are available in that case too. Previously that argument
+  skipped the request entirely, leaving `remoteHash` undefined and erroring.
 * `options(reproducible.checkRemoteHash = TRUE)` revalidates such files with a
   conditional `If-None-Match` request: one round-trip, no download. If the
   remote is unreachable the local file is used. The default is still to trust

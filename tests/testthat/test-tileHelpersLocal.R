@@ -206,7 +206,8 @@ test_that("getTargetCRS takes the local-file branch and writes a hash sidecar", 
   ## Having resolved the CRS locally it records the remote hash for next time.
   hf <- makeRemoteHashFile(url, tmpdir, "src.tif", strrep("a", 32))
   expect_true(file.exists(hf))
-  expect_identical(.parseRemoteHashFile(hf), list(algorithm = "md5", hash = strrep("a", 32)))
+  expect_identical(.parseRemoteHashFile(hf),
+                   list(algorithm = "md5", hash = strrep("a", 32), etag = NULL))
 })
 
 test_that("checkHaveCorrectHashedVersion accepts a matching local hash", {

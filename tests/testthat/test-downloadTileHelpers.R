@@ -161,7 +161,8 @@ test_that(".parseRemoteHashFile reads both the current and legacy sidecar format
   ## Current format: "<algo>:<hash>".
   f1 <- file.path(tmpdir, "current.hash")
   writeLines("sha256:abc123", f1)
-  expect_identical(.parseRemoteHashFile(f1), list(algorithm = "sha256", hash = "abc123"))
+  expect_identical(.parseRemoteHashFile(f1),
+                   list(algorithm = "sha256", hash = "abc123", etag = NULL))
 
   ## A hash containing colons keeps them (only the first colon splits).
   f2 <- file.path(tmpdir, "colons.hash")
@@ -172,7 +173,7 @@ test_that(".parseRemoteHashFile reads both the current and legacy sidecar format
   f3 <- file.path(tmpdir, "legacy.hash")
   writeLines(strrep("a", 32), f3)
   expect_identical(.parseRemoteHashFile(f3),
-                   list(algorithm = "md5", hash = strrep("a", 32)))
+                   list(algorithm = "md5", hash = strrep("a", 32), etag = NULL))
 
   ## Empty file -> NULL rather than a malformed result.
   f4 <- file.path(tmpdir, "empty.hash")
@@ -197,7 +198,7 @@ test_that("makeRemoteHashFile builds a hidden sidecar and round-trips", {
                                 algorithm = "md5", write = TRUE)
   expect_true(file.exists(written))
   expect_identical(.parseRemoteHashFile(written),
-                   list(algorithm = "md5", hash = "deadbeef"))
+                   list(algorithm = "md5", hash = "deadbeef", etag = NULL))
 
   ## Without an algorithm -> legacy hash-only line.
   written2 <- makeRemoteHashFile(url, tmpdir, "other.tif", strrep("b", 40),
@@ -219,4 +220,30 @@ test_that("boundaryPolygon traces the raster edge", {
   ## The traced boundary spans the raster's own extent.
   expect_equal(as.vector(terra::ext(bp)), as.vector(terra::ext(r)), tolerance = 1e-8)
   expect_identical(terra::crs(bp), terra::crs(r))
+})
+
+test_that("a sidecar can record both a digest and an ETag", {
+  # They answer different questions: the digest pins the bytes (and can be
+  # recomputed locally to confirm a download was not corrupted), while the ETag
+  # is the server's own "you already have this" token, usable via If-None-Match
+  # even when it is opaque. Record both when the remote offers both.
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+
+  written <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                                algorithm = "md5", write = TRUE,
+                                etag = "W/\"opaque-token\"")
+  parsed <- .parseRemoteHashFile(written)
+
+  expect_identical(parsed$algorithm, "md5")
+  expect_identical(parsed$hash, strrep("d", 32))
+  expect_identical(parsed$etag, "W/\"opaque-token\"")
+
+  ## ETag only -> algorithm/hash stay populated so older callers still work
+  written2 <- makeRemoteHashFile(url, tmpdir, "other.tif", "W/\"only-etag\"",
+                                 algorithm = "etag", write = TRUE)
+  parsed2 <- .parseRemoteHashFile(written2)
+  expect_identical(parsed2$algorithm, "etag")
+  expect_identical(parsed2$hash, "W/\"only-etag\"")
+  expect_identical(parsed2$etag, "W/\"only-etag\"")
 })
