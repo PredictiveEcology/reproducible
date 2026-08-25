@@ -43,7 +43,13 @@ jobs:
   fedora:
     runs-on: ubuntu-latest
     container: fedora:41
-    name: fedora (R-release, no-suggests)
+    # Deliberately makes no claim about the R version: R comes from Fedora's
+    # own packages (`dnf install R-core`), so it is whatever that release of
+    # Fedora ships -- 4.4.3 on Fedora 41 today, and it moves on its own as
+    # Fedora updates or as the container tag is bumped. Naming a version here
+    # would go stale silently. The real version is echoed into the job summary
+    # below, and `R --version` is in the install step's log.
+    name: fedora (distro R, no-suggests)
 
     env:
       # check expects only hard dependencies; without this, absent Suggests are
@@ -64,6 +70,7 @@ jobs:
             glibc-langpack-en pandoc qpdf ghostscript \
             p7zip p7zip-plugins
           R --version
+          echo "R: $(R --version | head -1)" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/checkout@v4
 

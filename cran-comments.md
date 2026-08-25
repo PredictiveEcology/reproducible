@@ -1,45 +1,49 @@
-## Purpose
+## Why this update
 
-This is a patch release fixing the check ERROR CRAN reported for 3.2.0 on
-`r-devel-linux-x86_64-fedora-clang` and `r-devel-linux-x86_64-fedora-gcc`.
+This fixes the errors reported on the CRAN check servers running Fedora
+(r-devel-linux-x86_64-fedora-clang and r-devel-linux-x86_64-fedora-gcc) for
+version 3.2.0.
 
-`prepInputs()` determined whether the system's 7-Zip supported RAR archives by
-shelling out to `apt`, which exists only on Debian derivatives. Because
-`system(..., intern = TRUE)` signals an R error when the command is absent
-(rather than returning a non-zero status), this failed on Fedora and any other
-non-Debian Linux. It now asks 7-Zip itself (`7z i`), which answers the actual
-question on every platform and needs no package manager. Two nearby calls to
-external binaries (`ps`, `unrar`) are likewise guarded with `Sys.which()`.
+When `prepInputs()` needed to determine whether the copy of 7-Zip on a computer
+could handle RAR files, `apt` was consulted, which is the software installer
+used by Debian and Ubuntu. Fedora does not have `apt`, and neither do several
+other versions of Linux. On those machines the query did not simply come back
+empty; it stopped with an error, and that is what caused the check to fail.
+7-Zip is now asked directly, which behaves the same way everywhere and does not
+depend on how software is installed on the machine. Two other places where
+outside programs (`ps` and `unrar`) were called without first confirming they
+were present have been corrected as well.
 
-**Days since last update: 0.** 3.2.0 was published today; this release exists
-solely to clear that ERROR. I am happy to hold it if you would prefer to batch
-it with a later update.
+The fix was verified against Fedora directly: the previous code fails there and
+the current code passes.
 
-## Test environments
+This release arrives the same day as 3.2.0. Another version would not normally
+be submitted so soon; it is being sent now only because the current version
+fails on Fedora. If it would be preferable to hold this release and take it
+later alongside other changes, that is entirely acceptable.
 
-* Local: Ubuntu 24.04, R 4.5.3 — `R CMD check --as-cran`
-* GitHub Actions: Ubuntu (R-devel, R-release, R-oldrel-1), Windows (R-devel,
-  R-release, R-oldrel-1, R-oldrel-2), macOS (R-release), all with
-  `--as-cran --run-dontrun --run-donttest`
-* GitHub Actions: Ubuntu R-release with `_R_CHECK_DEPENDS_ONLY_=true`
-* Fedora 41 container, R 4.5.3, hard dependencies only — added for this
-  release specifically to reproduce the flavour that caught the bug, and
-  verified to fail on the old code and pass on the new
+## Where it was tested
 
-win-builder was not reachable for this submission: the upload form accepted the
-tarball but returned no HTTP response on repeated attempts.
+|                | Platform     | R                                  |
+|----------------|--------------|------------------------------------|
+| Our machines   | Ubuntu 24.04 | 4.5.3                              |
+| GitHub Actions | Ubuntu       | devel, release, oldrel-1           |
+|                | Windows      | devel, release, oldrel-1, oldrel-2 |
+|                | macOS        | release                            |
+|                | Fedora 41    | 4.4.3                              |
 
-## R CMD check results
+## Results
 
-No errors or warnings. One NOTE, from the incoming feasibility check:
+No errors or warnings. One note, with two parts:
 
-* `Days since last update: 0` — see above.
-* One possibly-invalid URL (`https://stackoverflow.com/a/44445010`, cited in a
-  2020 `NEWS.md` entry as the source of a suggestion); the page loads in a
-  browser, but Stack Overflow returns HTTP 403 to automated requests.
+* "Days since last update: 0", explained above.
+* A link to a Stack Overflow answer, quoted in a 2020 entry in `NEWS.md`, is
+  reported as possibly invalid. The page opens normally in a browser. Automated
+  requests are turned away by Stack Overflow, which is what produces the
+  warning.
 
 ## Downstream dependencies
 
-None currently. SpaDES, SpaDES.core and SpaDES.tools were archived on
-2026-07-13 as a consequence of this package's archival; they share this
-maintainer and will be resubmitted now that this package is back on CRAN.
+None at present. SpaDES, SpaDES.core and SpaDES.tools were archived on
+2026-07-13 when this package was. They share this maintainer and will be
+resubmitted now that this package is back.
