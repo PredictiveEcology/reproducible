@@ -101,3 +101,21 @@ jobs:
           args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
           error-on: '"warning"'
           upload-snapshots: true
+
+      # check-r-package ships its own "Show testthat output" step, but it looks
+      # for `testthat.Rout*` -- the conventional tests/testthat.R. This package
+      # drives its suite from tests/test-all.R, so that step matches nothing and
+      # silently emits an empty group. R CMD check only prints the testthat
+      # summary when tests FAIL, so on a green run the skip/pass counts were
+      # invisible: `Status: OK` looks identical whether 969 tests passed or the
+      # suite never ran. Cat whatever .Rout the test driver actually produced.
+      - name: Show test output
+        if: always()
+        shell: bash
+        run: |
+          find check -path '*/tests/*' \( -name '*.Rout' -o -name '*.Rout.fail' \) \
+            | while read -r f; do
+                echo "::group::$f"
+                cat "$f"
+                echo "::endgroup::"
+              done
