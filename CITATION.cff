@@ -8,7 +8,10 @@ message: 'To cite package "reproducible" in publications use:'
 type: software
 license: GPL-3.0-only
 title: 'reproducible: Enhance Reproducibility of R Code'
-version: 3.2.0
+version: 3.2.0.9000
+identifiers:
+- type: doi
+  value: 10.32614/CRAN.package.reproducible
 abstract: A collection of high-level, machine- and OS-independent tools for making
   reproducible and reusable content in R. The two workhorse functions are 'Cache()'
   and 'prepInputs()'. 'Cache()' allows for nested caching, is robust to environments
@@ -54,11 +57,12 @@ preferred-citation:
     email: ian.eddy@nrcan-rncan.gc.ca
     orcid: https://orcid.org/0000-0001-7397-2116
   year: '2026'
-  notes: R package version 3.2.0
+  notes: R package version 3.2.0.9000
   url: https://reproducible.predictiveecology.org
+repository: https://CRAN.R-project.org/package=reproducible
 repository-code: https://github.com/PredictiveEcology/reproducible
 url: https://reproducible.predictiveecology.org
-date-released: '2026-08-24'
+date-released: '2026-08-25'
 contact:
 - family-names: McIntire
   given-names: Eliot J B
