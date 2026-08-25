@@ -21,6 +21,9 @@ No errors or warnings. One NOTE, from the incoming feasibility check:
 
 * `New submission` and `Package was archived on CRAN` — expected for this
   resubmission.
+* One possibly-invalid URL (`https://stackoverflow.com/a/44445010`, cited in a
+  2020 `NEWS.md` entry as the source of a suggestion); the page loads in a
+  browser, but Stack Overflow returns HTTP 403 to automated requests.
 * `Possibly misspelled words in DESCRIPTION: checksums`. This is spelled
   correctly; it is the standard term for the file digests the package compares.
 
