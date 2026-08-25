@@ -49,6 +49,11 @@ jobs:
       # check expects only hard dependencies; without this, absent Suggests are
       # reported as a WARNING rather than being the point of the leg
       _R_CHECK_DEPENDS_ONLY_: true
+      # Match the ubuntu no-suggests leg. Without this, `skip_on_cran()` fires
+      # and ~120 test blocks never run here, making this leg a strict subset of
+      # ubuntu's -- it could not catch a Fedora-specific bug sitting behind one
+      # of them. The Suggests-gated skips are unaffected either way.
+      NOT_CRAN: true
 
     steps:
       - name: Install R and build tools
