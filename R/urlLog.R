@@ -452,3 +452,92 @@ clearUrlLog <- function() {
   }
   invisible()
 }
+
+#' Re-check downloaded files against their remote sources
+#'
+#' Walks the `.hash` sidecars written by [preProcess()] under `path`, asks each
+#' recorded URL whether the file has changed, and removes the sidecars of those
+#' that have. Nothing is downloaded here: the next ordinary
+#' [preProcess()]/[prepInputs()] call re-fetches exactly the files whose
+#' sidecar was removed, and leaves the rest alone.
+#'
+#' @details
+#' This exists so that re-checking is something a user *does*, occasionally and
+#' deliberately, rather than a mode that gets switched on and forgotten.
+#' `options(reproducible.checkRemoteHash = TRUE)` is sticky — set once in a
+#' project's setup and every run pays for it forever — whereas this is a single
+#' action with no lasting state.
+#'
+#' How each file is checked depends on what its sidecar holds:
+#' an ETag is revalidated with a conditional `If-None-Match` request (one
+#' round-trip, no download); otherwise the recorded digest is compared with the
+#' hash the server currently advertises. Files whose remote cannot be reached
+#' are reported as `"unreachable"` and left untouched.
+#'
+#' Sidecars written before the URL was recorded have nothing to check against
+#' and are reported as `"noURL"`.
+#'
+#' @param path Directory to walk. Typically `inputPath(sim)` or
+#'   `outputPath(sim)`.
+#' @param recursive Logical; recurse into subdirectories. Default `TRUE`.
+#' @param dryRun Logical; if `TRUE`, report what would happen without removing
+#'   any sidecar. Default `FALSE`.
+#' @param verbose Numeric verbosity.
+#'
+#' @return Invisibly, a `data.frame` with one row per sidecar: `file`, `url`,
+#'   `status` (one of `"unchanged"`, `"changed"`, `"unreachable"`, `"noURL"`)
+#'   and `sidecar`.
+#'
+#' @export
+#' @examples
+#' \donttest{
+#' # after a run, ask which inputs have changed upstream
+#' revalidateRemotes(tempdir(), dryRun = TRUE)
+#' }
+revalidateRemotes <- function(path = ".", recursive = TRUE, dryRun = FALSE,
+                              verbose = getOption("reproducible.verbose")) {
+  sidecars <- dir(path, pattern = "\\.hash$", all.files = TRUE,
+                  full.names = TRUE, recursive = recursive)
+
+  empty <- data.frame(file = character(), url = character(),
+                      status = character(), sidecar = character(),
+                      stringsAsFactors = FALSE)
+  if (!length(sidecars)) return(invisible(empty))
+
+  rows <- lapply(sidecars, function(sc) {
+    parsed <- .parseRemoteHashFile(sc)
+    mkRow <- function(status, url = NA_character_)
+      data.frame(file = basename(sc), url = url, status = status,
+                 sidecar = sc, stringsAsFactors = FALSE)
+
+    if (is.null(parsed) || is.null(parsed$url) || !nzchar(parsed$url))
+      return(mkRow("noURL"))
+
+    url <- parsed$url
+    status <- if (!is.null(parsed$etag) && nzchar(parsed$etag)) {
+      reval <- .remoteEtagRevalidate(url, parsed$etag)
+      if (isTRUE(reval$unchanged)) "unchanged"
+      else if (isFALSE(reval$unchanged)) "changed"
+      else "unreachable"
+    } else {
+      meta <- tryCatch(getRemoteMetadata(url = url), error = function(e) NULL)
+      if (is.null(meta) || is.null(meta$remoteHash)) "unreachable"
+      else if (identical(tolower(as.character(meta$remoteHash)),
+                         tolower(as.character(parsed$hash)))) "unchanged"
+      else "changed"
+    }
+
+    if (identical(status, "changed") && !isTRUE(dryRun)) unlink(sc)
+    mkRow(status, url)
+  })
+
+  out <- do.call(rbind, rows)
+  nChanged <- sum(out$status == "changed")
+  messagePreProcess(
+    "revalidateRemotes: ", NROW(out), " sidecar(s); ", nChanged, " changed",
+    if (nChanged && !isTRUE(dryRun)) " (sidecars removed; next call re-downloads)"
+    else if (nChanged) " (dryRun: nothing removed)" else "",
+    verbose = verbose
+  )
+  invisible(out)
+}

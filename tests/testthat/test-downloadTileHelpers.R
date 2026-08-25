@@ -162,7 +162,7 @@ test_that(".parseRemoteHashFile reads both the current and legacy sidecar format
   f1 <- file.path(tmpdir, "current.hash")
   writeLines("sha256:abc123", f1)
   expect_identical(.parseRemoteHashFile(f1),
-                   list(algorithm = "sha256", hash = "abc123", etag = NULL))
+                   list(algorithm = "sha256", hash = "abc123", etag = NULL, url = NULL))
 
   ## A hash containing colons keeps them (only the first colon splits).
   f2 <- file.path(tmpdir, "colons.hash")
@@ -173,7 +173,7 @@ test_that(".parseRemoteHashFile reads both the current and legacy sidecar format
   f3 <- file.path(tmpdir, "legacy.hash")
   writeLines(strrep("a", 32), f3)
   expect_identical(.parseRemoteHashFile(f3),
-                   list(algorithm = "md5", hash = strrep("a", 32), etag = NULL))
+                   list(algorithm = "md5", hash = strrep("a", 32), etag = NULL, url = NULL))
 
   ## Empty file -> NULL rather than a malformed result.
   f4 <- file.path(tmpdir, "empty.hash")
@@ -198,12 +198,14 @@ test_that("makeRemoteHashFile builds a hidden sidecar and round-trips", {
                                 algorithm = "md5", write = TRUE)
   expect_true(file.exists(written))
   expect_identical(.parseRemoteHashFile(written),
-                   list(algorithm = "md5", hash = "deadbeef", etag = NULL))
+                   list(algorithm = "md5", hash = "deadbeef", etag = NULL, url = url))
 
   ## Without an algorithm -> legacy hash-only line.
   written2 <- makeRemoteHashFile(url, tmpdir, "other.tif", strrep("b", 40),
                                  write = TRUE)
-  expect_identical(readLines(written2, warn = FALSE), strrep("b", 40))
+  ## legacy hash-only line, now followed by the url that produced it
+  expect_identical(readLines(written2, warn = FALSE)[[1L]], strrep("b", 40))
+  expect_identical(.parseRemoteHashFile(written2)$url, url)
   expect_identical(.parseRemoteHashFile(written2)$algorithm, "sha1")
 })
 
@@ -246,4 +248,95 @@ test_that("a sidecar can record both a digest and an ETag", {
   expect_identical(parsed2$algorithm, "etag")
   expect_identical(parsed2$hash, "W/\"only-etag\"")
   expect_identical(parsed2$etag, "W/\"only-etag\"")
+})
+
+test_that("sidecar names are not lossy: different URLs get different files", {
+  # The old scheme dropped the scheme and turned every "/" into "_", so
+  # `my_data/sub_dir` and `my/data/sub/dir` collided -- two different URLs
+  # sharing one sidecar, and therefore one ETag.
+  testInit(verbose = -1)
+  f <- getFromNamespace(".remoteHashFilePath", "reproducible")
+
+  a <- f("https://example.com/my_data/sub_dir/DEM.tif", tmpdir, "DEM.tif")
+  b <- f("https://example.com/my/data/sub/dir/DEM.tif", tmpdir, "DEM.tif")
+  cc <- f("http://example.com/my_data/sub_dir/DEM.tif", tmpdir, "DEM.tif")
+
+  expect_false(identical(a, b))   # "/" vs "_" no longer ambiguous
+  expect_false(identical(a, cc))  # scheme is part of the identity
+  expect_identical(a, f("https://example.com/my_data/sub_dir/DEM.tif", tmpdir, "DEM.tif"))
+})
+
+test_that("a legacy-named sidecar is still found", {
+  # Existing caches must not be invalidated by the rename.
+  testInit(verbose = -1)
+  legacyPath <- getFromNamespace(".legacyRemoteHashFilePath", "reproducible")
+  findIt <- getFromNamespace(".findRemoteHashFile", "reproducible")
+
+  url <- "https://example.com/data/DEM.tif"
+  leg <- legacyPath(url, tmpdir, "DEM.tif")
+  writeLines("md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", leg)
+
+  expect_identical(findIt(url, tmpdir, "DEM.tif"), leg)
+  expect_identical(.parseRemoteHashFile(findIt(url, tmpdir, "DEM.tif"))$algorithm, "md5")
+})
+
+test_that("the sidecar records the URL it came from", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  written <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                                algorithm = "md5", write = TRUE,
+                                etag = "W/\"tok\"")
+  parsed <- .parseRemoteHashFile(written)
+  expect_identical(parsed$url, url)
+  expect_identical(parsed$hash, strrep("d", 32))
+  expect_identical(parsed$etag, "W/\"tok\"")
+})
+
+test_that("revalidateRemotes removes only the sidecars whose remote changed", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  ## unchanged -> kept
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = TRUE, etag = "W/\"tok\""),
+    { res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1)) }
+  )
+  expect_identical(res$status, "unchanged")
+  expect_true(file.exists(sc))
+
+  ## unreachable -> kept, reported
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = NA, etag = NULL),
+    { res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1)) }
+  )
+  expect_identical(res$status, "unreachable")
+  expect_true(file.exists(sc))
+
+  ## changed, dryRun -> reported but kept
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(revalidateRemotes(tmpdir, dryRun = TRUE, verbose = -1)) }
+  )
+  expect_identical(res$status, "changed")
+  expect_true(file.exists(sc))
+
+  ## changed -> removed, so the next preProcess() re-downloads just this one
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1)) }
+  )
+  expect_identical(res$status, "changed")
+  expect_false(file.exists(sc))
+})
+
+test_that("revalidateRemotes reports sidecars that predate the recorded URL", {
+  testInit(verbose = -1)
+  sc <- file.path(tmpdir, ".old_deadbeef.hash")
+  writeLines("md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", sc)
+
+  res <- suppressMessages(revalidateRemotes(tmpdir, verbose = -1))
+  expect_identical(res$status, "noURL")
+  expect_true(file.exists(sc))    # nothing to check against -> left alone
 })

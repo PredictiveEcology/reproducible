@@ -12,6 +12,17 @@
 * `getRemoteMetadata()` asks the remote even when `targetFile` is supplied, so
   the ETag and size are available in that case too. Previously that argument
   skipped the request entirely, leaving `remoteHash` undefined and erroring.
+* The sidecar records the URL it came from, and its filename now ends in a
+  digest of that URL. The previous name dropped the scheme and flattened every
+  `/` to `_`, so `example.com/my_data/sub_dir` and `example.com/my/data/sub/dir`
+  shared one file. Names stay human-readable; sidecars written by earlier
+  versions are still found.
+* New `revalidateRemotes()`: walk a directory, ask each recorded URL whether it
+  has changed, and drop the sidecars of those that have, so the next call
+  re-downloads only those. Nothing is downloaded by the call itself. This is
+  the intended way to re-check — a deliberate action rather than
+  `options(reproducible.checkRemoteHash = TRUE)`, which is easy to set once and
+  forget. See `?revalidateRemotes`.
 * `options(reproducible.checkRemoteHash = TRUE)` revalidates such files with a
   conditional `If-None-Match` request: one round-trip, no download. If the
   remote is unreachable the local file is used. The default is still to trust

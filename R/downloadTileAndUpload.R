@@ -975,32 +975,76 @@ numCoresToUse <- function(min = 2, max = NULL) {
   whEtag <- which(keys == "etag")
   if (length(whEtag)) etag <- entries[[whEtag[[1L]]]]$value
 
-  # the digest line is any keyed line that is not the etag
-  whDigest <- which(keys != "etag")
+  url <- NULL
+  whUrl <- which(keys == "url")
+  if (length(whUrl)) url <- entries[[whUrl[[1L]]]]$value
+
+  # the digest line is any keyed line that is neither the etag nor the url
+  whDigest <- which(!keys %in% c("etag", "url"))
   if (length(whDigest)) {
     e <- entries[[whDigest[[1L]]]]
-    return(list(algorithm = e$key, hash = e$value, etag = etag))
+    return(list(algorithm = e$key, hash = e$value, etag = etag, url = url))
   }
   if (!is.null(etag)) {
     # ETag only: keep algorithm/hash populated so callers that predate the
     # `etag` field continue to behave as they did.
-    return(list(algorithm = "etag", hash = etag, etag = etag))
+    return(list(algorithm = "etag", hash = etag, etag = etag, url = url))
   }
 
   # Legacy single-hash sidecar: infer algorithm from hash length.
   line <- txt[[1L]]
-  list(algorithm = .classifyRemoteHashAlgo(line), hash = line, etag = NULL)
+  list(algorithm = .classifyRemoteHashAlgo(line), hash = line, etag = NULL, url = url)
+}
+
+# Path of the sidecar for (url, targetFile).
+#
+# The URL is reduced to a short digest rather than flattened into the filename.
+# The old scheme dropped the protocol and turned every "/" into "_", so
+# `example.com/my_data/sub_dir` and `example.com/my/data/sub/dir` produced the
+# SAME filename -- two different URLs sharing one sidecar. Digesting the whole
+# URL (scheme included) is collision-free in practice, and the URL itself is
+# now recorded inside the file, so the name no longer has to be reversible.
+.remoteHashFilePath <- function(url, destinationPath, targetFile) {
+  url <- as.character(url)
+  # Readable part: the URL minus its scheme, with anything filesystem-unfriendly
+  # collapsed to "_", and truncated so long URLs cannot blow the 255-byte
+  # filename limit. This is for a human reading a directory listing.
+  readable <- sub("^[a-zA-Z][a-zA-Z0-9+.-]*://", "", url)
+  readable <- gsub("[^A-Za-z0-9._-]+", "_", readable)
+  readable <- gsub("_+", "_", readable)
+  readable <- sub("_$", "", substr(readable, 1L, 80L))
+  # Uniqueness comes from the digest of the WHOLE url, so truncation, sanitising
+  # and the dropped scheme cannot make two different URLs collide -- which is
+  # exactly what the previous flattened-only scheme did.
+  key <- substr(digest::digest(url, algo = "xxhash64"), 1L, 8L)
+  # Hide the sidecar with a leading "." so it doesn't show up in dir() listings
+  # (e.g. test patterns like `dir(tmpdir, pattern = "Shapefile")` would otherwise
+  # match `Shapefile1.zip_drive.google.com_..._.hash` and inflate file counts).
+  file.path(destinationPath,
+            paste0(".", basename(targetFile), "_", readable, "_", key, ".hash"))
+}
+
+# The pre-digest naming scheme. Retained for READING only, so sidecars written
+# by earlier versions are still found and existing caches are not invalidated.
+.legacyRemoteHashFilePath <- function(url, destinationPath, targetFile) {
+  url_no_protocol <- sub("^https?://", "", url)
+  urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
+  file.path(destinationPath, paste0(".", urlWithUnderscores, ".hash"))
+}
+
+# Resolve which sidecar to read: the current name if present, else a legacy one.
+# Returns the current path when neither exists, so callers can write to it.
+.findRemoteHashFile <- function(url, destinationPath, targetFile) {
+  cur <- .remoteHashFilePath(url, destinationPath, targetFile)
+  if (file.exists(cur)) return(cur)
+  leg <- .legacyRemoteHashFilePath(url, destinationPath, targetFile)
+  if (file.exists(leg)) return(leg)
+  cur
 }
 
 makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
                                algorithm = NULL, write = FALSE, etag = NULL) {
-  url_no_protocol <- sub("^https?://", "", url)
-  # Replace all slashes with underscores
-  urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
-  # Hide the sidecar with a leading "." so it doesn't show up in dir() listings
-  # (e.g. test patterns like `dir(tmpdir, pattern = "Shapefile")` would otherwise
-  # match `Shapefile1.zip_drive.google.com_..._.hash` and inflate file counts).
-  remoteHashFile <- file.path(destinationPath, paste0(".", urlWithUnderscores, ".hash"))
+  remoteHashFile <- .findRemoteHashFile(url, destinationPath, targetFile)
   if (isTRUE(write) && !file.exists(remoteHashFile)) {
     # A digest and an ETag answer different questions, so record both when the
     # remote offers both:
@@ -1022,6 +1066,11 @@ makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
     } else if (identical(algorithm, "etag")) {
       lines <- c(lines, paste0("etag:", remoteHash))
     }
+    # Record the URL so the sidecar is self-describing: the filename is a
+    # digest and cannot be inverted, and a durable record of "this file came
+    # from this URL" is what makes revalidateRemotes() possible.
+    if (length(lines) && !is.null(url) && isTRUE(nzchar(url)))
+      lines <- c(lines, paste0("url:", url))
     if (length(lines)) writeLines(lines, remoteHashFile)
   }
   return(remoteHashFile)
