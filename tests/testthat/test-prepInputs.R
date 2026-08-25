@@ -20,7 +20,7 @@ test_that("prepInputs doesn't work (part 1)", {
     ## Add a study area to Crop and Mask to
     coords <- structure(
       c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-      .Dim = c(5L, 2L)
+      dim = c(5L, 2L)
     )
     StudyArea <- terra::vect(coords, "polygons")
     terra::crs(StudyArea) <- crsToUse
@@ -1252,7 +1252,7 @@ test_that("prepInputs when fun = NA", {
   )
 
   globalNoisy <- capture.output({
-    coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), .Dim = c(5L, 2L))
+    coords <- structure(c(6, 6.1, 6.2, 6.15, 6, 49.5, 49.7, 49.8, 49.6, 49.5), dim = c(5L, 2L))
     StudyArea <- terra::vect(coords, "polygons")
     terra::crs(StudyArea) <- crsToUse
 

@@ -32,13 +32,13 @@ test_that("test miscellaneous unit tests cache-helpers", {
 
   # studyAreaName with SPDF/SP
   # coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-  #                     .Dim = c(5L, 2L))
+  #                     dim = c(5L, 2L))
   # Sr1 <- Polygon(coords)
   # Srs1 <- Polygons(list(Sr1), "s1")
   # StudyArea <- SpatialPolygons(list(Srs1), 1L)
 
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-    .Dim = c(5L, 2L)
+    dim = c(5L, 2L)
   )
   StudyArea <- terra::vect(coords, "polygons")
   terra::crs(StudyArea) <- crsToUse

@@ -242,7 +242,7 @@ utils::globalVariables(c(
 #'   withr::local_dir(withr::local_tempdir())
 #'   # Make a dummy study area map -- user would supply this normally
 #'   coords <- structure(c(-122.9, -116.1, -99.2, -106, -122.9, 59.9, 65.7, 63.6, 54.8, 59.9),
-#'     .Dim = c(5L, 2L)
+#'     dim = c(5L, 2L)
 #'   )
 #'   studyArea <- terra::vect(coords, "polygons")
 #'   terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
@@ -312,7 +312,7 @@ utils::globalVariables(c(
 #'     # Add a study area to Crop and Mask to
 #'     # Create a "study area"
 #'     coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-#'       .Dim = c(5L, 2L)
+#'       dim = c(5L, 2L)
 #'     )
 #'     studyArea <- terra::vect(coords, "polygons")
 #'     terra::crs(studyArea) <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"

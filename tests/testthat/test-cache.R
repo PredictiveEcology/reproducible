@@ -1539,10 +1539,10 @@ test_that("test cache; new approach to match.call, postProcess", {
   # Add a study area to Crop and Mask to
   # Create a "study area"
   coords <- structure(c(-122.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                      .Dim = c(5L, 2L)
+                      dim = c(5L, 2L)
   )
   coords2 <- structure(c(-115.98, -116.1, -99.2, -106, -122.98, 59.9, 65.73, 63.58, 54.79, 59.9),
-                       .Dim = c(5L, 2L)
+                       dim = c(5L, 2L)
   )
 
   StudyArea <- terra::vect(coords, "polygons")
