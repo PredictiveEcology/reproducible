@@ -6,11 +6,19 @@
 # and Debian/Ubuntu has apt, so all nine legs of the usual matrix were green.
 # One non-Debian Linux leg would have caught it on the PR.
 #
-# Deliberately cheap: reproducible's heavy dependencies (terra, sf, raster) are
-# Suggests, so this installs hard dependencies only. Fedora has no P3M binaries,
-# and building the geospatial stack from source here would cost far more than
-# this leg is worth -- the failure class it targets (shelling out to a missing
-# binary) needs none of it.
+# Deliberately R-RELEASE, not R-devel. This leg exists to vary ONE thing -- the
+# distribution -- so it catches "we shelled out to a binary that is not here".
+# R-devel is already covered by the ubuntu and Windows legs, and an r-hub devel
+# container was tried first: it failed building `lobstr`, because its R-devel
+# snapshot runs ahead of CRAN's and `R_envSymbols()` had changed. That is
+# upstream churn unrelated to this package, and a leg that reddens for reasons
+# no one here can fix is worse than no leg at all.
+#
+# Also deliberately cheap: terra, sf and raster are Suggests, so hard
+# dependencies only. Fedora has no P3M binaries and building the geospatial
+# stack from source would cost far more than this leg is worth -- the failure
+# class it targets needs none of it. Same dependency scope as the existing
+# `nosuggests` matrix leg, which has long run green.
 
 name: R-CMD-check-fedora
 
@@ -27,19 +35,23 @@ concurrency:
 jobs:
   fedora:
     runs-on: ubuntu-latest
-    # Fedora with R preinstalled, maintained by r-hub for exactly this purpose.
-    container: ghcr.io/r-hub/containers/gcc14:latest
-    name: fedora (hard deps only)
+    container: fedora:41
+    name: fedora (R-release, hard deps only)
 
     steps:
-      # r-hub's checkout, not actions/checkout: these containers are built for
-      # this and the r-hub action handles their node/glibc expectations.
-      - uses: r-hub/actions/checkout@v1
+      - name: Install R and build tools
+        run: |
+          dnf -y install --setopt=install_weak_deps=False \
+            R-core R-core-devel gcc gcc-c++ gfortran make \
+            git tar which libcurl-devel openssl-devel libxml2-devel
+          R --version
+
+      - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # hard deps only; testthat and rcmdcheck added explicitly so the
-          # tests actually run rather than being skipped wholesale.
+          # hard deps only; testthat and rcmdcheck added explicitly so the tests
+          # actually run rather than being skipped wholesale.
           dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
