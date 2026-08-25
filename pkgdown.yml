@@ -3,7 +3,7 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   Intro-to-Cache: Intro-to-Cache.html
-last_built: 2026-08-25T15:21Z
+last_built: 2026-08-25T19:22Z
 urls:
   reference: https://reproducible.predictiveecology.org/reference
   article: https://reproducible.predictiveecology.org/articles

@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.1</span>
       </span>
     </div>
 
@@ -64,9 +64,16 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.2.0.9000" id="reproducible-3209000">reproducible 3.2.0.9000<a class="anchor" aria-label="anchor" href="#reproducible-3209000"></a></h2>
-<ul><li>development version.</li>
+<h2 class="page-header" data-toc-text="3.2.1" id="reproducible-321">reproducible 3.2.1<a class="anchor" aria-label="anchor" href="#reproducible-321"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-3-2-1">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-3-2-1"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/prepInputs.html">prepInputs()</a></code> no longer errors on Linux distributions without <code>apt</code>.</strong> The check for RAR support shelled out to <code>apt</code>, which exists only on Debian/Ubuntu; <code>system(..., intern = TRUE)</code> <em>errors</em> rather than returning non-zero when a command is absent, so this failed on Fedora, RHEL, Arch and SUSE. CRAN’s <code>r-devel-linux-x86_64-fedora-{clang,gcc}</code> reported it as a check ERROR. It now asks <code>7z</code> itself (<code>7z i</code>), which answers the real question (“does this 7z support RAR?”) on every platform and needs no package manager.</li>
+<li>
+<code><a href="../reference/detectActiveCores.html">detectActiveCores()</a></code> no longer errors where <code>ps</code> is unavailable, and a missing <code>unrar</code> no longer fails silently: both now check for the binary with <code><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which()</a></code> before calling it.</li>
+<li>Guidance for installing an extraction binary now covers macOS (<code>brew install p7zip</code>) alongside Debian/Ubuntu and RHEL/Fedora.</li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="3.2.0" id="reproducible-320">reproducible 3.2.0<small>2026-08-25</small><a class="anchor" aria-label="anchor" href="#reproducible-320"></a></h2>
 <div class="section level3">
