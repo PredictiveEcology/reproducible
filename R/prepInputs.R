@@ -1438,29 +1438,17 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  ## Ask 7z itself whether it supports .rar -- `7z i` lists the compiled-in
-  ## codecs and formats -- instead of querying a package manager.
-  ##
-  ## This previously ran `apt -qq list p7zip-rar`, which was wrong three ways:
-  ## it answered a proxy question (is a Debian package installed) rather than
-  ## the real one; its advice is meaningless off Debian/Ubuntu; and
-  ## system(intern = TRUE) *errors* when the command does not exist, so it blew
-  ## up wherever `apt` is absent. Gating it by OS did not help -- "Linux" is not
-  ## "has apt" (Fedora, RHEL, Arch, SUSE) -- and that is exactly how 3.2.0
-  ## reached CRAN with a test ERROR on r-devel-linux-x86_64-fedora-{clang,gcc}.
-  ## `extractSystemCallPath` came from Sys.which(), so this call cannot hit that
-  ## failure mode.
-  if (grepl("7z", extractSystemCallPath)) {
-    sevenZipInfo <- tryCatch(
-      system(paste0("\"", extractSystemCallPath, "\" i"),
-             intern = TRUE, ignore.stderr = TRUE),
-      error = function(e) character(0),
-      warning = function(w) character(0)
-    )
-    ## only advise when 7z answered AND reported no Rar codec; an empty result
-    ## means we could not tell, which is not grounds for a message
-    if (length(sevenZipInfo) && !any(grepl("Rar", sevenZipInfo))) {
-      messagePreProcess(.message$sevenZipNoRar(), verbose = verbose)
+  ## TEMPORARY: deliberately reinstated pre-3.2.1 code, to prove this CI leg
+  ## catches the regression it was built for. `apt` does not exist on Fedora and
+  ## system(..., intern = TRUE) errors on a missing command.
+  if (isLinux()) {
+    if (grepl("7z", extractSystemCallPath)) {
+      SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
+      SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
+      if (isFALSE(SevenZrarExists)) {
+        messagePreProcess("To extract .rar files, you will need p7zip-rar, not just p7zip-full.",
+                          verbose = verbose)
+      }
     }
   }
 
