@@ -1,17 +1,14 @@
-# --------------------------------------------
-# CITATION file created with {cffr} R package
+# ------------------------------------------------
+# CITATION.cff file created with {cffr} R package
 # See also: https://docs.ropensci.org/cffr/
-# --------------------------------------------
+# ------------------------------------------------
  
 cff-version: 1.2.0
 message: 'To cite package "reproducible" in publications use:'
 type: software
 license: GPL-3.0-only
 title: 'reproducible: Enhance Reproducibility of R Code'
-version: 3.1.1
-identifiers:
-- type: doi
-  value: 10.32614/CRAN.package.reproducible
+version: 3.2.0
 abstract: A collection of high-level, machine- and OS-independent tools for making
   reproducible and reusable content in R. The two workhorse functions are 'Cache()'
   and 'prepInputs()'. 'Cache()' allows for nested caching, is robust to environments
@@ -57,12 +54,11 @@ preferred-citation:
     email: ian.eddy@nrcan-rncan.gc.ca
     orcid: https://orcid.org/0000-0001-7397-2116
   year: '2026'
-  notes: R package version 3.1.1
+  notes: R package version 3.2.0
   url: https://reproducible.predictiveecology.org
-repository: https://CRAN.R-project.org/package=reproducible
 repository-code: https://github.com/PredictiveEcology/reproducible
 url: https://reproducible.predictiveecology.org
-date-released: '2026-05-17'
+date-released: '2026-08-24'
 contact:
 - family-names: McIntire
   given-names: Eliot J B
@@ -167,7 +163,7 @@ references:
   title: fpCompare
   abstract: 'fpCompare: Reliable Comparison of Floating Point Numbers'
   notes: Imports
-  url: https://github.com/PredictiveEcology/fpCompare
+  url: https://fpcompare.predictiveecology.org
   repository: https://CRAN.R-project.org/package=fpCompare
   authors:
   - family-names: Chubaty
@@ -191,6 +187,22 @@ references:
     given-names: Gábor
   year: '2026'
   doi: 10.32614/CRAN.package.fs
+- type: software
+  title: lifecycle
+  abstract: 'lifecycle: Manage the Life Cycle of your Package Functions'
+  notes: Imports
+  url: https://lifecycle.r-lib.org/
+  repository: https://CRAN.R-project.org/package=lifecycle
+  authors:
+  - family-names: Henry
+    given-names: Lionel
+    email: lionel@posit.co
+  - family-names: Wickham
+    given-names: Hadley
+    email: hadley@posit.co
+    orcid: https://orcid.org/0000-0003-4757-117X
+  year: '2026'
+  doi: 10.32614/CRAN.package.lifecycle
 - type: software
   title: lobstr
   abstract: 'lobstr: Visualize R Data Structures with Trees'
@@ -463,6 +475,7 @@ references:
   title: RCurl
   abstract: 'RCurl: General Network (HTTP/FTP/...) Client Interface for R'
   notes: Suggests
+  url: https://codeberg.org/aitap/RCurl
   repository: https://CRAN.R-project.org/package=RCurl
   authors:
   - family-names: Temple Lang
@@ -618,8 +631,14 @@ references:
     given-names: Andrew
     orcid: https://orcid.org/0000-0002-4565-533X
   - family-names: Barbosa
-    given-names: Márcia
+    given-names: A. Márcia
     orcid: https://orcid.org/0000-0001-8972-7713
+  - family-names: Cordano
+    given-names: Emanuele
+    orcid: https://orcid.org/0000-0002-3508-5898
+  - family-names: Dyba
+    given-names: Krzysztof
+    orcid: https://orcid.org/0000-0002-8614-3816
   year: '2026'
   doi: 10.32614/CRAN.package.terra
   version: '>= 1.7-20'
