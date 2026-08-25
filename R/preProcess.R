@@ -909,27 +909,39 @@ pp_download <- function(ctx) {
   # are the remote representation at this moment, so the ETag is trustworthy
   # without digesting anything -- which is the only way to obtain a sidecar for
   # a server whose ETag is opaque (e.g. raw.githubusercontent.com).
+  # Record what the remote said about this file, next to the freshly downloaded
+  # bytes. On a first download pp_remote_hash_check() returned before ever
+  # contacting the remote (there was no local file to compare), so nothing is on
+  # hand; one HEAD beside a completed download is negligible.
+  #
+  # Prefer the host's own content hash (md5/sha1/sha256 -- Google Drive's
+  # md5Checksum, or an ETag that IS a digest): it pins the bytes and can be
+  # verified locally later. Only when the remote offers nothing verifiable does
+  # this fall back to recording the opaque ETag, which can still be revalidated
+  # via If-None-Match but proves nothing on its own.
   if (!isTRUE(ctx$skipDownload) && !is.null(ctx$url) &&
       !grepl("^file://", ctx$url)) {
-    # On a first download there was no local file, so pp_remote_hash_check()
-    # returned before ever contacting the remote and no ETag is on hand. Fetch
-    # it now: one HEAD next to a completed download is negligible, and it is
-    # what lets every subsequent call revalidate instead of re-downloading.
-    if (is.null(ctx$remoteEtagToRecord) || !nzchar(ctx$remoteEtagToRecord))
-      ctx$remoteEtagToRecord <- tryCatch(getRemoteMetadata(url = ctx$url)$etag,
-                                         error = function(e) NULL)
-  }
-
-  if (!isTRUE(ctx$skipDownload) && !is.null(ctx$remoteEtagToRecord) &&
-      isTRUE(nzchar(ctx$remoteEtagToRecord))) {
     dlFile <- downloadFileResult$downloaded
     if (length(dlFile) && !is.na(dlFile[[1L]]) && file.exists(dlFile[[1L]])) {
-      sidecar <- makeRemoteHashFile(ctx$url, ctx$destinationPath,
-                                    basename(dlFile[[1L]]), "")
-      # makeRemoteHashFile() will not overwrite, so clear a stale one first
-      if (file.exists(sidecar)) unlink(sidecar)
-      makeRemoteHashFile(ctx$url, ctx$destinationPath, basename(dlFile[[1L]]),
-                         ctx$remoteEtagToRecord, algorithm = "etag", write = TRUE)
+      meta <- tryCatch(getRemoteMetadata(url = ctx$url), error = function(e) NULL)
+      if (!is.null(meta)) {
+        strongAlgo <- meta$remoteAlgorithm
+        haveStrong <- !is.null(strongAlgo) && nzchar(strongAlgo) &&
+          !identical(strongAlgo, "etag-opaque") &&
+          !is.null(meta$remoteHash) && isTRUE(nzchar(meta$remoteHash))
+
+        recAlgo <- if (haveStrong) strongAlgo else "etag"
+        recHash <- if (haveStrong) meta$remoteHash else meta$etag
+
+        if (!is.null(recHash) && isTRUE(nzchar(recHash))) {
+          sidecar <- makeRemoteHashFile(ctx$url, ctx$destinationPath,
+                                        basename(dlFile[[1L]]), "")
+          # makeRemoteHashFile() will not overwrite, so clear a stale one first
+          if (file.exists(sidecar)) unlink(sidecar)
+          makeRemoteHashFile(ctx$url, ctx$destinationPath, basename(dlFile[[1L]]),
+                             recHash, algorithm = recAlgo, write = TRUE)
+        }
+      }
     }
   }
 

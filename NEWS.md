@@ -2,10 +2,12 @@
 
 ## enhancements
 
-* `preProcess()` records an opaque remote ETag in the `.hash` sidecar after a
-  download, so later calls skip the network instead of re-downloading. Affects
-  any host whose ETag is not a content hash, including
-  `raw.githubusercontent.com`, where no sidecar was written at all.
+* `preProcess()` now writes the `.hash` sidecar on the first download, instead
+  of only on a later call that could re-verify the file locally. It records the
+  host's own content hash (md5/sha1/sha256) where there is one, falling back to
+  the opaque ETag otherwise. Hosts whose ETag is not a content hash — including
+  `raw.githubusercontent.com` — previously got no sidecar at all, so every call
+  re-downloaded.
 * `options(reproducible.checkRemoteHash = TRUE)` revalidates such files with a
   conditional `If-None-Match` request: one round-trip, no download. If the
   remote is unreachable the local file is used. The default is still to trust
