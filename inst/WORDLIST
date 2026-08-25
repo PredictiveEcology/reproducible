@@ -19,6 +19,7 @@ CHECKSUMS
 CIFS
 CMD
 COG's
+CRAN's
 CacheDigest
 CacheRepo
 Checksumming
@@ -53,6 +54,8 @@ PRs
 Postgres
 Pre
 R6
+RAR
+RHEL
 RSQLite
 RasterLayer
 Rstudio

@@ -1,6 +1,19 @@
-# reproducible 3.2.0.9000
+# reproducible 3.2.1
 
-* development version.
+## bug fixes
+
+* **`prepInputs()` no longer errors on Linux distributions without `apt`.**
+  The check for RAR support shelled out to `apt`, which exists only on
+  Debian/Ubuntu; `system(..., intern = TRUE)` *errors* rather than returning
+  non-zero when a command is absent, so this failed on Fedora, RHEL, Arch and
+  SUSE. CRAN's `r-devel-linux-x86_64-fedora-{clang,gcc}` reported it as a check
+  ERROR. It now asks `7z` itself (`7z i`), which answers the real question
+  ("does this 7z support RAR?") on every platform and needs no package manager.
+* `detectActiveCores()` no longer errors where `ps` is unavailable, and a
+  missing `unrar` no longer fails silently: both now check for the binary with
+  `Sys.which()` before calling it.
+* Guidance for installing an extraction binary now covers macOS
+  (`brew install p7zip`) alongside Debian/Ubuntu and RHEL/Fedora.
 
 # reproducible 3.2.0
 

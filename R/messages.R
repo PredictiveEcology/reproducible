@@ -13,6 +13,36 @@
 .message$stopNeedArchive <- function(archive)
   paste0("Please install.packages('archive') to extract files from \n", archive)
 
+## Advice for installing an archive-extraction binary. Defined once: both the
+## "7z has no RAR codec" and the "no 7z/unrar at all" paths offer it, and the
+## two must not drift apart.
+.message$installArchiveBinary <- paste0(
+  "--------------------------\n",
+  "apt install p7zip p7zip-rar p7zip-full -y   ## Debian/Ubuntu\n",
+  "yum install p7zip p7zip-plugins -y          ## RHEL/Fedora\n",
+  "brew install p7zip                          ## macOS\n",
+  "--------------------------\n"
+)
+
+.message$sevenZipNoRarTxt <- "reports no RAR support, so .rar archives may not extract"
+
+.message$sevenZipNoRar <- function()
+  paste0("This '7z' ", .message$sevenZipNoRarTxt, ".\n",
+         "Install the p7zip RAR codec, or 'unrar':\n",
+         .message$installArchiveBinary)
+
+.message$missingUnrarTxt <-
+  "The archive is a 'rar' archive; your system does not have unrar or 7zip"
+
+## `withInstall = FALSE` for the call site that only states the problem.
+.message$missingUnrar <- function(withInstall = TRUE) {
+  m <- paste0(.message$missingUnrarTxt, ";\n")
+  if (isTRUE(withInstall)) {
+    m <- paste0(m, "Try installing with, e.g.,: \n", .message$installArchiveBinary)
+  }
+  m
+}
+
 .message$forkChildFailedTxt <- "some parallel workers failed; retrying those serially"
 
 .message$forkChildFailed <- function(n, what)

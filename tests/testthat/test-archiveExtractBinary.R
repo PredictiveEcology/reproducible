@@ -20,8 +20,9 @@ test_that(".archiveExtractBinary finds a system binary when one is installed", {
   testInit()
 
   ## The contract: an absolute path to something usable, or NULL. Never "".
-  ## On Linux this also walks the p7zip-rar advisory (an `apt` call, which is
-  ## why that block is guarded on isLinux() rather than !isWindows()).
+  ## Where 7z is the binary found, this also walks the RAR-codec advisory. That
+  ## used to shell out to `apt`, which errors wherever apt is absent (Fedora,
+  ## macOS) -- it now asks `7z i` instead, so this runs on every platform.
   out <- .archiveExtractBinary(verbose = 0)
   expect_true(is.null(out) || (is.character(out) && nzchar(out)))
   if (!is.null(out)) expect_true(file.exists(out))
@@ -67,4 +68,38 @@ test_that(".archiveExtractBinary returns NULL on unix when no binary exists", {
     isWindows = function() FALSE))
 
   expect_null(out)
+})
+
+test_that(".archiveExtractBinary never shells out to a package manager", {
+  testInit()
+
+  ## The Fedora regression: `system(..., intern = TRUE)` *errors* when the
+  ## command does not exist, so probing for a binary that may be absent (`apt`)
+  ## turned a cosmetic advisory into a check ERROR. Nothing here may do that.
+  fnBody <- paste(deparse(reproducible:::.archiveExtractBinary), collapse = "\n")
+  expect_false(grepl("\"apt\b", fnBody))
+  expect_false(grepl("yum |dnf |brew ", fnBody))
+
+  ## and it must survive a PATH with none of the binaries on it
+  withr::with_path(character(0), action = "replace", {
+    expect_error(.archiveExtractBinary(verbose = 0), NA)
+  })
+})
+
+test_that("archive-binary advice lives in .message, not inline", {
+  ## messages are centralised so tests can assert on them without copy/paste
+  m <- reproducible:::.message
+  expect_true(nzchar(m$sevenZipNoRarTxt))
+  expect_true(nzchar(m$missingUnrarTxt))
+
+  ## every platform we advise is named exactly once, in one place
+  for (mgr in c("apt install", "yum install", "brew install")) {
+    expect_equal(lengths(regmatches(m$installArchiveBinary,
+                                    gregexpr(mgr, m$installArchiveBinary, fixed = TRUE))), 1L)
+  }
+
+  ## both advisories reuse that one block rather than restating it
+  expect_true(grepl(m$installArchiveBinary, m$sevenZipNoRar(), fixed = TRUE))
+  expect_true(grepl(m$installArchiveBinary, m$missingUnrar(), fixed = TRUE))
+  expect_false(grepl(m$installArchiveBinary, m$missingUnrar(withInstall = FALSE), fixed = TRUE))
 })
