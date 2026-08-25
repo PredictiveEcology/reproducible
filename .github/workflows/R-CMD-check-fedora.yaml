@@ -76,12 +76,18 @@ jobs:
             echo "__EOF__"
           } >> "$GITHUB_OUTPUT"
 
+      # testthat is a Suggests, so `dependencies: NA` leaves it out and
+      # tests/test-all.R dies at its bare `library(testthat)`: the suite is
+      # skipped entirely and the leg goes green having checked nothing. The
+      # ubuntu nosuggests leg gets testthat from RSPM incidentally; this
+      # container does not, so it is named explicitly below. Do not remove.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           pak-version: stable
           dependencies: 'NA'
           extra-packages: |
             any::rcmdcheck
+            any::testthat
             ${{ steps.vignette-builder.outputs.packages }}
           cache: always
 
