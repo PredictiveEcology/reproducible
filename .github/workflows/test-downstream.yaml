@@ -1,133 +1,40 @@
+# Thin caller — shared logic lives in PredictiveEcology/actions (reusable workflow).
+#
+# Previously this workflow checked SpaDES.core and SpaDES.project against
+# `reproducible@development` fetched from GitHub rather than against this
+# branch, and passed while doing so: both downstreams pin reproducible in
+# their `Remotes:`, and nothing here installed the checkout. See
+# PredictiveEcology/actions#19.
 on:
   push:
-    branches:
-      - main
-      - development
+    branches: [main, development]
   pull_request:
-    branches:
-      - main
-      - development
+    branches: [main, development]
 
 name: test-downstream
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   test-downstream:
-    runs-on: ubuntu-latest
-
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    uses: PredictiveEcology/actions/.github/workflows/test-downstream.yaml@main
+    secrets:
       GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
-      NOT_CRAN: true
-      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      R_PKG_INSTALL_RETRIES: 3
-
-    steps:
-      - name: Checkout reproducible
-        uses: actions/checkout@v4
-        with:
-          path: reproducible
-
-      - name: Checkout SpaDES.core
-        uses: actions/checkout@v4
-        with:
-          repository: PredictiveEcology/SpaDES.core
-          ref: development
-          path: SpaDES.core
-
-      - name: Checkout SpaDES.project
-        uses: actions/checkout@v4
-        with:
-          repository: PredictiveEcology/SpaDES.project
-          ref: development
-          path: SpaDES.project
-
-      # Stock Noble apt; ubuntugis-unstable PPA dropped — see the rationale
-      # in R-CMD-check.yaml.
-      - name: Install spatial deps (Linux, stock Noble)
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -f -y || true
-          sudo apt-get install -y --fix-missing \
-            libudunits2-dev libgdal-dev libgeos-dev libproj-dev libsqlite3-dev
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          Ncpus: 2
-          use-public-rspm: true
-
-      # setup-r-dependencies bootstraps pak's library serially (resolve ->
-      # install via lockfile) before parallel installs begin. A raw
-      # `pak::pak()` call parallel-installs deps including R6 and itself uses
-      # R6 mid-install via zip::unzip_process, racing on R6.rdb. The two-phase
-      # action avoids that. `ropensci/NLMR` is needed by SpaDES.core Suggests;
-      # `PredictiveEcology/Require@development` is the dev-version fix for
-      # setLinuxBinaryRepo (drop once Require is on CRAN). `local::../X` paths
-      # resolve relative to working-directory (the reproducible checkout).
-      - id: deps
-        continue-on-error: true
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          working-directory: reproducible
-          pak-version: stable
-          extra-packages: |
-            ropensci/NLMR
-            PredictiveEcology/Require@development
-            local::../SpaDES.core
-            local::../SpaDES.project
-            any::rcmdcheck
-            any::knitr
-            any::rmarkdown
-
-      # Fallback: same retry pattern as R-CMD-check.yaml. Re-installs pak from
-      # stable and resolves all refs via pak::pak() up to 3 attempts.
-      - name: Install R deps (retry fallback)
-        if: steps.deps.outcome == 'failure'
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 30
-          max_attempts: 3
-          retry_wait_seconds: 60
-          retry_on: error
-          shell: bash
-          command: |
-            Rscript --no-save <<'EOF'
-            install.packages("pak", repos = "https://r-lib.github.io/p/pak/stable/")
-            pak::pak(
-              c("ropensci/NLMR",
-                "PredictiveEcology/Require@development",
-                "local::reproducible", "local::SpaDES.core", "local::SpaDES.project",
-                "any::rcmdcheck", "any::knitr", "any::rmarkdown"),
-              dependencies = TRUE,
-              ask = FALSE
-            )
-            EOF
-
-      - name: Check SpaDES.core
-        run: |
-          rcmdcheck::rcmdcheck(
-            "SpaDES.core",
-            args = c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest"),
-            error_on = "error",
-            check_dir = "check"
-          )
-        shell: Rscript {0}
-
-      # Drop --run-dontrun for SpaDES.project: its own R-CMD-check.yaml uses
-      # the default (no --run-dontrun), and a \dontrun example like
-      # `experiment3` deliberately requires a `global.R` script in the working
-      # directory that the example does not (and should not) create. Forcing
-      # \dontrun blocks here means we are stricter than the upstream
-      # repository's own check, and we hit a contrived failure that has
-      # nothing to do with reproducible.
-      - name: Check SpaDES.project
-        run: |
-          rcmdcheck::rcmdcheck(
-            "SpaDES.project",
-            args = c("--no-manual", "--as-cran", "--run-donttest"),
-            error_on = "error",
-            check_dir = "check"
-          )
-        shell: Rscript {0}
+    with:
+      # SpaDES.project drops --run-dontrun: a \dontrun example there
+      # deliberately requires a `global.R` in the working directory that the
+      # example does not (and should not) create, so forcing those blocks is
+      # stricter than that repo's own check for reasons unrelated to
+      # reproducible.
+      downstream: >-
+        [{"repo": "PredictiveEcology/SpaDES.core", "ref": "development"},
+         {"repo": "PredictiveEcology/SpaDES.project", "ref": "development",
+          "check-args": "c(\"--no-manual\", \"--as-cran\", \"--run-donttest\")"}]
+      check-args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
+      # NLMR is needed by SpaDES.core's Suggests; Require@development is the
+      # dev-version fix for setLinuxBinaryRepo (drop once Require is on CRAN).
+      extra-packages: |
+        ropensci/NLMR
+        PredictiveEcology/Require@development
