@@ -61,6 +61,21 @@ sidecar is trusted and the remote check is skipped — typically saving
 remote round-trip on every call (the pre-3.0.0.9050 behaviour); use
 this if the upstream file may change and you need to detect that.
 Removing the \verb{<file>_*.hash} sidecar also forces a re-check.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{This governs both kinds of sidecar. A sidecar recording a content hash
+(an ETag that is an md5/sha1/sha256) is re-checked by comparing that hash
+to what the server now advertises. A sidecar recording an *opaque* ETag
+— one the server generates however it likes, as
+`raw.githubusercontent.com` does — is re-checked with a conditional
+`If-None-Match` request, which costs one HTTP round-trip and no body
+transfer. If the remote cannot be reached, the local file is used rather
+than re-downloaded, so re-checking stays safe offline.
+
+Note that a re-check reports what the *server's edge* currently serves.
+A CDN may answer `304 Not Modified` for a file that has already changed
+upstream until its own cache expires (5 minutes, for GitHub raw).
+}\if{html}{\out{</div>}}
+
 }
 \item{\code{conn}}{
 Default: \code{NULL}. Sets a specific connection to a database, e.g.,

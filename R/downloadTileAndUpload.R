@@ -1044,7 +1044,8 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
 
   if (missing(targetFile)) {
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
-    remoteHash <- httr2::resp_headers(response)[["etag"]] |>
+    etagRaw <- httr2::resp_headers(response)[["etag"]]
+    remoteHash <- etagRaw |>
       gsub(pattern = "^\"|\"", replacement = "")
 
     content_disposition <- httr2::resp_header(response, "content-disposition")
@@ -1058,8 +1059,48 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     }
   }
   remoteAlgorithm <- .classifyRemoteHashAlgo(remoteHash, isGDurl = isGDurl)
+  if (!exists("etagRaw", inherits = FALSE)) etagRaw <- NULL
   list(targetFile = targetFile, fileSize = fileSize, remoteHash = remoteHash,
-       remoteAlgorithm = remoteAlgorithm, timestampOnline = timestampOnline)
+       remoteAlgorithm = remoteAlgorithm, timestampOnline = timestampOnline,
+       etag = etagRaw)
+}
+
+# Conditional revalidation of a remote file using its ETag.
+#
+# An ETag is an opaque cache validator, not a content hash -- servers are free
+# to generate it however they like (a git blob SHA, an S3 checksum, an edge
+# server's own token). It cannot be recomputed locally, but it CAN be handed
+# back via `If-None-Match`: a 304 means the representation is unchanged, a 200
+# means it is not.
+#
+# `etag` must be the raw header value, including its quotes and any `W/` weak
+# prefix, and the request must be made the same way the ETag was obtained
+# (httr2 negotiates gzip by default, and a server may serve a different ETag
+# for the compressed representation).
+#
+# Returns list(unchanged = TRUE/FALSE/NA, etag = <current etag or NULL>).
+# `unchanged = NA` means the remote could not be reached, so the caller should
+# fall back to whatever it would have done offline rather than re-download.
+.remoteEtagRevalidate <- function(url, etag) {
+  if (!requireNamespace("httr2", quietly = TRUE) ||
+      is.null(etag) || !nzchar(etag))
+    return(list(unchanged = NA, etag = NULL))
+
+  tryCatch({
+    resp <- httr2::request(url) |>
+      httr2::req_method("HEAD") |>
+      httr2::req_headers(`If-None-Match` = etag) |>
+      httr2::req_error(is_error = function(resp) FALSE) |>
+      httr2::req_perform()
+    status <- httr2::resp_status(resp)
+    if (identical(status, 304L)) {
+      list(unchanged = TRUE, etag = etag)
+    } else if (status >= 200L && status < 300L) {
+      list(unchanged = FALSE, etag = httr2::resp_header(resp, "etag"))
+    } else {
+      list(unchanged = NA, etag = NULL)
+    }
+  }, error = function(e) list(unchanged = NA, etag = NULL))
 }
 
 sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,

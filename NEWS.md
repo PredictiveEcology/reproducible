@@ -1,3 +1,16 @@
+# reproducible 3.2.1.9001
+
+## enhancements
+
+* `preProcess()` records an opaque remote ETag in the `.hash` sidecar after a
+  download, so later calls skip the network instead of re-downloading. Affects
+  any host whose ETag is not a content hash, including
+  `raw.githubusercontent.com`, where no sidecar was written at all.
+* `options(reproducible.checkRemoteHash = TRUE)` revalidates such files with a
+  conditional `If-None-Match` request: one round-trip, no download. If the
+  remote is unreachable the local file is used. The default is still to trust
+  the sidecar. See `?reproducibleOptions`.
+
 # reproducible 3.2.1
 
 ## bug fixes

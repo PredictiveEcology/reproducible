@@ -110,3 +110,131 @@ test_that("sidecar fast-path records skipDownloadFile so pp_download keeps a rea
   expect_identical(out$filesToChecksum, localFile)
   expect_false(any(is.na(out$filesToChecksum)))
 })
+
+test_that("an opaque ETag is recorded in a sidecar and revalidated, not re-downloaded", {
+  # Regression: a server whose ETag is opaque (raw.githubusercontent.com, S3,
+  # any edge-generated token) can never match a locally computed digest, so the
+  # `.hash` sidecar was never written and EVERY call re-contacted the remote and
+  # re-downloaded. An ETag cannot be recomputed locally, but it can be handed
+  # back via `If-None-Match`, which is what the server is for.
+  testInit("terra", verbose = -1)
+
+  localFile <- file.path(tmpdir, "opaque.tif")
+  writeLines("some bytes", localFile)
+
+  url <- "https://example.com/data/opaque.tif"
+  ctx <- list(
+    url              = url,
+    archive          = NULL,
+    neededFiles      = localFile,
+    destinationPath  = tmpdir,
+    checkSumFilePath = file.path(tmpdir, "CHECKSUMS.txt"),
+    verbose          = -1,
+    hashVerified     = character(),
+    skipDownload     = FALSE,
+    remoteMetadata   = NULL
+  )
+
+  ## an ETag-backed sidecar, as pp_download() now writes after a real download
+  sidecar <- reproducible:::makeRemoteHashFile(
+    url, tmpdir, basename(localFile), "\"etag-abc\"",
+    algorithm = "etag", write = TRUE
+  )
+  expect_true(file.exists(sidecar))
+  parsed <- reproducible:::.parseRemoteHashFile(sidecar)
+  expect_identical(parsed$algorithm, "etag")
+  expect_identical(parsed$hash, "\"etag-abc\"")
+
+  ## 1. DEFAULT: the sidecar is trusted outright and the remote is never asked.
+  ##    A long run must not have its caches invalidated because an upstream file
+  ##    changed part-way through.
+  called <- FALSE
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) { called <<- TRUE; list(unchanged = FALSE, etag = "\"new\"") },
+    {
+      res <- reproducible:::pp_remote_hash_check(ctx)
+    }
+  )
+  expect_true(isTRUE(res$skipDownload))
+  expect_false(called)                      # no network at all
+  expect_identical(res$skipDownloadFile, localFile)
+
+  ## 2. Opt in to re-checking: unchanged (304) -> still skip the download
+  withr::local_options(reproducible.checkRemoteHash = TRUE)
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(url, etag) list(unchanged = TRUE, etag = etag),
+    {
+      res <- reproducible:::pp_remote_hash_check(ctx)
+    }
+  )
+  expect_true(isTRUE(res$skipDownload))
+
+  ## 3. Opt in, and the remote really changed -> download, carrying the new ETag
+  ##    so pp_download() can record it
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(url, etag) list(unchanged = FALSE, etag = "\"etag-xyz\""),
+    {
+      res <- reproducible:::pp_remote_hash_check(ctx)
+    }
+  )
+  expect_false(isTRUE(res$skipDownload))
+  expect_identical(res$remoteEtagToRecord, "\"etag-xyz\"")
+
+  ## 4. Opt in, but the remote is unreachable -> use the local file rather than
+  ##    failing or re-downloading, so re-checking is safe offline
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(url, etag) list(unchanged = NA, etag = NULL),
+    {
+      res <- reproducible:::pp_remote_hash_check(ctx)
+    }
+  )
+  expect_true(isTRUE(res$skipDownload))
+  expect_identical(res$skipDownloadFile, localFile)
+})
+
+test_that("an opaque ETag is carried out of pp_remote_hash_check for recording", {
+  # With no sidecar yet, an opaque ETag yields no local verification, so the
+  # download proceeds -- but the ETag must be carried forward so pp_download()
+  # can write the sidecar once the bytes are on disk.
+  testInit("terra", verbose = -1)
+
+  localFile <- file.path(tmpdir, "fresh.tif")
+  writeLines("some bytes", localFile)
+
+  ctx <- list(
+    url              = "https://example.com/data/fresh.tif",
+    archive          = NULL,
+    neededFiles      = localFile,
+    destinationPath  = tmpdir,
+    checkSumFilePath = file.path(tmpdir, "CHECKSUMS.txt"),
+    verbose          = -1,
+    hashVerified     = character(),
+    skipDownload     = FALSE,
+    remoteMetadata   = NULL
+  )
+
+  fakeMeta <- list(
+    targetFile      = "fresh.tif",
+    fileSize        = file.size(localFile),   # same size -> no fast-fail
+    remoteHash      = "W/opaque",
+    remoteAlgorithm = "etag-opaque",
+    timestampOnline = NULL,
+    etag            = "W/\"opaque\""
+  )
+
+  testthat::with_mocked_bindings(
+    getRemoteMetadata = function(...) fakeMeta,
+    {
+      res <- reproducible:::pp_remote_hash_check(ctx)
+    }
+  )
+
+  expect_false(isTRUE(res$skipDownload))
+  expect_identical(res$remoteEtagToRecord, "W/\"opaque\"")
+})
+
+test_that(".remoteEtagRevalidate reports NA when the ETag is missing", {
+  # NA means "could not determine", which callers treat as "use the local file"
+  expect_identical(reproducible:::.remoteEtagRevalidate("https://example.com/x", NULL)$unchanged, NA)
+  expect_identical(reproducible:::.remoteEtagRevalidate("https://example.com/x", "")$unchanged, NA)
+})
