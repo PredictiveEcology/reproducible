@@ -24,7 +24,7 @@ reasons that do not persist.'><!-- mathjax --><script src="https://cdnjs.cloudfl
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -61,7 +61,7 @@ reasons that do not persist.'><!-- mathjax --><script src="https://cdnjs.cloudfl
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>A wrapper around <code>try</code> that retries on failure</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/helpers.R" class="external-link"><code>R/helpers.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/helpers.R" class="external-link"><code>R/helpers.R</code></a></small>
     <div class="hidden name"><code>retry.Rd</code></div>
     </div>
 
@@ -131,6 +131,14 @@ the <code>expr</code> again. For backwards compatibility, this still works).</p>
     <p>Based on <a href="https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525" class="external-link">https://github.com/jennybc/googlesheets/issues/219#issuecomment-195218525</a>.</p>
     </div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># retries a flaky expression; here it simply succeeds on the first try</span></span></span>
+<span class="r-in"><span><span class="fu">retry</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>, retries <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.564893</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>
@@ -143,7 +151,7 @@ the <code>expr</code> again. For backwards compatibility, this still works).</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

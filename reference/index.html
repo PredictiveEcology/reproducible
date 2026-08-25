@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -95,7 +95,7 @@
         </td>
         <td><p>Return the filename(s) from a <code>Raster*</code> object</p></td>
       </tr><tr><td>
-          <p><code><a href="Path-class.html">asPath()</a></code> </p>
+          <p><code><a href="Path-class.html">asPath()</a></code> <code><a href="Path-class.html">coerce(<i>&lt;character&gt;</i>,<i>&lt;Path&gt;</i>)</a></code> </p>
         </td>
         <td><p>Coerce a character string to a class "Path"</p></td>
       </tr><tr><td>
@@ -114,10 +114,6 @@
           <p><code><a href="cacheId.html">cacheId()</a></code> </p>
         </td>
         <td><p>Extract the cache id of an object</p></td>
-      </tr><tr><td>
-          <p><code><a href="checkAndMakeCloudFolderID.html">checkAndMakeCloudFolderID()</a></code> </p>
-        </td>
-        <td><p>Check for presence of <code>checkFolderID</code> (for <code>Cache(useCloud)</code>)</p></td>
       </tr><tr><td>
           <p><code><a href="checkPath.html">checkPath()</a></code> </p>
         </td>
@@ -187,10 +183,6 @@
         </td>
         <td><p>Deal with class for saving to and loading from Cache or Disk</p></td>
       </tr><tr><td>
-          <p><code><a href="downloadFile.html">downloadFile()</a></code> </p>
-        </td>
-        <td><p>A wrapper around a set of downloading functions</p></td>
-      </tr><tr><td>
           <p><code><a href="downloadRemote.html">downloadRemote()</a></code> </p>
         </td>
         <td><p>Download a remote file</p></td>
@@ -211,10 +203,6 @@
         </td>
         <td><p>Harmonize all forms of call</p></td>
       </tr><tr><td>
-          <p><code><a href="internetExists.html">internetExists()</a></code> <code><a href="internetExists.html">urlExists()</a></code> </p>
-        </td>
-        <td><p>Checks for existed of a url or the internet using <a href="https://CRAN.R-project.org" class="external-link">https://CRAN.R-project.org</a></p></td>
-      </tr><tr><td>
           <p><code><a href="isSpatial.html">.isGridded()</a></code> <code><a href="isSpatial.html">.isVector()</a></code> <code><a href="isSpatial.html">.isSF()</a></code> <code><a href="isSpatial.html">.isSpat()</a></code> <code><a href="isSpatial.html">.isSpatialAny()</a></code> <code><a href="isSpatial.html">.isCRSany()</a></code> </p>
         </td>
         <td><p>Some spatial helper functions</p></td>
@@ -231,13 +219,17 @@
         </td>
         <td><p>Hardlink, symlink, or copy a file</p></td>
       </tr><tr><td>
+          <p><code><a href="listGoogleDriveFolder.html">listGoogleDriveFolder()</a></code> </p>
+        </td>
+        <td><p>List a Google Drive folder, using a mirror listing when remapped</p></td>
+      </tr><tr><td>
           <p><code><a href="listNamed.html">listNamed()</a></code> </p>
         </td>
         <td><p>Create a list with names from object names</p></td>
       </tr><tr><td>
-          <p><code><a href="loadFile.html">loadFile()</a></code> </p>
+          <p><code><a href="makeUrlRemap.html">makeUrlRemap()</a></code> </p>
         </td>
-        <td><p>Load a file from the cache</p></td>
+        <td><p>Build a URL remap function from a manifest</p></td>
       </tr><tr><td>
           <p><code><a href="matchCall2.html">matchCall2()</a></code> </p>
         </td>
@@ -275,6 +267,10 @@
         </td>
         <td><p>Generic function to post process objects</p></td>
       </tr><tr><td>
+          <p><code><a href="postProcessInputsSuperseded.html">cropInputs()</a></code> <code><a href="postProcessInputsSuperseded.html">projectInputs()</a></code> <code><a href="postProcessInputsSuperseded.html">maskInputs()</a></code> </p>
+        </td>
+        <td><p>Superseded <code>postProcess</code> input functions</p></td>
+      </tr><tr><td>
           <p><code><a href="postProcessTo.html">postProcessTo()</a></code> <code><a href="postProcessTo.html">postProcessTerra()</a></code> <code><a href="postProcessTo.html">maskTo()</a></code> <code><a href="postProcessTo.html">projectTo()</a></code> <code><a href="postProcessTo.html">cropTo()</a></code> <code><a href="postProcessTo.html">writeTo()</a></code> </p>
         </td>
         <td><p>Transform a GIS dataset so it has the properties (extent, projection, mask) of another</p></td>
@@ -291,9 +287,9 @@
         </td>
         <td><p>Download and optionally post-process files</p></td>
       </tr><tr><td>
-          <p><code><a href="prepInputsCOG.html">prepInputsCOG()</a></code> </p>
+          <p><code><a href="prepInputsLog.html">prepInputsLog()</a></code> <code><a href="prepInputsLog.html">clearUrlLog()</a></code> </p>
         </td>
-        <td><p>Fast spatial subsetting of Cloud Optimized GeoTiff (COG) files</p></td>
+        <td><p>URL access log for <code>prepInputs</code> / <code>preProcess</code></p></td>
       </tr><tr><td>
           <p><code><a href="prepInputsWithTiles.html">prepInputsWithTiles()</a></code> </p>
         </td>
@@ -381,7 +377,7 @@
       </tr><tr><td>
           <p><code><a href="writeFuture.html">writeFuture()</a></code> </p>
         </td>
-        <td><p>Write to cache repository, using <code><a href="https://future.futureverse.org/reference/future.html" class="external-link">future::future</a></code></p></td>
+        <td><p>Write to cache repository, using <code><a href="https://future.futureverse.org/reference/future.html" class="external-link">future::future</a></code> (defunct)</p></td>
       </tr></tbody></table></div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -395,7 +391,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -60,7 +60,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Try to pick a file to load</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/prepInputs.R" class="external-link"><code>R/prepInputs.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/prepInputs.R" class="external-link"><code>R/prepInputs.R</code></a></small>
     <div class="hidden name"><code>guessAtTarget.Rd</code></div>
     </div>
 
@@ -74,7 +74,8 @@
 <span>  destinationPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.destinationPath"</span>, <span class="st">"."</span><span class="op">)</span>,</span>
 <span>  <span class="va">filesExtracted</span>,</span>
 <span>  fun <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>  verbose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"reproducible.verbose"</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  messageGuessing <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -90,6 +91,15 @@
 <dd><p>A character vector of all files that have been extracted (e.g.,
 from an archive)</p></dd>
 
+
+<dt id="arg-messageguessing">messageGuessing<a class="anchor" aria-label="anchor" href="#arg-messageguessing"></a></dt>
+<dd><p>Logical. If <code>TRUE</code> (the default, used when a load will
+follow, e.g. from <code>prepInputs</code>), emit the messages about the guessed
+<code>targetFile</code>/<code>fun</code> (e.g. "targetFile was not specified", "Picking the last
+one"). A direct <code><a href="preProcess.html">preProcess()</a></code> call sets this to <code>FALSE</code> because it never
+loads the object, so those messages would be misleading; the guessing
+itself (and the returned values) is unchanged.</p></dd>
+
 </dl></div>
 
   </div>
@@ -104,7 +114,7 @@ from an archive)</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

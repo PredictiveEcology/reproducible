@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -60,7 +60,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Download a remote file</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/download.R" class="external-link"><code>R/download.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/download.R" class="external-link"><code>R/download.R</code></a></small>
     <div class="hidden name"><code>downloadRemote.Rd</code></div>
     </div>
 
@@ -145,7 +145,7 @@ custom downloading, in addition to loading into R. Still experimental.</p></dd>
 <dt id="arg-destinationpath">destinationPath<a class="anchor" aria-label="anchor" href="#arg-destinationpath"></a></dt>
 <dd><p>Character string of a directory in which to download
 and save the file that comes from <code>url</code> and is also where the function
-will look for <code>archive</code> or <code>targetFile</code>. NOTE (still experimental):
+will look for <code>archive</code> or <code>targetFile</code>.
 To prevent repeated downloads in different locations, the user can also set
 <code>options("reproducible.destinationPathShared")</code> to one or more local file paths to
 search for the file before attempting to download. Default for that option is
@@ -172,16 +172,21 @@ Will be cleared <code>on.exit</code> from this function.</p></dd>
 
 
 <dt id="arg-alsoextract">alsoExtract<a class="anchor" aria-label="anchor" href="#arg-alsoextract"></a></dt>
-<dd><p>Optional character string naming files other than
-<code>targetFile</code> that must be extracted from the <code>archive</code>. If
-<code>NULL</code>, the default, then it will extract all files. Other options:
-<code>"similar"</code> will extract all files with the same filename without
-file extension as <code>targetFile</code>. <code>NA</code> will extract nothing other
-than <code>targetFile</code>. A character string of specific file names will cause
-only those to be extracted. Each element may also be a regular expression:
-if an element does not match any archive member literally (by relative path
-or basename), it is passed to <code><a href="https://rdrr.io/r/base/grep.html" class="external-link">grep()</a></code> against the archive's file list and
-all matching members are extracted. For example,
+<dd><p>Which files to fetch or extract in addition to
+<code>targetFile</code>. Spatial data rarely arrives as one file – a shapefile is
+five or six, and a raster often has a <code>.aux.xml</code>, <code>.ovr</code> or <code>.tfw</code>
+alongside carrying its attribute table, overviews or georeferencing –
+so this controls how much of that company comes along.</p>
+<p>The default depends on where the files are coming from, because
+"everything" only means something when a container bounds it:</p>
+<table class="table table"><tr><td><strong><code>alsoExtract</code></strong></td><td><strong>from an <code>archive</code></strong></td><td><strong>from a <code>url</code></strong></td></tr><tr><td><code>NULL</code> (default)</td><td>every file in the archive</td><td>as for <code>"similar"</code></td></tr><tr><td><code>"similar"</code></td><td>files sharing <code>targetFile</code>'s name without its extension</td><td>same, discovered by listing the remote directory</td></tr><tr><td><code>NA</code> or <code>"none"</code></td><td><code>targetFile</code> only</td><td><code>targetFile</code> only</td></tr><tr><td>a character vector</td><td>those files only</td><td>those files only</td></tr></table><p>An archive bounds what "all files" can mean, so <code>NULL</code> extracts all of it.
+A <code>url</code> has no such bound – the server may hold thousands of unrelated
+files – so <code>NULL</code> there means <code>targetFile</code> and its companions, never the
+whole remote directory.</p>
+<p>Each element of a character vector may also be a regular expression: if an
+element does not match any archive member literally (by relative path or
+basename), it is passed to <code><a href="https://rdrr.io/r/base/grep.html" class="external-link">grep()</a></code> against the archive's file list and all
+matching members are extracted. For example,
 <code>alsoExtract = "CMD_sm|CMD_sp"</code> extracts every file whose name contains
 <code>CMD_sm</code> or <code>CMD_sp</code>. See table in <code><a href="preProcess.html">preProcess()</a></code>.</p></dd>
 
@@ -204,7 +209,7 @@ objects, if necessary.</p></dd>
 <code><a href="postProcess.html">postProcess()</a></code> and <code><a href="Cache.html">Cache()</a></code>.
 Since <code>...</code> is passed to <code><a href="postProcess.html">postProcess()</a></code>, these will
 <code>...</code> will also be passed into the inner
-functions, e.g., <code><a href="deprecated.html">cropInputs()</a></code>. Possibly useful other arguments include
+functions, e.g., <code><a href="postProcessInputsSuperseded.html">cropInputs()</a></code>. Possibly useful other arguments include
 <code>dlFun</code> which is passed to <code>preProcess</code>. See details and examples.</p></dd>
 
 </dl></div>
@@ -221,7 +226,7 @@ functions, e.g., <code><a href="deprecated.html">cropInputs()</a></code>. Possib
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

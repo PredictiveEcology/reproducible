@@ -38,7 +38,7 @@ This function is also used internally with the deprecated family postProcess(),
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -75,7 +75,7 @@ This function is also used internally with the deprecated family postProcess(),
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Transform a GIS dataset so it has the properties (extent, projection, mask) of another</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/postProcessTo.R" class="external-link"><code>R/postProcessTo.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/postProcessTo.R" class="external-link"><code>R/postProcessTo.R</code></a></small>
     <div class="hidden name"><code>postProcessTo.Rd</code></div>
     </div>
 
@@ -95,7 +95,7 @@ a <code>SpatRaster</code> class object from <code>terra</code>.
 Vector means a <code>Spatial*</code> class object from <code>sp</code>, a <code>sf</code> class object
 from <code>sf</code>, or a <code>SpatVector</code> class object from <code>terra</code>.
 This function is also used internally with the deprecated family <code><a href="postProcess.html">postProcess()</a></code>,
-<code>*Inputs</code>, such as <code><a href="deprecated.html">cropInputs()</a></code>.</p>
+<code>*Inputs</code>, such as <code><a href="postProcessInputsSuperseded.html">cropInputs()</a></code>.</p>
     </div>
 
     <div id="ref-usage">
@@ -234,8 +234,7 @@ option, e.g., <code>options('reproducible.verbose' = 0) to reduce to minimal</co
 or <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster</a></code> (for <code>writeTo</code>) and not used for <code>cropTo</code>, as well <code>postProcess</code>'s
 <code>rasterToMatch</code> and <code>studyArea</code> arguments (see below). Commonly used arguments might be
 <code>method</code>, <code>touches</code>, and <code>datatype</code>. If <code>filename</code> is passed, it will be ignored; use
-<code>writeTo = </code>. If <code>reproducible.gdalwarp = TRUE</code>, then these will be passed to the
-<code>gdal*</code> functions. See them for details.</p></dd>
+<code>writeTo = </code>.</p></dd>
 
 
 <dt id="arg-needbuffer">needBuffer<a class="anchor" aria-label="anchor" href="#arg-needbuffer"></a></dt>
@@ -387,32 +386,30 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> If this is not correct, create a template gridded object and pass that to</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   `projectTo`...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0141 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.013 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0123 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0212 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0921 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0192 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0872 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00577 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00525 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0121 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0117 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0633 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.00994 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.0585 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.128 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.134 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0178 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0174 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0218 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.457 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0208 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.473 secs</span></span>
 </code></pre></div>
     </div>
   </div>
@@ -427,7 +424,7 @@ call <code>sf::gdal_utils(...)</code> directly: <code><a href="gdalwarpFns.html"
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

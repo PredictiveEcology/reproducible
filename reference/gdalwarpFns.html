@@ -27,7 +27,7 @@ set, notably, -cutline, -dstnodata = NA, and -overwrite."><!-- mathjax --><scrip
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -64,7 +64,7 @@ set, notably, -cutline, -dstnodata = NA, and -overwrite."><!-- mathjax --><scrip
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>3-Step postProcess sequence for SpatRasters using <code>gdalwarp</code></h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/postProcessTo.R" class="external-link"><code>R/postProcessTo.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/postProcessTo.R" class="external-link"><code>R/postProcessTo.R</code></a></small>
     <div class="hidden name"><code>gdalwarpFns.Rd</code></div>
     </div>
 
@@ -149,15 +149,14 @@ object. Default is <code>NULL</code>, which means there is no <code>writeRaster<
 set, notably, <code>-r</code> to <code>method</code> (in the ...), <code>-t_srs</code> to the crs of the <code>toRas</code>,
 <code>-te</code> to the extent of the <code>toRas</code>, <code>-te_srs</code> to the <code>crs</code> of the <code>toRas</code>,
 <code>-dstnodata = NA</code>, and <code>-overwrite</code>.</p>
-<p>These three functions are used within <code>postProcessTo</code>, in the sequence:
-<code>gdalProject</code>, <code>gdalResample</code> and <code>gdalMask</code>, when <code>from</code> and <code>projectTo</code> are <code>SpatRaster</code> and
-<code>maskTo</code> is a <code>SpatVector</code>, but only if <code>options(reproducible.gdalwarp = TRUE)</code> is set.</p>
-<p>This sequence is a slightly different order than the sequence when <code>gdalwarp = FALSE</code> or
-the arguments do not match the above. This sequence was determined to be faster and
-more accurate than any other sequence, including running all three steps in one
-<code>gdalwarp</code> call (which <code>gdalwarp</code> can do). Using one-step <code>gdalwarp</code> resulted in
-very coarse pixelation when converting from a coarse resolution to fine resolution, which
-visually was inappropriate in test cases.</p>
+<p>These three functions were an alternative sequence
+(<code>gdalProject</code>, <code>gdalResample</code>, <code>gdalMask</code>) for the <code>from</code> + <code>projectTo</code>
+<code>SpatRaster</code> / <code>maskTo</code> <code>SpatVector</code> case in <code>postProcessTo</code>. The sequence
+was determined to be faster and more accurate than any other ordering,
+including running all three steps in one <code>gdalwarp</code> call (one-step
+<code>gdalwarp</code> resulted in very coarse pixelation when converting from a
+coarse resolution to fine resolution). They are retained for reference
+only; the live <code>postProcessTo</code> path no longer dispatches to them.</p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
@@ -191,7 +190,7 @@ visually was inappropriate in test cases.</p>
 <span class="r-in"><span>  <span class="va">t3a</span> <span class="op">&lt;-</span> <span class="fu"><a href="postProcessTo.html">postProcessTo</a></span><span class="op">(</span><span class="va">elev1</span>, to <span class="op">=</span> <span class="va">rInUTM</span>, maskTo <span class="op">=</span> <span class="va">vInUTM</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> terra 1.9.27</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> terra 1.9.46</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
@@ -202,32 +201,30 @@ visually was inappropriate in test cases.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;"> If this is not correct, create a template gridded object and pass that to</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">   `projectTo`...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.017 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0161 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0484 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0127 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0219 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.164 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0431 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.142 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0676 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0424 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0122 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0124 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0113 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.134 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0103 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.109 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">Running `postProcessTo`</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Try setting options('reproducible.gdalwarp' = TRUE) to use a different, possibly faster, algorithm</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">projecting...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.14 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.145 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">masking...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0176 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0179 secs</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">cropping...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0218 secs</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.468 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">done! took:  0.0215 secs</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">postProcessTo done! took:  0.49 secs</span></span>
 </code></pre></div>
     </div>
   </div>
@@ -242,7 +239,7 @@ visually was inappropriate in test cases.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

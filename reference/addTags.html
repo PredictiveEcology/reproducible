@@ -28,7 +28,7 @@ This function supports both database-backed and file-based cache systems."><!-- 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -65,7 +65,7 @@ This function supports both database-backed and file-based cache systems."><!-- 
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Add a Tag to a Cached Object in the Repository</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/DBI.R" class="external-link"><code>R/DBI.R</code></a></small>
     <div class="hidden name"><code>addTags.Rd</code></div>
     </div>
 
@@ -171,23 +171,155 @@ file-based caching systems.</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, ca275879d5116967.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;"> call</span></span>
 <span class="r-in"><span><span class="fu">.addTagsRepo</span><span class="op">(</span>cacheId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">a</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>             tagKey <span class="op">=</span> <span class="st">"status"</span>, tagValue <span class="op">=</span> <span class="st">"processed"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 493</span>
 <span class="r-in"><span><span class="fu"><a href="viewCache.html">showCache</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># last entry is the above line</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Cache size:</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Total (including Rasters): 26.5 Kb</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Selected objects (not including Rasters): 26.5 Kb</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                       tagValue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               &lt;char&gt;              &lt;char&gt;                         &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: a23e6daa3fc8bdc5            function prepInputs_fireSenseParams.rds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: a23e6daa3fc8bdc5            accessed      2026-08-25 00:58:03.55793</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: a23e6daa3fc8bdc5             inCloud                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: a23e6daa3fc8bdc5   elapsedTimeDigest               0.003089666 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: a23e6daa3fc8bdc5           preDigest          .FUN:02beb4f7734642e4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: a23e6daa3fc8bdc5           preDigest        enclos:4412a6633250beb8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: a23e6daa3fc8bdc5           preDigest         envir:d2c074244988e3b3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: a23e6daa3fc8bdc5           preDigest          expr:babfa29d70e92731</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: a23e6daa3fc8bdc5               class                     data.frame</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: a23e6daa3fc8bdc5         object.size                          28992</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: a23e6daa3fc8bdc5            fromDisk                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: a23e6daa3fc8bdc5          resultHash                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: a23e6daa3fc8bdc5 elapsedTimeFirstRun                0.02437234 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: a23e6daa3fc8bdc5            accessed      2026-08-25 00:58:03.75914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: a23e6daa3fc8bdc5            accessed      2026-08-25 00:58:03.80189</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: a23e6daa3fc8bdc5            accessed      2026-08-25 00:58:03.88059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: ca275879d5116967            function                          rnorm</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: ca275879d5116967            accessed      2026-08-25 00:58:02.87488</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: ca275879d5116967             inCloud                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: ca275879d5116967   elapsedTimeDigest               0.003033638 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: ca275879d5116967           preDigest          .FUN:4f604aa46882b368</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: ca275879d5116967           preDigest          mean:c40c00762a0dac94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: ca275879d5116967           preDigest             n:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: ca275879d5116967           preDigest            sd:853b1797f54b229c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: ca275879d5116967               class                        numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: ca275879d5116967         object.size                             56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: ca275879d5116967            fromDisk                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: ca275879d5116967          resultHash                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: ca275879d5116967 elapsedTimeFirstRun              0.0009660721 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: ca275879d5116967            accessed      2026-08-25 00:58:05.63666</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: ca275879d5116967              status                      processed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: d03daaa68c73e7e9            function                centralTendency</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: d03daaa68c73e7e9            userTags                   thisIsUnique</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: d03daaa68c73e7e9            userTags                   reallyUnique</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: d03daaa68c73e7e9            accessed      2026-08-25 00:57:56.68863</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: d03daaa68c73e7e9             inCloud                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: d03daaa68c73e7e9   elapsedTimeDigest               0.001446724 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: d03daaa68c73e7e9           preDigest          .FUN:88d14fe75c352ad5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: d03daaa68c73e7e9           preDigest             x:e4aa8de28dc6c1bb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: d03daaa68c73e7e9               class                        numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: d03daaa68c73e7e9         object.size                             56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: d03daaa68c73e7e9            fromDisk                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: d03daaa68c73e7e9          resultHash                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: d03daaa68c73e7e9 elapsedTimeFirstRun                0.03595018 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: d03daaa68c73e7e9            accessed      2026-08-25 00:57:56.73992</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: d598abd965f6e371            function                    sf::st_read</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47: d598abd965f6e371            accessed      2026-08-25 00:58:03.48904</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48: d598abd965f6e371             inCloud                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49: d598abd965f6e371   elapsedTimeDigest               0.002489328 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50: d598abd965f6e371           preDigest          .FUN:322208b6a2fd2938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51: d598abd965f6e371           preDigest           dsn:6071e082648497fe</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52: d598abd965f6e371               class                             sf</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53: d598abd965f6e371         object.size                          79296</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54: d598abd965f6e371            fromDisk                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55: d598abd965f6e371          resultHash                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56: d598abd965f6e371 elapsedTimeFirstRun                0.01892638 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              cacheId              tagKey                       tagValue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               &lt;char&gt;              &lt;char&gt;                         &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  2: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  4: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  5: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  6: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  7: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  8: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  9: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13: 2026-08-25 00:58:03.584143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14: 2026-08-25 00:58:03.759229</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15: 2026-08-25 00:58:03.801984</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16: 2026-08-25 00:58:03.880686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 21: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 22: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 23: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 24: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 25: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 26: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 27: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 28: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 29: 2026-08-25 00:58:02.876862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 30: 2026-08-25 00:58:05.636754</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 31: 2026-08-25 00:58:05.638627</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 32: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 33: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 34: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 35: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 36: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 37: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 38: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 39: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 40: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 41: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 42: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 43: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 44: 2026-08-25 00:57:56.725653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 45: 2026-08-25 00:57:56.740011</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 46: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 47: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 48: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 49: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 50: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 51: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 52: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 53: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 54: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 55: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 56: 2026-08-25 00:58:03.509339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    createdDate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         &lt;char&gt;</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="Cache.html">Cache</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">No cachePath supplied and getOption('reproducible.cachePath') is inside a temporary directory;</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">  this will not persist across R sessions.</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Object to retrieve (fn: </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;">, ca275879d5116967.rds) ...</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">Loaded! Cached result from previous </span><span style="color: #BB0000;">rnorm</span><span style="color: #0000BB;"> call</span></span>
 <span class="r-in"><span><span class="co"># Update an existing tag</span></span></span>
 <span class="r-in"><span><span class="fu">.updateTagsRepo</span><span class="op">(</span>cacheId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">a</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>             tagKey <span class="op">=</span> <span class="st">"status"</span>, tagValue <span class="op">=</span> <span class="st">"second"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 507</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add a tag if it doesn't exist</span></span></span>
 <span class="r-in"><span><span class="fu">.updateTagsRepo</span><span class="op">(</span>cacheId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"cacheId:"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">a</span>, <span class="st">"tags"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>             tagKey <span class="op">=</span> <span class="st">"status"</span>, tagValue <span class="op">=</span> <span class="st">"new"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 506</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -203,7 +335,7 @@ file-based caching systems.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

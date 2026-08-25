@@ -23,7 +23,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -60,13 +60,65 @@
   <div class="col-md-9 contents">
     <div class="page-header">
       <h1 data-toc-skip>Changelog <small></small></h1>
-      <small>Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="3.1.1" id="reproducible-311">reproducible 3.1.1<small>2026-05-18</small><a class="anchor" aria-label="anchor" href="#reproducible-311"></a></h2>
+<h2 class="page-header" data-toc-text="3.2.0" id="reproducible-320">reproducible 3.2.0<a class="anchor" aria-label="anchor" href="#reproducible-320"></a></h2>
 <div class="section level3">
-<h3 id="bug-fixes-3-1-1">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-3-1-1"></a></h3>
+<h3 id="cran-policy-compliance-3-2-0">CRAN policy compliance<a class="anchor" aria-label="anchor" href="#cran-policy-compliance-3-2-0"></a></h3>
+<ul><li>
+<strong>Tests using Internet resources now fail gracefully on CRAN</strong>, per CRAN policy — this is the issue that led to the package being archived. When a download terminally fails or a downloaded file no longer matches its checksum, and the code is running inside a test on CRAN (<code><a href="https://testthat.r-lib.org/reference/is_testing.html" class="external-link">testthat::is_testing()</a></code> and <code>NOT_CRAN != "true"</code>), the test is <code>skip()</code>-ped rather than erroring. Where <code>NOT_CRAN == "true"</code> (local, CI) failures still error, so regressions are not masked; outside tests, behaviour is unchanged.</li>
+<li>Test fixtures previously downloaded from a third-party personal repository — the source whose intermittent unavailability triggered the check failure — are now release assets on <code>PredictiveEcology/reproducible</code>.</li>
+<li>
+<strong>Every example now runs during <code>R CMD check</code>.</strong> All <code>\dontrun{}</code> and <code>\donttest{}</code> wrappers have been removed, so no example is exempt from being checked. Examples that reach a third-party server are instead gated on <code>NOT_CRAN</code>, keeping CRAN’s machines off remote resources while local and CI runs still exercise them. The <code><a href="../reference/prepInputs.html">prepInputs()</a></code> example now uses a 15 kB ecozones archive shipped in <code>inst/ex</code> (and mirrored as a release asset) rather than repeatedly downloading a 1.44 MB file from a federal server; <code>prepInputs</code> went from 7.1 s to 0.07 s and no example exceeds CRAN’s 5 s threshold (<a href="https://github.com/PredictiveEcology/reproducible/issues/437" class="external-link">#437</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-3-2-0">new features<a class="anchor" aria-label="anchor" href="#new-features-3-2-0"></a></h3>
+<ul><li>
+<strong>URL logging.</strong> <code><a href="../reference/prepInputs.html">prepInputs()</a></code>/<code><a href="../reference/preProcess.html">preProcess()</a></code> record every file and web access; view with <code><a href="../reference/prepInputsLog.html">prepInputsLog()</a></code>/<code>getUrlLog()</code>. Includes <code>targetFile</code>, <code>archive</code> and <code>alsoExtract</code> columns, per-<code>Cache</code> url frames, and cache-hit replay. On by default; <code>options(reproducible.urlLog = FALSE)</code> disables.</li>
+<li>
+<strong>Faster, more robust downloads.</strong> Parallel ranged downloads with per-part retry; progress, elapsed time and ETA shown in non-interactive/logged sessions; <code>reproducible.timeout</code> default raised to 12000.</li>
+<li>
+<strong>Download mirrors</strong> via <code>reproducible.urlRemap</code>, accepting a manifest <code>data.frame</code> or CSV path, with optional <code>id</code> (Google Drive) and <code>type</code> columns.</li>
+<li>
+<strong>Google Drive without authentication</strong> for files and folders shared “anyone with the link”; <code>showSimilar</code> is now cloud-aware under <code>useCloud</code>.</li>
+<li>
+<strong><code>reproducible.digestVersion</code></strong> selects the hashing scheme; version 4 (the new default) makes <code>sf</code>/<code>SpatVector</code> digests platform-stable and realizes deferred-string ALTREP vectors before hashing.</li>
+<li>
+<strong>Cloud-optimized GeoTiff fast path</strong> (<code><a href="../reference/prepInputsCOG.html">prepInputsCOG()</a></code>): reads only the spatial window of interest via <code>/vsicurl/</code>, with terra’s native progress bar.</li>
+<li>New diagnostics: <code>reproducible.preDigestDump</code>, improved <code>showSimilar</code> output, and a one-time hint pointing at <code>getUrlLog()</code>/<code><a href="../reference/viewCache.html">showCache()</a></code>.</li>
+<li>
+<code><a href="../reference/CacheGeo.html">CacheGeo()</a></code> handles multiple overlapping (not just contained) domains.</li>
+<li>User-visible functions now carry <code>lifecycle</code> badges.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="behaviour-changes-3-2-0">behaviour changes<a class="anchor" aria-label="anchor" href="#behaviour-changes-3-2-0"></a></h3>
+<ul><li><p><strong>Parallelism is now controlled by three options, one per resource</strong> — <code>reproducible.parallel.cores</code> (CPU-bound work, i.e. tiling), <code>reproducible.parallel.download</code> (concurrent ranged download connections) and <code>reproducible.parallel.upload</code> (concurrent Google Drive uploads). The network options are deliberately no longer derived from the core count, and are not capped by <code>mc.cores</code>; CPU work still is. <code>reproducible.parallel.streams</code> and <code>reproducible.parallel.maxConnections</code> are deprecated but still honoured, with the new options taking precedence when both are set. <code>reproducible.parallel.cores = 1L</code> additionally disables the background <code><a href="../reference/viewCache.html">showCache()</a></code> pre-warm fork, which costs one extra process.</p></li>
+<li><p><strong>Five functions are no longer exported</strong> — <code><a href="../reference/internetExists.html">internetExists()</a></code>, <code><a href="../reference/downloadFile.html">downloadFile()</a></code>, <code><a href="../reference/loadFile.html">loadFile()</a></code>, <code><a href="../reference/checkAndMakeCloudFolderID.html">checkAndMakeCloudFolderID()</a></code> and <code><a href="../reference/prepInputsCOG.html">prepInputsCOG()</a></code>. All are implementation details with better-maintained equivalents elsewhere (e.g. <code><a href="https://jeroen.r-universe.dev/curl/reference/nslookup.html" class="external-link">curl::has_internet()</a></code>, <code><a href="https://jeroen.r-universe.dev/curl/reference/curl_download.html" class="external-link">curl::curl_download()</a></code>) or no use outside this package; they continue to work internally.</p></li>
+<li><p><strong><code><a href="../reference/writeFuture.html">writeFuture()</a></code> is defunct</strong>, and the <code>future</code>-backed background download and cache-write paths are removed. Both were off by default and effectively untested. <code>reproducible.futurePlan</code> is retained because downstream packages set it, but has no effect as of 3.2.0.</p></li>
+<li><p><code>options("reproducible.gdalwarp")</code> is removed; it is no longer needed.</p></li>
+<li><p><code>options("reproducible.cachePath")</code> is no longer pre-set — it resolves lazily on first use.</p></li>
+<li><p><code><a href="../reference/postProcessTo.html">postProcessTo()</a></code> is faster, uses less memory on large rasters, and keeps categorical (factor) rasters categorical.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-3-2-0">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-3-2-0"></a></h3>
+<ul><li><p><strong>Tiling no longer deadlocks after a <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">terra::writeRaster()</a></code>.</strong> A default <code><a href="https://rspatial.github.io/terra/reference/writeRaster.html" class="external-link">writeRaster()</a></code> allocates a GDAL thread pool of one thread per core that is never released; forking such a process (as <code>prepInputs(numTiles = )</code> did via <code>mclapply()</code>) left the children holding GDAL mutexes no surviving thread could release, and they hung indefinitely. The trigger is the <em>child</em> asking GDAL for a worker pool, not the parent having one, so writing the tiles with <code>NUM_THREADS=1</code> is sufficient on its own — it holds regardless of what the caller did beforehand, or which version of  they run.</p></li>
+<li><p><strong>A failed parallel worker no longer silently drops tiles or uploads.</strong> <code>mclapply()</code> marks every value a dead worker was given as failed, and those results were not inspected — so a single failing worker quietly produced a half-complete set (observed as 2 of 4 tiles reaching Google Drive). The failed slice is now retried serially, and an error is raised if that also fails.</p></li>
+<li><p><strong>The last large third-party download is gone from the tests.</strong> <code>test-gis.R</code> fetched a ~40 MB national fire-point archive from a federal server, on a URL that has since been renamed upstream and now 404s. It is replaced by a 2.8 kB 25-point fixture shipped in <code>inst/ex</code> and hosted as a release asset.</p></li>
+<li><p><strong><code>prepInputs(numTiles = )</code> now works without geodata configured.</strong> It builds its tile grid from GADM boundaries, but called <code><a href="https://rspatial.github.io/geodata/reference/gadm.html" class="external-link">geodata::gadm()</a></code> with no <code>path</code>, which errors on any machine where <code><a href="https://rspatial.github.io/geodata/reference/geodata_path.html" class="external-link">geodata::geodata_path()</a></code> has never been set. The download location is now resolved explicitly, preferring somewhere persistent: <code>geodata_path()</code>, then <code>reproducible.destinationPathShared</code>, then <code>reproducible.inputPath</code> (under <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code>). If GADM cannot be retrieved at all, a <strong>warning</strong> now says so and names the fixed extent used instead, rather than failing or silently tiling the wrong area.</p></li>
+<li><p><strong>Setting <code>mc.cores</code> no longer throttles downloads.</strong> Concurrent connections defaulted to <code>parallelly::availableCores() - 1</code>, and because <code>availableCores()</code> honours <code>mc.cores</code>, capping CPU forking silently reduced downloads to a single connection.</p></li>
+<li><p><strong>Changing <code>options(reproducible.cacheSaveFormat)</code> no longer invalidates the cache.</strong> On the file-backed backend every entry was silently recomputed and both old and new files left on disk; entries are now migrated to the new format. Two related defects on the same path are also fixed (<code><a href="../reference/loadFile.html">loadFile()</a></code> erroring with <code>object 'fe' not found</code> when given <code>format=</code>, and the format-retry loop giving up after the first candidate).</p></li>
+<li><p><strong>The background <code><a href="../reference/viewCache.html">showCache()</a></code> pre-warm fork is no longer leaked.</strong> It is spawned only when it will be consumed, and never under a DBI backend; previously long sessions accumulated forks and OOM-killed CI runners. New advanced option <code>reproducible.showCachePreWarm</code>.</p></li>
+<li><p><strong>DBI backend:</strong> tag values containing a single quote no longer break inserts; <code><a href="../reference/addTags.html">.addTagsRepo()</a></code>/<code><a href="../reference/addTags.html">.updateTagsRepo()</a></code> accept a named list of connections; and URL logging is no longer silently disabled under <code>useDBI(TRUE)</code>.</p></li>
+<li><p><strong>Google Drive:</strong> public files no longer trigger an interactive OAuth prompt; authentication uses a verified fallback chain; failures report the actual cause; and <code>Cache(useCloud = TRUE)</code> no longer pages the entire cloud-cache folder. A best-effort cloud upload no longer aborts the run.</p></li>
+<li><p><strong>File-backed objects</strong> (e.g. <code>terra</code> <code>SpatRaster</code>) are restored portably across machines via the new <code>reproducible.fileBackedAnchors</code>.</p></li>
+<li><p><strong>Platform-specific:</strong> <code><a href="../reference/archiveExtractBinary.html">.archiveExtractBinary()</a></code> no longer invokes <code>apt</code> on macOS, nor errors on Windows when more than one archive binary is installed.</p></li>
+<li><p>Single-stream downloads no longer hang for certain servers; parallel ranged downloads are used only where the server supports them.</p></li>
+<li><p>Assorted message and reporting fixes in <code><a href="../reference/messageColoured.html">messageColoured()</a></code>/<code>cliCol()</code>, <code><a href="../reference/relativePaths.html">getRelative()</a></code>, and direct <code><a href="../reference/preProcess.html">preProcess()</a></code> calls. # reproducible 3.1.1</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-3-2-0-1">bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-3-2-0-1"></a></h3>
 <ul><li>fixed a test failure (<code>test-destinationPathShared.R</code>) on file systems whose inode numbers exceed <code>.Machine$integer.max</code>: the inode helper now compares inode numbers as strings rather than coercing to integer. No user-facing change; the package code is unaffected.</li>
 </ul></div>
 </div>
@@ -552,7 +604,7 @@
 <li>
 <code>clearCache</code> and <code>cc</code> did not correctly remove file-backed raster files (when not clearing whole CacheRepo); this may have resulted in a proliferation of files, each a filename with an underscore and a new higher number. This fix should eliminate this problem.</li>
 <li>deal with development versions of GDAL in <code>getGDALVersion()</code> (<a href="https://github.com/PredictiveEcology/reproducible/issues/239" class="external-link">#239</a>)</li>
-<li>fix issue with <code><a href="../reference/deprecated.html">maskInputs()</a></code> when not passing <code>rasterToMatch</code>.</li>
+<li>fix issue with <code><a href="../reference/postProcessInputsSuperseded.html">maskInputs()</a></code> when not passing <code>rasterToMatch</code>.</li>
 <li>fix issue with <code>isna.SpatialFix</code> when using <code>postProcess.quosure</code>
 </li>
 </ul></div>
@@ -1170,7 +1222,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

@@ -25,7 +25,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -62,7 +62,7 @@ See Details below."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/aj
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1><code>reproducible</code> options</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/options.R" class="external-link"><code>R/options.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/options.R" class="external-link"><code>R/options.R</code></a></small>
     <div class="hidden name"><code>reproducibleOptions.Rd</code></div>
     </div>
 
@@ -94,8 +94,16 @@ file so they persist between sessions.</p>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="Cache.html">Cache()</a></code> in the <code>.cacheChaining</code> argument.</p></dd>
 
 <dt><code>cachePath</code></dt>
-<dd><p>Default: <code>.reproducibleTempCacheDir</code>. Used in <code><a href="Cache.html">Cache()</a></code> and many others.
-The default path for repositories if not passed as an argument.</p></dd>
+<dd><p>Default: <code>NULL</code>. Used in <code><a href="Cache.html">Cache()</a></code> and many others. The option is no
+longer pre-set when the package is loaded; instead it is resolved
+lazily on first use by an entry point (<code><a href="Cache.html">Cache()</a></code>, <code><a href="viewCache.html">clearCache()</a></code>,
+<code><a href="viewCache.html">showCache()</a></code>, <code><a href="viewCache.html">keepCache()</a></code>, ...). If still unset at that point,
+it is set to <code>.reproducibleTempCacheDir()</code> for the rest of the
+session. This lets project-setup layers (e.g.
+<code>SpaDES.project::setupProject()</code>) detect "unset" cleanly and avoids
+committing every R session to a session-tempdir path that would not
+persist across sessions. Set this early (e.g. in your project setup
+script) to use a persistent cache.</p></dd>
 
 <dt><code>cacheSaveFormat</code></dt>
 <dd><p>Default: <code>"rds"</code>. What save format to use; currently, <code>"qs"</code> (which will use
@@ -128,6 +136,14 @@ For remote database servers, setting one connection may be far faster than using
 <dd><p>Default: <code>NULL</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
 Can be set globally here.</p></dd>
 
+<dt><code>downloadProgressInterval</code></dt>
+<dd><p>Default: <code>2</code>, in seconds. Minimum interval between download-progress lines
+in non-interactive / non-dynamic sessions (logged runs, CI, a SpaDES
+<code>simInit</code>). In those sessions <code>httr2</code>'s native cli progress bar emits
+nothing, so <code><a href="preProcess.html">preProcess()</a></code> instead streams the body and reports progress
+via <code><a href="messageColoured.html">messagePreProcess()</a></code> (which the calling app can timestamp). In a
+dynamic terminal the native in-place bar is used and this has no effect.</p></dd>
+
 <dt><code>drv</code></dt>
 <dd><p>Default: <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">RSQLite::SQLite()</a></code>. Sets the default driver for the backend database system.
 Only tested with <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">RSQLite::SQLite()</a></code> and <code>RPostgres::Postgres()</code>.</p></dd>
@@ -135,12 +151,29 @@ Only tested with <code><a href="https://rsqlite.r-dbi.org/reference/SQLite.html"
 <dt>dryRun</dt>
 <dd><p>Default: <code>FALSE</code>.</p></dd>
 
+<dt><code>fileBackedAnchors</code></dt>
+<dd><p>Default: <code>NULL</code>. A named list of "anchor" directories (e.g. the result of
+SpaDES <code>paths(sim)</code>: <code>cachePath</code>, <code>inputPath</code>, <code>outputPath</code>, <code>modulePath</code>,
+...) used to make <em>file-backed</em> objects (such as a <code>terra</code> <code>SpatRaster</code>)
+portable across machines and users. A file-backed object embeds an
+<em>absolute</em> path to its backing file; when stored relative to a named anchor
+here, <code>Cache</code> records the anchor name plus the path relative to it, and on
+load rebuilds the file under the <em>receiver's</em> anchor of the same name. Each
+entry may hold one or more directories, and the most specific (longest)
+matching anchor wins. The same named list must be set on both the machine
+that writes the cache entry and the one that reads it (e.g. a shared cloud
+cache). When the file lives under no anchor, or the anchor name is not set
+on the receiver, the object is restored <em>self-contained under the
+receiver's <code>cachePath</code></em> rather than the producing machine's absolute path.
+<code>cachePath</code> and the current working directory are always available as
+fallback anchors.</p></dd>
+
 <dt><code>futurePlan</code></dt>
-<dd><p>Default: <code>FALSE</code>. On Linux OSes, <code>Cache</code> and <code>cloudCache</code> have some
-functionality that uses the <code>future</code> package.
-Default is to not use these, as they are experimental.
-They may, however, be very effective in speeding up some things, specifically,
-uploading cached elements via <code>googledrive</code> in <code>cloudCache</code>.</p></dd>
+<dd><p><strong>No effect as of version 3.2.0.</strong> Default: <code>FALSE</code>. This previously
+enabled <code>future</code>-backed background downloading and cache writing on Linux.
+Those paths were off by default, effectively untested, and have been
+removed; the option is retained only because downstream packages set it,
+and setting it now does nothing.</p></dd>
 
 <dt><code>gdalwarp</code></dt>
 <dd><p><strong>Deprecated — do not use.</strong> Default: <code>FALSE</code>. This option previously
@@ -153,6 +186,20 @@ compatibility and will be removed in a future release.</p></dd>
 <dt><code>gdalwarpThreads</code></dt>
 <dd><p><strong>Deprecated — do not use</strong> (see <code>gdalwarp</code> above). Default: <code>2</code>.
 Previously set <code>-wo NUM_THREADS=</code> for <code>gdalProject</code>.</p></dd>
+
+<dt><code>gdriveNoAuth</code></dt>
+<dd><p>Default: <code>FALSE</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
+When <code>TRUE</code>, Google Drive files are accessed without a <code>googledrive</code> token
+(i.e. no <code>drive_auth()</code>): both the <em>metadata</em> read in <code>assessGoogle()</code> and
+the download itself are done anonymously (the metadata read by
+deauthorizing <code>googledrive</code> so it uses an API key). This only works for
+files shared as "Anyone with the link". The same no-auth path is taken
+automatically — regardless of this option — when no Drive token is loaded
+(the common "cloud reader" case) or when the supplied <code>url</code> is the public
+web-download form, e.g.
+<code>https://drive.google.com/uc?export=download&amp;id=&lt;ID&gt;</code>. A loaded token (a
+"cloud writer" who needs auth to write a shared cloud cache) is left
+intact.</p></dd>
 
 <dt><code>destinationPathShared</code></dt>
 <dd><p>Default: <code>NULL</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code> and <code><a href="preProcess.html">preProcess()</a></code>.
@@ -193,6 +240,23 @@ cues (largely based on <code>memfrac</code>, <code>maxmem</code> <code>terraOpti
 however, if the user has set the <code>terraOptions</code> away from its default of <code>0.5</code>. The default
 increases predictability of whether the returned object is on disk or in memory.</p></dd>
 
+<dt><code>terraMemmax</code></dt>
+<dd><p>Default: <code>2</code> (gigabytes). Used in <code><a href="postProcessTo.html">postProcessTo()</a></code>.
+Caps <code>terra</code>'s per-raster memory budget for the duration of a <code><a href="postProcessTo.html">postProcessTo()</a></code>
+call by temporarily setting <code>terraOptions(memmax = ...)</code>, restored via
+<code><a href="https://rdrr.io/r/base/on.exit.html" class="external-link">on.exit()</a></code>. Small values force <code>terra</code> to process in chunks, which on
+high-RAM machines is substantially faster than letting it pull whole
+rasters into RAM (in benchmarks on a 1TB-RAM machine, <code>memmax = 4</code> was
+~45% faster and used ~3x less peak RSS than the unbounded default; the
+2GB default is conservative for shared nodes). Set to <code>NULL</code> to disable
+and let <code>terra</code> choose. <strong>Respects user-set values</strong>: if the caller has
+already set <code>terraOptions(memmax = ...)</code> to a positive finite value,
+<code><a href="postProcessTo.html">postProcessTo()</a></code> leaves it alone – the option only applies when
+<code>terra</code>'s <code>memmax</code> is at its default ("ignored": <code>NA</code>, <code>NULL</code>, or <code>&lt;= 0</code>;
+terra's out-of-the-box default is <code>-1</code>). See also <code>memfrac</code> in
+<code><a href="https://rspatial.github.io/terra/reference/terraOptions.html" class="external-link">terra::terraOptions()</a></code>; a <code>memfrac</code> ceiling of <code>0.1</code> is sensible on
+shared machines.</p></dd>
+
 <dt><code>memoisePersist</code></dt>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="Cache.html">Cache()</a></code>.
 Should the memoised copy of the Cache objects persist even if <code>reproducible</code> reloads
@@ -213,6 +277,61 @@ faster, depending on the objects.</p></dd>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="prepInputs.html">prepInputs()</a></code>, <code><a href="preProcess.html">preProcess()</a></code>,
 <code><a href="downloadFile.html">downloadFile()</a></code>, and <code><a href="postProcess.html">postProcess()</a></code>.</p></dd>
 
+<dt><code>parallel.cores</code></dt>
+<dd><p>Default: <code>NULL</code>, meaning <code><a href="https://parallelly.futureverse.org/reference/freeCores.html" class="external-link">parallelly::freeCores()</a></code>. Degree of parallelism
+for <strong>CPU-bound</strong> work, i.e. tiling in <code><a href="prepInputs.html">prepInputs()</a></code> when <code>numTiles</code> is
+supplied. Being CPU work, it is additionally capped by <code>mc.cores</code>.
+Setting it to <code>1L</code> also disables the background <code><a href="viewCache.html">showCache()</a></code> pre-warm
+fork, which costs one extra process (see <code>showCachePreWarm</code> below).</p></dd>
+
+<dt><code>parallel.download</code></dt>
+<dd><p>Default: <code>NULL</code>, meaning <code>48L</code>. Number of concurrent ranged connections
+used to fetch a single large file (equivalently, the number of byte-range
+parts it is split into). Deliberately <strong>not</strong> derived from the core count:
+network throughput is bounded by bandwidth and per-connection server
+shaping, not by CPUs, so this is not capped by <code>mc.cores</code> either. Set <code>1L</code>
+to force the single-stream path. As with the deprecated options it
+replaces, this has no effect unless <code>reproducible.urlRemap</code> is set.</p></dd>
+
+<dt><code>parallel.upload</code></dt>
+<dd><p>Default: <code>NULL</code>, meaning <code>7L</code>. Number of concurrent uploads to Google
+Drive. Network-bound like <code>parallel.download</code>, so likewise not core-derived
+and not capped by <code>mc.cores</code>; more than about 7 tends to be slower,
+depending on connection speed.</p></dd>
+
+<dt><code>parallel.streams</code></dt>
+<dd><p><a href="https://lifecycle.r-lib.org/articles/stages.html#deprecated" class="external-link"><img src="figures/lifecycle-deprecated.svg" alt="[Deprecated]"></a>)<code>Use</code>parallel.download<code>instead, which takes precedence when both are set. Still honoured when it alone is set. Default:</code>48L<code>. The number of contiguous byte-range **parts** a single large HTTPS file is split into. **This has no effect unless you have opted in by setting </code>reproducible.urlRemap<code>** (see below): if no remap is set, downloads are always single-stream, regardless of this value. Once opted in, the parallel path is used **only for a URL that the </code>urlRemap<code>hook actually redirected** to a (Range-capable) mirror — *not* for arbitrary range-capable origin servers reached without a redirect, since those may cap concurrent connections per IP (in which case parallel streams all stall and the download is slower than a single stream). For an eligible, redirected URL the file is split into this many parts — but only when the server advertises</code>Accept-Ranges: bytes<code>and the file is larger than</code>reproducible.parallel.threshold<code>; otherwise, and on any failure, it falls back transparently to a single stream. (A redirected mirror that *does* turn out to cap concurrency is detected on the first attempt — see </code>reproducible.parallel.minConcurrentFrac<code>— and also falls back.) Splitting into many small parts keeps retries cheap (a dropped connection costs only one part re-fetch). The number that download *at once* is separately capped by</code>reproducible.parallel.maxConnections<code>. Especially useful on networks that shape bandwidth per-connection. Set to </code>1L<code> to force single-stream downloads even when a remap is set. Requires the \pkg{curl} and \pkg{httr2} packages. The assembled file is byte-identical to a single-stream download, so checksums are unaffected. } \item{</code>parallel.maxConnections<code>}{ \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}})</code> Use <code>parallel.download</code> instead, which
+takes precedence when both are set. Still honoured when it alone is set.
+Previously defaulted to <code>parallelly::availableCores() - 1</code>, which meant a
+user setting <code>mc.cores</code> to limit forking silently throttled downloads. The maximum
+number of ranged parts that download <strong>simultaneously</strong>; the rest queue
+until a connection frees up. This bounds the burst of concurrent TLS
+handshakes, which some stacks (notably Windows) refuse when all
+<code>reproducible.parallel.streams</code> are opened at once — the symptom being
+most parts failing immediately at connection time. Set a positive integer
+to override the default ceiling.</p></dd>
+
+<dt><code>parallel.connecttimeout</code></dt>
+<dd><p>Default: <code>30L</code>, in seconds. The per-connection establishment timeout for
+each ranged stream. This is distinct from <code>reproducible.timeout</code> (the
+overall download timeout, which may be hours): a short, dedicated cap so a
+stalled handshake fails its own part quickly and is retried rather than
+hanging.</p></dd>
+
+<dt><code>parallel.minConcurrentFrac</code></dt>
+<dd><p>Default: <code>0.25</code>. A guard against a redirected mirror that advertises Range
+support but actually caps concurrent connections per IP. If the <em>first</em>
+concurrent attempt completes fewer than this fraction of the parts (most
+having stalled at 0 bytes), the parallel path gives up immediately and
+falls back to a single stream, instead of grinding through every retry.
+Set to <code>0</code> to disable the early fallback.</p></dd>
+
+<dt><code>parallel.threshold</code></dt>
+<dd><p>Default: <code>10 * 1024^2</code> (10 MiB), in bytes. Files at or below this size are
+always downloaded single-stream; only files larger than this use the
+parallel ranged path. Like <code>reproducible.parallel.streams</code>, this has no
+effect unless you have opted in via <code>reproducible.urlRemap</code>.</p></dd>
+
 <dt><code>quick</code></dt>
 <dd><p>Default: <code>FALSE</code>. Used in <code><a href="Cache.html">Cache()</a></code>. This will cause <code>Cache</code> to use
 <code>file.size(file)</code> instead of the <code>digest::digest(file)</code>.
@@ -231,6 +350,35 @@ it will use <code><a href="https://rdrr.io/pkg/raster/man/shapefile.html" class=
 <dt><code>showSimilar</code></dt>
 <dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
 
+<dt><code>showCachePreWarm</code></dt>
+<dd><p>Default <code>TRUE</code> (override with environment variable
+<code>R_REPRODUCIBLE_SHOWCACHE_PREWARM</code>). When <code>TRUE</code>, a <code>Cache(showSimilar = TRUE)</code>
+call spawns a one-time background process (a fork; not on Windows) that
+pre-scans the flat-file cache so the subsequent <code><a href="viewCache.html">showCache()</a></code>/<code>showSimilar</code>
+lookup returns quickly for large caches. This is skipped automatically under
+a DBI backend (<code>useDBI(TRUE)</code>), which is answered from an index. <strong>Advanced
+option:</strong> set to <code>FALSE</code> to disable the automatic pre-warm entirely – useful
+in memory-constrained runners that touch many distinct <code>cachePath</code>s in one
+session (e.g. <code><a href="http://covr.r-lib.org/reference/package_coverage.html" class="external-link">covr::package_coverage()</a></code>), where the per-path forks can
+accumulate. Explicit <code><a href="prepopulateCacheAsync.html">prepopulateCacheAsync()</a></code> calls are unaffected.</p></dd>
+
+<dt><code>preDigestDump</code></dt>
+<dd><p>Default: <code>NULL</code> (off). A diagnostic for "why is my <code>cacheId</code> different on
+this machine than that one?" (e.g. a cloud cache that will not share across
+OSs). Unlike <code>showSimilar</code> (closest prior call only) or <code>dryRun</code>/<code>verbose</code>,
+this dumps the <strong>full</strong> element-by-element <code>name = hash</code> list that produced
+the <code>cacheId</code>, for <em>every</em> <code><a href="Cache.html">Cache()</a></code> call (including ones built inside other
+packages, e.g. SpaDES.core events). Set to <code>TRUE</code> to print each call's
+sorted list via <code><a href="messageColoured.html">messageCache()</a></code>, or to a <strong>directory path</strong> to write one
+<code>preDigest_&lt;functionName&gt;[_&lt;n&gt;].txt</code> file per call. Point it at a fresh,
+empty directory on each machine, run, then <code>diff</code> the two directories: the
+differing <code>name = hash</code> line is exactly what is splitting the <code>cacheId</code>.</p></dd>
+
+<dt><code>preDigestDumpPattern</code></dt>
+<dd><p>Default: <code>NULL</code>. Optional regular expression matched against a call's
+<code>.functionName</code>; when set, only matching <code><a href="Cache.html">Cache()</a></code> calls are dumped by
+<code>reproducible.preDigestDump</code> (e.g. <code>"init|inputObjects"</code>).</p></dd>
+
 <dt><code>testCharacterAsFile</code></dt>
 <dd><p>Default <code>FALSE</code>. The behaviour of <code>.robustDigest</code> on <code>character</code> vectors prior to
 <code>reproducible == 2.1.2</code> was that the function would test for whether they were
@@ -244,11 +392,31 @@ either <code>asPath</code> or <code><a href="https://fs.r-lib.org/reference/fs_p
 behaviour will return, where it tries to guess whether a character vector
 is filenames or not, and if it is, then digest the file content.</p></dd>
 
+<dt><code>connecttimeout</code></dt>
+<dd><p>Default: <code>30L</code>, in seconds. The per-connection establishment (TLS
+handshake) timeout for the single-stream download in <code>preProcess</code>. This is
+distinct from <code>reproducible.timeout</code> (the overall download budget, which
+may be hours): a short, dedicated cap so a stalled or flaky connect fails
+quickly and is retried rather than hanging for the full timeout. Mirrors
+<code>reproducible.parallel.connecttimeout</code> for the parallel ranged path.</p></dd>
+
 <dt><code>timeout</code></dt>
-<dd><p>Default <code>1200</code>. Used in <code>preProcess</code> when downloading occurs. If a user has <code>R.utils</code>
+<dd><p>Default <code>12000</code>. Used in <code>preProcess</code> when downloading occurs. If a user has <code>R.utils</code>
 package installed, <code>R.utils::withTimeout(  , timeout = getOption("reproducible.timeout"))</code>
 will be wrapped around the download so that it will timeout (and error) after this many
 seconds.</p></dd>
+
+<dt><code>urlLog</code></dt>
+<dd><p>Default: <code>NULL</code>. Controls whether <code><a href="prepInputs.html">prepInputs()</a></code> / <code><a href="preProcess.html">preProcess()</a></code> keep a
+record of the files and web addresses (URLs) they download. <code>NULL</code> (the
+default) records each download as a permanent tag on the matching cache
+entry, which you can look up later with
+<code>showCache(userTags = "reproducible.url")</code>; it keeps no in-session list.
+<code>TRUE</code> additionally keeps an in-memory list for the current session, which
+you can read with <code><a href="prepInputsLog.html">prepInputsLog()</a></code> and empty with <code><a href="prepInputsLog.html">clearUrlLog()</a></code>.
+<code>FALSE</code> turns the recording off completely. Advanced: you may instead
+supply an environment (records are appended to <code>env$records</code>, which you
+own and manage) or a function (called once with each record).</p></dd>
 
 <dt><code>useCache</code></dt>
 <dd><p>Default: <code>TRUE</code>. Used in <code><a href="Cache.html">Cache()</a></code>. If <code>FALSE</code>, then the entire
@@ -270,19 +438,51 @@ entry in the <code>cachePath</code>, then this option will default back to the n
 behaviour to avoid deleting objects.
 This, therefore, is most useful if the user is using unique values for <code>userTags</code>.</p></dd>
 
+<dt><code>urlRemap</code></dt>
+<dd><p>Default: <code>NULL</code> (feature off). <strong>This is the opt-in switch for the faster
+download path.</strong> It may be set to any of: a function <code>function(url, filename)</code>; a manifest <code>data.frame</code> with <code>filename</code> and <code>url</code> columns; or a
+length-one character path/URL to a CSV with those columns. For the
+<code>data.frame</code>/CSV forms, <code>reproducible</code> builds the remap function internally
+(once, then cached) — so a novice can simply write
+<code>options(reproducible.urlRemap = read.csv("manifest.csv"))</code> without calling
+<code><a href="makeUrlRemap.html">makeUrlRemap()</a></code> themselves. However supplied, it is
+consulted in the download path once the target <code>filename</code> has been
+resolved (for Google Drive URLs, after the <code>drive_get()</code> lookup). The
+function may return an alternative URL to download from instead, e.g. a
+public mirror that supports HTTP Range requests (which then triggers the
+parallel ranged download governed by <code>reproducible.parallel.streams</code> and
+<code>reproducible.parallel.threshold</code>); returning <code>NULL</code> or the original URL
+keeps the behaviour unchanged. A function that errors is ignored (with a
+warning) so a broken remap cannot break a download. With the default
+<code>NULL</code>, no remapping occurs and downloads behave exactly as before.</p></dd>
+
 <dt><code>reproducible.useCacheV3</code></dt>
 <dd><p>Default: <code>TRUE</code>. If this is set to <code>FALSE</code>, it will use the old <code>Cache</code> source
 code. This will only be available for a short period before it is deleted
-from the package. See also <code>reproducible.digestV3</code>. It is not guaranteed to
+from the package. See also <code>reproducible.digestVersion</code>. It is not guaranteed to
 be identical to using a previous version of <code>reproducible (&lt;3.0)</code>.</p></dd>
 
 <dt><code>useCloud</code></dt>
 <dd><p>Default <code>FALSE</code>. Passed to <code>Cache</code>.</p></dd>
 
 <dt><code>useDBI</code></dt>
-<dd><p>Default: <code>TRUE</code> if <span class="pkg">DBI</span> is available.
-Default value can be overridden by setting environment variable <code>R_REPRODUCIBLE_USE_DBI</code>.
-As of version 0.3, the backend is now <span class="pkg">DBI</span> instead of <span class="pkg">archivist</span>.</p></dd>
+<dd><p>Default: <code>FALSE</code>, i.e., the file-backed cache metadata backend, which writes
+one small metadata file per <code>cacheId</code> alongside the cached object in
+<code>cacheOutputs/</code>. This needs no database packages, works on network
+filesystems (e.g., NFS, CIFS), where <code>SQLite</code> file locking is unreliable, and
+makes cloud caching straightforward because each entry's metadata is a
+self-contained, uploadable file.
+If <code>TRUE</code>, cache metadata are instead kept in a <span class="pkg">DBI</span> database –
+<code>SQLite</code> (<code>cache.db</code>) by default, or any <span class="pkg">DBI</span> backend supplied via
+<code>reproducible.drv</code>/<code>reproducible.conn</code>. This answers <code><a href="viewCache.html">showCache()</a></code> from the
+database rather than by scanning the cache directory, which is faster on
+large cache repositories. It requires both <span class="pkg">DBI</span> and <span class="pkg">RSQLite</span>;
+if either is missing, the option silently reverts to <code>FALSE</code> with a message.
+Switching this option on an existing cache repository is supported: the
+metadata are converted to the other backend on first use, without loss.
+Default value can be overridden by setting environment variable
+<code>R_REPRODUCIBLE_USE_DBI</code> to <code>"true"</code> or <code>"false"</code>.
+As of version 0.3, the database backend is <span class="pkg">DBI</span> instead of <span class="pkg">archivist</span>.</p></dd>
 
 <dt><code>useGdown</code></dt>
 <dd><p>Default: <code>FALSE</code>. If a user provides a Google Drive url to <code>preProcess</code>/<code>prepInputs</code>,
@@ -327,13 +527,59 @@ them and also the time it took to run the call and save the call to the cache re
 load the cached copy from the repository.
 This may help diagnosing some problems that may occur.</p></dd>
 
+<dt><code>digestVersion</code></dt>
+<dd><p>Default: <code>NULL</code> (which resolves to <code>4</code>). A single integer that selects the
+digest (i.e. <code>cacheId</code>) algorithm used by <code><a href="Cache.html">Cache()</a></code>. This is the
+going-forward control; it supersedes the booleans <code>digestV3</code> and
+<code>digestV4</code> below (which are still honoured when <code>digestVersion</code> is unset).
+Higher numbers are newer; each builds on the previous one. (Note: this is
+the <em>digest-algorithm</em> version, <strong>not</strong> the version of the <code>reproducible</code>
+<strong>package</strong> — although the lower numbers echo the package generation that
+introduced them. References below to e.g. "the <code>reproducible</code> package
+v3.x" mean the package release, not this option.) The versions:</p><dl><dt><code>2</code></dt>
+<dd><p><em>Some of</em> the hash assembly used by older <code>reproducible</code>
+<strong>package</strong> versions (before package v3.0.0), for partial backwards
+compatibility with caches they created. It cannot be made exact for
+all classes, particularly file-backed objects. (Equivalent to the old
+<code>digestV3 = FALSE</code>.)</p></dd>
+
+<dt><code>3</code></dt>
+<dd><p>The hash assembly introduced in the <code>reproducible</code> <strong>package</strong>
+v3.x (the default through package v3.1.1): includes the names of list
+elements and several other tweaks. <code>sf</code>/<code>SpatVector</code> use the original
+(pre-platform-stable) geometry digest, which could differ across
+operating systems. Set <code>digestVersion = 3</code> to reproduce the <code>cacheId</code>s
+of the <code>reproducible</code> package v3.1.1 and earlier, and to avoid the
+one-time cache invalidation described under <code>4</code>.</p></dd>
+
+<dt><code>4</code></dt>
+<dd><p><strong>Default.</strong> As <code>3</code>, but <code>sf</code> and <code>SpatVector</code> objects are
+digested with a platform-stable algorithm: the geometry is the numeric
+vertex matrix with coordinates rounded to a fixed precision (plus the
+geometry type), and attributes are kept in feature order with columns
+sorted by a locale-independent method. The same vector data then
+produces the same <code>cacheId</code> on Windows, macOS and Linux (digest
+version <code>3</code> could differ across operating systems, preventing
+shared/cloud caching of these objects), and an <code>sf</code> object and its
+<code>SpatVector</code> equivalent digest identically. Requires the <span class="pkg">terra</span>
+package. <strong>NOTE:</strong> because <code>4</code> is now the default, the <code>cacheId</code> of
+every <code>sf</code>/<code>SpatVector</code> object differs from that produced by the
+<code>reproducible</code> package v3.1.1 and earlier, so cached results that
+involved such objects are <em>recomputed once</em> under the new algorithm.
+Set <code>digestVersion = 3</code> to avoid this.</p></dd>
+
+
+</dl></dd>
+
 <dt><code>digestV3</code></dt>
-<dd><p>Default: <code>TRUE</code>. This uses a digest approach that includes the names of
-list elements and several other tweaks that were created for <code>reproducible 3.x</code>.
-Set this to <code>FALSE</code> to use <em>some of</em> the previous cache digesting to
-achieve some backwards compatibility with the digest algorithms of <code>reproducible (&lt;3.x)</code>.
-It will not be possible to get it exact for all classes of objects, particularly
-those with file-backing.</p></dd>
+<dd><p><strong>Superseded by <code>digestVersion</code></strong> (still honoured when <code>digestVersion</code> is
+unset). Default: <code>TRUE</code>. <code>TRUE</code> leaves the version at its default; <code>FALSE</code>
+is equivalent to <code>digestVersion = 2</code> (see above).</p></dd>
+
+<dt><code>digestV4</code></dt>
+<dd><p><strong>Superseded by <code>digestVersion</code></strong> (still honoured when <code>digestVersion</code> is
+unset). Default: <code>FALSE</code>. <code>TRUE</code> is equivalent to <code>digestVersion = 4</code>,
+which is now also the default (see above).</p></dd>
 
 
 
@@ -360,6 +606,20 @@ User agent for downloads using this package.</p></dd>
 
 </dl></div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># See all reproducible options and their defaults</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu">reproducibleOptions</span><span class="op">(</span><span class="op">)</span>, max.level <span class="op">=</span> <span class="fl">1</span>, list.len <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> List of 68</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.ask                           : logi TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.cacheChaining                 : logi FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.checkRemoteHash               : logi FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.cachePath                     : NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ reproducible.cacheSaveFormat               : chr "rds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [list output truncated]</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>
@@ -372,7 +632,7 @@ User agent for downloads using this package.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

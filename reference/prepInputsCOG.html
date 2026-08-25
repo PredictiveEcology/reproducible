@@ -4,7 +4,10 @@ When a URL points to a COG and the user has specified a spatial subsetting argum
 (to, cropTo, or maskTo), this function reads only the spatial window of interest
 via GDAL's /vsicurl/ virtual filesystem — no full-file download is needed.
 The returned SpatRaster is passed back to prepInputs where the normal
-postProcess step (mask, reproject, write) completes the pipeline."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
+postProcess step (mask, reproject, write) completes the pipeline.
+This function is called automatically from inside prepInputs() when
+getOption(&quot;reproducible.useCOG&quot;) is TRUE (the default). It can also be
+called directly."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--><!-- Global site tag (gtag.js) - Google Analytics --><script async src="https://www.googletagmanager.com/gtag/js?id=UA-58633549-5"></script><script>
@@ -28,7 +31,7 @@ postProcess step (mask, reproject, write) completes the pipeline."><!-- mathjax 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">reproducible</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">3.2.0</span>
       </span>
     </div>
 
@@ -65,7 +68,7 @@ postProcess step (mask, reproject, write) completes the pipeline."><!-- mathjax 
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Fast spatial subsetting of Cloud Optimized GeoTiff (COG) files</h1>
-    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/v3.1.1/R/prepInputsCOG.R" class="external-link"><code>R/prepInputsCOG.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/PredictiveEcology/reproducible/blob/main/R/prepInputsCOG.R" class="external-link"><code>R/prepInputsCOG.R</code></a></small>
     <div class="hidden name"><code>prepInputsCOG.Rd</code></div>
     </div>
 
@@ -76,6 +79,9 @@ When a URL points to a COG and the user has specified a spatial subsetting argum
 via GDAL's <code>/vsicurl/</code> virtual filesystem — no full-file download is needed.
 The returned <code>SpatRaster</code> is passed back to <code>prepInputs</code> where the normal
 <code>postProcess</code> step (mask, reproject, write) completes the pipeline.</p>
+<p>This function is called automatically from inside <code><a href="prepInputs.html">prepInputs()</a></code> when
+<code>getOption("reproducible.useCOG")</code> is <code>TRUE</code> (the default). It can also be
+called directly.</p>
     </div>
 
     <div id="ref-usage">
@@ -105,12 +111,6 @@ or <code>maskTo</code> (a spatial object defining the area of interest).</p></dd
 object (in the COG's own CRS), or the character string <code>"NULL"</code> if any
 pre-condition fails (not HTTP, no spatial arg, network error, empty window, etc.).</p>
     </div>
-    <div id="details">
-    <h2>Details</h2>
-    <p>This function is called automatically from inside <code><a href="prepInputs.html">prepInputs()</a></code> when
-<code>getOption("reproducible.useCOG")</code> is <code>TRUE</code> (the default). It can also be
-called directly.</p>
-    </div>
     <div id="see-also">
     <h2>See also</h2>
     <div class="dont-index"><p><code><a href="prepInputs.html">prepInputs()</a></code>, <code><a href="prepInputsWithTiles.html">prepInputsWithTiles()</a></code></p></div>
@@ -128,7 +128,7 @@ called directly.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>
