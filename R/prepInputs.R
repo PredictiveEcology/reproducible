@@ -998,7 +998,14 @@ extractFromArchive <- function(archive,
         )
       })
     } else {
-      system(paste0("unrar x ", args[[1]], " ", .tempPath), wait = TRUE, ignore.stdout = TRUE)
+      ## `unrar` here is a bare command name, unlike the 7z paths above which
+      ## come from Sys.which(); without this guard a missing unrar silently
+      ## returns status 127 and the extraction quietly does nothing.
+      if (nzchar(Sys.which("unrar"))) {
+        system(paste0("unrar x ", args[[1]], " ", .tempPath), wait = TRUE, ignore.stdout = TRUE)
+      } else {
+        messagePreProcess("`unrar` not found; cannot extract ", args[[1]], verbose = verbose)
+      }
     }
     # list of full paths of all extracted files!
     # extractedFiles <- list.files(path = .tempPath, recursive = TRUE, include.dirs = TRUE)
@@ -1431,24 +1438,29 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   } else {
     ""
   }
-  ## `apt` is Debian/Ubuntu, i.e. Linux-only, so this is guarded on isLinux().
-  ## It was `!(isWindows() && !isMac())`, which by De Morgan is `!isWindows() ||
-  ## isMac()` -- that admits macOS, where system("apt ...", intern = TRUE) errors
-  ## with "error in running command". Nothing had ever called this function on
-  ## macOS, so it went unnoticed until a test did. (The old `## TODO: macOS ??
-  ## #266` marker sat on this very line.)
-  if (isLinux()) {
-    if (grepl("7z", extractSystemCallPath)) {
-      SevenZrarExists <- system("apt -qq list p7zip-rar", intern = TRUE, ignore.stderr = TRUE)
-      SevenZrarExists <- grepl(SevenZrarExists, pattern = "installed")
-      if (isFALSE(SevenZrarExists)) {
-        messagePreProcess("To extract .rar files, you will need p7zip-rar, not just p7zip-full. Try: \n",
-                          "--------------------------\n",
-                          "apt install p7zip-rar\n",
-                          "--------------------------\n",
-                          verbose = verbose
-        )
-      }
+  ## Ask 7z itself whether it supports .rar -- `7z i` lists the compiled-in
+  ## codecs and formats -- instead of querying a package manager.
+  ##
+  ## This previously ran `apt -qq list p7zip-rar`, which was wrong three ways:
+  ## it answered a proxy question (is a Debian package installed) rather than
+  ## the real one; its advice is meaningless off Debian/Ubuntu; and
+  ## system(intern = TRUE) *errors* when the command does not exist, so it blew
+  ## up wherever `apt` is absent. Gating it by OS did not help -- "Linux" is not
+  ## "has apt" (Fedora, RHEL, Arch, SUSE) -- and that is exactly how 3.2.0
+  ## reached CRAN with a test ERROR on r-devel-linux-x86_64-fedora-{clang,gcc}.
+  ## `extractSystemCallPath` came from Sys.which(), so this call cannot hit that
+  ## failure mode.
+  if (grepl("7z", extractSystemCallPath)) {
+    sevenZipInfo <- tryCatch(
+      system(paste0("\"", extractSystemCallPath, "\" i"),
+             intern = TRUE, ignore.stderr = TRUE),
+      error = function(e) character(0),
+      warning = function(w) character(0)
+    )
+    ## only advise when 7z answered AND reported no Rar codec; an empty result
+    ## means we could not tell, which is not grounds for a message
+    if (length(sevenZipInfo) && !any(grepl("Rar", sevenZipInfo))) {
+      messagePreProcess(.message$sevenZipNoRar(), verbose = verbose)
     }
   }
 
@@ -1476,7 +1488,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           )
           if (length(extractSystemCallPath) == 0 || !nzchar(extractSystemCallPath[1])) {
             extractSystemCallPath <- NULL
-            messagePreProcess(missingUnrarMess, verbose = verbose)
+            messagePreProcess(.message$missingUnrar(withInstall = FALSE), verbose = verbose)
           } else {
             messagePreProcess("The extracting software was found in an unusual location: ",
                               extractSystemCallPath, ".",
@@ -1489,14 +1501,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
         extractSystemCallPath <- extractSystemCallPath[1]
       }
     } else {
-      messagePreProcess(missingUnrarMess,
-                        "Try installing with, e.g.,: \n",
-                        "--------------------------\n",
-                        "apt install p7zip p7zip-rar p7zip-full -y\n",
-                        "yum install p7zip p7zip-plugins -y\n",
-                        "--------------------------",
-                        verbose = verbose
-      )
+      messagePreProcess(.message$missingUnrar(), verbose = verbose)
     }
   }
   if (!exists("extractSystemCallPath", inherits = FALSE)) extractSystemCallPath <- NULL
@@ -1551,7 +1556,6 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 #' @name unrarPath
 .systemArchivePath <- NULL
 
-missingUnrarMess <- "The archive is a 'rar' archive; your system does not have unrar or 7zip;\n"
 proj6Warn <- "NOT UPDATED FOR PROJ"
 
 sevenzName <- "7z"

@@ -788,6 +788,13 @@ cacheId <- function(obj) {
 #' @export
 detectActiveCores <- function(pattern = "", minCPU = 50) {
   if (!isWindows()) {
+    ## gate on the binary, not the OS: system(intern = TRUE) *errors* when the
+    ## command is absent, and `ps` is not guaranteed on every unix (minimal
+    ## containers omit procps). Same failure mode that took `apt` to CRAN.
+    if (!nzchar(Sys.which("ps"))) {
+      message("`ps` not found; cannot detect active cores")
+      return(0L)
+    }
     a0 <- system("ps -ef", intern = TRUE)[-1]
     a4 <- grep(pattern, a0, value = TRUE)
     a5 <- gsub("^.*[[:digit:]]* [[:digit:]]* ([[:digit:]]{1,3}) .*$",
