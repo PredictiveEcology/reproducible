@@ -136,7 +136,7 @@ extractPolygonIfWithin <- function(domain, existingObjSF, bufferOK, existingObj,
 #' of a larger spatial object that is specified with `targetFile`.
 #'
 #' @export
-#' @examples
+#' @examplesIf identical(Sys.getenv("NOT_CRAN"), "true")
 #' if (requireNamespace("sf", quietly = TRUE) &&
 #'     requireNamespace("terra", quietly = TRUE)) {
 #'   dPath <- checkPath(file.path(tempdir2()), create = TRUE)
