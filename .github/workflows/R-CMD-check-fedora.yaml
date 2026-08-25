@@ -15,6 +15,12 @@
 #     R keeps them visible so vignettes can be re-built, and `NA` would leave
 #     them uninstalled ("vignette builder 'knitr' not found")
 #
+# p7zip is REQUIRED here, not incidental: .archiveExtractBinary() only reaches
+# the branch that shells out when Sys.which("7z") finds something, and
+# test-archiveExtractBinary.R skips itself when no 7z/unrar exists. Without it
+# this leg silently skips the very code path it was created to cover -- CRAN's
+# Fedora has 7z, which is why the bug fired there.
+#
 # R-RELEASE deliberately, not R-devel: that is already covered by the ubuntu and
 # Windows legs. An r-hub devel container was tried and failed building `lobstr`,
 # because its R-devel snapshot runs ahead of CRAN's -- upstream churn unrelated
@@ -50,7 +56,8 @@ jobs:
           dnf -y install --setopt=install_weak_deps=False \
             R-core R-core-devel gcc gcc-c++ gfortran make \
             git tar which libcurl-devel openssl-devel libxml2-devel \
-            glibc-langpack-en pandoc qpdf ghostscript
+            glibc-langpack-en pandoc qpdf ghostscript \
+            p7zip p7zip-plugins
           R --version
 
       - uses: actions/checkout@v4
