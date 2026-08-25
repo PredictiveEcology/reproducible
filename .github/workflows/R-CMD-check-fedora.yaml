@@ -17,8 +17,14 @@
 # Also deliberately cheap: terra, sf and raster are Suggests, so hard
 # dependencies only. Fedora has no P3M binaries and building the geospatial
 # stack from source would cost far more than this leg is worth -- the failure
-# class it targets needs none of it. Same dependency scope as the existing
-# `nosuggests` matrix leg, which has long run green.
+# class it targets needs none of it.
+#
+# NOTE this is a stricter scope than the existing `nosuggests` matrix leg, which
+# INSTALLS everything and merely sets _R_CHECK_DEPENDS_ONLY_ for the check. Here
+# Suggests are genuinely absent, so `knitr` is too -- and DESCRIPTION declares
+# `VignetteBuilder: knitr`, which makes the package unbuildable rather than
+# merely unvignetted. Vignettes are therefore skipped outright: they are covered
+# by the ubuntu legs, and rendering them is not what this leg is for.
 
 name: R-CMD-check-fedora
 
@@ -60,6 +66,8 @@ jobs:
 
       - uses: r-lib/actions/check-r-package@v2
         with:
-          args: 'c("--no-manual", "--as-cran")'
+          # no vignettes: knitr is a Suggests and is deliberately not installed
+          args: 'c("--no-manual", "--as-cran", "--no-vignettes")'
+          build_args: 'c("--no-build-vignettes")'
           error-on: '"warning"'
           upload-snapshots: true
