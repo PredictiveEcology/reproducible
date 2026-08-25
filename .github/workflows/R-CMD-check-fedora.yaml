@@ -50,7 +50,7 @@ jobs:
           dnf -y install --setopt=install_weak_deps=False \
             R-core R-core-devel gcc gcc-c++ gfortran make \
             git tar which libcurl-devel openssl-devel libxml2-devel \
-            glibc-langpack-en pandoc
+            glibc-langpack-en pandoc qpdf ghostscript
           R --version
 
       - uses: actions/checkout@v4
