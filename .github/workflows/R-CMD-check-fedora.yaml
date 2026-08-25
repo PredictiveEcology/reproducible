@@ -1,0 +1,53 @@
+# A Fedora leg, because our matrix has none and CRAN's does.
+#
+# reproducible 3.2.0 shipped a check ERROR on CRAN's
+# r-devel-linux-x86_64-fedora-{clang,gcc}: a `system("apt ...", intern = TRUE)`
+# call, which *errors* where the command does not exist. macOS never reached it
+# and Debian/Ubuntu has apt, so all nine legs of the usual matrix were green.
+# One non-Debian Linux leg would have caught it on the PR.
+#
+# Deliberately cheap: reproducible's heavy dependencies (terra, sf, raster) are
+# Suggests, so this installs hard dependencies only. Fedora has no P3M binaries,
+# and building the geospatial stack from source here would cost far more than
+# this leg is worth -- the failure class it targets (shelling out to a missing
+# binary) needs none of it.
+
+name: R-CMD-check-fedora
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fedora:
+    runs-on: ubuntu-latest
+    # Fedora with R preinstalled, maintained by r-hub for exactly this purpose.
+    container: ghcr.io/r-hub/containers/gcc14:latest
+    name: fedora (hard deps only)
+
+    steps:
+      # r-hub's checkout, not actions/checkout: these containers are built for
+      # this and the r-hub action handles their node/glibc expectations.
+      - uses: r-hub/actions/checkout@v1
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # hard deps only; testthat and rcmdcheck added explicitly so the
+          # tests actually run rather than being skipped wholesale.
+          dependencies: '"hard"'
+          extra-packages: |
+            any::rcmdcheck
+            any::testthat
+          cache: always
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"warning"'
+          upload-snapshots: true
