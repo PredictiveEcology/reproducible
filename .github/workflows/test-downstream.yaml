@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   test-downstream:
-    uses: PredictiveEcology/actions/.github/workflows/test-downstream.yaml@feat/test-downstream
+    uses: PredictiveEcology/actions/.github/workflows/test-downstream.yaml@main
     secrets:
       GOOGLEDRIVE_AUTH: ${{ secrets.GOOGLEDRIVE_AUTH }}
     with:
