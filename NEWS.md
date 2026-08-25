@@ -19,8 +19,9 @@
   versions are still found.
 * New `preProcessCheckURLs()`: walk a directory, ask each recorded URL whether
   it has changed, and report. `redownload` decides what happens to anything
-  that has: fetch it now (`"immediate"`), remove its sidecar so the next
-  `preProcess()` fetches it (`"nextPreProcess"`), or report only (`"no"`).
+  that has: report only (`"no"`, the default), fetch it now (`"immediate"`), or
+  remove its sidecar so the next `preProcess()` fetches it
+  (`"nextPreProcess"`). Partial matches work, e.g. `"imm"`, `"next"`.
   This is the intended way to re-check — a deliberate action rather than
   `options(reproducible.checkRemoteHash = TRUE)`, which is easy to set once and
   forget. See `?preProcessCheckURLs`.

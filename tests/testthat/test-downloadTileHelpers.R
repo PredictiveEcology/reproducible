@@ -395,3 +395,41 @@ test_that("preProcessCheckURLs leaves unchanged files alone whatever redownload 
     expect_true(file.exists(sc), info = rd)
   }
 })
+
+test_that("preProcessCheckURLs defaults to reporting, and accepts partial matches", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  ## default is "no": a bare call must not touch anything
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, verbose = -1)) }
+  )
+  expect_identical(res$status, "changed")
+  expect_identical(res$action, "none")
+  expect_true(file.exists(sc))
+
+  ## partial matches resolve
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "next", verbose = -1)) }
+  )
+  expect_identical(res$action, "sidecarRemoved")
+  expect_false(file.exists(sc))
+
+  sc2 <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                            algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+  fetched <- 0L
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    preProcess = function(...) { fetched <<- fetched + 1L; invisible(NULL) },
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "imm", verbose = -1)) }
+  )
+  expect_identical(res$action, "redownloaded")
+  expect_identical(fetched, 1L)
+
+  ## "n" alone is genuinely ambiguous and must not silently pick one
+  expect_error(preProcessCheckURLs(tmpdir, redownload = "n", verbose = -1))
+})

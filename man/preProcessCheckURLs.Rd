@@ -6,7 +6,7 @@
 \usage{
 preProcessCheckURLs(
   path = ".",
-  redownload = c("immediate", "nextPreProcess", "no"),
+  redownload = c("no", "immediate", "nextPreProcess"),
   recursive = TRUE,
   verbose = getOption("reproducible.verbose")
 )
@@ -15,13 +15,16 @@ preProcessCheckURLs(
 \item{path}{Directory to walk. Typically \code{inputPath(sim)} or
 \code{outputPath(sim)}.}
 
-\item{redownload}{What to do with files whose remote has changed.
+\item{redownload}{What to do with files whose remote has changed. Defaults
+to \code{"no"}, so a bare call reports without touching anything.
 \describe{
+\item{\code{"no"}}{report only; change nothing.}
 \item{\code{"immediate"}}{fetch them now.}
 \item{\code{"nextPreProcess"}}{remove their sidecars, so the next ordinary
 \code{\link[=preProcess]{preProcess()}} call fetches them. Nothing is downloaded here.}
-\item{\code{"no"}}{report only; change nothing.}
-}}
+}
+Partial matches work, e.g. \code{"imm"} and \code{"next"}. (\code{"n"} alone is ambiguous
+between \code{"no"} and \code{"nextPreProcess"}.)}
 
 \item{recursive}{Logical; recurse into subdirectories. Default \code{TRUE}.}
 
@@ -55,7 +58,11 @@ recorded (\code{"noURL"}).
 }
 \examples{
 \donttest{
-# what has changed upstream, without touching anything
-preProcessCheckURLs(tempdir(), redownload = "no")
+# what has changed upstream, without touching anything (the default)
+preProcessCheckURLs(tempdir())
+
+# ... then act on it; partial matches are fine
+preProcessCheckURLs(tempdir(), redownload = "next")   # refetch on next preProcess()
+preProcessCheckURLs(tempdir(), redownload = "imm")    # refetch now
 }
 }

@@ -476,13 +476,16 @@ clearUrlLog <- function() {
 #'
 #' @param path Directory to walk. Typically `inputPath(sim)` or
 #'   `outputPath(sim)`.
-#' @param redownload What to do with files whose remote has changed.
+#' @param redownload What to do with files whose remote has changed. Defaults
+#'   to `"no"`, so a bare call reports without touching anything.
 #'   \describe{
+#'     \item{`"no"`}{report only; change nothing.}
 #'     \item{`"immediate"`}{fetch them now.}
 #'     \item{`"nextPreProcess"`}{remove their sidecars, so the next ordinary
 #'       [preProcess()] call fetches them. Nothing is downloaded here.}
-#'     \item{`"no"`}{report only; change nothing.}
 #'   }
+#'   Partial matches work, e.g. `"imm"` and `"next"`. (`"n"` alone is ambiguous
+#'   between `"no"` and `"nextPreProcess"`.)
 #' @param recursive Logical; recurse into subdirectories. Default `TRUE`.
 #' @param verbose Numeric verbosity.
 #'
@@ -496,11 +499,15 @@ clearUrlLog <- function() {
 #'
 #' @examples
 #' \donttest{
-#' # what has changed upstream, without touching anything
-#' preProcessCheckURLs(tempdir(), redownload = "no")
+#' # what has changed upstream, without touching anything (the default)
+#' preProcessCheckURLs(tempdir())
+#'
+#' # ... then act on it; partial matches are fine
+#' preProcessCheckURLs(tempdir(), redownload = "next")   # refetch on next preProcess()
+#' preProcessCheckURLs(tempdir(), redownload = "imm")    # refetch now
 #' }
 preProcessCheckURLs <- function(path = ".",
-                                redownload = c("immediate", "nextPreProcess", "no"),
+                                redownload = c("no", "immediate", "nextPreProcess"),
                                 recursive = TRUE,
                                 verbose = getOption("reproducible.verbose")) {
   redownload <- match.arg(redownload)
