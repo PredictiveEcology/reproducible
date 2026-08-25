@@ -4,7 +4,7 @@
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/reproducible)](https://cran.r-project.org/package=reproducible)
 [![CRAN Downloads](https://cranlogs.r-pkg.org/badges/grand-total/reproducible)](https://cran.r-project.org/package=reproducible)
 [![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=master)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/main/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=main)
 <!-- badges: end -->
 
 A set of tools for R that enhance reproducibility for data analytics and forecasting.
@@ -75,8 +75,8 @@ See vignettes and help files for many more real-world examples.
 
 ### Current release (on CRAN)
 
-[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=master)](https://github.com/PredictiveEcology/reproducible/actions)
-[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/master/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=master)
+[![R build status](https://github.com/PredictiveEcology/reproducible/workflows/R-CMD-check/badge.svg?branch=main)](https://github.com/PredictiveEcology/reproducible/actions)
+[![Codecov test coverage](https://codecov.io/gh/PredictiveEcology/reproducible/branch/main/graph/badge.svg)](https://app.codecov.io/gh/PredictiveEcology/reproducible?branch=main)
 
 **Install from CRAN:**
 
