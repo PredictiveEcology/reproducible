@@ -161,7 +161,8 @@ test_that(".parseRemoteHashFile reads both the current and legacy sidecar format
   ## Current format: "<algo>:<hash>".
   f1 <- file.path(tmpdir, "current.hash")
   writeLines("sha256:abc123", f1)
-  expect_identical(.parseRemoteHashFile(f1), list(algorithm = "sha256", hash = "abc123"))
+  expect_identical(.parseRemoteHashFile(f1),
+                   list(algorithm = "sha256", hash = "abc123", etag = NULL, url = NULL))
 
   ## A hash containing colons keeps them (only the first colon splits).
   f2 <- file.path(tmpdir, "colons.hash")
@@ -172,7 +173,7 @@ test_that(".parseRemoteHashFile reads both the current and legacy sidecar format
   f3 <- file.path(tmpdir, "legacy.hash")
   writeLines(strrep("a", 32), f3)
   expect_identical(.parseRemoteHashFile(f3),
-                   list(algorithm = "md5", hash = strrep("a", 32)))
+                   list(algorithm = "md5", hash = strrep("a", 32), etag = NULL, url = NULL))
 
   ## Empty file -> NULL rather than a malformed result.
   f4 <- file.path(tmpdir, "empty.hash")
@@ -197,12 +198,14 @@ test_that("makeRemoteHashFile builds a hidden sidecar and round-trips", {
                                 algorithm = "md5", write = TRUE)
   expect_true(file.exists(written))
   expect_identical(.parseRemoteHashFile(written),
-                   list(algorithm = "md5", hash = "deadbeef"))
+                   list(algorithm = "md5", hash = "deadbeef", etag = NULL, url = url))
 
   ## Without an algorithm -> legacy hash-only line.
   written2 <- makeRemoteHashFile(url, tmpdir, "other.tif", strrep("b", 40),
                                  write = TRUE)
-  expect_identical(readLines(written2, warn = FALSE), strrep("b", 40))
+  ## legacy hash-only line, now followed by the url that produced it
+  expect_identical(readLines(written2, warn = FALSE)[[1L]], strrep("b", 40))
+  expect_identical(.parseRemoteHashFile(written2)$url, url)
   expect_identical(.parseRemoteHashFile(written2)$algorithm, "sha1")
 })
 
@@ -219,4 +222,214 @@ test_that("boundaryPolygon traces the raster edge", {
   ## The traced boundary spans the raster's own extent.
   expect_equal(as.vector(terra::ext(bp)), as.vector(terra::ext(r)), tolerance = 1e-8)
   expect_identical(terra::crs(bp), terra::crs(r))
+})
+
+test_that("a sidecar can record both a digest and an ETag", {
+  # They answer different questions: the digest pins the bytes (and can be
+  # recomputed locally to confirm a download was not corrupted), while the ETag
+  # is the server's own "you already have this" token, usable via If-None-Match
+  # even when it is opaque. Record both when the remote offers both.
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+
+  written <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                                algorithm = "md5", write = TRUE,
+                                etag = "W/\"opaque-token\"")
+  parsed <- .parseRemoteHashFile(written)
+
+  expect_identical(parsed$algorithm, "md5")
+  expect_identical(parsed$hash, strrep("d", 32))
+  expect_identical(parsed$etag, "W/\"opaque-token\"")
+
+  ## ETag only -> algorithm/hash stay populated so older callers still work
+  written2 <- makeRemoteHashFile(url, tmpdir, "other.tif", "W/\"only-etag\"",
+                                 algorithm = "etag", write = TRUE)
+  parsed2 <- .parseRemoteHashFile(written2)
+  expect_identical(parsed2$algorithm, "etag")
+  expect_identical(parsed2$hash, "W/\"only-etag\"")
+  expect_identical(parsed2$etag, "W/\"only-etag\"")
+})
+
+test_that("sidecar names are not lossy: different URLs get different files", {
+  # The old scheme dropped the scheme and turned every "/" into "_", so
+  # `my_data/sub_dir` and `my/data/sub/dir` collided -- two different URLs
+  # sharing one sidecar, and therefore one ETag.
+  testInit(verbose = -1)
+  f <- getFromNamespace(".remoteHashFilePath", "reproducible")
+
+  a <- f("https://example.com/my_data/sub_dir/DEM.tif", tmpdir, "DEM.tif")
+  b <- f("https://example.com/my/data/sub/dir/DEM.tif", tmpdir, "DEM.tif")
+  cc <- f("http://example.com/my_data/sub_dir/DEM.tif", tmpdir, "DEM.tif")
+
+  expect_false(identical(a, b))   # "/" vs "_" no longer ambiguous
+  expect_false(identical(a, cc))  # scheme is part of the identity
+  expect_identical(a, f("https://example.com/my_data/sub_dir/DEM.tif", tmpdir, "DEM.tif"))
+})
+
+test_that("a legacy-named sidecar is still found", {
+  # Existing caches must not be invalidated by the rename.
+  testInit(verbose = -1)
+  legacyPath <- getFromNamespace(".legacyRemoteHashFilePath", "reproducible")
+  findIt <- getFromNamespace(".findRemoteHashFile", "reproducible")
+
+  url <- "https://example.com/data/DEM.tif"
+  leg <- legacyPath(url, tmpdir, "DEM.tif")
+  writeLines("md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", leg)
+
+  expect_identical(findIt(url, tmpdir, "DEM.tif"), leg)
+  expect_identical(.parseRemoteHashFile(findIt(url, tmpdir, "DEM.tif"))$algorithm, "md5")
+})
+
+test_that("the sidecar records the URL it came from", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  written <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                                algorithm = "md5", write = TRUE,
+                                etag = "W/\"tok\"")
+  parsed <- .parseRemoteHashFile(written)
+  expect_identical(parsed$url, url)
+  expect_identical(parsed$hash, strrep("d", 32))
+  expect_identical(parsed$etag, "W/\"tok\"")
+})
+
+test_that("preProcessCheckURLs acts only on the sidecars whose remote changed", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  ## unchanged -> kept
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = TRUE, etag = "W/\"tok\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1)) }
+  )
+  expect_identical(res$status, "unchanged")
+  expect_true(file.exists(sc))
+
+  ## unreachable -> kept, reported
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = NA, etag = NULL),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1)) }
+  )
+  expect_identical(res$status, "unreachable")
+  expect_true(file.exists(sc))
+
+  ## changed, redownload = "no" -> reported but kept
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "no", verbose = -1)) }
+  )
+  expect_identical(res$status, "changed")
+  expect_true(file.exists(sc))
+
+  ## changed, redownload = "nextPreProcess" -> sidecar removed so the next
+  ## ordinary preProcess() re-downloads just this one
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1)) }
+  )
+  expect_identical(res$status, "changed")
+  expect_false(file.exists(sc))
+})
+
+test_that("preProcessCheckURLs reports sidecars that predate the recorded URL", {
+  testInit(verbose = -1)
+  sc <- file.path(tmpdir, ".old_deadbeef.hash")
+  writeLines("md5:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", sc)
+
+  res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "nextPreProcess", verbose = -1))
+  expect_identical(res$status, "noURL")
+  expect_true(file.exists(sc))    # nothing to check against -> left alone
+})
+
+test_that("preProcessCheckURLs redownload = 'immediate' fetches the changed file now", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+  fetched <- 0L
+
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    preProcess = function(...) { fetched <<- fetched + 1L; invisible(NULL) },
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "immediate",
+                                                  verbose = -1)) }
+  )
+
+  expect_identical(res$status, "changed")
+  expect_identical(res$action, "redownloaded")
+  expect_identical(fetched, 1L)
+})
+
+test_that("preProcessCheckURLs reports a failed immediate redownload rather than erroring", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                     algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    preProcess = function(...) stop("remote exploded"),
+    { res <- expect_no_error(
+        suppressMessages(preProcessCheckURLs(tmpdir, redownload = "immediate",
+                                             verbose = -1))) }
+  )
+
+  expect_identical(res$status, "changed")
+  expect_identical(res$action, "redownloadFailed")
+})
+
+test_that("preProcessCheckURLs leaves unchanged files alone whatever redownload says", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  for (rd in c("immediate", "nextPreProcess", "no")) {
+    testthat::with_mocked_bindings(
+      .remoteEtagRevalidate = function(...) list(unchanged = TRUE, etag = "W/\"tok\""),
+      { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = rd, verbose = -1)) }
+    )
+    expect_identical(res$status, "unchanged", info = rd)
+    expect_identical(res$action, "none", info = rd)
+    expect_true(file.exists(sc), info = rd)
+  }
+})
+
+test_that("preProcessCheckURLs defaults to reporting, and accepts partial matches", {
+  testInit(verbose = -1)
+  url <- "https://example.com/data/target.tif"
+  sc <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                           algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+
+  ## default is "no": a bare call must not touch anything
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, verbose = -1)) }
+  )
+  expect_identical(res$status, "changed")
+  expect_identical(res$action, "none")
+  expect_true(file.exists(sc))
+
+  ## partial matches resolve
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "next", verbose = -1)) }
+  )
+  expect_identical(res$action, "sidecarRemoved")
+  expect_false(file.exists(sc))
+
+  sc2 <- makeRemoteHashFile(url, tmpdir, "target.tif", strrep("d", 32),
+                            algorithm = "md5", write = TRUE, etag = "W/\"tok\"")
+  fetched <- 0L
+  testthat::with_mocked_bindings(
+    .remoteEtagRevalidate = function(...) list(unchanged = FALSE, etag = "W/\"new\""),
+    preProcess = function(...) { fetched <<- fetched + 1L; invisible(NULL) },
+    { res <- suppressMessages(preProcessCheckURLs(tmpdir, redownload = "imm", verbose = -1)) }
+  )
+  expect_identical(res$action, "redownloaded")
+  expect_identical(fetched, 1L)
+
+  ## "n" alone is genuinely ambiguous and must not silently pick one
+  expect_error(preProcessCheckURLs(tmpdir, redownload = "n", verbose = -1))
 })

@@ -640,10 +640,50 @@ pp_remote_hash_check <- function(ctx) {
   )
   haveSidecar <- file.exists(remoteHashFileLocal) &&
     isTRUE(suppressWarnings(file.size(remoteHashFileLocal)) > 0L)
-  if (haveSidecar &&
-      !isTRUE(getOption("reproducible.checkRemoteHash", FALSE))) {
+
+  parsedSidecar <- if (haveSidecar) .parseRemoteHashFile(remoteHashFileLocal) else NULL
+  # An ETag, when the sidecar has one, is the cheapest way to ask "is this still
+  # what I have?" -- the server answers with 304 and no body. A digest can
+  # answer the same question by comparison (Step 4b), and additionally pins the
+  # bytes, so both are recorded when the remote offers both.
+  sidecarEtag <- if (!is.null(parsedSidecar)) parsedSidecar$etag else NULL
+
+  # Default is to TRUST an existing sidecar and do no network at all. That is
+  # deliberate: a long-running simulation should not have its caches invalidated
+  # part-way through because whoever hosts an input file happened to update it.
+  # `options(reproducible.checkRemoteHash = TRUE)` opts in to revalidating, and
+  # is the user's decision about when a re-check is wanted.
+  if (haveSidecar && !isTRUE(getOption("reproducible.checkRemoteHash", FALSE))) {
     messagePreProcess(
       "Skipping download; local file matches remote version (cached): ",
+      .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
+    )
+    ctx$skipDownload     <- TRUE
+    ctx$skipDownloadFile <- localFile
+    ctx$hashVerified <- unique(c(ctx$hashVerified, localFile))
+    if (is.null(ctx$archive) && !is.null(.isArchive(localFile)))
+      ctx$archive <- localFile
+    return(ctx)
+  }
+
+  # Re-checking was requested. For an ETag-backed sidecar that is one
+  # conditional HEAD -- no body transfer, no local digest -- because an ETag is
+  # an opaque cache validator that only the server can evaluate, via
+  # `If-None-Match`. (Digest-backed sidecars are handled at Step 4b below,
+  # which compares the recorded hash to what the server now advertises.)
+  if (!is.null(sidecarEtag) && nzchar(sidecarEtag)) {
+    reval <- .remoteEtagRevalidate(ctx$url, sidecarEtag)
+    if (isFALSE(reval$unchanged)) {
+      # remote really has changed -- carry the new ETag so pp_download records it
+      ctx$remoteEtagToRecord <- reval$etag
+      return(ctx)
+    }
+    # TRUE (304 Not Modified), or NA (remote unreachable -> stay usable offline)
+    messagePreProcess(
+      if (isTRUE(reval$unchanged))
+        "Skipping download; remote reports not modified (ETag): "
+      else
+        "Skipping download; remote unreachable, using local file: ",
       .messageFunctionFn(basename(localFile)), verbose = ctx$verbose
     )
     ctx$skipDownload     <- TRUE
@@ -682,6 +722,11 @@ pp_remote_hash_check <- function(ctx) {
   remoteAlgo <- remoteMetadata$remoteAlgorithm
   if (is.null(remoteAlgo) || identical(remoteAlgo, "etag-opaque") ||
       !nzchar(remoteAlgo)) {
+    # No content hash to compare against, so nothing can be verified locally.
+    # Carry the raw ETag through: once pp_download has fetched the bytes, they
+    # ARE this representation, so it can be recorded then and revalidated
+    # cheaply on later calls (Step 1 above).
+    ctx$remoteEtagToRecord <- remoteMetadata$etag
     return(ctx)
   }
 
@@ -864,6 +909,47 @@ pp_download <- function(ctx) {
   } else {
     ctx$archive
   }
+  # Record the remote ETag beside the freshly downloaded file. The local bytes
+  # are the remote representation at this moment, so the ETag is trustworthy
+  # without digesting anything -- which is the only way to obtain a sidecar for
+  # a server whose ETag is opaque (e.g. raw.githubusercontent.com).
+  # Record what the remote said about this file, next to the freshly downloaded
+  # bytes. On a first download pp_remote_hash_check() returned before ever
+  # contacting the remote (there was no local file to compare), so nothing is on
+  # hand; one HEAD beside a completed download is negligible.
+  #
+  # Prefer the host's own content hash (md5/sha1/sha256 -- Google Drive's
+  # md5Checksum, or an ETag that IS a digest): it pins the bytes and can be
+  # verified locally later. Only when the remote offers nothing verifiable does
+  # this fall back to recording the opaque ETag, which can still be revalidated
+  # via If-None-Match but proves nothing on its own.
+  if (!isTRUE(ctx$skipDownload) && !is.null(ctx$url) &&
+      !grepl("^file://", ctx$url)) {
+    dlFile <- downloadFileResult$downloaded
+    if (length(dlFile) && !is.na(dlFile[[1L]]) && file.exists(dlFile[[1L]])) {
+      meta <- tryCatch(getRemoteMetadata(url = ctx$url), error = function(e) NULL)
+      if (!is.null(meta)) {
+        strongAlgo <- meta$remoteAlgorithm
+        haveStrong <- !is.null(strongAlgo) && nzchar(strongAlgo) &&
+          !identical(strongAlgo, "etag-opaque") &&
+          !is.null(meta$remoteHash) && isTRUE(nzchar(meta$remoteHash))
+
+        recAlgo <- if (haveStrong) strongAlgo else "etag"
+        recHash <- if (haveStrong) meta$remoteHash else meta$etag
+
+        if (!is.null(recHash) && isTRUE(nzchar(recHash))) {
+          sidecar <- makeRemoteHashFile(ctx$url, ctx$destinationPath,
+                                        basename(dlFile[[1L]]), "")
+          # makeRemoteHashFile() will not overwrite, so clear a stale one first
+          if (file.exists(sidecar)) unlink(sidecar)
+          makeRemoteHashFile(ctx$url, ctx$destinationPath, basename(dlFile[[1L]]),
+                             recHash, algorithm = recAlgo, write = TRUE,
+                             etag = if (haveStrong) meta$etag else NULL)
+        }
+      }
+    }
+  }
+
   ctx$downloadResult <- downloadFileResult
   ctx
 }

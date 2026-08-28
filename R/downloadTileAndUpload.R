@@ -958,33 +958,120 @@ numCoresToUse <- function(min = 2, max = NULL) {
   if (!file.exists(remoteHashFile)) return(NULL)
   txt <- try(readLines(remoteHashFile, warn = FALSE), silent = TRUE)
   if (is(txt, "try-error") || !length(txt)) return(NULL)
-  line <- txt[[1L]]
-  if (grepl(":", line, fixed = TRUE)) {
+  txt <- txt[nzchar(txt)]
+  if (!length(txt)) return(NULL)
+
+  splitLine <- function(line) {
+    if (!grepl(":", line, fixed = TRUE)) return(NULL)
     parts <- strsplit(line, ":", fixed = TRUE)[[1L]]
-    if (length(parts) >= 2L)
-      return(list(algorithm = parts[[1L]],
-                  hash      = paste(parts[-1L], collapse = ":")))
+    if (length(parts) < 2L) return(NULL)
+    list(key = parts[[1L]], value = paste(parts[-1L], collapse = ":"))
   }
+
+  entries <- Filter(Negate(is.null), lapply(txt, splitLine))
+  keys <- vapply(entries, `[[`, character(1), "key")
+
+  etag <- NULL
+  whEtag <- which(keys == "etag")
+  if (length(whEtag)) etag <- entries[[whEtag[[1L]]]]$value
+
+  url <- NULL
+  whUrl <- which(keys == "url")
+  if (length(whUrl)) url <- entries[[whUrl[[1L]]]]$value
+
+  # the digest line is any keyed line that is neither the etag nor the url
+  whDigest <- which(!keys %in% c("etag", "url"))
+  if (length(whDigest)) {
+    e <- entries[[whDigest[[1L]]]]
+    return(list(algorithm = e$key, hash = e$value, etag = etag, url = url))
+  }
+  if (!is.null(etag)) {
+    # ETag only: keep algorithm/hash populated so callers that predate the
+    # `etag` field continue to behave as they did.
+    return(list(algorithm = "etag", hash = etag, etag = etag, url = url))
+  }
+
   # Legacy single-hash sidecar: infer algorithm from hash length.
-  list(algorithm = .classifyRemoteHashAlgo(line), hash = line)
+  line <- txt[[1L]]
+  list(algorithm = .classifyRemoteHashAlgo(line), hash = line, etag = NULL, url = url)
 }
 
-makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
-                               algorithm = NULL, write = FALSE) {
-  url_no_protocol <- sub("^https?://", "", url)
-  # Replace all slashes with underscores
-  urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
+# Path of the sidecar for (url, targetFile).
+#
+# The URL is reduced to a short digest rather than flattened into the filename.
+# The old scheme dropped the protocol and turned every "/" into "_", so
+# `example.com/my_data/sub_dir` and `example.com/my/data/sub/dir` produced the
+# SAME filename -- two different URLs sharing one sidecar. Digesting the whole
+# URL (scheme included) is collision-free in practice, and the URL itself is
+# now recorded inside the file, so the name no longer has to be reversible.
+.remoteHashFilePath <- function(url, destinationPath, targetFile) {
+  url <- as.character(url)
+  # Readable part: the URL minus its scheme, with anything filesystem-unfriendly
+  # collapsed to "_", and truncated so long URLs cannot blow the 255-byte
+  # filename limit. This is for a human reading a directory listing.
+  readable <- sub("^[a-zA-Z][a-zA-Z0-9+.-]*://", "", url)
+  readable <- gsub("[^A-Za-z0-9._-]+", "_", readable)
+  readable <- gsub("_+", "_", readable)
+  readable <- sub("_$", "", substr(readable, 1L, 80L))
+  # Uniqueness comes from the digest of the WHOLE url, so truncation, sanitising
+  # and the dropped scheme cannot make two different URLs collide -- which is
+  # exactly what the previous flattened-only scheme did.
+  key <- substr(digest::digest(url, algo = "xxhash64"), 1L, 8L)
   # Hide the sidecar with a leading "." so it doesn't show up in dir() listings
   # (e.g. test patterns like `dir(tmpdir, pattern = "Shapefile")` would otherwise
   # match `Shapefile1.zip_drive.google.com_..._.hash` and inflate file counts).
-  remoteHashFile <- file.path(destinationPath, paste0(".", urlWithUnderscores, ".hash"))
+  file.path(destinationPath,
+            paste0(".", basename(targetFile), "_", readable, "_", key, ".hash"))
+}
+
+# The pre-digest naming scheme. Retained for READING only, so sidecars written
+# by earlier versions are still found and existing caches are not invalidated.
+.legacyRemoteHashFilePath <- function(url, destinationPath, targetFile) {
+  url_no_protocol <- sub("^https?://", "", url)
+  urlWithUnderscores <- gsub("/", "_", file.path(basename(targetFile), dirname(url_no_protocol)))
+  file.path(destinationPath, paste0(".", urlWithUnderscores, ".hash"))
+}
+
+# Resolve which sidecar to read: the current name if present, else a legacy one.
+# Returns the current path when neither exists, so callers can write to it.
+.findRemoteHashFile <- function(url, destinationPath, targetFile) {
+  cur <- .remoteHashFilePath(url, destinationPath, targetFile)
+  if (file.exists(cur)) return(cur)
+  leg <- .legacyRemoteHashFilePath(url, destinationPath, targetFile)
+  if (file.exists(leg)) return(leg)
+  cur
+}
+
+makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
+                               algorithm = NULL, write = FALSE, etag = NULL) {
+  remoteHashFile <- .findRemoteHashFile(url, destinationPath, targetFile)
   if (isTRUE(write) && !file.exists(remoteHashFile)) {
-    if (is.null(algorithm) || is.na(algorithm) || !nzchar(algorithm)) {
+    # A digest and an ETag answer different questions, so record both when the
+    # remote offers both:
+    #   digest -- pins the bytes; can be recomputed locally to confirm that a
+    #             download was not corrupted, and compared to what the server
+    #             advertises later.
+    #   ETag   -- the server's own "you already have this" token; the only
+    #             thing that works when the digest is opaque, via If-None-Match.
+    lines <- character()
+    if (!is.null(algorithm) && !is.na(algorithm) && nzchar(algorithm) &&
+        !identical(algorithm, "etag")) {
+      lines <- c(lines, paste0(algorithm, ":", remoteHash))
+    } else if (is.null(algorithm) || is.na(algorithm) || !nzchar(algorithm)) {
       # Legacy callers: write hash-only line.
-      writeLines(remoteHash, remoteHashFile)
-    } else {
-      writeLines(paste0(algorithm, ":", remoteHash), remoteHashFile)
+      lines <- c(lines, remoteHash)
     }
+    if (!is.null(etag) && !is.na(etag) && nzchar(etag)) {
+      lines <- c(lines, paste0("etag:", etag))
+    } else if (identical(algorithm, "etag")) {
+      lines <- c(lines, paste0("etag:", remoteHash))
+    }
+    # Record the URL so the sidecar is self-describing: the filename is a
+    # digest and cannot be inverted, and a durable record of "this file came
+    # from this URL" is what makes revalidateRemotes() possible.
+    if (length(lines) && !is.null(url) && isTRUE(nzchar(url)))
+      lines <- c(lines, paste0("url:", url))
+    if (length(lines)) writeLines(lines, remoteHashFile)
   }
   return(remoteHashFile)
 }
@@ -1042,24 +1129,71 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     timestampOnline <- file$drive_resource[[1]]$modifiedTime
   }
 
-  if (missing(targetFile)) {
+  if (!isGDurl) {
+    # Always ask the remote, even when `targetFile` was supplied. The ETag and
+    # size are wanted for the sidecar regardless of whether the caller needed
+    # help naming the file -- and previously, supplying `targetFile` skipped
+    # this block entirely, leaving `remoteHash` undefined and erroring below.
     response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
-    remoteHash <- httr2::resp_headers(response)[["etag"]] |>
+    etagRaw <- httr2::resp_headers(response)[["etag"]]
+    remoteHash <- etagRaw |>
       gsub(pattern = "^\"|\"", replacement = "")
 
     content_disposition <- httr2::resp_header(response, "content-disposition")
     fileSize <- httr2::resp_header(response, "content-length") |> as.numeric()
     timestampOnline <- httr2::resp_header(response, "Date")
-    if (isTRUE(!(is.na(content_disposition)))) {
-      targetFile <- sub('.*filename="([^"]+)".*', '\\1', content_disposition)
-    } else {
-      # Fallback: extract from URL
-      targetFile <- basename(url)
+    if (missing(targetFile)) {
+      if (isTRUE(!(is.na(content_disposition)))) {
+        targetFile <- sub('.*filename="([^"]+)".*', '\\1', content_disposition)
+      } else {
+        # Fallback: extract from URL
+        targetFile <- basename(url)
+      }
     }
   }
   remoteAlgorithm <- .classifyRemoteHashAlgo(remoteHash, isGDurl = isGDurl)
+  if (!exists("etagRaw", inherits = FALSE)) etagRaw <- NULL
   list(targetFile = targetFile, fileSize = fileSize, remoteHash = remoteHash,
-       remoteAlgorithm = remoteAlgorithm, timestampOnline = timestampOnline)
+       remoteAlgorithm = remoteAlgorithm, timestampOnline = timestampOnline,
+       etag = etagRaw)
+}
+
+# Conditional revalidation of a remote file using its ETag.
+#
+# An ETag is an opaque cache validator, not a content hash -- servers are free
+# to generate it however they like (a git blob SHA, an S3 checksum, an edge
+# server's own token). It cannot be recomputed locally, but it CAN be handed
+# back via `If-None-Match`: a 304 means the representation is unchanged, a 200
+# means it is not.
+#
+# `etag` must be the raw header value, including its quotes and any `W/` weak
+# prefix, and the request must be made the same way the ETag was obtained
+# (httr2 negotiates gzip by default, and a server may serve a different ETag
+# for the compressed representation).
+#
+# Returns list(unchanged = TRUE/FALSE/NA, etag = <current etag or NULL>).
+# `unchanged = NA` means the remote could not be reached, so the caller should
+# fall back to whatever it would have done offline rather than re-download.
+.remoteEtagRevalidate <- function(url, etag) {
+  if (!requireNamespace("httr2", quietly = TRUE) ||
+      is.null(etag) || !nzchar(etag))
+    return(list(unchanged = NA, etag = NULL))
+
+  tryCatch({
+    resp <- httr2::request(url) |>
+      httr2::req_method("HEAD") |>
+      httr2::req_headers(`If-None-Match` = etag) |>
+      httr2::req_error(is_error = function(resp) FALSE) |>
+      httr2::req_perform()
+    status <- httr2::resp_status(resp)
+    if (identical(status, 304L)) {
+      list(unchanged = TRUE, etag = etag)
+    } else if (status >= 200L && status < 300L) {
+      list(unchanged = FALSE, etag = httr2::resp_header(resp, "etag"))
+    } else {
+      list(unchanged = NA, etag = NULL)
+    }
+  }, error = function(e) list(unchanged = NA, etag = NULL))
 }
 
 sprcMosaicRast <- function(url, tile_rasters, to_inTileGrid, targetFilePostProcessedFullPath,

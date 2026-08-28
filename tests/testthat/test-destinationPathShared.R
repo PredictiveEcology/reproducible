@@ -898,8 +898,10 @@ test_that("pp_remote_hash_check: md5 match writes md5 sidecar + row, skips DL", 
 
   sc <- readSidecar(td, fx, url)
   expect_false(is.null(sc))
-  expect_match(sc$contents, "^md5:")
-  expect_identical(sub("^md5:", "", sc$contents), fakeMeta$remoteHash)
+  ## the sidecar now also records the url it came from, so match the hash line
+  hashLine <- grep("^md5:", sc$contents, value = TRUE)
+  expect_length(hashLine, 1L)
+  expect_identical(sub("^md5:", "", hashLine), fakeMeta$remoteHash)
 
   rows <- readChecksumsRows(td)
   expect_false(is.null(rows))
@@ -933,7 +935,7 @@ test_that("pp_remote_hash_check: sha1 match writes sha1 sidecar + row", {
 
   expect_true(isTRUE(out$skipDownload))
   sc <- readSidecar(td, fx, url)
-  expect_match(sc$contents, "^sha1:")
+  expect_length(grep("^sha1:", sc$contents, value = TRUE), 1L)
 
   rows <- readChecksumsRows(td)
   hit <- which(rows$algorithm == "sha1" & basename(rows$file) == "data.bin")

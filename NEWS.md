@@ -1,3 +1,35 @@
+# reproducible 3.2.1.9001
+
+## enhancements
+
+* `preProcess()` writes the `.hash` sidecar on the first download, rather than
+  only on a later call that could re-verify the file locally. It records the
+  host's content hash (md5/sha1/sha256) *and* the ETag when both are offered:
+  the hash pins the bytes, the ETag is what the server can answer
+  `If-None-Match` against. Hosts whose ETag is not a content hash — including
+  `raw.githubusercontent.com` — previously got no sidecar at all, so every call
+  re-downloaded.
+* `getRemoteMetadata()` asks the remote even when `targetFile` is supplied, so
+  the ETag and size are available in that case too. Previously that argument
+  skipped the request entirely, leaving `remoteHash` undefined and erroring.
+* The sidecar records the URL it came from, and its filename now ends in a
+  digest of that URL. The previous name dropped the scheme and flattened every
+  `/` to `_`, so `example.com/my_data/sub_dir` and `example.com/my/data/sub/dir`
+  shared one file. Names stay human-readable; sidecars written by earlier
+  versions are still found.
+* New `preProcessCheckURLs()`: walk a directory, ask each recorded URL whether
+  it has changed, and report. `redownload` decides what happens to anything
+  that has: report only (`"no"`, the default), fetch it now (`"immediate"`), or
+  remove its sidecar so the next `preProcess()` fetches it
+  (`"nextPreProcess"`). Partial matches work, e.g. `"imm"`, `"next"`.
+  This is the intended way to re-check — a deliberate action rather than
+  `options(reproducible.checkRemoteHash = TRUE)`, which is easy to set once and
+  forget. See `?preProcessCheckURLs`.
+* `options(reproducible.checkRemoteHash = TRUE)` revalidates such files with a
+  conditional `If-None-Match` request: one round-trip, no download. If the
+  remote is unreachable the local file is used. The default is still to trust
+  the sidecar. See `?reproducibleOptions`.
+
 # reproducible 3.2.1
 
 ## bug fixes

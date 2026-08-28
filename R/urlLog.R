@@ -452,3 +452,126 @@ clearUrlLog <- function() {
   }
   invisible()
 }
+
+#' Check downloaded files against their remote sources
+#'
+#' Walks the `.hash` sidecars written by [preProcess()] under `path`, asks each
+#' recorded URL whether the file has changed, and reports what it found. The
+#' check always happens; `redownload` decides what to do about anything that
+#' has changed.
+#'
+#' @details
+#' This exists so that re-checking is something a user *does*, occasionally and
+#' deliberately, rather than a mode that gets switched on and forgotten.
+#' `options(reproducible.checkRemoteHash = TRUE)` is sticky — set once in a
+#' project's setup and every run pays for it forever — whereas this is a single
+#' action with no lasting state.
+#'
+#' How each file is checked depends on what its sidecar holds: an ETag is
+#' revalidated with a conditional `If-None-Match` request (one round-trip, no
+#' download); otherwise the recorded digest is compared with the hash the server
+#' currently advertises. Files whose remote cannot be reached are reported as
+#' `"unreachable"` and left alone, as are sidecars written before the URL was
+#' recorded (`"noURL"`).
+#'
+#' @param path Directory to walk. Typically `inputPath(sim)` or
+#'   `outputPath(sim)`.
+#' @param redownload What to do with files whose remote has changed. Defaults
+#'   to `"no"`, so a bare call reports without touching anything.
+#'   \describe{
+#'     \item{`"no"`}{report only; change nothing.}
+#'     \item{`"immediate"`}{fetch them now.}
+#'     \item{`"nextPreProcess"`}{remove their sidecars, so the next ordinary
+#'       [preProcess()] call fetches them. Nothing is downloaded here.}
+#'   }
+#'   Partial matches work, e.g. `"imm"` and `"next"`. (`"n"` alone is ambiguous
+#'   between `"no"` and `"nextPreProcess"`.)
+#' @param recursive Logical; recurse into subdirectories. Default `TRUE`.
+#' @param verbose Numeric verbosity.
+#'
+#' @return Invisibly, a `data.frame` with one row per sidecar: `file`, `url`,
+#'   `status` (`"unchanged"`, `"changed"`, `"unreachable"` or `"noURL"`),
+#'   `action` (`"none"`, `"sidecarRemoved"`, `"redownloaded"` or
+#'   `"redownloadFailed"`) and `sidecar`.
+#'
+#' @export
+#' @rdname preProcessCheckURLs
+#'
+#' @examples
+#' \donttest{
+#' # what has changed upstream, without touching anything (the default)
+#' preProcessCheckURLs(tempdir())
+#'
+#' # ... then act on it; partial matches are fine
+#' preProcessCheckURLs(tempdir(), redownload = "next")   # refetch on next preProcess()
+#' preProcessCheckURLs(tempdir(), redownload = "imm")    # refetch now
+#' }
+preProcessCheckURLs <- function(path = ".",
+                                redownload = c("no", "immediate", "nextPreProcess"),
+                                recursive = TRUE,
+                                verbose = getOption("reproducible.verbose")) {
+  redownload <- match.arg(redownload)
+
+  sidecars <- dir(path, pattern = "\\.hash$", all.files = TRUE,
+                  full.names = TRUE, recursive = recursive)
+
+  empty <- data.frame(file = character(), url = character(),
+                      status = character(), action = character(),
+                      sidecar = character(), stringsAsFactors = FALSE)
+  if (!length(sidecars)) return(invisible(empty))
+
+  rows <- lapply(sidecars, function(sc) {
+    parsed <- .parseRemoteHashFile(sc)
+    mkRow <- function(status, action = "none", url = NA_character_)
+      data.frame(file = basename(sc), url = url, status = status,
+                 action = action, sidecar = sc, stringsAsFactors = FALSE)
+
+    if (is.null(parsed) || is.null(parsed$url) || !nzchar(parsed$url))
+      return(mkRow("noURL"))
+
+    url <- parsed$url
+    status <- if (!is.null(parsed$etag) && nzchar(parsed$etag)) {
+      reval <- .remoteEtagRevalidate(url, parsed$etag)
+      if (isTRUE(reval$unchanged)) "unchanged"
+      else if (isFALSE(reval$unchanged)) "changed"
+      else "unreachable"
+    } else {
+      meta <- tryCatch(getRemoteMetadata(url = url), error = function(e) NULL)
+      if (is.null(meta) || is.null(meta$remoteHash)) "unreachable"
+      else if (identical(tolower(as.character(meta$remoteHash)),
+                         tolower(as.character(parsed$hash)))) "unchanged"
+      else "changed"
+    }
+
+    if (!identical(status, "changed")) return(mkRow(status, "none", url))
+
+    action <- switch(
+      redownload,
+      no = "none",
+      nextPreProcess = { unlink(sc); "sidecarRemoved" },
+      immediate = {
+        # drop the stale sidecar first so preProcess() cannot trust it, then
+        # fetch; preProcess() rewrites the sidecar from the new response
+        unlink(sc)
+        ok <- tryCatch({
+          preProcess(url = url, destinationPath = dirname(sc), verbose = verbose - 1L)
+          TRUE
+        }, error = function(e) FALSE)
+        if (isTRUE(ok)) "redownloaded" else "redownloadFailed"
+      }
+    )
+    mkRow(status, action, url)
+  })
+
+  out <- do.call(rbind, rows)
+  nChanged <- sum(out$status == "changed")
+  messagePreProcess(
+    "preProcessCheckURLs: ", NROW(out), " sidecar(s) checked; ", nChanged, " changed",
+    switch(redownload,
+           no = " (redownload = 'no': nothing changed on disk)",
+           nextPreProcess = if (nChanged) " (sidecars removed; next preProcess() re-downloads)" else "",
+           immediate = if (nChanged) " (re-downloaded now)" else ""),
+    verbose = verbose
+  )
+  invisible(out)
+}
