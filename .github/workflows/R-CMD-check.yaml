@@ -21,4 +21,13 @@ jobs:
       # Run \dontrun / \donttest examples the way CRAN's incoming checks do.
       check-args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
       # Keep the windows oldrel-2 (R 4.4) leg reproducible tested before migrating.
-      extra-config: '[{"config":{"os":"windows-latest","nosuggests":false,"r":"oldrel-2"}}]'
+      # Deep matrix legs pinned to exact R versions, not oldrel-N. The oldrel
+      # ladder is platform-dependent and not monotone: on ubuntu-latest
+      # oldrel-4 and oldrel-5 both resolve to 4.1.3 and R 4.2 is unreachable
+      # entirely; on ubuntu-22.04 oldrel-4 gives R 3.6.3. It also shifts every
+      # time R releases. DESCRIPTION declares R (>= 4.3), so 4.3 is the
+      # version this matrix has to prove -- oldrel-2 stopped at 4.4.
+      extra-config: |
+        [{"config": {"os": "windows-latest", "nosuggests": false, "r": "4.4"}},
+         {"config": {"os": "ubuntu-latest",  "nosuggests": false, "r": "4.4"}},
+         {"config": {"os": "ubuntu-latest",  "nosuggests": false, "r": "4.3"}}]
