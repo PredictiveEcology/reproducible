@@ -183,20 +183,18 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
       skip("SKIP_GAUTH=true; skipping Google Drive tests")
     if (isNamespaceLoaded("googledrive"))
       if ((!googledrive::drive_has_token())) {
-        ## Prefer a real user OAuth token when one is available.
+        ## Only a real user OAuth token is supported. A service account has no
+        ## Drive quota on user-owned folders: it authenticates fine but cannot
+        ## complete an upload round-trip, so the Drive tests start and then stop
+        ## part-way. Nothing fails loudly -- covr does not fail on test errors
+        ## and prints no skip summary -- so those code paths just silently show
+        ## 0 coverage (CacheGeo() sat at 0/176 lines this way).
         ##
-        ## A service account has no Drive quota on user-owned folders: it
-        ## authenticates fine but cannot complete an upload round-trip, so the
-        ## Drive tests start and then stop part-way. Nothing fails loudly --
-        ## covr does not fail on test errors and prints no skip summary -- so
-        ## those code paths just silently show 0 coverage (CacheGeo() sat at
-        ## 0/176 lines this way). A user token carries the user's own quota.
-        ##
-        ## GDRIVE_OAUTH_TOKEN is a path to a serialized token, set by the
-        ## reusable workflow when the GOOGLEDRIVE_AUTH secret holds one (see
+        ## GDRIVE_OAUTH_TOKEN is a path to a serialized token, staged by the
+        ## reusable workflow from the org-level GOOGLEDRIVE_AUTH secret (see
         ## PredictiveEcology/actions); locally, point it at your own saveRDS'd
-        ## token. Falls through to the service-account path below when unset or
-        ## unreadable, so this is a no-op until the secret is switched over.
+        ## token. Service accounts are not supported -- see above -- so when
+        ## this is unset the Drive tests skip via skip_if_no_token().
         oauthTokenFile <- Sys.getenv("GDRIVE_OAUTH_TOKEN")
         if (nzchar(oauthTokenFile) && file.exists(oauthTokenFile)) {
           tok <- tryCatch(readRDS(oauthTokenFile), error = function(e) {
@@ -217,33 +215,6 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
                      error = function(e)
                        message("GDRIVE_OAUTH_TOKEN was not usable: ", conditionMessage(e)))
           }
-        }
-      }
-    if (isNamespaceLoaded("googledrive"))
-      if ((!googledrive::drive_has_token())) {
-        if (!nzchar(Sys.getenv("GOOGLEDRIVE_AUTH"))) {
-          Sys.setenv("GOOGLEDRIVE_AUTH" = "~/genial-cycling-408722-788552a3ecac.json")
-        }
-        gauthEnv <- Sys.getenv("GOOGLEDRIVE_AUTH")
-        if (nzchar(gauthEnv)) {
-          ## drive_auth() -> gargle::credentials_service_account() accepts
-          ## either a JSON file path or the JSON contents themselves
-          ## (anything jsonlite::fromJSON accepts as `txt`), so pass the
-          ## env var through as-is. On GHA the secret holds JSON content;
-          ## locally it's typically a path.
-          ##
-          ## Service-account credentials can be revoked at Google's end
-          ## (key rotated, SA disabled, etc.). drive_auth() converts the
-          ## underlying HTTP 400 / invalid_grant into a generic "Can't get
-          ## Google credentials" abort, which turns every Drive-using test
-          ## into an ERROR instead of a SKIP. Swallow it so the
-          ## skip_if_no_token() below cleanly skips instead.
-          ## Report the reason rather than discarding it: a revoked or
-          ## malformed credential is otherwise indistinguishable from "no
-          ## credential configured", and the tests just skip in silence.
-          tryCatch(googledrive::drive_auth(path = gauthEnv),
-                   error = function(e)
-                     message("GOOGLEDRIVE_AUTH was not usable: ", conditionMessage(e)))
         }
       }
 
