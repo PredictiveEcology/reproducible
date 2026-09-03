@@ -24,7 +24,7 @@ jobs:
       R_PKG_INSTALL_RETRIES: 3
     steps:
       - uses: actions/checkout@v5
-      - uses: PredictiveEcology/actions/install-spatial-deps@v0.2
+      - uses: PredictiveEcology/actions/install-spatial-deps@main
       - uses: r-lib/actions/setup-r@v2
         with:
           Ncpus: 2
