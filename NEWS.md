@@ -1,5 +1,11 @@
 # reproducible 3.2.1.9002
 
+## enhancements
+
+* `attributesReassign()` no longer uses `setdiff()`, which was ~44% of
+  `SpaDES.core::loadSimList(parse = FALSE)` on a large `simList`. Same result,
+  ~21% faster load.
+
 ## new features
 
 * `padYears()` pads a `c(start, end)` pair of years to a common width, taken from
