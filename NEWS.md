@@ -1,3 +1,11 @@
+# reproducible 3.2.1.9002
+
+## new features
+
+* `padYears()` pads a `c(start, end)` pair of years to a common width, taken from
+  the end year, so the two sort together. Wraps `paddedFloatToChar()`, whose
+  `padL` default is the same formula.
+
 # reproducible 3.2.1.9001
 
 ## enhancements

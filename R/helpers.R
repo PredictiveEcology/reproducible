@@ -35,6 +35,35 @@ paddedFloatToChar <- function(x, padL = ceiling(log10(x + 1)), padR = 3, pad = "
   return(xFCEnd)
 }
 
+################################################################################
+#' Pad a pair of start and end years to a common width
+#'
+#' A convenience wrapper around [paddedFloatToChar()] for the common case of a
+#' two-element `c(start, end)` vector of simulation years, where both elements
+#' must be padded to the *same* width so that the resulting filenames sort
+#' correctly. That width is taken from the end year, i.e. the larger of the two.
+#'
+#' @param years numeric of length 2, giving the start and end years.
+#'
+#' @return A list with elements `padL` (the common width), and `start` and
+#'   `end`, the two years as padded character strings.
+#'
+#' @author Eliot McIntire
+#' @export
+#' @rdname padYears
+#'
+#' @examples
+#' padYears(c(2011, 2100))
+#' padYears(c(1, 100)) # both padded to 3 characters
+padYears <- function(years) {
+  padL <- ceiling(log10(years[2] + 1))
+  list(
+    padL = padL,
+    start = paddedFloatToChar(years[1], padL = padL),
+    end = paddedFloatToChar(years[2], padL = padL)
+  )
+}
+
 #' Add a prefix or suffix to the basename part of a file path
 #'
 #' Prepend (or postpend) a filename with a prefix (or suffix).
