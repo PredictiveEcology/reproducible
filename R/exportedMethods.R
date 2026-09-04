@@ -247,15 +247,23 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
         filenameInCache <- filenameInCacheWPrefix(filenameInCache, cacheId = cacheId, relative = FALSE)
         # filenameInCache <- .prefix(filenameInCache, prefixCacheId(cacheId))
         # if (!identical(filenameInCache, filenameInCache2)) browser()
-        feObjs <- file.exists(obj)
-        if (any(feObjs))
-          unlink(obj[feObjs])
         # Rebuild the destination from the stored *relative* tags (anchor + relName)
         #   rather than reusing `fns` (the producing machine's embedded absolute path).
         #   Passing `fns` as `obj` here short-circuited remapFilenames() to the verbatim
         #   producer path, which is what made a cloud-cached raster try to write back to
         #   e.g. /home/<producer>/... on a different user's machine.
         newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
+        # Clear the DESTINATION, and only after it has been computed. This used to unlink the
+        #   original files first, which broke remapFilenames(): for a raster with no resolvable
+        #   anchor it tests `is_absolute_path(x) && file.exists(x)` to decide whether the original
+        #   location is still valid, and that test was being asked about files this line had just
+        #   deleted. It therefore always failed, falling through to `file.path(cachePath,
+        #   basename(x))` -- dropping BOTH the original directory and the cacheId, so two cached
+        #   calls whose rasters share a basename silently overwrote one another in the cache root
+        #   and returned each other's data.
+        feNew <- file.exists(newFiles$newName)
+        if (any(feNew))
+          unlink(newFiles$newName[feNew])
         fromFiles <- unlist(filenameInCache)
       } else {
         newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)

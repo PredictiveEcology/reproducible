@@ -1,3 +1,18 @@
+# reproducible 3.2.1.9005
+
+## bug fixes
+
+* `unwrapSpatRaster()` restores a file-backed `SpatRaster` to the directory it was
+  produced in, rather than to `file.path(cachePath, basename(f))`. It had been
+  unlinking the original file *before* computing the destination, which made
+  `remapFilenames()`'s "is the original location still valid" test
+  (`is_absolute_path(x) && file.exists(x)`) fail on the very files just deleted.
+  For a raster with no resolvable anchor that test always failed, so the
+  destination fell back to the cache root with the `cacheId` dropped -- and two
+  cached calls whose rasters shared a basename silently overwrote one another
+  there, with one call returning the other's data. The unlink now clears only the
+  computed destination, after it is known.
+
 # reproducible 3.2.1.9002
 
 ## enhancements
