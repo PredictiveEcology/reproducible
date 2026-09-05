@@ -1761,6 +1761,28 @@ isGoogleDownloadURL <- function(url) {
 #' }
 linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                        verbose = getOption("reproducible.verbose", 1)) {
+  ## A file that is already at its destination cannot be linked or copied onto
+  ## itself; file.copy() errors with "file can not be copied both 'from' and
+  ## 'to'". This has to be decided per element: `from` and `to` are parallel
+  ## vectors, and a single call routinely mixes self-referential pairs with real
+  ## ones -- e.g. when some of the needed files are already in
+  ## `getOption("reproducible.inputPaths")` and others are not.
+  ## The previous guard was `!all(normPath(to) %in% normPath(from))`, which is
+  ## (a) set membership rather than pairwise, so it could also skip a legitimate
+  ## copy whose `to` happened to equal some unrelated `from`, and (b)
+  ## all-or-nothing, so any mixed vector fell straight through to file.copy().
+  selfRef <- normPath(from) == normPath(to)
+  if (any(selfRef)) {
+    messagePreProcess(
+      singularPlural(c("File is", "Files are"), l = from[selfRef]),
+      " already at the destination:\n", paste(to[selfRef], collapse = "\n"),
+      "\n", messageNoCopyMade, verbose = verbose)
+    if (all(selfRef))
+      return(TRUE)
+    from <- from[!selfRef]
+    to <- to[!selfRef]
+  }
+
   existsLogical <- file.exists(from)
   existsTo <- file.exists(to)
 
@@ -1768,8 +1790,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
   fromCollapsed <- paste(from, collapse = "\n")
   result <- TRUE
 
-  ## if the filename is the same, you can't copy from self to self
-  if (!all(normPath(to) %in% normPath(from))) {
+  if (length(from)) {
     if (any(existsLogical)) {
       toDirs1 <- unique(dirname(to))
       dirDoesntExist1 <- !dir.exists(toDirs1)
