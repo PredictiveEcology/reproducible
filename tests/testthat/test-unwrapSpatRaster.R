@@ -72,3 +72,36 @@ test_that("two cached calls sharing a raster basename do not collide", {
   a3 <- Cache(mk(111, dpA), .functionName = "A")
   expect_equal(terra::values(a3[[1]])[1], 111)
 })
+
+test_that("restore still separates calls when the original files are gone", {
+  skip_if_not_installed("terra")
+  testInit("terra", opts = list(
+    "reproducible.showSimilar" = FALSE,
+    "reproducible.useMemoise" = FALSE
+  ))
+  withr::local_options(reproducible.cachePath = tmpdir)
+
+  dpA <- withr::local_tempdir("goneA")
+  dpB <- withr::local_tempdir("goneB")
+
+  mk <- function(val, dp) {
+    list(terra::writeRaster(
+      terra::rast(nrows = 10, ncols = 10, vals = val),
+      file.path(dp, "1.tif"), overwrite = TRUE
+    ))
+  }
+
+  Cache(mk(111, dpA), .functionName = "A")
+  Cache(mk(222, dpB), .functionName = "B")
+
+  ## Intermediates are routinely deleted while the cache is kept. With the originals gone the
+  ## restore cannot put them back where they came from and must fall back to the cache -- which
+  ## is exactly where a bare basename would make two cached calls share one file.
+  unlink(c(file.path(dpA, "1.tif"), file.path(dpB, "1.tif")))
+
+  a <- Cache(mk(111, dpA), .functionName = "A")
+  b <- Cache(mk(222, dpB), .functionName = "B")
+  expect_equal(terra::values(a[[1]])[1], 111)
+  expect_equal(terra::values(b[[1]])[1], 222)
+  expect_false(identical(terra::sources(a[[1]]), terra::sources(b[[1]])))
+})

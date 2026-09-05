@@ -1,17 +1,31 @@
-# reproducible 3.2.1.9005
+# reproducible 3.2.1.9006
 
 ## bug fixes
 
 * `unwrapSpatRaster()` restores a file-backed `SpatRaster` to the directory it was
-  produced in, rather than to `file.path(cachePath, basename(f))`. It had been
-  unlinking the original file *before* computing the destination, which made
-  `remapFilenames()`'s "is the original location still valid" test
-  (`is_absolute_path(x) && file.exists(x)`) fail on the very files just deleted.
-  For a raster with no resolvable anchor that test always failed, so the
-  destination fell back to the cache root with the `cacheId` dropped -- and two
-  cached calls whose rasters shared a basename silently overwrote one another
-  there, with one call returning the other's data. The unlink now clears only the
-  computed destination, after it is known.
+  produced in, rather than to `file.path(cachePath, basename(f))`. Two faults
+  combined: the original file was unlinked *before* the destination was computed,
+  which made `remapFilenames()`'s "is the original location still valid" test
+  (`is_absolute_path(x) && file.exists(x)`) fail on the very files just deleted; and
+  the fallback it then took reduced the name to a bare `basename()`, dropping the
+  `cacheId`. Two cached calls whose rasters shared a basename therefore landed on one
+  file in the cache root and silently returned each other's data. The unlink now
+  clears only the computed destination, and the fallback keeps the
+  `<cacheId>_<name>` prefix the save side already uses.
+
+  **Effect on an existing Cache repository: none — no `cacheId` changes, and nothing
+  needs regenerating.** This is entirely in the read/recovery stage; digesting and the
+  save side are untouched, so existing entries still hit (verified: the same call
+  yields cacheId `1aa53aeb61ccba98` before and after). The stored copies under
+  `cacheOutputs/` were always correctly namespaced — only the restore was wrong — so a
+  repository written by an affected version **self-heals on the first read** under this
+  version, with no `clearCache()` required.
+
+  The one thing that does not self-heal: a downstream cache entry whose *inputs* were
+  a raster corrupted this way. Its stored output is genuinely wrong and must be
+  recomputed. That only applies where two cached calls produced file-backed rasters
+  sharing a basename (e.g. several calls each writing `4.1.tif`), and the affected
+  entry was read back before being consumed.
 
 # reproducible 3.2.1.9002
 

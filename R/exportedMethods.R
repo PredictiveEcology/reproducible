@@ -252,7 +252,7 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
         #   Passing `fns` as `obj` here short-circuited remapFilenames() to the verbatim
         #   producer path, which is what made a cloud-cached raster try to write back to
         #   e.g. /home/<producer>/... on a different user's machine.
-        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
+        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, cacheId = cacheId, ...)
         # Clear the DESTINATION, and only after it has been computed. This used to unlink the
         #   original files first, which broke remapFilenames(): for a raster with no resolvable
         #   anchor it tests `is_absolute_path(x) && file.exists(x)` to decide whether the original
@@ -266,7 +266,7 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
           unlink(newFiles$newName[feNew])
         fromFiles <- unlist(filenameInCache)
       } else {
-        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
+        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, cacheId = cacheId, ...)
         fromFiles <- unlist(fns) # fnToLoad <- newFiles$newName
       }
       hardLinkOrCopy(fromFiles, newFiles$newName, verbose = 0)
@@ -747,7 +747,8 @@ setMethod(
 #'
 #' unlink(inputDir, recursive = TRUE)
 #' @importFrom fs path_join path_norm
-remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cachePath"), ...) {
+remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cachePath"),
+                           cacheId = NULL, ...) {
   tags <- parseTags(tags)
   origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
 
@@ -796,8 +797,17 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
         #   object self-contained under THIS machine's cache. Never resurrect a path
         #   from the producing machine (the cause of the cross-user cloud-cache crash:
         #   "cannot create dir '/home/<producer>' ... Operation not supported").
+        #   Keep the cacheId in that name. `basename(x)` alone is shared by every cached call
+        #   whose raster happened to have that filename, so without the prefix they all land on
+        #   one file in the cache root and silently overwrite one another -- matching the
+        #   `<cacheId>_<name>` convention the save side already uses (filenameInCacheWPrefix()).
         rel <- x
-        if (fs::is_absolute_path(rel)) rel <- basename(rel)
+        if (fs::is_absolute_path(rel)) {
+          rel <- basename(rel)
+          if (!is.null(cacheId) && length(cacheId) && nzchar(cacheId[[1]])) {
+            rel <- paste0(cacheId[[1]], "_", rel)
+          }
+        }
         while (any(grepl(grepStartsTwoDots, rel))) {
           rel <- gsub(paste0(grepStartsTwoDots, "|(\\\\|/)"), "", rel)
         }
