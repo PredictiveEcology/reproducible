@@ -1,3 +1,20 @@
+# reproducible 3.2.1.9006
+
+## bug fixes
+
+* `linkOrCopy()` no longer errors when `from` and `to` contain a self-referential
+  pair alongside real ones. A file already at its destination cannot be linked or
+  copied onto itself -- `file.copy()` raises
+  "file can not be copied both 'from' and 'to'" -- and the guard against this was
+  `!all(normPath(to) %in% normPath(from))`. That is set membership rather than
+  pairwise, and all-or-nothing, while the operation itself is element-wise: a call
+  mixing self-referential pairs with real ones fell straight through and errored,
+  taking the legitimate copies down with it. It could also skip real work, when a
+  `to` happened to equal some unrelated `from`. Self-reference is now decided per
+  element; those elements are reported and skipped, and the rest proceed.
+  Reached in practice through `prepInputs()`/`preProcess()` when some needed files
+  are already in `getOption("reproducible.inputPaths")` and others are not.
+
 # reproducible 3.2.1.9005
 
 ## bug fixes

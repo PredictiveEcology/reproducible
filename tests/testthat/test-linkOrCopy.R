@@ -151,3 +151,42 @@ test_that("linkOrCopy tries a symlink before copying on unix", {
   expect_true(file.exists(to))
   expect_identical(readLines(to, warn = FALSE), "payload")
 })
+
+test_that("linkOrCopy tolerates self-referential from/to pairs, alone and mixed", {
+  testInit()
+
+  ## Regression: a file already at its destination cannot be linked or copied
+  ## onto itself -- file.copy() raises "file can not be copied both 'from' and
+  ## 'to'". The guard used to be `!all(normPath(to) %in% normPath(from))`, which
+  ## is set membership rather than pairwise AND all-or-nothing, so a vector that
+  ## mixed self-referential pairs with real ones fell through and errored. This
+  ## is reached in practice via prepInputs when some needed files are already in
+  ## getOption("reproducible.inputPaths") and others are not.
+  a <- file.path(tmpdir, "a.txt")
+  b <- file.path(tmpdir, "b.txt")
+  writeLines("A", a)
+  writeLines("B", b)
+
+  ## 1. Every pair self-referential -- no-op, no error.
+  expect_true(isTRUE(all(suppressMessages(linkOrCopy(a, a, verbose = 0)))))
+  expect_identical(readLines(a, warn = FALSE), "A")
+
+  ## 2. Mixed: one self-referential pair, one real copy. This is the case that
+  ##    used to error out entirely, taking the legitimate copy down with it.
+  bTo <- file.path(tmpdir, "sub", "b-copy.txt")
+  res <- suppressMessages(
+    linkOrCopy(from = c(a, b), to = c(a, bTo), verbose = 0)
+  )
+  expect_true(isTRUE(all(res)))
+  expect_true(file.exists(bTo))
+  expect_identical(readLines(bTo, warn = FALSE), "B")
+  expect_identical(readLines(a, warn = FALSE), "A")
+
+  ## 3. A `to` that merely collides with an unrelated `from` must still copy --
+  ##    the old `%in%` test could skip real work here.
+  c1 <- file.path(tmpdir, "c.txt")
+  writeLines("C", c1)
+  res3 <- suppressMessages(linkOrCopy(from = c1, to = b, verbose = 0))
+  expect_true(isTRUE(all(res3)))
+  expect_identical(readLines(b, warn = FALSE), "C")
+})
