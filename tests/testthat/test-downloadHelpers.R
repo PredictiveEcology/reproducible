@@ -291,6 +291,21 @@ test_that(".remoteSiblings does not probe extensions on the deny-list", {
   expect_length(.remoteSiblings("https://example.invalid/d/x.tif", "x.tif", "similar"), 0L)
 })
 
+test_that(".remoteSiblings never returns an archive as a companion of a plain file", {
+  testInit()
+  skip_if_not_installed("curl"); skip_if_not_installed("httr2")
+  ## A listable parent whose index holds the target, two true sidecars, and three
+  ## archives that merely share the stem. Fetched, those archives are treated as
+  ## archives to extract from each other -- LandR CI died in exactly that way on
+  ## tati-micheletti/host/data/rasterTest.{tif,rar,tar,zip}.
+  html <- paste0('<a href="rasterTest.', c("tif", "tfw", "tif.aux.xml", "zip", "rar", "tar"),
+                 '">x</a>', collapse = "\n")
+  testthat::local_mocked_bindings(.readUrlLines = function(...) html, .package = "reproducible")
+  sibs <- .remoteSiblings("https://example.org/d/rasterTest.tif", "rasterTest.tif", "similar",
+                          verbose = -1)
+  expect_setequal(names(sibs), c("rasterTest.tfw", "rasterTest.tif.aux.xml"))
+})
+
 test_that(".remoteSiblings finds the sidecars beside a file url", {
   skip_on_cran()
   skip_if_not_installed("curl")
