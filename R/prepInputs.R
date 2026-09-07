@@ -1301,7 +1301,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
       }
 
       if (needSystemCall) {
-        extractSystemCallPath <- .testForArchiveExtract(archive)
+        # `archive` may be several *guessed* candidates (.checkForSimilar() tries
+        # <name>.rar/.tar/.zip when a download has no archive extension). Nothing
+        # can be listed from one that is not on disk, and looking for 7-Zip/unrar
+        # on its behalf can stop() on a machine without them -- so return before
+        # probing, and probe for the first candidate only: passing the whole
+        # vector made the probe's `if` a length-3 condition.
+        if (!isTRUE(file.exists(archive[1]))) return(NULL)
+        extractSystemCallPath <- .testForArchiveExtract(archive[1])
         funWArgs <- list(fun = extractSystemCallPath)
       } else {
         funWArgs <- .whichExtractFn(archive[1], NULL, dontUse = dontUse)
@@ -1526,7 +1533,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
   sevenzName <- grep("7z", knownSystemArchiveExtensions, value = TRUE)
 
   extractSystemCallPath <- NULL
-  if (tools::file_ext(archive) == sevenzName) {
+  if (isTRUE(tools::file_ext(archive[1]) == sevenzName)) {
     extractSystemCallPath <- Sys.which(sevenzName)
   }
 

@@ -81,3 +81,32 @@ test_that("knownArchiveExtensions and its subsets stay consistent", {
   expect_true(all(knownSystemArchiveExtensions %in% knownArchiveExtensions))
   expect_true("zip" %in% knownInternalArchiveExtensions)
 })
+
+test_that(".listFilesInArchive: guessed candidates that are not on disk never reach the tool probe", {
+  ## .checkForSimilar() guesses <name>.rar/.tar/.zip when a download has no archive
+  ## extension. None exist. The .rar first element routes to the system-tool branch,
+  ## which used to hand the whole vector to .testForArchiveExtract(), whose `if`
+  ## then had a length-3 condition (every LandR CI job, where `archive` is absent).
+  cands <- file.path(withr::local_tempdir(), c("guess.rar", "guess.tar", "guess.zip"))
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    .testForArchiveExtract = function(archive = "") { seen <<- archive; NULL },
+    .package = "reproducible"
+  )
+  expect_no_error(res <- .listFilesInArchive(cands))
+  expect_true(is.null(res) || length(res) == 0L)
+  expect_null(seen)
+})
+
+test_that(".listFilesInArchive probes the system tool for the first candidate only", {
+  td <- withr::local_tempdir()
+  rar <- file.path(td, "real.rar")
+  writeBin(as.raw(rep(1L, 64L)), rar)          # exists, > 10 bytes; listing itself is not exercised
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    .testForArchiveExtract = function(archive = "") { seen <<- archive; NULL },
+    .package = "reproducible"
+  )
+  expect_no_error(.listFilesInArchive(c(rar, file.path(td, "real.tar"))))
+  expect_identical(seen, rar)
+})
