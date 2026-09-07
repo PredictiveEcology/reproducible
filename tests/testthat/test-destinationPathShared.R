@@ -1236,3 +1236,99 @@ test_that("C6: deleted local file + stale sidecar + nothing in shared → downlo
   # The file should now exist locally (downloaded from `file://src/foo.csv`).
   expect_true(file.exists(file.path(dest, "foo.csv")))
 })
+
+# ---------------------------------------------------------------------------
+# A: archive-scoped shared directory
+#
+# Every ClimateNA tile zip contains `Year_1991MSY/CMD_sm.asc`. A shared store keyed
+# by that archive-relative name alone handed tile 55 the file extracted from tile
+# 34 (one inode, 32 hardlinks across seven projects on the FireSense cluster).
+# Files that come out of an archive live under <shared>/<archive stem>/ together
+# with the archive and their own CHECKSUMS.txt; the root index is never consulted
+# for archive contents.
+# ---------------------------------------------------------------------------
+
+# A zip whose single member sits at a relative inner path, built from a scratch
+# dir so the archive records that path. Returns the absolute zip path.
+makeZipFixture <- function(dir, zipName, inner, content) {
+  scratch <- file.path(dir, paste0("build_", tools::file_path_sans_ext(zipName)))
+  dir.create(file.path(scratch, dirname(inner)), recursive = TRUE, showWarnings = FALSE)
+  writeBin(charToRaw(content), file.path(scratch, inner))
+  zp <- file.path(normPath(dir), zipName)
+  withr::with_dir(scratch, suppressWarnings(utils::zip(zp, inner, flags = "-q")))
+  zp
+}
+
+test_that("A1: two archives with the same inner path each deliver their own file", {
+  testInit("digest")
+  skip_if(!nzchar(Sys.which("zip")), "zip binary not available")
+  shared <- normPath(file.path(tmpdir, "shared"))
+  destA  <- normPath(file.path(tmpdir, "destA"))
+  destB  <- normPath(file.path(tmpdir, "destB"))
+  srcA   <- normPath(file.path(tmpdir, "srcA"))
+  srcB   <- normPath(file.path(tmpdir, "srcB"))
+  for (d in c(shared, destA, destB, srcA, srcB)) dir.create(d, recursive = TRUE)
+
+  inner <- "Year_1991MSY/CMD_sm.asc"
+  zipA <- makeZipFixture(srcA, "34_MSY_1990.zip", inner, "tile34\n")
+  zipB <- makeZipFixture(srcB, "55_MSY_1990.zip", inner, "tile55\n")
+
+  withr::local_options(list(reproducible.destinationPathShared = shared))
+
+  capture.output(type = "output",
+    preProcess(url = toFileUrl(zipA), targetFile = inner,
+               destinationPath = destA, fun = NA, verbose = -1))
+  capture.output(type = "output",
+    preProcess(url = toFileUrl(zipB), targetFile = inner,
+               destinationPath = destB, fun = NA, verbose = -1))
+
+  expect_identical(readLines(file.path(destA, inner)), "tile34")
+  expect_identical(readLines(file.path(destB, inner)), "tile55")
+
+  # nothing extracted lands flat in the shared root; each archive has its own dir
+  expect_false(file.exists(file.path(shared, inner)))
+  expect_true(file.exists(file.path(shared, "34_MSY_1990", "34_MSY_1990.zip")))
+  expect_true(file.exists(file.path(shared, "55_MSY_1990", "55_MSY_1990.zip")))
+  expect_true(file.exists(file.path(shared, "55_MSY_1990", inner)))
+  expect_identical(readLines(file.path(shared, "55_MSY_1990", inner)), "tile55")
+})
+
+test_that("A2: legacy flat shared root: archive is migrated and reused, flat extracted file is not", {
+  testInit("digest")
+  skip_if(!nzchar(Sys.which("zip")), "zip binary not available")
+  shared <- normPath(file.path(tmpdir, "shared"))
+  destB  <- normPath(file.path(tmpdir, "destB"))
+  src    <- normPath(file.path(tmpdir, "src"))
+  for (d in c(shared, destB, src)) dir.create(d, recursive = TRUE)
+
+  inner <- "Year_1991MSY/CMD_sm.asc"
+  zipB <- makeZipFixture(src, "55_MSY_1990.zip", inner, "tile55\n")
+
+  # The pre-fix layout: the archive flat in the root, plus a flat extracted file
+  # that came from a DIFFERENT archive, both indexed in the root CHECKSUMS.txt.
+  file.copy(zipB, file.path(shared, "55_MSY_1990.zip"))
+  dir.create(file.path(shared, dirname(inner)), recursive = TRUE)
+  writeBin(charToRaw("tile34\n"), file.path(shared, inner))
+  csRows <- vapply(c("55_MSY_1990.zip", inner), function(f) {
+    p <- file.path(shared, f)
+    sprintf('"%s" "%s" "%d" "xxhash64"', f, digest::digest(file = p, algo = "xxhash64"),
+            file.info(p)$size)
+  }, character(1))
+  writeLines(c('"file" "checksum" "filesize" "algorithm"', csRows),
+             file.path(shared, "CHECKSUMS.txt"))
+
+  withr::local_options(list(reproducible.destinationPathShared = shared))
+
+  # The url points at a file that no longer exists: the only way to succeed is to
+  # reuse the archive already in the shared store.
+  gone <- file.path(src, "not_here_55_MSY_1990.zip")
+  capture.output(type = "output",
+    preProcess(url = toFileUrl(gone), archive = "55_MSY_1990.zip", targetFile = inner,
+               destinationPath = destB, fun = NA, verbose = -1))
+
+  expect_identical(readLines(file.path(destB, inner)), "tile55")
+  expect_true(file.exists(file.path(shared, "55_MSY_1990", "55_MSY_1990.zip")))
+  expect_true(file.exists(file.path(shared, "55_MSY_1990", inner)))
+  # the poisoned flat file is left alone, and was not used
+  expect_identical(readLines(file.path(shared, inner)), "tile34")
+})

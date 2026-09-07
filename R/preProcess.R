@@ -352,7 +352,8 @@ pp_checksums_init <- function(ctx) {
   # local re-verification.
   filesPreVerified <- character()
   if (length(filesToCheck)) {
-    sidecarDirs <- unique(c(ctx$destinationPath, .getDestinationPathShared()))
+    sharedRoots <- .getDestinationPathShared()
+    sidecarDirs <- unique(c(ctx$destinationPath, .sharedDirsFor(sharedRoots, ctx$archive), sharedRoots))
     hasSidecar <- vapply(filesToCheck, function(f) {
       length(.findRemoteHashSidecars(basename2(f), sidecarDirs)) > 0L &&
         file.exists(f)
@@ -364,7 +365,8 @@ pp_checksums_init <- function(ctx) {
     }
   }
 
-  inputPaths <- runChecksums(ctx$destinationPath, ctx$checkSumFilePath, filesToCheck, ctx$verbose)
+  inputPaths <- runChecksums(ctx$destinationPath, ctx$checkSumFilePath, filesToCheck, ctx$verbose,
+                             archive = ctx$archive)
 
   ctx$reproducible.inputPaths <- inputPaths$reproducible.inputPaths
   ctx$destinationPathUser     <- inputPaths$destinationPathUser
@@ -1126,6 +1128,15 @@ pp_link_to_destination <- function(ctx) {
           messagePreProcess("... linking to getOption('reproducible.destinationPathShared')...",
                             verbose = ctx$verbose)
           hardLinkOrCopy(from, to, verbose = ctx$verbose)
+          # An archive's shared dir keeps its own CHECKSUMS.txt -- the root index is
+          # never consulted for archive contents -- so record what was just linked.
+          if (!isNULLorNA(ctx$archive)) {
+            linked <- to[file.exists(to)]
+            if (length(linked))
+              appendChecksumsTable(checkSumFilePath = identifyCHECKSUMStxtFile(riP),
+                                   filesToChecksum = linked, destinationPath = riP,
+                                   append = TRUE, verbose = ctx$verbose - 1L)
+          }
         } else {
           messagePreProcess("Skipping copy from destinationPathShared; all files present",
                             verbose = ctx$verbose)
@@ -1673,7 +1684,9 @@ isGoogleDownloadURL <- function(url) {
     }
     # do a check here that destinationPath is already the destinationPathShared
     #   need to emulate the above behaviour
-    reproducible.inputPaths <- .getDestinationPathShared()
+    # `otherPaths` is already this request's shared dir (archive-scoped when there is
+    # an archive); re-reading the option here would compare against the root.
+    reproducible.inputPaths <- otherPaths
     if (!is.null(reproducible.inputPaths)) {
       reproducible.inputPaths <- normPath(reproducible.inputPaths)
     }
@@ -2338,13 +2351,46 @@ setupArchive <- function(archive, destinationPath) {
   archive
 }
 
-runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbose) {
-  reproducible.inputPaths <- .getDestinationPathShared()
-  if (!is.null(reproducible.inputPaths)) {
-    reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
+# Files extracted from an archive are only meaningful together with that archive.
+# Every ClimateNA tile zip contains `Year_1991MSY/CMD_sm.asc`; a shared store keyed
+# by that archive-relative name alone handed tile 55 the file extracted from tile 34
+# (one inode, 32 hardlinks across seven projects). So a request that involves an
+# archive uses its own directory inside destinationPathShared,
+# `<shared>/<archive stem>/`, holding the archive, whatever was extracted from it,
+# and their CHECKSUMS.txt. Requests for plain files keep using the shared root.
+.sharedDirsFor <- function(sharedRoots, archive) {
+  if (is.null(sharedRoots) || isNULLorNA(archive)) return(sharedRoots)
+  stem <- tools::file_path_sans_ext(basename2(archive[1]), compression = TRUE)
+  file.path(sharedRoots, stem)
+}
+
+# A shared root populated before archive scoping holds the archive flat at
+# `<shared>/<archive>`. Bring it into the scoped dir once so the download is still
+# reused. Flat *extracted* files are deliberately left where they are: nothing
+# records which archive they came from, which is the defect being fixed.
+.migrateFlatArchive <- function(sharedRoot, sharedDir, archive, verbose) {
+  flat <- file.path(sharedRoot, basename2(archive[1]))
+  scoped <- file.path(sharedDir, basename2(archive[1]))
+  if (!file.exists(flat) || file.exists(scoped)) return(invisible(FALSE))
+  hardLinkOrCopy(flat, scoped, verbose = verbose - 1L)
+  appendChecksumsTable(checkSumFilePath = identifyCHECKSUMStxtFile(sharedDir),
+                       filesToChecksum = scoped, destinationPath = sharedDir,
+                       append = TRUE, verbose = verbose - 1L)
+  invisible(TRUE)
+}
+
+runChecksums <- function(destinationPath, checkSumFilePath, filesToCheck, verbose,
+                         archive = NULL) {
+  sharedRoots <- .getDestinationPathShared()
+  if (!is.null(sharedRoots)) {
+    sharedRoots <- checkPath(sharedRoots, create = TRUE)
+    sharedRoots <- path.expand(sharedRoots)
   }
-  if (!is.null(reproducible.inputPaths)) {
-    reproducible.inputPaths <- path.expand(reproducible.inputPaths)
+  reproducible.inputPaths <- .sharedDirsFor(sharedRoots, archive)
+  if (!identical(reproducible.inputPaths, sharedRoots)) {
+    reproducible.inputPaths <- checkPath(reproducible.inputPaths, create = TRUE)
+    Map(.migrateFlatArchive, sharedRoots, reproducible.inputPaths,
+        MoreArgs = list(archive = archive, verbose = verbose))
   }
 
   destinationPathUser <- NULL
