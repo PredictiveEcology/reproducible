@@ -1943,6 +1943,16 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     found <- stats::setNames(paste0(parent, cand)[ok], cand[ok])
   }
   found <- found[names(found) != base]
+  # A companion is something needed to read `targetFile` -- a `.tfw`, `.prj`,
+  #   `.aux.xml`. An archive sitting beside a plain file is different data that
+  #   happens to share the stem (`rasterTest.tif` next to `rasterTest.zip`), and
+  #   once fetched it is handed down the pipeline as an archive to extract from,
+  #   which is where LandR's CI died. Keep archive siblings only when the target
+  #   itself is an archive.
+  if (is.null(.isArchive(base))) {
+    arch <- .isArchive(names(found))
+    if (length(arch)) found <- found[!names(found) %in% arch]
+  }
   if (length(found)) {
     messagePreProcess("alsoExtract = 'similar': also fetching ",
                       paste(names(found), collapse = ", "), verbose = verbose)

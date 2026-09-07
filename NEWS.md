@@ -1,3 +1,14 @@
+# reproducible 3.2.1.9010
+
+## bug fixes
+
+* `alsoExtract = "similar"` beside a plain file url no longer fetches archive-named
+  siblings (`rasterTest.zip` next to `rasterTest.tif`). A companion is a `.tfw`, `.prj`,
+  `.aux.xml`; an archive sharing the stem is different data, and once fetched it was
+  handed down the pipeline as an archive to extract from -- which is what has kept
+  LandR's R-CMD-check red since 2026-08-24 on machines without 7-Zip. Archive siblings
+  are still returned when the target itself is an archive.
+
 # reproducible 3.2.1.9009
 
 ## bug fixes
