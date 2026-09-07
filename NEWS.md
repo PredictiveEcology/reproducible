@@ -1,3 +1,16 @@
+# reproducible 3.2.1.9008
+
+## bug fixes
+
+* `.listFilesInArchive()` no longer fails with "the condition has length > 1" on the
+  system-tool path. `.checkForSimilar()` passes several *guessed* candidate archives
+  (`<name>.rar`, `.tar`, `.zip`) when a download has no archive extension; the `.rar`
+  first element routed to the 7-Zip/unrar branch, which handed the whole vector to
+  `.testForArchiveExtract()`. Only reached when the `archive` package is not
+  installed, which is why it broke every LandR CI job (and `development` since
+  2026-08-29) while passing on developer machines. Candidates that are not on disk
+  now return `NULL` before any tool probe, and the probe sees the first candidate only.
+
 # reproducible 3.2.1.9007
 
 ## bug fixes
