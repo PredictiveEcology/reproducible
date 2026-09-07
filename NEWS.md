@@ -1,3 +1,19 @@
+# reproducible 3.2.1.9007
+
+## bug fixes
+
+* `reproducible.destinationPathShared`: files extracted from an archive are now
+  stored under `<shared>/<archive stem>/` (with the archive and their own
+  `CHECKSUMS.txt`) instead of flat in the shared root. The flat layout keyed
+  extracted files by their archive-relative name alone, so two archives with the
+  same inner path -- every ClimateNA tile zip contains `Year_1991MSY/CMD_sm.asc` --
+  shared one file: `preProcess()` redirected into the shared root, found the name
+  in the root `CHECKSUMS.txt`, skipped extraction, and hardlinked the first
+  archive's file into every later request. An archive already sitting flat in a
+  pre-existing shared root is migrated into its scoped directory on first use, so
+  downloads are still reused; flat extracted files are left alone and no longer
+  consulted for archive contents. (#585)
+
 # reproducible 3.2.1.9006
 
 ## bug fixes
