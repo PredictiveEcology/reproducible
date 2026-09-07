@@ -216,3 +216,54 @@ test_that(".stopGoogleDriveAccess surfaces the full URL and the original error",
   # ...and the original googledrive detail is preserved
   expect_error(reproducible:::.stopGoogleDriveAccess(id, err), "File not found")
 })
+
+test_that(".gdrivePrepareAuth: a transient probe failure is retried, not demoted to anonymous", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = "a@b.com",
+                       reproducible.gdriveAuthRetries = 1L)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  events <- character(); n <- 0L
+  testthat::local_mocked_bindings(.gdriveHasToken = function() FALSE)
+  testthat::local_mocked_bindings(
+    as_id = function(x) x,
+    drive_auth = function(...) { events <<- c(events, "auth"); invisible() },
+    drive_get = function(...) {                 # first probe: refresh/network blip; second: fine
+      n <<- n + 1L; events <<- c(events, paste0("probe", n))
+      if (n == 1L) stop("Failed to connect to oauth2.googleapis.com port 443: Timeout was reached")
+      invisible(TRUE)
+    },
+    drive_deauth = function(...) events <<- c(events, "deauth"),
+    .package = "googledrive")
+  expect_identical(suppressMessages(reproducible:::.gdrivePrepareAuth("u")), "token")
+  expect_identical(events, c("auth", "probe1", "auth", "probe2"))   # retried; never deauthorized
+})
+
+test_that(".gdrivePrepareAuth: a 403/404 denial is final -- no retry -- and is reported", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = "a@b.com",
+                       reproducible.gdriveAuthRetries = 2L)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  probes <- 0L
+  testthat::local_mocked_bindings(.gdriveHasToken = function() FALSE)
+  testthat::local_mocked_bindings(
+    as_id = function(x) x,
+    drive_auth = function(...) invisible(),
+    drive_get = function(...) { probes <<- probes + 1L; stop("Client error: (404) Not Found. File not found: u") },
+    drive_deauth = function(...) invisible(),
+    .package = "googledrive")
+  expect_identical(suppressMessages(reproducible:::.gdrivePrepareAuth("u")), "anon")
+  expect_identical(probes, 1L)
+  err <- tryCatch(reproducible:::.stopGoogleDriveAccess("u", simpleError("File not found: u")),
+                  error = function(e) conditionMessage(e))
+  expect_match(err, "Authenticated access was tried first and failed", fixed = TRUE)
+  expect_match(err, "gargle_oauth_email = 'a@b.com': Client error: (404)", fixed = TRUE)
+})
+
+test_that(".gdriveIsDenial separates 403/404 from transient failures", {
+  f <- reproducible:::.gdriveIsDenial
+  expect_true(f(simpleError("Client error: (404) Not Found")))
+  expect_true(f(simpleError("404 File not found")))
+  expect_true(f(simpleError("Client error: (403) Forbidden: insufficientPermissions")))
+  expect_false(f(simpleError("Failed to connect to oauth2.googleapis.com port 443: Timeout was reached")))
+  expect_false(f(simpleError("Server error: (503) Service Unavailable")))
+})

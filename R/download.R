@@ -561,15 +561,35 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 # identity is only accepted when it genuinely grants access to *this* resource
 # (not merely "a token loaded"). `team_drive` is forwarded for shared-drive files.
 .gdriveProbe <- function(url, team_drive = NULL) {
-  isTRUE(tryCatch({
+  isTRUE(.gdriveProbeCond(url, team_drive = team_drive))
+}
+
+# Same probe, but hand back the error condition instead of FALSE, so the cascade
+# can tell a definitive denial from a transient failure and can say why an
+# identity was abandoned.
+.gdriveProbeCond <- function(url, team_drive = NULL) {
+  tryCatch({
     args <- list(googledrive::as_id(url))
     if (!is.null(team_drive))
       args[[if (utils::packageVersion("googledrive") < "2.0.0")
         "team_drive" else "shared_drive"]] <- team_drive
     suppressMessages(do.call(googledrive::drive_get, args))
     TRUE
-  }, error = function(e) FALSE))
+  }, error = function(e) e)
 }
+
+# Is this error a definitive "this identity cannot see the file" (HTTP 403/404),
+# as opposed to a transient failure -- token refresh against oauth2.googleapis.com,
+# DNS, a timeout, a 5xx -- that is worth retrying before giving the identity up?
+.gdriveIsDenial <- function(e) {
+  msg <- conditionMessage(e)
+  isTRUE(grepl("\\((403|404)\\)|\\b40[34]\\b|File not found|insufficient", msg, ignore.case = TRUE))
+}
+
+# What happened to the configured identities during the most recent cascade. Read
+# by .stopGoogleDriveAccess(): when anonymous access then gets a 404 on a private
+# file, the useful fact is *why* the authenticated attempt was abandoned, not the 404.
+.gdriveLastAuth <- new.env(parent = emptyenv())
 
 # The ordered list of auth identities to TRY for a Drive resource, each present
 # only when its prerequisite exists (so we never attempt an identity that cannot
@@ -626,19 +646,39 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   op <- options(rlang_interactive = FALSE)
   on.exit(options(op), add = TRUE)
 
+  # A transient failure (token refresh, DNS, timeout, 5xx) must not demote a
+  # configured identity to anonymous access: on a private file that ends in a
+  # misleading 404. Six workers starting 20 s apart and refreshing one cached
+  # token did exactly that. Retry such failures; a 403/404 denial is final.
+  retries <- getOption("reproducible.gdriveAuthRetries", 2L)
+  .gdriveLastAuth$attempts <- character()
+
   for (cand in .gdriveAuthCandidates()) {
-    ok <- isTRUE(tryCatch({
-      if (identical(cand$kind, "email")) {
-        messagePreProcess("Google Drive: trying option gargle_oauth_email = '",
-                          paste(cand$email, collapse = "', '"), "'", verbose = verbose)
-        suppressMessages(googledrive::drive_auth(email = cand$email))
-      } else {
-        messagePreProcess("Google Drive: trying service-account JSON from $",
-                          cand$envvar, verbose = verbose)
-        suppressMessages(googledrive::drive_auth(path = cand$path))
-      }
-      .gdriveProbe(url, team_drive = team_drive)
-    }, error = function(e) FALSE))
+    label <- if (identical(cand$kind, "email")) {
+      paste0("gargle_oauth_email = '", paste(cand$email, collapse = "', '"), "'")
+    } else {
+      paste0("service-account JSON from $", cand$envvar)
+    }
+    messagePreProcess("Google Drive: trying option ", label, verbose = verbose)
+    ok <- FALSE
+    for (attempt in seq_len(1L + retries)) {
+      res <- tryCatch({
+        if (identical(cand$kind, "email")) {
+          suppressMessages(googledrive::drive_auth(email = cand$email))
+        } else {
+          suppressMessages(googledrive::drive_auth(path = cand$path))
+        }
+        .gdriveProbeCond(url, team_drive = team_drive)
+      }, error = function(e) e)
+      if (isTRUE(res)) { ok <- TRUE; break }
+      .gdriveLastAuth$attempts <- c(.gdriveLastAuth$attempts,
+                                    paste0(label, ": ", conditionMessage(res)))
+      if (.gdriveIsDenial(res) || attempt > retries) break
+      messagePreProcess("Google Drive: transient failure (",
+                        substr(conditionMessage(res), 1L, 80L), "); retrying in ",
+                        2L * attempt, " s", verbose = verbose)
+      Sys.sleep(2L * attempt)
+    }
     if (ok) return("token")
     # This identity authenticated but cannot read the file (or failed to load):
     # clear its (possibly poisoning) token before trying the next rung.
@@ -667,10 +707,15 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 # front, preserving the original error detail (404 reason/location etc.).
 .stopGoogleDriveAccess <- function(url, e) {
   browserUrl <- .gdriveBrowserUrl(url)
+  tried <- tryCatch(.gdriveLastAuth$attempts, error = function(e) character())
+  authNote <- if (length(tried)) {
+    paste0("\n  Authenticated access was tried first and failed:\n    ",
+           paste(tried, collapse = "\n    "), "\n  ")
+  } else ""
   stop("Could not access the Google Drive resource:\n  ",
        if (!is.na(browserUrl)) browserUrl else url,
        "\n  (open it in a browser to confirm it exists and is shared ",
-       "'Anyone with the link')\n  ",
+       "'Anyone with the link')", authNote, "\n  ",
        conditionMessage(e), call. = FALSE)
 }
 

@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9009
+
+## bug fixes
+
+* Google Drive auth cascade: a transient failure while authenticating as the configured
+  identity or probing the file (token refresh against `oauth2.googleapis.com`, DNS, a
+  timeout, a 5xx) no longer demotes the request to anonymous access, which on a private
+  file ended in a misleading 404. Such failures are retried (`reproducible.gdriveAuthRetries`,
+  default 2, with backoff); a 403/404 denial is still final. The eventual
+  "Could not access the Google Drive resource" error now says which authenticated
+  attempts were made and why each failed.
+
 # reproducible 3.2.1.9008
 
 ## bug fixes
