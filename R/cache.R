@@ -221,6 +221,11 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                 # cacheSaveFormat = cacheSaveFormat,
                 drv = drv, conn = conn, verbose)
   }
+  ## Debugging aid for pipelines: stop at the first miss that had a close
+  ## previous call, and name the elements that differ. See ?whyNoCacheHit.
+  .maybeStopOnCacheMiss(getOption("reproducible.stopOnCacheMiss", FALSE),
+                        keyFull, callList$.functionName, metadata, cachePaths[[1]], verbose)
+
   if (isTRUE(dryRun))
     ## Return what the dry run computed rather than discarding it: the
     ## element-by-element digest of the call that WOULD have run. Pass it to

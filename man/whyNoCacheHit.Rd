@@ -10,6 +10,8 @@ whyNoCacheHit(
   cacheId = NULL,
   other = NULL,
   cachePath = getOption("reproducible.cachePath"),
+  since = NULL,
+  before = NULL,
   n = 3,
   verbose = getOption("reproducible.verbose")
 )
@@ -31,7 +33,16 @@ entry for the same function, ranked so the closest comes first.}
 \item{cachePath}{The cache repository. Defaults to
 \code{getOption("reproducible.cachePath")}.}
 
-\item{n}{Report at most this many candidate entries.}
+\item{since}{A time (or a \code{difftime}, meaning "ago"). Instead of explaining one
+entry, explain a whole run: every entry written after \code{since} is compared
+against the closest earlier call of the same function. This is the form to
+use when the \code{Cache()} calls belong to modules rather than to you, as in a
+\code{SpaDES} pipeline -- ask why the run recomputed, not why one call did.}
+
+\item{before}{With \code{since}, the far end of the window, so a run can be
+isolated from whatever else was writing to a shared cache at the time.}
+
+\item{n}{Report at most this many candidate entries (single-entry mode).}
 
 \item{verbose}{Numeric or logical; controls messaging.}
 
@@ -66,6 +77,14 @@ which reports at call time and stops descending at
 go, so a difference nested inside a parameter list is named in full rather
 than reported as "possible, unknown, differences in a nested list".
 }
+\section{Cost on a real repository}{
+
+Explaining a whole run reads the repository once (about a minute for ~37,000
+entries). \code{showCache()} memoises that read per \code{cachePath} for the session, so
+later calls are quick; \code{\link[=prepopulateCacheAsync]{prepopulateCacheAsync()}} warms it in a background fork
+if you would rather not wait for the first one.
+}
+
 \section{How fine the answer is}{
 
 Each entry records its elements to the depth given by

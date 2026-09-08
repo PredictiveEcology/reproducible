@@ -97,7 +97,19 @@
 #'     Only tested with `RSQLite::SQLite()` and `RPostgres::Postgres()`.
 #'   }
 #'   \item{dryRun}{
-#'     Default: `FALSE`.
+#'     Default: `FALSE`. Digest the arguments and report on the closest previous
+#'     call, but neither evaluate nor save. Returns that digest invisibly; pass
+#'     it to [whyNoCacheHit()] to be told which element differs.
+#'   }
+#'   \item{`stopOnCacheMiss`}{
+#'     Default: `FALSE`. A debugging switch for pipelines, where the `Cache()`
+#'     calls belong to modules rather than to you. When `TRUE`, the first call
+#'     that fails to reuse the cache *and* has an earlier call of the same
+#'     function to compare against stops the run, after printing the
+#'     element-by-element difference ([whyNoCacheHit()]). A miss with nothing to
+#'     compare against is new work, not a slip, and never fires. Set a number `k`
+#'     instead of `TRUE` to fire only when the closest earlier call differs in at
+#'     most `k` elements.
 #'   }
 #'   \item{`fileBackedAnchors`}{
 #'     Default: `NULL`. A named list of "anchor" directories (e.g. the result of
@@ -590,6 +602,7 @@ reproducibleOptions <- function() {
     reproducible.downloadProgressInterval = 2,      # seconds between streamed-download progress lines (non-dynamic sessions)
     reproducible.drv = NULL, # RSQLite::SQLite(),
     reproducible.dryRun = FALSE,
+    reproducible.stopOnCacheMiss = FALSE,
     reproducible.fileBackedAnchors = NULL, # named list of semantic project paths (e.g. SpaDES paths(sim)); used to store/restore file-backed object paths *relative* to a portable anchor
     reproducible.futurePlan = FALSE, # no effect as of 3.2.0; kept because downstream sets it
     reproducible.gdalwarpThreads = 2L,

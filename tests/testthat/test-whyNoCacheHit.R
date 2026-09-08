@@ -105,3 +105,85 @@ test_that("a dry run answers the question before the expensive call is made", {
   expect_equal(out$element, "settings.b.name")
   expect_equal(out$status, "differs")
 })
+
+test_that("a whole run can be explained, which is the form a pipeline needs", {
+  ## In a SpaDES pipeline the Cache() calls belong to the modules, so the user
+  ## has no cacheId to hand and no call of their own to put dryRun on. They ask
+  ## about the run: which entries did it write that it might have reused?
+  cachePath <- withr::local_tempdir()
+  f <- function(x, settings) paste(x, length(settings))
+  g <- function(y) y
+  Cache(f, x = 1, settings = list(b = list(name = "12.4")), cachePath = cachePath, verbose = -2)
+  Cache(g, y = "12.4", cachePath = cachePath, verbose = -2)
+  Sys.sleep(1.1)
+  runStart <- Sys.time()
+  Sys.sleep(1.1)
+  ## The "run": the same two calls, with one shared value changed in both.
+  Cache(f, x = 1, settings = list(b = list(name = 12.4)), cachePath = cachePath, verbose = -2)
+  Cache(g, y = 12.4, cachePath = cachePath, verbose = -2)
+
+  out <- whyNoCacheHit(cachePath = cachePath, since = runStart, verbose = -2)
+  expect_equal(length(unique(out$entry)), 2L)
+  expect_setequal(unique(out$fn), c("f", "g"))
+  expect_setequal(unique(out$element), c("settings.b.name", "y"))
+  ## Candidates must exclude the run's own entries, or two misses explain each other.
+  expect_false(any(out$candidate %in% out$entry))
+  expect_output(print(out), "Entries written after")
+})
+
+test_that("a run that reused everything says so", {
+  cachePath <- withr::local_tempdir()
+  f <- function(x) x
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)
+  Sys.sleep(1.1)
+  runStart <- Sys.time()
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)   # a hit: writes nothing new
+  out <- whyNoCacheHit(cachePath = cachePath, since = runStart, verbose = -2)
+  expect_equal(nrow(out), 0L)
+})
+
+test_that("cacheId and since are alternatives, not a combination", {
+  cachePath <- withr::local_tempdir()
+  f <- function(x) x
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)
+  ids <- unique(showCache(cachePath, verbose = -2)$cacheId)
+  expect_error(whyNoCacheHit(cacheId = ids[[1]], since = Sys.time(), cachePath = cachePath, verbose = -2),
+               "not both")
+})
+
+test_that("stopOnCacheMiss stops at the first accidental miss and names what changed", {
+  ## The pipeline case: the user cannot reach the Cache() calls, so they set an
+  ## option before the run and are told at the moment it matters.
+  cachePath <- withr::local_tempdir()
+  f <- function(x, settings) paste(x, length(settings))
+  Cache(f, x = 1, settings = list(b = list(name = "12.4")), cachePath = cachePath, verbose = -2)
+
+  withr::local_options(reproducible.stopOnCacheMiss = TRUE)
+  expect_error(
+    Cache(f, x = 1, settings = list(b = list(name = 12.4)), cachePath = cachePath, verbose = -2),
+    "settings.b.name")
+})
+
+test_that("a miss with nothing to compare against is new work, and does not stop the run", {
+  cachePath <- withr::local_tempdir()
+  f <- function(x) x
+  g <- function(y) y
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)
+
+  withr::local_options(reproducible.stopOnCacheMiss = TRUE)
+  ## Cache() attaches its own attributes to the result; the value is what matters.
+  expect_equal(as.numeric(Cache(g, y = 99, cachePath = cachePath, verbose = -2)), 99)
+})
+
+test_that("a numeric setting fires only when the miss looks like a slip", {
+  cachePath <- withr::local_tempdir()
+  f <- function(a, b, c) paste(a, b, c)
+  Cache(f, a = 1, b = 1, c = 1, cachePath = cachePath, verbose = -2)
+
+  ## Three elements differ; with a threshold of 1 that is a different job, not a slip.
+  withr::local_options(reproducible.stopOnCacheMiss = 1)
+  expect_equal(as.character(Cache(f, a = 2, b = 2, c = 2, cachePath = cachePath, verbose = -2)), "2 2 2")
+
+  ## One element differs: that is the slip the switch is for.
+  expect_error(Cache(f, a = 2, b = 2, c = 3, cachePath = cachePath, verbose = -2), "\\bc\\b")
+})

@@ -37,6 +37,21 @@
   `whyNoCacheHit()`, which has no depth limit, so the approximate answer points
   at the exact one.
 
+* `whyNoCacheHit(since = )` explains a whole run rather than one call, which is
+  the form a pipeline needs: in `SpaDES` the `Cache()` calls belong to modules,
+  so there is no call of yours to put `dryRun` on and no `cacheId` to hand over.
+  Every entry written after `since` (optionally up to `before`) is compared with
+  the closest earlier call of the same function, and the summary groups the
+  differences by element, so "13 entries differ on `.studyAreaName`" is one line
+  rather than thirteen.
+
+* New option `reproducible.stopOnCacheMiss`. Set it before a run and the first
+  call that fails to reuse the cache -- *and* has an earlier call of the same
+  function to compare against -- stops, after printing which elements differ. A
+  miss with nothing to compare against is new work, not a slip, and never fires.
+  Set a number `k` rather than `TRUE` to fire only when the closest earlier call
+  differs in at most `k` elements.
+
 
 # reproducible 3.2.1.9011
 
