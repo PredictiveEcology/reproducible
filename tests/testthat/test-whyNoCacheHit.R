@@ -251,3 +251,30 @@ test_that("an arming costs nothing while the cache is being reused", {
   ## And the arming survives to catch the miss it was armed for.
   expect_error(Cache(f, x = 2, cachePath = cachePath, verbose = -2), "\\bx\\b")
 })
+
+test_that("an arming can be confined to one repository", {
+  ## A pipeline writes to several caches; the arming should not be spent by a
+  ## miss in one you were not asking about.
+  ofInterest <- withr::local_tempdir()
+  elsewhere <- withr::local_tempdir()
+  f <- function(x) x
+  Cache(f, x = 1, cachePath = ofInterest, verbose = -2)
+  Cache(f, x = 1, cachePath = elsewhere, verbose = -2)
+
+  whyNoCacheHitOnce(cachePath = ofInterest, verbose = -2)
+  ## A miss in the other repository is ignored, and the arming survives it.
+  expect_equal(as.numeric(Cache(f, x = 2, cachePath = elsewhere, verbose = -2)), 2)
+  ## The one it was armed for stops.
+  expect_error(Cache(f, x = 3, cachePath = ofInterest, verbose = -2), "\\bx\\b")
+  ## And is spent.
+  expect_equal(as.numeric(Cache(f, x = 4, cachePath = ofInterest, verbose = -2)), 4)
+})
+
+test_that("cancelling clears a confined arming too", {
+  cp <- withr::local_tempdir()
+  f <- function(x) x
+  Cache(f, x = 1, cachePath = cp, verbose = -2)
+  whyNoCacheHitOnce(cachePath = cp, verbose = -2)
+  expect_false(whyNoCacheHitOnce(FALSE, verbose = -2))
+  expect_equal(as.numeric(Cache(f, x = 2, cachePath = cp, verbose = -2)), 2)
+})

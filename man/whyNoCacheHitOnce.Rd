@@ -4,12 +4,21 @@
 \alias{whyNoCacheHitOnce}
 \title{Report on the next cache miss that looks accidental, once}
 \usage{
-whyNoCacheHitOnce(k = TRUE, verbose = getOption("reproducible.verbose"))
+whyNoCacheHitOnce(
+  k = TRUE,
+  cachePath = NULL,
+  verbose = getOption("reproducible.verbose")
+)
 }
 \arguments{
 \item{k}{\code{TRUE} to fire at the first such miss (the default), or a number:
 fire only when the closest earlier call differs in at most \code{k} elements, so
 a genuinely different job does not trip it. \code{FALSE} cancels an arming.}
+
+\item{cachePath}{Confine the arming to one repository, so a miss in an
+unrelated cache does not spend it. A pipeline writes to more than one -- the
+project cache, plus whatever temporary ones its modules create -- and it is
+usually the project one you are asking about. \code{NULL} (default) watches any.}
 
 \item{verbose}{Numeric or logical; controls messaging.}
 }

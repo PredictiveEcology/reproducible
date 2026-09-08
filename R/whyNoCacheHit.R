@@ -432,14 +432,24 @@ print.cacheDryRun <- function(x, ...) {
   ## and is cleared by the miss it reports -- see debugonce().
   once <- .fnRowsEnv[["armedOnce"]]
   armed <- !is.null(once)
-  if (armed) setting <- once
+  if (armed) {
+    ## An arming confined to one repository ignores misses in the others.
+    wantPath <- .fnRowsEnv[["armedOncePath"]]
+    if (!is.null(wantPath) &&
+        !identical(wantPath, normalizePath(cachePath, mustWork = FALSE)))
+      return(invisible(NULL))
+    setting <- once
+  }
   if (isFALSE(setting) || is.null(setting)) return(invisible(NULL))
   dr <- .cacheDryRunResult(keyFull, functionName, metadata, cachePath)
   if (!length(dr$preDigest)) return(invisible(NULL))
   report <- try(whyNoCacheHit(dr, cachePath = cachePath, n = 1, verbose = -2), silent = TRUE)
   if (inherits(report, "try-error") || !NROW(report)) return(invisible(NULL))
   if (is.numeric(setting) && report$nDiff[[1L]] > setting) return(invisible(NULL))
-  if (armed) rm("armedOnce", envir = .fnRowsEnv)  # fires once, like debugonce()
+  if (armed) {                                     # fires once, like debugonce()
+    rm("armedOnce", envir = .fnRowsEnv)
+    if (!is.null(.fnRowsEnv[["armedOncePath"]])) rm("armedOncePath", envir = .fnRowsEnv)
+  }
   messageCache(if (armed) "whyNoCacheHitOnce() was armed, and this call did not reuse the cache:"
                else "reproducible.stopOnCacheMiss is set, and this call did not reuse the cache:",
                verbose = verbose)
@@ -471,6 +481,10 @@ print.cacheDryRun <- function(x, ...) {
 #' @param k `TRUE` to fire at the first such miss (the default), or a number:
 #'   fire only when the closest earlier call differs in at most `k` elements, so
 #'   a genuinely different job does not trip it. `FALSE` cancels an arming.
+#' @param cachePath Confine the arming to one repository, so a miss in an
+#'   unrelated cache does not spend it. A pipeline writes to more than one -- the
+#'   project cache, plus whatever temporary ones its modules create -- and it is
+#'   usually the project one you are asking about. `NULL` (default) watches any.
 #' @param verbose Numeric or logical; controls messaging.
 #'
 #' @return Invisibly, `TRUE` when armed, `FALSE` when cancelled.
@@ -492,15 +506,23 @@ print.cacheDryRun <- function(x, ...) {
 #'
 #' ## The arming was spent by that miss. Cancel anyway, in case it never came.
 #' whyNoCacheHitOnce(FALSE)
-whyNoCacheHitOnce <- function(k = TRUE, verbose = getOption("reproducible.verbose")) {
+whyNoCacheHitOnce <- function(k = TRUE, cachePath = NULL,
+                              verbose = getOption("reproducible.verbose")) {
   if (isFALSE(k)) {
     if (!is.null(.fnRowsEnv[["armedOnce"]])) rm("armedOnce", envir = .fnRowsEnv)
+    if (!is.null(.fnRowsEnv[["armedOncePath"]])) rm("armedOncePath", envir = .fnRowsEnv)
     messageCache("No longer watching for a cache miss.", verbose = verbose)
     return(invisible(FALSE))
   }
   .fnRowsEnv[["armedOnce"]] <- k
+  ## A pipeline writes to more than one repository -- the project cache, and
+  ## whatever temporary ones its modules make -- so an arming can be confined to
+  ## the one being asked about, rather than spent by the first unrelated miss.
+  .fnRowsEnv[["armedOncePath"]] <- if (is.null(cachePath)) NULL
+                                   else normalizePath(cachePath, mustWork = FALSE)
   messageCache("Watching for the next cache miss that had an earlier call to compare against",
                if (is.numeric(k)) paste0(" and differs in at most ", k, " element(s)"),
+               if (!is.null(cachePath)) paste0(", in ", cachePath),
                ". It will report and stop, once.", verbose = verbose)
   invisible(TRUE)
 }

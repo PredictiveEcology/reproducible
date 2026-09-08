@@ -53,7 +53,9 @@
   next run is unaffected and there is nothing to remember to switch off. A miss
   with nothing to compare against is new work, not a slip, and does not spend the
   arming. `whyNoCacheHitOnce(k)` fires only when the closest earlier call differs
-  in at most `k` elements; `whyNoCacheHitOnce(FALSE)` cancels.
+  in at most `k` elements; `whyNoCacheHitOnce(cachePath = )` confines it to one
+  repository, so a miss in an unrelated cache does not spend it; and
+  `whyNoCacheHitOnce(FALSE)` cancels.
 
   It costs nothing while a run is reusing the cache: the check sits after both
   hit paths, so a call that finds its result never reaches it and no repository
