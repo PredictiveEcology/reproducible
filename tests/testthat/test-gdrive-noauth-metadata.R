@@ -267,3 +267,42 @@ test_that(".gdriveIsDenial separates 403/404 from transient failures", {
   expect_false(f(simpleError("Failed to connect to oauth2.googleapis.com port 443: Timeout was reached")))
   expect_false(f(simpleError("Server error: (503) Service Unavailable")))
 })
+
+test_that(".gdrivePrepareAuth: a transient exhaustion never deauthorizes the session", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = "a@b.com",
+                       reproducible.gdriveAuthRetries = 0L)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  events <- character()
+  testthat::local_mocked_bindings(.gdriveHasToken = function() FALSE)
+  testthat::local_mocked_bindings(
+    as_id = function(x) x,
+    drive_auth = function(...) { events <<- c(events, "auth"); invisible() },
+    drive_get = function(...) stop("Timeout was reached [oauth2.googleapis.com]"),
+    drive_deauth = function(...) events <<- c(events, "deauth"),
+    .package = "googledrive")
+  expect_identical(suppressMessages(reproducible:::.gdrivePrepareAuth("u")), "anon")
+  expect_identical(events, "auth")            # no deauth: LandR's later drive_ls() must not go anonymous
+  expect_false(isTRUE(reproducible:::.gdriveLastAuth$deauthed))
+  expect_false(reproducible:::.gdriveRestoreAuth())   # nothing to restore
+})
+
+test_that(".gdrivePrepareAuth: after a denial, .gdriveRestoreAuth() puts the email identity back", {
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = "a@b.com",
+                       reproducible.gdriveAuthRetries = 2L)
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  events <- character()
+  testthat::local_mocked_bindings(.gdriveHasToken = function() FALSE)
+  testthat::local_mocked_bindings(
+    as_id = function(x) x,
+    drive_auth = function(...) { events <<- c(events, paste0("auth:", list(...)$email)); invisible() },
+    drive_get = function(...) stop("Client error: (404) Not Found. File not found: u"),
+    drive_deauth = function(...) events <<- c(events, "deauth"),
+    .package = "googledrive")
+  expect_identical(suppressMessages(reproducible:::.gdrivePrepareAuth("u")), "anon")
+  expect_identical(events, c("auth:a@b.com", "deauth"))   # denial: deauth once, no retry
+  expect_true(reproducible:::.gdriveRestoreAuth())
+  expect_identical(events, c("auth:a@b.com", "deauth", "auth:a@b.com"))
+  expect_false(isTRUE(reproducible:::.gdriveLastAuth$deauthed))
+})

@@ -652,8 +652,12 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   # token did exactly that. Retry such failures; a 403/404 denial is final.
   retries <- getOption("reproducible.gdriveAuthRetries", 2L)
   .gdriveLastAuth$attempts <- character()
+  .gdriveLastAuth$deauthed <- FALSE
+  .gdriveLastAuth$restoreEmail <- NULL
+  denied <- FALSE
 
-  for (cand in .gdriveAuthCandidates()) {
+  cands <- .gdriveAuthCandidates()
+  for (cand in cands) {
     label <- if (identical(cand$kind, "email")) {
       paste0("gargle_oauth_email = '", paste(cand$email, collapse = "', '"), "'")
     } else {
@@ -680,14 +684,46 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       Sys.sleep(2L * attempt)
     }
     if (ok) return("token")
-    # This identity authenticated but cannot read the file (or failed to load):
-    # clear its (possibly poisoning) token before trying the next rung.
-    try(googledrive::drive_deauth(), silent = TRUE)
+    if (.gdriveIsDenial(res)) {
+      # This identity authenticated but cannot read the file: clear its (possibly
+      # poisoning) token before trying the next rung, and remember how to put the
+      # email identity back afterwards -- drive_deauth() is process-wide, and a
+      # session left anonymous makes every later direct googledrive call by any
+      # package see private folders as "Does not exist".
+      denied <- TRUE
+      if (identical(cand$kind, "email")) .gdriveLastAuth$restoreEmail <- cand$email
+      try(googledrive::drive_deauth(), silent = TRUE)
+      .gdriveLastAuth$deauthed <- TRUE
+    }
+    # A transient failure leaves the auth state alone: googledrive will try again
+    # itself on the next call, and if the network is still down the caller gets
+    # the real error rather than an anonymous 404.
   }
 
   messagePreProcess("Google Drive: trying anonymous (public) access", verbose = verbose)
-  try(googledrive::drive_deauth(), silent = TRUE)
+  if (denied || !length(cands)) {
+    if (!length(cands)) {
+      # nothing configured: anonymous is the only rung, and it must not prompt
+      try(googledrive::drive_deauth(), silent = TRUE)
+      .gdriveLastAuth$deauthed <- TRUE
+    }
+  }
   "anon"
+}
+
+# Undo a denial-driven drive_deauth() once reproducible's own read is over.
+# Called on exit of the caller of .gdrivePrepareAuth(). Only an OAuth email can
+# be put back silently (its token is in the gargle cache); with nothing
+# configured there is nothing to restore.
+.gdriveRestoreAuth <- function() {
+  if (!isTRUE(.gdriveLastAuth$deauthed)) return(invisible(FALSE))
+  email <- .gdriveLastAuth$restoreEmail
+  if (is.null(email) || !requireNamespace("googledrive", quietly = TRUE)) return(invisible(FALSE))
+  op <- options(rlang_interactive = FALSE)
+  on.exit(options(op), add = TRUE)
+  ok <- !inherits(try(suppressMessages(googledrive::drive_auth(email = email)), silent = TRUE), "try-error")
+  if (ok) .gdriveLastAuth$deauthed <- FALSE
+  invisible(ok)
 }
 
 # A browser-pasteable URL for a Google Drive resource, for use in error messages.
@@ -2400,6 +2436,7 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   # "Anyone with the link" file -- and the metadata read happens before (so
   # defeats) the no-auth download path.
   .gdrivePrepareAuth(url, team_drive = team_drive, verbose = verbose)
+  on.exit(.gdriveRestoreAuth(), add = TRUE)
 
   # Cache the drive_get / drive_ls result indefinitely. The Cache key
   # includes the URL/ID, so each distinct file pays one API hit ever per
