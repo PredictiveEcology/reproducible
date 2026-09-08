@@ -3,6 +3,7 @@
 \name{whyNoCacheHit}
 \alias{whyNoCacheHit}
 \alias{print.whyNoCacheHit}
+\alias{print.cacheDryRun}
 \title{Why did this call not reuse the cache, and what changed?}
 \usage{
 whyNoCacheHit(
@@ -14,10 +15,15 @@ whyNoCacheHit(
 )
 
 \method{print}{whyNoCacheHit}(x, ...)
+
+\method{print}{cacheDryRun}(x, ...)
 }
 \arguments{
-\item{cacheId}{The \code{cacheId} of the run that missed. Defaults to the most
-recently created entry in \code{cachePath}, i.e. "whatever my latest run wrote".}
+\item{cacheId}{The \code{cacheId} of the run that missed, or the object returned by
+\code{Cache(..., dryRun = TRUE)} -- which answers the question \emph{before} the
+expensive call runs, since a dry run digests the arguments without
+evaluating or saving anything. Defaults to the most recently created entry
+in \code{cachePath}, i.e. "whatever my latest run wrote".}
 
 \item{other}{Optional \code{cacheId}(s) to compare against. By default, every other
 entry for the same function, ranked so the closest comes first.}
@@ -60,6 +66,14 @@ which reports at call time and stops descending at
 go, so a difference nested inside a parameter list is named in full rather
 than reported as "possible, unknown, differences in a nested list".
 }
+\section{How fine the answer is}{
+
+Each entry records its elements to the depth given by
+\code{reproducible.showSimilarDepth} (default 3) at the time it was written. A
+difference deeper than that is reported at the deepest recorded path, so raise
+the option if an answer stops short of the element you need.
+}
+
 \examples{
 cachePath <- file.path(tempdir(), "whyNoCacheHitExample")
 f <- function(x, settings) paste(x, length(settings))
@@ -69,5 +83,7 @@ Cache(f, x = 1, settings = list(a = 1, b = list(name = 12.4)), cachePath = cache
 whyNoCacheHit(cachePath = cachePath)
 }
 \seealso{
-\code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}
+\code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}. \code{Cache(dryRun = TRUE)} asks the same
+question before running anything; \code{options(reproducible.showSimilar = TRUE)}
+reports at call time.
 }

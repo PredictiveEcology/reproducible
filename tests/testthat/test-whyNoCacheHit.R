@@ -84,3 +84,24 @@ test_that("printing gives the one-line answer", {
   Cache(f, x = 1, settings = list(b = list(name = 12.4)), cachePath = cachePath, verbose = -2)
   expect_output(print(whyNoCacheHit(cachePath = cachePath, verbose = -2)), "settings.b.name")
 })
+
+test_that("a dry run answers the question before the expensive call is made", {
+  ## The point: you should not have to run the miss to learn why it will miss.
+  cachePath <- withr::local_tempdir()
+  f <- function(x, settings) { Sys.sleep(0); paste(x, length(settings)) }
+  Cache(f, x = 1, settings = list(b = list(name = "12.4")), cachePath = cachePath, verbose = -2)
+  before <- length(unique(showCache(cachePath, verbose = -2)$cacheId))
+
+  dr <- Cache(f, x = 1, settings = list(b = list(name = 12.4)),
+              cachePath = cachePath, dryRun = TRUE, verbose = -2)
+  expect_s3_class(dr, "cacheDryRun")
+  expect_true(length(dr$preDigest) > 0)
+  expect_output(print(dr), "whyNoCacheHit")
+
+  ## Nothing was run and nothing was written.
+  expect_equal(length(unique(showCache(cachePath, verbose = -2)$cacheId)), before)
+
+  out <- whyNoCacheHit(dr, verbose = -2)
+  expect_equal(out$element, "settings.b.name")
+  expect_equal(out$status, "differs")
+})

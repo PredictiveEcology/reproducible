@@ -31,8 +31,11 @@ utils::globalVariables(c("tagKey", "tagValue", "cacheId", "createdDate"))
 #' go, so a difference nested inside a parameter list is named in full rather
 #' than reported as "possible, unknown, differences in a nested list".
 #'
-#' @param cacheId The `cacheId` of the run that missed. Defaults to the most
-#'   recently created entry in `cachePath`, i.e. "whatever my latest run wrote".
+#' @param cacheId The `cacheId` of the run that missed, or the object returned by
+#'   `Cache(..., dryRun = TRUE)` -- which answers the question *before* the
+#'   expensive call runs, since a dry run digests the arguments without
+#'   evaluating or saving anything. Defaults to the most recently created entry
+#'   in `cachePath`, i.e. "whatever my latest run wrote".
 #' @param other Optional `cacheId`(s) to compare against. By default, every other
 #'   entry for the same function, ranked so the closest comes first.
 #' @param cachePath The cache repository. Defaults to
@@ -48,7 +51,15 @@ utils::globalVariables(c("tagKey", "tagValue", "cacheId", "createdDate"))
 #'   which means the two calls digested identically. Printing it gives the
 #'   one-line answer.
 #'
-#' @seealso [showCache()], [clearCache()]
+#' @section How fine the answer is:
+#' Each entry records its elements to the depth given by
+#' `reproducible.showSimilarDepth` (default 3) at the time it was written. A
+#' difference deeper than that is reported at the deepest recorded path, so raise
+#' the option if an answer stops short of the element you need.
+#'
+#' @seealso [showCache()], [clearCache()]. `Cache(dryRun = TRUE)` asks the same
+#'   question before running anything; `options(reproducible.showSimilar = TRUE)`
+#'   reports at call time.
 #' @export
 #' @examples
 #' cachePath <- file.path(tempdir(), "whyNoCacheHitExample")
@@ -60,6 +71,14 @@ utils::globalVariables(c("tagKey", "tagValue", "cacheId", "createdDate"))
 whyNoCacheHit <- function(cacheId = NULL, other = NULL,
                           cachePath = getOption("reproducible.cachePath"),
                           n = 3, verbose = getOption("reproducible.verbose")) {
+  ## Cache(dryRun = TRUE) hands back the prospective digest; use it as "this
+  ## call", so nothing has to be run or written to get an answer.
+  dryRun <- NULL
+  if (inherits(cacheId, "cacheDryRun")) {
+    dryRun <- cacheId
+    if (missing(cachePath) || is.null(cachePath)) cachePath <- dryRun$cachePath
+    cacheId <- dryRun$cacheId
+  }
   if (is.null(cachePath) || !CacheIsACache(cachePath))
     stop("`cachePath` is not a cache repository: ", paste(cachePath, collapse = ", "), call. = FALSE)
   ## A whole-repository read is heavy on a real cache (tens of thousands of
@@ -78,9 +97,11 @@ whyNoCacheHit <- function(cacheId = NULL, other = NULL,
   ## `cacheId` is also a column of these tables, and in `i` the column wins, so
   ## hold the argument in a name that cannot be shadowed.
   wantedId <- cacheId
-  thisRows <- data.table::as.data.table(showCache(cachePath, cacheId = wantedId, verbose = -2))
+  thisRows <- if (is.null(dryRun))
+    data.table::as.data.table(showCache(cachePath, cacheId = wantedId, verbose = -2))
+  else data.table::data.table(cacheId = wantedId, tagKey = "function", tagValue = dryRun$functionName)
   if (!NROW(thisRows)) stop("No cache entry with cacheId '", cacheId, "' in ", cachePath, call. = FALSE)
-  thisDigest <- .preDigestOfRows(thisRows[tagKey %in% "preDigest"])
+  thisDigest <- if (is.null(dryRun)) .preDigestOfRows(thisRows[tagKey %in% "preDigest"]) else dryRun$preDigest
   if (!length(thisDigest))
     stop("Entry '", cacheId, "' recorded no per-element digests, so there is nothing to compare. ",
          "This happens for entries written by versions that did not record them.", call. = FALSE)
@@ -181,5 +202,27 @@ print.whyNoCacheHit <- function(x, ...) {
     cat("  ", best$element[[i]], "  [", best$status[[i]], "]\n", sep = "")
   if (length(unique(x$candidate)) > 1L)
     cat("(", length(unique(x$candidate)) - 1L, " further candidate(s) in the returned data.frame)\n", sep = "")
+  invisible(x)
+}
+
+## What Cache(dryRun = TRUE) hands back: the prospective call's identity and its
+## element-by-element digest, so it can be compared against the repository
+## without running or saving anything.
+.cacheDryRunResult <- function(keyFull, functionName, metadata, cachePath) {
+  pre <- metadata[metadata[["tagKey"]] %in% "preDigest", ]
+  structure(list(cacheId = keyFull$key,
+                 functionName = functionName,
+                 preDigest = .preDigestOfRows(pre),
+                 cachePath = cachePath),
+            class = "cacheDryRun")
+}
+
+#' @export
+#' @rdname whyNoCacheHit
+print.cacheDryRun <- function(x, ...) {
+  cat("A dry run of ", if (length(x$functionName)) x$functionName else "a Cache() call",
+      "\n  cacheId it would use: ", x$cacheId,
+      "\n  digested elements:    ", length(x$preDigest),
+      "\n  Pass this to whyNoCacheHit() to see which element differs from the closest previous call.\n", sep = "")
   invisible(x)
 }

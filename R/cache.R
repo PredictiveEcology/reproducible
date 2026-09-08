@@ -9,7 +9,12 @@
 utils::globalVariables("arg")
 
 
-#' @param dryRun See [reproducibleOptions].
+#' @param dryRun Logical. If `TRUE`, digest the arguments and report on the
+#'   closest previous call, but neither evaluate `FUN` nor write anything.
+#'   Returns, invisibly, the element-by-element digest of the call that would
+#'   have run; pass it to [whyNoCacheHit()] to be told which element differs
+#'   from the closest previous call, before paying for the miss. See also
+#'   [reproducibleOptions].
 #'
 #' @include messages.R
 #' @export
@@ -217,7 +222,11 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
                 drv = drv, conn = conn, verbose)
   }
   if (isTRUE(dryRun))
-    return(invisible(NULL))
+    ## Return what the dry run computed rather than discarding it: the
+    ## element-by-element digest of the call that WOULD have run. Pass it to
+    ## whyNoCacheHit() to learn which element differs from the closest previous
+    ## call, without paying for the miss first.
+    return(invisible(.cacheDryRunResult(keyFull, callList$.functionName, metadata, cachePaths[[1]])))
 
   # ## evaluate the call ## #
   outputFromEvaluate <- evalTheFunAndAddChanged(callList = callList, keyFull = keyFull,

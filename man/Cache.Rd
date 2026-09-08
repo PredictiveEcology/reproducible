@@ -99,7 +99,12 @@ or an unevaluated function call (e.g., using \code{quote()}).}
 
 \item{...}{Arguments passed to \code{FUN}, if \code{FUN} is not an expression.}
 
-\item{dryRun}{See \link{reproducibleOptions}.}
+\item{dryRun}{Logical. If \code{TRUE}, digest the arguments and report on the
+closest previous call, but neither evaluate \code{FUN} nor write anything.
+Returns, invisibly, the element-by-element digest of the call that would
+have run; pass it to \code{\link[=whyNoCacheHit]{whyNoCacheHit()}} to be told which element differs
+from the closest previous call, before paying for the miss. See also
+\link{reproducibleOptions}.}
 
 \item{notOlderThan}{A time. Load an object from the Cache if it was created after this.}
 

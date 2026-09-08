@@ -84,6 +84,11 @@ showSimilar <- function(cachePath, metadata, .functionName, userTags, useCache,
                    paste(collapse = ", ", as.character(otherLabels[whOther %in% TRUE])),
                    verbose = verbose
       )
+      ## This message is where a user is already asking "what changed?", so name
+      ## the tool that answers it exactly rather than approximately.
+      messageCache("   For the element-by-element difference, call ",
+                   "whyNoCacheHit(\"", cacheIdOfSimilar[[1]], "\")",
+                   verbose = verbose)
 
     }
 

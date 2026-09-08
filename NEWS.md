@@ -24,6 +24,20 @@
   in full instead of appearing as "possible, unknown, differences in a nested
   list".
 
+* `Cache(dryRun = TRUE)` now returns, invisibly, the element-by-element digest of
+  the call that would have run, instead of `NULL`. Passed to `whyNoCacheHit()`,
+  it answers "why will this miss?" *before* the expensive call runs:
+
+  ```r
+  dr <- Cache(myFun, args, dryRun = TRUE)   # digests only; runs and saves nothing
+  whyNoCacheHit(dr)
+  ```
+
+* `showSimilar`'s "differences in a nested list deeper than N" message now names
+  `whyNoCacheHit()`, which has no depth limit, so the approximate answer points
+  at the exact one.
+
+
 # reproducible 3.2.1.9011
 
 ## bug fixes
