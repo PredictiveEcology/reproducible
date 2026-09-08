@@ -1,5 +1,11 @@
 # reproducible 3.2.1.9011
 
+* `postProcessTo()` registers its `terraOptions(memfrac)` restore with
+  `add = TRUE`. Without it that `on.exit()` replaced any restore already registered
+  in the same call, so the other option it changes (`memmax`) could be left altered
+  process-wide. Only the order in which the two branches happen to run was keeping
+  that from biting.
+
 ## bug fixes
 
 * Google Drive auth cascade: a transient failure no longer calls `googledrive::drive_deauth()`.
