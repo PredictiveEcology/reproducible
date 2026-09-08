@@ -31,10 +31,19 @@ A miss with nothing to compare against is new work, not a slip, and does not
 spend the arming -- it waits for a miss that looks accidental.
 }
 \examples{
-\dontrun{
-whyNoCacheHitOnce()      # arm
-mySimulation()           # stops at the first accidental miss, naming the element
-}
+## Arm it, then run the thing that recomputed when you expected it not to.
+## Here that is a second call whose only difference is three levels down.
+cachePath <- file.path(tempdir(), "whyNoCacheHitOnceExample")
+f <- function(x, settings) paste(x, length(settings))
+Cache(f, x = 1, settings = list(b = list(name = "12.4")), cachePath = cachePath)
+
+whyNoCacheHitOnce()
+## Stops, naming settings.b.name. In a pipeline this would be your simulation
+## call, and the report would name the module parameter that changed.
+try(Cache(f, x = 1, settings = list(b = list(name = 12.4)), cachePath = cachePath))
+
+## The arming was spent by that miss. Cancel anyway, in case it never came.
+whyNoCacheHitOnce(FALSE)
 }
 \seealso{
 \code{\link[=whyNoCacheHit]{whyNoCacheHit()}}, which explains an entry or a whole run after the
