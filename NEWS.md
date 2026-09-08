@@ -1,3 +1,29 @@
+# reproducible 3.2.1.9012
+
+## New features
+
+* `whyNoCacheHit()` answers, after the fact, the question a cache miss always
+  raises: which input changed. Every cache entry already records the hash of
+  each element it digested, addressed by its path into the call's arguments, so
+  the answer is a comparison rather than an investigation. Give it the entry the
+  surprising run wrote -- or nothing, for the most recent one -- and it names the
+  differing elements against the closest previous call for the same function:
+
+  ```
+  Cache entry 7100d202c2d3ad3c (.inputObjects_canClimateData)
+  Closest previous call: 034ea09a1fbd24bc (2026-09-06 22:17:33)
+  1 of 44 digested elements differ:
+    sim.params.canClimateData..studyAreaName  [differs]
+  ```
+
+  It reads the repository only, so it needs neither the objects nor a re-run and
+  works on entries written before anything looked wrong. It complements
+  `options(reproducible.showSimilar = TRUE)`, which reports at call time and
+  stops descending at `reproducible.showSimilarDepth`: this descends as far as
+  the recorded paths go, so a difference nested inside a parameter list is named
+  in full instead of appearing as "possible, unknown, differences in a nested
+  list".
+
 # reproducible 3.2.1.9011
 
 ## bug fixes
