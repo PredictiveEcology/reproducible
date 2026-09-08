@@ -265,6 +265,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                           isHit = FALSE, .callingEnv = .callingEnv,
                           urlFrameId = .urlFrameId)
+  ## Anything holding a snapshot of the repository (see .fnRowsCached) must know
+  ## that it is now out of date.
+  .pkgEnv[["cacheWrites"]] <- (if (is.null(.pkgEnv[["cacheWrites"]])) 0L else .pkgEnv[["cacheWrites"]]) + 1L
   if (getOption("reproducible.savePreDigest", FALSE)) {
     keyFullPreDigest <- keyFull
     keyFullPreDigest$key <- paste0(.txtPreDigest, "_", keyFullPreDigest$key)

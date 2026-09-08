@@ -79,10 +79,21 @@ than reported as "possible, unknown, differences in a nested list".
 }
 \section{Cost on a real repository}{
 
-Explaining a whole run reads the repository once (about a minute for ~37,000
-entries). \code{showCache()} memoises that read per \code{cachePath} for the session, so
-later calls are quick; \code{\link[=prepopulateCacheAsync]{prepopulateCacheAsync()}} warms it in a background fork
-if you would rather not wait for the first one.
+Measured on a 37,000-entry repository with \code{reproducible.useMemoise = TRUE}:\tabular{ll}{
+   what \tab cost \cr
+   first check in a session (cold read) \tab 64 s \cr
+   later check, same function \tab 0.3-0.6 s \cr
+   first check of another function \tab ~2 s \cr
+}
+
+
+The per-function reads are held for the session and dropped as soon as
+anything is written to that repository, since a call saved a moment ago may be
+exactly the one that should have been reused. \code{\link[=forgetCacheLookups]{forgetCacheLookups()}} drops
+them by hand; \code{\link[=prepopulateCacheAsync]{prepopulateCacheAsync()}} pays the cold read in a background
+fork beforehand. With \code{reproducible.useMemoise = FALSE} (the default) the cold
+read recurs after every write, which matters for
+\code{reproducible.stopOnCacheMiss} on a pipeline.
 }
 
 \section{How fine the answer is}{

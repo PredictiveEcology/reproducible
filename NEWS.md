@@ -52,6 +52,13 @@
   Set a number `k` rather than `TRUE` to fire only when the closest earlier call
   differs in at most `k` elements.
 
+  Cost, measured on a 37,000-entry repository with
+  `reproducible.useMemoise = TRUE`: 64 s for the first check in a session (the
+  cold repository read), then 0.3-0.6 s per later check of the same function and
+  ~2 s the first time each other function is seen. The per-function reads are
+  held for the session and dropped whenever anything is written, so they cannot
+  answer with a stale view; `forgetCacheLookups()` drops them by hand.
+
 
 # reproducible 3.2.1.9011
 

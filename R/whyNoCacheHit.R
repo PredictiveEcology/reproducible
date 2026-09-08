@@ -41,6 +41,56 @@
   recent[!startsWith(cacheId, "preDigest_")]
 }
 
+## Per-session store of "the entries for this function in this repository".
+## Without it, a run with dozens of misses pays the repository scan dozens of
+## times: 66 s the first time and ~1.5 s after, on a 37,000-entry repository
+## with memoisation on, and 66 s EVERY time with it off (the default).
+.fnRowsEnv <- new.env(parent = emptyenv())
+
+## Held only until this session writes to a cache: a call saved a moment ago may
+## be exactly the one that should have been reused, so a snapshot that predates
+## it would answer the wrong question.
+.fnRowsCached <- function(cachePath, fn, refresh = FALSE) {
+  key <- paste0(cachePath, "||", fn)
+  writes <- .pkgEnv[["cacheWrites"]]
+  if (is.null(writes)) writes <- 0L
+  hit <- .fnRowsEnv[[key]]
+  if (!refresh && !is.null(hit) && identical(attr(hit, "cacheWrites"), writes)) return(hit)
+  t0 <- Sys.time()
+  rows <- data.table::as.data.table(showCache(cachePath, fun = fn, verbose = -2))
+  took <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+  ## The first read of a large repository is the whole cost of this diagnostic
+  ## (about a minute for 37,000 entries); afterwards it is well under a second,
+  ## but only while showCache's own memoised copy survives.
+  if (took > 5 && !isTRUE(getOption("reproducible.useMemoise", FALSE)) &&
+      is.null(.fnRowsEnv[[".warnedSlow"]])) {
+    .fnRowsEnv[[".warnedSlow"]] <- TRUE
+    messageCache("Reading the cache took ", round(took), " s. With ",
+                 "options(reproducible.useMemoise = TRUE) that read is kept for the session, ",
+                 "so later checks cost well under a second.", verbose = 1)
+  }
+  if (NROW(rows)) rows <- rows[!startsWith(cacheId, "preDigest_")]
+  attr(rows, "cacheWrites") <- writes
+  .fnRowsEnv[[key]] <- rows
+  rows
+}
+
+#' Forget what `whyNoCacheHit()` has read from a repository this session
+#'
+#' The per-function lookups are held for the session, so a run with many cache
+#' misses scans the repository once rather than once per miss. Call this if
+#' entries have been added by another process and the newest ones must be seen.
+#'
+#' @param cachePath Repository to forget; `NULL` forgets all of them.
+#' @return Invisibly, the number of cached lookups dropped.
+#' @export
+forgetCacheLookups <- function(cachePath = NULL) {
+  keys <- ls(.fnRowsEnv, all.names = TRUE)
+  if (!is.null(cachePath)) keys <- keys[startsWith(keys, paste0(cachePath, "||"))]
+  rm(list = keys, envir = .fnRowsEnv)
+  invisible(length(keys))
+}
+
 utils::globalVariables(c("tagKey", "tagValue", "cacheId", "createdDate"))
 
 ## Cache stores, for every call, one "preDigest" tag per digested element:
@@ -102,10 +152,21 @@ utils::globalVariables(c("tagKey", "tagValue", "cacheId", "createdDate"))
 #'   one-line answer.
 #'
 #' @section Cost on a real repository:
-#' Explaining a whole run reads the repository once (about a minute for ~37,000
-#' entries). `showCache()` memoises that read per `cachePath` for the session, so
-#' later calls are quick; [prepopulateCacheAsync()] warms it in a background fork
-#' if you would rather not wait for the first one.
+#' Measured on a 37,000-entry repository with `reproducible.useMemoise = TRUE`:
+#'
+#' | what | cost |
+#' | --- | --- |
+#' | first check in a session (cold read) | 64 s |
+#' | later check, same function | 0.3-0.6 s |
+#' | first check of another function | ~2 s |
+#'
+#' The per-function reads are held for the session and dropped as soon as
+#' anything is written to that repository, since a call saved a moment ago may be
+#' exactly the one that should have been reused. [forgetCacheLookups()] drops
+#' them by hand; [prepopulateCacheAsync()] pays the cold read in a background
+#' fork beforehand. With `reproducible.useMemoise = FALSE` (the default) the cold
+#' read recurs after every write, which matters for
+#' `reproducible.stopOnCacheMiss` on a pipeline.
 #'
 #' @section How fine the answer is:
 #' Each entry records its elements to the depth given by
@@ -226,7 +287,7 @@ whyNoCacheHit <- function(cacheId = NULL, other = NULL,
     data.table::rbindlist(lapply(other, function(o)
       data.table::as.data.table(showCache(cachePath, cacheId = o, verbose = -2))), fill = TRUE)
   } else if (length(fn)) {
-    data.table::as.data.table(showCache(cachePath, Function = fn, verbose = -2))
+    .fnRowsCached(cachePath, fn)
   } else if (exists("all", inherits = FALSE)) all else thisRows
   all <- all[!startsWith(cacheId, "preDigest_")]
   candidates <- if (!is.null(other)) other else setdiff(unique(all[["cacheId"]]), wantedId)
