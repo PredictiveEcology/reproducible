@@ -113,7 +113,9 @@ Cache(f, x = 1, settings = list(a = 1, b = list(name = 12.4)), cachePath = cache
 whyNoCacheHit(cachePath = cachePath)
 }
 \seealso{
-\code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}. \code{Cache(dryRun = TRUE)} asks the same
-question before running anything; \code{options(reproducible.showSimilar = TRUE)}
-reports at call time.
+\code{\link[=whyNoCacheHitOnce]{whyNoCacheHitOnce()}} arms this check for the next accidental miss,
+which is the form to use when the \code{Cache()} calls are not yours to edit.
+\code{Cache(dryRun = TRUE)} asks the same question before running anything;
+\code{options(reproducible.showSimilar = TRUE)} reports at call time.
+\code{\link[=showCache]{showCache()}}, \code{\link[=clearCache]{clearCache()}}.
 }

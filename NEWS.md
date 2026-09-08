@@ -45,12 +45,18 @@
   differences by element, so "13 entries differ on `.studyAreaName`" is one line
   rather than thirteen.
 
-* New option `reproducible.stopOnCacheMiss`. Set it before a run and the first
-  call that fails to reuse the cache -- *and* has an earlier call of the same
-  function to compare against -- stops, after printing which elements differ. A
-  miss with nothing to compare against is new work, not a slip, and never fires.
-  Set a number `k` rather than `TRUE` to fire only when the closest earlier call
-  differs in at most `k` elements.
+* `whyNoCacheHitOnce()` is the cache equivalent of `debugonce()`, and the
+  easiest way to use any of this in a pipeline. Arm it, run the thing that
+  recomputed when you expected it not to, and the first call that fails to reuse
+  the cache -- *and* has an earlier call of the same function to compare against
+  -- prints which elements differ and stops. The arming is then spent, so the
+  next run is unaffected and there is nothing to remember to switch off. A miss
+  with nothing to compare against is new work, not a slip, and does not spend the
+  arming. `whyNoCacheHitOnce(k)` fires only when the closest earlier call differs
+  in at most `k` elements; `whyNoCacheHitOnce(FALSE)` cancels.
+
+* New option `reproducible.stopOnCacheMiss` is the sticky form of the same
+  check, for keeping it on across a whole session.
 
   Cost, measured on a 37,000-entry repository with
   `reproducible.useMemoise = TRUE`: 64 s for the first check in a session (the

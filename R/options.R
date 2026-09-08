@@ -102,14 +102,15 @@
 #'     it to [whyNoCacheHit()] to be told which element differs.
 #'   }
 #'   \item{`stopOnCacheMiss`}{
-#'     Default: `FALSE`. A debugging switch for pipelines, where the `Cache()`
-#'     calls belong to modules rather than to you. When `TRUE`, the first call
-#'     that fails to reuse the cache *and* has an earlier call of the same
+#'     Default: `FALSE`. The sticky form of [whyNoCacheHitOnce()], which is
+#'     usually what you want: that arms the same check for one miss and is spent
+#'     by it, so there is nothing to remember to switch off. Set this option only
+#'     to keep the check on for a whole session (CI, say). When `TRUE`, the first
+#'     call that fails to reuse the cache *and* has an earlier call of the same
 #'     function to compare against stops the run, after printing the
 #'     element-by-element difference ([whyNoCacheHit()]). A miss with nothing to
-#'     compare against is new work, not a slip, and never fires. Set a number `k`
-#'     instead of `TRUE` to fire only when the closest earlier call differs in at
-#'     most `k` elements.
+#'     compare against is new work, not a slip, and never fires. A number `k`
+#'     fires only when the closest earlier call differs in at most `k` elements.
 #'   }
 #'   \item{`fileBackedAnchors`}{
 #'     Default: `NULL`. A named list of "anchor" directories (e.g. the result of

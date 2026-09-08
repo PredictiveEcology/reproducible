@@ -174,9 +174,11 @@ utils::globalVariables(c("tagKey", "tagValue", "cacheId", "createdDate"))
 #' difference deeper than that is reported at the deepest recorded path, so raise
 #' the option if an answer stops short of the element you need.
 #'
-#' @seealso [showCache()], [clearCache()]. `Cache(dryRun = TRUE)` asks the same
-#'   question before running anything; `options(reproducible.showSimilar = TRUE)`
-#'   reports at call time.
+#' @seealso [whyNoCacheHitOnce()] arms this check for the next accidental miss,
+#'   which is the form to use when the `Cache()` calls are not yours to edit.
+#'   `Cache(dryRun = TRUE)` asks the same question before running anything;
+#'   `options(reproducible.showSimilar = TRUE)` reports at call time.
+#'   [showCache()], [clearCache()].
 #' @export
 #' @examples
 #' cachePath <- file.path(tempdir(), "whyNoCacheHitExample")
@@ -420,18 +422,70 @@ print.cacheDryRun <- function(x, ...) {
 ## number k: fire only when the closest earlier call differs in at most k
 ## elements, i.e. when the miss looks like a slip rather than a different job.
 .maybeStopOnCacheMiss <- function(setting, keyFull, functionName, metadata, cachePath, verbose) {
+  ## An arming from whyNoCacheHitOnce() takes precedence over the sticky option,
+  ## and is cleared by the miss it reports -- see debugonce().
+  once <- .fnRowsEnv[["armedOnce"]]
+  armed <- !is.null(once)
+  if (armed) setting <- once
   if (isFALSE(setting) || is.null(setting)) return(invisible(NULL))
   dr <- .cacheDryRunResult(keyFull, functionName, metadata, cachePath)
   if (!length(dr$preDigest)) return(invisible(NULL))
   report <- try(whyNoCacheHit(dr, cachePath = cachePath, n = 1, verbose = -2), silent = TRUE)
   if (inherits(report, "try-error") || !NROW(report)) return(invisible(NULL))
   if (is.numeric(setting) && report$nDiff[[1L]] > setting) return(invisible(NULL))
-  messageCache("reproducible.stopOnCacheMiss is set, and this call did not reuse the cache:",
+  if (armed) rm("armedOnce", envir = .fnRowsEnv)  # fires once, like debugonce()
+  messageCache(if (armed) "whyNoCacheHitOnce() was armed, and this call did not reuse the cache:"
+               else "reproducible.stopOnCacheMiss is set, and this call did not reuse the cache:",
                verbose = verbose)
   print(report)
   stop("Cache miss in ", if (length(functionName)) functionName else "a Cache() call",
        ": ", paste(unique(report$element), collapse = ", "),
-       " differ(s) from the closest previous call. ",
-       "Set options(reproducible.stopOnCacheMiss = FALSE) to continue past misses.",
+       " differ(s) from the closest previous call.",
+       if (!armed) " Set options(reproducible.stopOnCacheMiss = FALSE) to continue past misses.",
        call. = FALSE)
+}
+
+
+#' Report on the next cache miss that looks accidental, once
+#'
+#' @description
+#' The cache equivalent of [debugonce()]. Arm it, run the thing that recomputed
+#' when you expected it not to, and the first call that fails to reuse the cache
+#' -- *and* has an earlier call of the same function to compare against --
+#' prints which elements differ and stops. The arming is then spent, so the next
+#' run is unaffected: nothing to remember to switch off.
+#'
+#' This is the form to reach for in a pipeline, where the `Cache()` calls belong
+#' to modules rather than to you, so there is no call of yours to put
+#' `dryRun` on and no `cacheId` to hand to [whyNoCacheHit()] afterwards.
+#'
+#' A miss with nothing to compare against is new work, not a slip, and does not
+#' spend the arming -- it waits for a miss that looks accidental.
+#'
+#' @param k `TRUE` to fire at the first such miss (the default), or a number:
+#'   fire only when the closest earlier call differs in at most `k` elements, so
+#'   a genuinely different job does not trip it. `FALSE` cancels an arming.
+#' @param verbose Numeric or logical; controls messaging.
+#'
+#' @return Invisibly, `TRUE` when armed, `FALSE` when cancelled.
+#' @seealso [whyNoCacheHit()], which explains an entry or a whole run after the
+#'   fact, and `options(reproducible.stopOnCacheMiss = )`, the sticky form of
+#'   this switch.
+#' @export
+#' @examples
+#' \dontrun{
+#' whyNoCacheHitOnce()      # arm
+#' mySimulation()           # stops at the first accidental miss, naming the element
+#' }
+whyNoCacheHitOnce <- function(k = TRUE, verbose = getOption("reproducible.verbose")) {
+  if (isFALSE(k)) {
+    if (!is.null(.fnRowsEnv[["armedOnce"]])) rm("armedOnce", envir = .fnRowsEnv)
+    messageCache("No longer watching for a cache miss.", verbose = verbose)
+    return(invisible(FALSE))
+  }
+  .fnRowsEnv[["armedOnce"]] <- k
+  messageCache("Watching for the next cache miss that had an earlier call to compare against",
+               if (is.numeric(k)) paste0(" and differs in at most ", k, " element(s)"),
+               ". It will report and stop, once.", verbose = verbose)
+  invisible(TRUE)
 }

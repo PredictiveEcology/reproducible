@@ -105,14 +105,15 @@ call, but neither evaluate nor save. Returns that digest invisibly; pass
 it to \code{\link[=whyNoCacheHit]{whyNoCacheHit()}} to be told which element differs.
 }
 \item{\code{stopOnCacheMiss}}{
-Default: \code{FALSE}. A debugging switch for pipelines, where the \code{Cache()}
-calls belong to modules rather than to you. When \code{TRUE}, the first call
-that fails to reuse the cache \emph{and} has an earlier call of the same
+Default: \code{FALSE}. The sticky form of \code{\link[=whyNoCacheHitOnce]{whyNoCacheHitOnce()}}, which is
+usually what you want: that arms the same check for one miss and is spent
+by it, so there is nothing to remember to switch off. Set this option only
+to keep the check on for a whole session (CI, say). When \code{TRUE}, the first
+call that fails to reuse the cache \emph{and} has an earlier call of the same
 function to compare against stops the run, after printing the
 element-by-element difference (\code{\link[=whyNoCacheHit]{whyNoCacheHit()}}). A miss with nothing to
-compare against is new work, not a slip, and never fires. Set a number \code{k}
-instead of \code{TRUE} to fire only when the closest earlier call differs in at
-most \code{k} elements.
+compare against is new work, not a slip, and never fires. A number \code{k}
+fires only when the closest earlier call differs in at most \code{k} elements.
 }
 \item{\code{fileBackedAnchors}}{
 Default: \code{NULL}. A named list of "anchor" directories (e.g. the result of

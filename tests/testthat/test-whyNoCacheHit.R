@@ -187,3 +187,50 @@ test_that("a numeric setting fires only when the miss looks like a slip", {
   ## One element differs: that is the slip the switch is for.
   expect_error(Cache(f, a = 2, b = 2, c = 3, cachePath = cachePath, verbose = -2), "\\bc\\b")
 })
+
+test_that("whyNoCacheHitOnce fires once and then is spent, like debugonce()", {
+  cachePath <- withr::local_tempdir()
+  f <- function(x, settings) paste(x, length(settings))
+  Cache(f, x = 1, settings = list(b = list(name = "12.4")), cachePath = cachePath, verbose = -2)
+
+  whyNoCacheHitOnce(verbose = -2)
+  expect_error(
+    Cache(f, x = 1, settings = list(b = list(name = 12.4)), cachePath = cachePath, verbose = -2),
+    "settings.b.name")
+
+  ## Spent: the same miss now runs to completion, with nothing to switch off.
+  expect_equal(as.character(Cache(f, x = 1, settings = list(b = list(name = 12.5)),
+                                  cachePath = cachePath, verbose = -2)), "1 1")
+})
+
+test_that("an arming waits for an accidental miss rather than being spent by new work", {
+  cachePath <- withr::local_tempdir()
+  f <- function(x) x
+  g <- function(y) y
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)
+
+  whyNoCacheHitOnce(verbose = -2)
+  ## First ever call to g: new work, nothing to compare against, arming untouched.
+  expect_equal(as.numeric(Cache(g, y = 1, cachePath = cachePath, verbose = -2)), 1)
+  ## Now a miss that does have an earlier call: this is what it was armed for.
+  expect_error(Cache(f, x = 2, cachePath = cachePath, verbose = -2), "\\bx\\b")
+})
+
+test_that("an arming can be cancelled", {
+  cachePath <- withr::local_tempdir()
+  f <- function(x) x
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)
+  whyNoCacheHitOnce(verbose = -2)
+  expect_false(whyNoCacheHitOnce(FALSE, verbose = -2))
+  expect_equal(as.numeric(Cache(f, x = 2, cachePath = cachePath, verbose = -2)), 2)
+})
+
+test_that("a numeric arming fires only on a miss that looks like a slip", {
+  cachePath <- withr::local_tempdir()
+  f <- function(a, b, c) paste(a, b, c)
+  Cache(f, a = 1, b = 1, c = 1, cachePath = cachePath, verbose = -2)
+  whyNoCacheHitOnce(1, verbose = -2)
+  expect_equal(as.character(Cache(f, a = 2, b = 2, c = 2, cachePath = cachePath, verbose = -2)),
+               "2 2 2")                                        # three differ: a different job
+  expect_error(Cache(f, a = 2, b = 2, c = 3, cachePath = cachePath, verbose = -2), "\\bc\\b")
+})
