@@ -1,3 +1,14 @@
+# reproducible 3.2.1.9011
+
+## bug fixes
+
+* Google Drive auth cascade: a transient failure no longer calls `googledrive::drive_deauth()`.
+  That call is process-wide, so one network blip during reproducible's first Drive access
+  left the whole R session anonymous, and every later direct `googledrive::drive_ls()` by
+  another package (LandR's SCANFI folder listing, for one) failed with "Does not exist" on
+  a folder that exists. After a genuine 403/404 denial the deauthorisation still happens,
+  and the configured email identity is now put back once reproducible's own read is over.
+
 # reproducible 3.2.1.9010
 
 ## bug fixes
