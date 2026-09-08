@@ -77,6 +77,14 @@ which reports at call time and stops descending at
 go, so a difference nested inside a parameter list is named in full rather
 than reported as "possible, unknown, differences in a nested list".
 }
+\section{What it costs while a run is reusing the cache}{
+
+Nothing. The check sits after both hit paths, so a call that finds its result
+-- in the memoised copy or in the repository -- never reaches it, and no
+repository read happens on its behalf. The costs below are paid only on a
+miss, and only while armed.
+}
+
 \section{Cost on a real repository}{
 
 Measured on a 37,000-entry repository with \code{reproducible.useMemoise = TRUE}:\tabular{ll}{

@@ -234,3 +234,20 @@ test_that("a numeric arming fires only on a miss that looks like a slip", {
                "2 2 2")                                        # three differ: a different job
   expect_error(Cache(f, a = 2, b = 2, c = 3, cachePath = cachePath, verbose = -2), "\\bc\\b")
 })
+
+test_that("an arming costs nothing while the cache is being reused", {
+  ## The check sits after both hit paths (memoised copy, then repository), so a
+  ## run that is reusing everything never reaches it -- no repository read, no
+  ## per-call cost, and the arming is still there for the miss it was meant for.
+  cachePath <- withr::local_tempdir()
+  f <- function(x) x
+  Cache(f, x = 1, cachePath = cachePath, verbose = -2)
+  forgetCacheLookups()
+
+  whyNoCacheHitOnce(verbose = -2)
+  expect_equal(as.numeric(Cache(f, x = 1, cachePath = cachePath, verbose = -2)), 1)  # a hit
+  ## Nothing was read from the repository on behalf of the check.
+  expect_false(any(grepl("||", ls(reproducible:::.fnRowsEnv, all.names = TRUE), fixed = TRUE)))
+  ## And the arming survives to catch the miss it was armed for.
+  expect_error(Cache(f, x = 2, cachePath = cachePath, verbose = -2), "\\bx\\b")
+})

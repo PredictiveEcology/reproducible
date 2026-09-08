@@ -55,6 +55,10 @@
   arming. `whyNoCacheHitOnce(k)` fires only when the closest earlier call differs
   in at most `k` elements; `whyNoCacheHitOnce(FALSE)` cancels.
 
+  It costs nothing while a run is reusing the cache: the check sits after both
+  hit paths, so a call that finds its result never reaches it and no repository
+  read happens on its behalf.
+
 * New option `reproducible.stopOnCacheMiss` is the sticky form of the same
   check, for keeping it on across a whole session.
 
