@@ -24,8 +24,9 @@ test_that("destinationPathShared links archive-derived files across destinations
     file.path(src, paste0(name, ".zip"))
   }
 
-  nlink <- function(p) as.integer(system2("stat", c("-c", "%h", shQuote(p)), stdout = TRUE))
-  skip_if(is.na(nlink(file.path(src))), "stat(1) unavailable")
+  ## fs, not `stat -c`: that spelling is GNU-only and returns nothing on macOS, where
+  ## BSD stat wants `-f %l`. fs is already an Import and reports hard_links everywhere.
+  nlink <- function(p) as.integer(fs::file_info(p)$hard_links)
 
   linksAcrossDestinations <- function(zip, label) {
     shared <- checkPath(file.path(tmpdir, paste0("shared_", label)), create = TRUE)
