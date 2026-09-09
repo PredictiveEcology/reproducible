@@ -189,7 +189,11 @@ postProcessTo <- function(from, to,
         co <- capture.output(origMemFrac <- terra::terraOptions()$memfrac)
         if (identical(origMemFrac, 0.5)) { # 0.5 is the default in `terra` on Dec 15, 2025
           terra::terraOptions(memfrac = 0)
-          on.exit(terra::terraOptions(memfrac = origMemFrac))
+          ## add = TRUE: without it this on.exit *replaces* whatever the function has
+          ## already registered, so a second restore below (or any future one) would be
+          ## dropped and its option left changed process-wide. Ordering happens to save
+          ## it today, which is exactly why it should not be relied on.
+          on.exit(terra::terraOptions(memfrac = origMemFrac), add = TRUE)
         }
       }
       # Cap terra per-raster memory for the duration of this call. On high-RAM
