@@ -233,14 +233,17 @@ test_that("test file-backed raster caching", {
       sc <- showCache(tmpCache)
       origFile <- sc[tagKey == "origFilename"]$cacheId
       hasFilenameInCache <- NROW(sc[tagKey %in% tagFilenamesInCache])
-      ## On-disk file count is backend-dependent. Both backends write the object
-      ## .rds and the file-backed .tif (2 files). The flat-file backend ALSO
-      ## writes the tag store and the filename-tag file to disk, whereas useDBI()
-      ## keeps those in the SQLite DB -- so gate both flat-file-only files on
-      ## !useDBI(). (Previously `hasFilenameInCache` was added unconditionally,
-      ## over-counting by one under useDBI = TRUE.)
+      ## On-disk file count is backend-dependent. BOTH backends write the object
+      ## .rds, the file-backed .tif, and the per-key .lock -- the lock is taken for
+      ## both backends now, not only the flat-file one, so that two workers reaching
+      ## the same uncached key cannot both compute it. The flat-file backend ALSO
+      ## writes its tag store, whereas useDBI() keeps that in the SQLite DB.
+      ##
+      ## The previous formula counted 2 for useDBI() and folded the lock into the
+      ## flat-file-only term as `hasFilenameInCache + 1L`, which happened to total
+      ## correctly while the lock existed on one backend only.
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (2L + as.integer(!useDBI()) * (hasFilenameInCache + 1L) + 2L * savePreDigest))
+                    (3L + as.integer(!useDBI()) * hasFilenameInCache + 2L * savePreDigest))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 

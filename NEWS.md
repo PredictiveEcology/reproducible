@@ -5,6 +5,15 @@
   in the same call, so the other option it changes (`memmax`) could be left altered
   process-wide. Only the order in which the two branches happen to run was keeping
   that from biting.
+* the per-key file lock around "is it cached? -> compute -> store" is now taken for
+  both cache backends. It was inside `if (!useDBI())`, so with the DBI backend no
+  lock was taken and two concurrent workers reaching the same uncached key both
+  computed it. SQLite's own locking cannot prevent that: the function call happens
+  between two independent database operations and no transaction spans them, so WAL
+  and `busy_timeout` keep the database consistent without deduplicating the
+  computation. No deadlock is introduced, since this package holds no transactions,
+  so a database lock never outlives a single statement and every caller takes the
+  file lock first.
 
 ## bug fixes
 

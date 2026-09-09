@@ -144,10 +144,23 @@ releaseLockFile <- function(locked) {
 
 
 #' @importFrom stats runif
+## Taken for BOTH backends. The lock serializes *callers* around
+## "is it cached? -> compute -> store"; SQLite's own locking (WAL plus
+## busy_timeout, set in createConns()) keeps the *database* consistent. Those are
+## different jobs: the function call happens between two independent database
+## operations, and no transaction spans them, so SQLite cannot deduplicate a
+## computation no matter how it is configured. While this was inside
+## `if (!useDBI())`, the DBI backend had no protection at all and two workers
+## reaching the same cold key both computed it.
+##
+## No deadlock is possible: there are no transactions in this package, so a
+## database lock is only ever held for the duration of one statement and never
+## across an acquisition of this lock. Every caller therefore takes this lock
+## first and any database lock second, which is a single consistent ordering.
 lockFile <- function(cachePath, cache_key,
                      envir   = parent.frame(),
                      verbose = getOption("reproducible.verbose")) {
-  if (!useDBI()) {
+  {
     csd <- CacheStorageDir(cachePath)
     checkPath(csd, create = TRUE)
 

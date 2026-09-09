@@ -64,15 +64,22 @@ test_that("lockFile takes a lock on the file-backed backend", {
   filelock::unlock(lock)
 })
 
-test_that("lockFile is a no-op under the DBI backend", {
+test_that("lockFile takes a real lock under the DBI backend too", {
   skip_if_not_installed("RSQLite")
+  skip_if_not_installed("filelock")
   testInit()
 
   withr::local_options(reproducible.useDBI = TRUE)
   skip_if_not(useDBI())
   cp <- checkPath(file.path(tmpdir, "cacheDBI"), create = TRUE)
 
-  ## SQLite does its own locking, so no file lock is taken and no lock file is
-  ## left behind for a later run to trip over.
-  expect_null(lockFile(cp, "abc123"))
+  ## This used to expect NULL, on the reasoning that "SQLite does its own locking".
+  ## SQLite's locking -- WAL plus busy_timeout -- serialises writes to the database
+  ## file. It says nothing about the user's function: two processes with a cold key
+  ## both miss, both compute, and both then write their result. Deduplicating the
+  ## COMPUTE is what this per-key lock is for, so it is needed under both backends.
+  lock <- lockFile(cp, "abc123")
+  expect_s3_class(lock, "filelock_lock")
+  expect_true(any(grepl("abc123", dir(CacheStorageDir(cp)))))
+  filelock::unlock(lock)
 })
