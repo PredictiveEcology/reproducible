@@ -1,3 +1,77 @@
+# reproducible 3.2.1.9012
+
+## New features
+
+* `whyNoCacheHit()` answers, after the fact, the question a cache miss always
+  raises: which input changed. Every cache entry already records the hash of
+  each element it digested, addressed by its path into the call's arguments, so
+  the answer is a comparison rather than an investigation. Give it the entry the
+  surprising run wrote -- or nothing, for the most recent one -- and it names the
+  differing elements against the closest previous call for the same function:
+
+  ```
+  Cache entry 7100d202c2d3ad3c (.inputObjects_canClimateData)
+  Closest previous call: 034ea09a1fbd24bc (2026-09-06 22:17:33)
+  1 of 44 digested elements differ:
+    sim.params.canClimateData..studyAreaName  [differs]
+  ```
+
+  It reads the repository only, so it needs neither the objects nor a re-run and
+  works on entries written before anything looked wrong. It complements
+  `options(reproducible.showSimilar = TRUE)`, which reports at call time and
+  stops descending at `reproducible.showSimilarDepth`: this descends as far as
+  the recorded paths go, so a difference nested inside a parameter list is named
+  in full instead of appearing as "possible, unknown, differences in a nested
+  list".
+
+* `Cache(dryRun = TRUE)` now returns, invisibly, the element-by-element digest of
+  the call that would have run, instead of `NULL`. Passed to `whyNoCacheHit()`,
+  it answers "why will this miss?" *before* the expensive call runs:
+
+  ```r
+  dr <- Cache(myFun, args, dryRun = TRUE)   # digests only; runs and saves nothing
+  whyNoCacheHit(dr)
+  ```
+
+* `showSimilar`'s "differences in a nested list deeper than N" message now names
+  `whyNoCacheHit()`, which has no depth limit, so the approximate answer points
+  at the exact one.
+
+* `whyNoCacheHit(since = )` explains a whole run rather than one call, which is
+  the form a pipeline needs: in `SpaDES` the `Cache()` calls belong to modules,
+  so there is no call of yours to put `dryRun` on and no `cacheId` to hand over.
+  Every entry written after `since` (optionally up to `before`) is compared with
+  the closest earlier call of the same function, and the summary groups the
+  differences by element, so "13 entries differ on `.studyAreaName`" is one line
+  rather than thirteen.
+
+* `whyNoCacheHitOnce()` is the cache equivalent of `debugonce()`, and the
+  easiest way to use any of this in a pipeline. Arm it, run the thing that
+  recomputed when you expected it not to, and the first call that fails to reuse
+  the cache -- *and* has an earlier call of the same function to compare against
+  -- prints which elements differ and stops. The arming is then spent, so the
+  next run is unaffected and there is nothing to remember to switch off. A miss
+  with nothing to compare against is new work, not a slip, and does not spend the
+  arming. `whyNoCacheHitOnce(k)` fires only when the closest earlier call differs
+  in at most `k` elements; `whyNoCacheHitOnce(cachePath = )` confines it to one
+  repository, so a miss in an unrelated cache does not spend it; and
+  `whyNoCacheHitOnce(FALSE)` cancels.
+
+  It costs nothing while a run is reusing the cache: the check sits after both
+  hit paths, so a call that finds its result never reaches it and no repository
+  read happens on its behalf.
+
+* New option `reproducible.stopOnCacheMiss` is the sticky form of the same
+  check, for keeping it on across a whole session.
+
+  Cost, measured on a 37,000-entry repository with
+  `reproducible.useMemoise = TRUE`: 64 s for the first check in a session (the
+  cold repository read), then 0.3-0.6 s per later check of the same function and
+  ~2 s the first time each other function is seen. The per-function reads are
+  held for the session and dropped whenever anything is written, so they cannot
+  answer with a stale view; `forgetCacheLookups()` drops them by hand.
+
+
 # reproducible 3.2.1.9011
 
 * `postProcessTo()` registers its `terraOptions(memfrac)` restore with
