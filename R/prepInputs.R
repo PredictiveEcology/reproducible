@@ -1238,7 +1238,8 @@ extractFromArchive <- function(archive,
 #' @importFrom data.table rbindlist as.data.table setDT setDF
 appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
                                  destinationPath = getOption("reproducible.destinationPath", "."),
-                                 append = TRUE, verbose = getOption("reproducible.verbose", 1)) {
+                                 append = TRUE, verbose = getOption("reproducible.verbose", 1),
+                                 archive = NULL) {
   csf <- tempfile(fileext = ".TXT")
   areAbs <- isAbsolutePath(filesToChecksum)
   if (any(!areAbs)) {
@@ -1253,7 +1254,14 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     )
   })
 
-  rip <- .getDestinationPathShared()
+  ## The shared stash is scoped per archive by .sharedDirsFor(), and runChecksums()
+  ## reads back from that scoped directory. Writing to the unscoped root instead put the
+  ## rows somewhere the read side never looks, so an archive-derived file was never found
+  ## in the stash: preProcess re-downloaded, then hit the "already exists at <stash>"
+  ## branch in downloadRemote() -- an error under the default overwrite = FALSE, and a
+  ## private re-extraction that replaced the stash under overwrite = TRUE. Either way the
+  ## hardlink count never climbed past 2, so every study area kept its own copy.
+  rip <- .sharedDirsFor(.getDestinationPathShared(), archive)
   checkSumFilePaths <- if (!is.null(rip)) {
     unique(c(checkSumFilePath, file.path(rip, basename(checkSumFilePath))))
   } else {

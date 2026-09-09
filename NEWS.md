@@ -1,5 +1,20 @@
 # reproducible 3.2.1.9012
 
+## Bug fixes
+
+* `destinationPathShared` now links files that came out of an archive, instead of leaving
+  every destination with its own copy. The shared stash is scoped per archive by
+  `.sharedDirsFor()`, and `runChecksums()` reads back from that scoped directory, but
+  `appendChecksumsTable()` wrote its copy of the rows to the unscoped shared root -- where
+  the read side never looks. An archive-derived file was therefore never found in the
+  stash, so `preProcess()` re-downloaded it and then reached the "already exists at
+  \<stash\>" branch of `downloadRemote()`: an error under the default
+  `overwrite = FALSE`, and a private re-extraction that replaced the stash under
+  `overwrite = TRUE`. Either way the hardlink count never climbed past 2. Found on a run
+  with ~70 study areas sharing one stash, where hardlinking was saving 70% overall but
+  148 archive-derived files still accounted for 588 GB of duplicate copies -- e.g.
+  `CA_FAO_forest_2019.tif` present as 71 copies across 50 inodes.
+
 ## New features
 
 * `whyNoCacheHit()` answers, after the fact, the question a cache miss always

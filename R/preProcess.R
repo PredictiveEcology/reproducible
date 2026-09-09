@@ -524,7 +524,8 @@ pp_resolve_needed_files <- function(ctx) {
         checkSumFilePath = ctx$checkSumFilePath,
         filesToChecksum  = unique(filesToChecksum),
         destinationPath  = ctx$destinationPath,
-        append           = results$needChecksums >= 2L
+        append           = results$needChecksums >= 2L,
+        archive          = ctx$archive
       )
       ctx$needChecksums <- 0L
     }
@@ -1197,7 +1198,8 @@ pp_finalize <- function(ctx) {
         checkSumFilePath = csfp,
         filesToChecksum  = basename2(unique(filesToChecksum)),
         destinationPath  = csp,
-        append           = needChecksums >= 2L
+        append           = needChecksums >= 2L,
+        archive          = ctx$archive
       )
     }
     if (!is.null(ctx$reproducible.inputPaths) && needChecksums != 3L) {
@@ -1206,7 +1208,8 @@ pp_finalize <- function(ctx) {
         filesToChecksum  = unique(filesToChecksum),
         destinationPath  = ctx$destinationPath,
         append           = needChecksums == 2L,
-        verbose          = ctx$verbose - 1L
+        verbose          = ctx$verbose - 1L,
+        archive          = ctx$archive
       )
     }
   }
@@ -1989,7 +1992,8 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           checkSumFilePath = checkSumFilePath,
           filesToChecksum = unique(filesToChecksum),
           destinationPath = destinationPath,
-          append = needChecksums >= 2
+          append = needChecksums >= 2,
+          archive = archive
         )
         needChecksums <- 0
       }
@@ -2375,7 +2379,7 @@ setupArchive <- function(archive, destinationPath) {
   hardLinkOrCopy(flat, scoped, verbose = verbose - 1L)
   appendChecksumsTable(checkSumFilePath = identifyCHECKSUMStxtFile(sharedDir),
                        filesToChecksum = scoped, destinationPath = sharedDir,
-                       append = TRUE, verbose = verbose - 1L)
+                       append = TRUE, verbose = verbose - 1L, archive = archive)
   invisible(TRUE)
 }
 
