@@ -1793,6 +1793,22 @@ isGoogleDownloadURL <- function(url) {
 #'   ## cleanup
 #'   unlink(tmpDir, recursive = TRUE)
 #' }
+## TRUE where `to` already holds byte-identical content to `from`. Size splits almost
+## every non-match without reading anything; only the survivors are digested.
+.sameFileContent <- function(from, to) {
+  same <- rep(FALSE, length(to))
+  if (!length(to)) return(same)
+  ok <- file.exists(from) & file.exists(to) & !dir.exists(from) & !dir.exists(to)
+  if (!any(ok)) return(same)
+  sameSize <- rep(FALSE, length(to))
+  sameSize[ok] <- file.size(from[ok]) == file.size(to[ok])
+  for (i in which(sameSize))
+    same[i] <- isTRUE(tryCatch(
+      identical(.robustDigest(asPath(from[i])), .robustDigest(asPath(to[i]))),
+      error = function(e) FALSE))
+  same
+}
+
 linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                        verbose = getOption("reproducible.verbose", 1)) {
   ## A file that is already at its destination cannot be linked or copied onto
@@ -1848,12 +1864,32 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       isDir <- dir.exists(to)
       dups <- duplicated(from)
 
-      if (any(existsTo)) {
-        unlink(to[existsTo])
+      ## A target that already holds exactly these bytes is left alone. Unlinking and
+      ## re-linking it would give the same content a NEW inode, which strands every other
+      ## path hardlinked to the old one as a private copy -- and buys nothing, since the
+      ## bytes are identical. It matters most when `to` is a shared store: extracting an
+      ## archive into `destinationPathShared` used to overwrite the copy every other
+      ## destination was sharing, so one 0.78 GB input collected three inodes in twenty
+      ## minutes, each orphaned at nlink = 1.
+      keepTo <- rep(FALSE, length(to))
+      canCompare <- existsTo & !isDir
+      if (any(canCompare))
+        keepTo[canCompare] <- .sameFileContent(from[canCompare], to[canCompare])
+      if (any(keepTo))
+        messagePreProcess(sum(keepTo), " file(s) already present at the destination and ",
+                          "identical; keeping ", singularPlural(c("it", "them"), l = which(keepTo)),
+                          verbose = verbose - 1)
+
+      if (any(existsTo & !keepTo)) {
+        unlink(to[existsTo & !keepTo])
       }
       # Try hard link first -- the only type that R deeply recognizes
-      result <- captureWarningsToAttr(
-        file.link(from[!dups & !isDir], to[!dups & !isDir])
+      linkable <- !dups & !isDir & !keepTo
+      ## file.link() ERRORS on zero-length input ("no files to link from") rather than
+      ## returning logical(0), so a set that is all directories -- or, now, all already
+      ## present -- must not reach it.
+      result <- if (!any(linkable)) TRUE else captureWarningsToAttr(
+        file.link(from[linkable], to[linkable])
       )
       warns <- attr(result, "warning")
       attr(result, "warning") <- NULL

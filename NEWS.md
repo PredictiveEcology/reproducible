@@ -1,6 +1,23 @@
-# reproducible 3.2.1.9022
+# reproducible 3.2.1.9024
 
 ## Bug fixes
+
+* `linkOrCopy()` no longer replaces a target that already holds byte-identical content.
+  It unlinked every existing target before linking, so the same bytes were given a new
+  inode and every other path hardlinked to the old one was stranded as a private copy.
+  This bit hardest through `extractFromArchive()`, which unpacks to a temp directory and
+  then moves the results to `exdir` -- and `exdir` is `destinationPathShared` itself
+  whenever the lookup has redirected `destinationPath` there. Each extraction therefore
+  destroyed the copy every other destination was sharing, and the next one destroyed that.
+  Measured on a 15-worker run: `CA_FAO_forest_2019.tif` collected three inodes in twenty
+  minutes, each orphaned at `nlink = 1`. Four sequential destinations now hold one inode
+  with `nlink` 2, 3, 4, 5; before, the stash inode changed and the count reset.
+
+* `linkOrCopy()` no longer calls `file.link()` with zero-length input, which errors with
+  `no files to link from` rather than returning `logical(0)`. A set consisting only of
+  directories reached it; inside `extractFromArchive()` the error was swallowed and
+  retried until the extraction fallbacks ran out, surfacing as a misleading
+  `Please install.packages('archive')`.
 
 * `preProcess()` now lets only one process at a time fill `destinationPathShared` for a
   given input, so concurrent callers share one copy instead of each keeping their own.
