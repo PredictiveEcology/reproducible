@@ -38,9 +38,13 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
 
     # This is an imperfect test for a google drive ID ... because of this, we try 2x,
     #   first with best guess, then if wrong, try the other branch of "if (isID)"
-    stripHTTP <- gsub("http.+drive.google.com.+folders/(.{32,33})\\?*.+$", "\\1", cloudFolderID)
-    if (isID(stripHTTP))
-      cloudFolderID <- stripHTTP
+    ## .extractDriveId() stops the id at the first character that cannot be in one, so a
+    ## URL ending at the id keeps all of it; the old regex needed a character after it.
+    if (isTRUE(isGoogleDriveURL(cloudFolderID))) {
+      idFromURL <- .extractDriveId(cloudFolderID)
+      if (!is.na(idFromURL))
+        cloudFolderID <- idFromURL
+    }
     isID <- isTRUE(32 <= nchar(cloudFolderID) && nchar(cloudFolderID) <= 33)
     if (packageVersion("googledrive") < "2.0.0") {
       args <- list(temp_drive = team_drive)
