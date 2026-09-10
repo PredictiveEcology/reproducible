@@ -121,3 +121,114 @@ test_that("concurrent consumers of one archive converge on one inode in the shar
   expect_equal(length(unique(fs::file_info(got)$inode)), 1L)
   expect_equal(unique(as.integer(fs::file_info(got)$hard_links)), n + 1L)
 })
+
+test_that("a destination arriving later does not replace the copy already in the stash", {
+  skip_on_cran()
+  testInit()
+
+  ## linkOrCopy() unlinks an existing target before linking. Passing it a `to` that the
+  ## stash already holds therefore DELETES the shared copy and replaces it with a link to
+  ## the current caller's file -- orphaning every destination that had linked to the old
+  ## inode, which the next caller then does to this one. On a 15-worker run
+  ## CA_FAO_forest_2019.tif collected three inodes in twenty minutes, each stranded at
+  ## nlink = 1, with only the most recent writer still sharing.
+  ##
+  ## Sequential, deliberately: this is not a race. One destination after another is enough,
+  ## which is why the lock in the preceding test does not cover it.
+  src <- checkPath(file.path(tmpdir, "src"), create = TRUE)
+  inner <- checkPath(file.path(src, "keep", "keep"), create = TRUE)
+  writeBin(as.raw(rep(7L, 2e5)), file.path(inner, "keep.bin"))
+  owd <- setwd(file.path(src, "keep"))
+  zipped <- utils::zip(file.path(src, "keep.zip"), "keep", flags = "-rq")
+  setwd(owd)
+  skip_if_not(identical(zipped, 0L), "no zip utility")
+
+  shared <- checkPath(file.path(tmpdir, "shared"), create = TRUE)
+  withr::local_options(reproducible.destinationPathShared = shared)
+
+  inoOf <- function(p) as.character(fs::file_info(p)$inode)
+  stashed <- NULL
+  inodes <- character()
+  for (i in 1:3) {
+    dest <- checkPath(file.path(tmpdir, paste0("d", i)), create = TRUE)
+    prepInputs(url = paste0("file://", file.path(src, "keep.zip")),
+               destinationPath = dest, fun = NA, useCache = FALSE)
+    if (is.null(stashed))
+      stashed <- list.files(shared, pattern = "keep[.]bin$", recursive = TRUE,
+                            full.names = TRUE)[1L]
+    expect_true(file.exists(stashed))
+    inodes <- c(inodes, inoOf(stashed))
+  }
+
+  ## The stash keeps ONE inode throughout -- it is never unlinked and rewritten...
+  expect_length(unique(inodes), 1L)
+  ## ...and nothing that linked to it earlier has been orphaned.
+  expect_gte(as.integer(fs::file_info(stashed)$hard_links), 2L)
+})
+
+test_that("extracting into the shared stash keeps the copy other destinations are sharing", {
+  skip_on_cran()
+  testInit()
+
+  ## extractFromArchive() unpacks to a temp dir and then moves the results to `exdir` with
+  ## hardLinkOrCopy(). When the lookup has redirected destinationPath at the shared stash,
+  ## `exdir` IS the stash -- and linkOrCopy() unlinks a target before linking to it. So the
+  ## extraction replaced the stash file with a fresh inode holding the same bytes, and
+  ## every destination hardlinked to the old inode was stranded as a private copy; the next
+  ## extraction then stranded that one. On a 15-worker run CA_FAO_forest_2019.tif collected
+  ## three inodes in twenty minutes, each at nlink = 1.
+  ##
+  ## Sequential, not concurrent: the lock added for the stash race does not cover this, and
+  ## one destination after another is enough to show it.
+  src <- checkPath(file.path(tmpdir, "src"), create = TRUE)
+  inner <- checkPath(file.path(src, "arc", "arc"), create = TRUE)
+  writeBin(as.raw(rep(3L, 2e5)), file.path(inner, "arc.bin"))
+  owd <- setwd(file.path(src, "arc"))
+  zipped <- utils::zip(file.path(src, "arc.zip"), "arc", flags = "-rq")
+  setwd(owd)
+  skip_if_not(identical(zipped, 0L), "no zip utility")
+
+  shared <- checkPath(file.path(tmpdir, "shared"), create = TRUE)
+  withr::local_options(reproducible.destinationPathShared = shared)
+  stashed <- file.path(shared, "arc", "arc", "arc.bin")
+  csf     <- file.path(shared, "arc", "CHECKSUMS.txt")
+
+  inodes <- character()
+  links  <- integer()
+  for (i in 1:4) {
+    dest <- checkPath(file.path(tmpdir, paste0("d", i)), create = TRUE)
+    prepInputs(url = paste0("file://", file.path(src, "arc.zip")),
+               destinationPath = dest, fun = NA, useCache = FALSE)
+    ## every destination gets its file -- the guard must not skip the placement
+    expect_true(file.exists(file.path(dest, "arc", "arc.bin")))
+    expect_true(file.exists(stashed))
+    inodes <- c(inodes, as.character(fs::file_info(stashed)$inode))
+    links  <- c(links,  as.integer(fs::file_info(stashed)$hard_links))
+    ## After the first pass, drop the row for the file while leaving the file itself: that
+    ## is the state the affected stash was in -- populated but not findable -- and it is
+    ## what sends later callers back through extraction and onto the stash path.
+    if (i == 1L && file.exists(csf)) {
+      x <- readLines(csf)
+      writeLines(x[!grepl("arc\\.bin", x)], csf)
+    }
+  }
+
+  ## One inode throughout: the stash file is never unlinked and rewritten...
+  expect_length(unique(inodes), 1L)
+  ## ...and each destination adds a link rather than orphaning the last.
+  expect_equal(links, 2:5)
+})
+
+test_that("linkOrCopy handles a set with nothing to link", {
+  skip_on_cran()
+  testInit()
+
+  ## file.link() errors with "no files to link from" on zero-length input rather than
+  ## returning logical(0), so a set that is all directories reached it and threw. In
+  ## extractFromArchive the throw was swallowed and retried until the extraction fallbacks
+  ## ran out, surfacing as a misleading "Please install.packages('archive')".
+  d <- checkPath(file.path(tmpdir, "onlyDirs"), create = TRUE)
+  checkPath(file.path(d, "sub"), create = TRUE)
+  to <- file.path(tmpdir, "dest", "sub")
+  expect_error(linkOrCopy(file.path(d, "sub"), to, symlink = FALSE, verbose = -1), NA)
+})
