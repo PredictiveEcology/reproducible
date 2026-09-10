@@ -78,12 +78,14 @@ test_that("concurrent consumers of one archive converge on one inode in the shar
   script <- file.path(tmpdir, "consumer.R")
   ## Under devtools/pkgload the installed reproducible is not the one being tested, and a
   ## fresh child process would silently load the installed one -- so the child loads the
-  ## same source tree the parent did.
-  devPath <- if (isNamespaceLoaded("pkgload") &&
-                 isTRUE(pkgload::is_dev_package("reproducible")))
-    normalizePath(getNamespaceInfo("reproducible", "path"), mustWork = FALSE)
-  loadLine <- if (!is.null(devPath) && file.exists(file.path(devPath, "DESCRIPTION")))
-    sprintf('pkgload::load_all("%s", quiet = TRUE)', devPath) else
+  ## same source tree the parent did. An installed package has R/reproducible.rdb where a
+  ## source tree has R/*.R; that is the difference, and it needs no extra dependency to
+  ## ask (pkgload is not one of reproducible's).
+  pkgPath <- normalizePath(getNamespaceInfo("reproducible", "path"), mustWork = FALSE)
+  fromSource <- !file.exists(file.path(pkgPath, "R", "reproducible.rdb")) &&
+    file.exists(file.path(pkgPath, "DESCRIPTION"))
+  loadLine <- if (fromSource)
+    sprintf('library(pkgload); load_all("%s", quiet = TRUE)', pkgPath) else
       'suppressMessages(library(reproducible))'
   writeLines(c(
     sprintf('.libPaths(%s)', paste0("c(", paste0('"', libs, '"', collapse = ", "), ")")),
