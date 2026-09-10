@@ -1,6 +1,15 @@
-# reproducible 3.2.1.9024
+# reproducible 3.2.1.9025
 
 ## Bug fixes
+
+* `Cache(useCloud = TRUE)` now accepts a Google Drive folder URL that ends at the folder id,
+  the form Drive's address bar gives. `checkAndMakeCloudFolderID()` took the id out with a
+  pattern that needed at least one character after it, so
+  `https://drive.google.com/drive/folders/<33-character id>` became a 32-character id. That
+  still looked like an id, so Drive was asked for a folder that does not exist and the call
+  stopped with "File not found". A URL with `?usp=...` after the id was unaffected, which is
+  why this went unnoticed. The id is now read with the same helper `prepInputs()` uses for
+  Drive URLs.
 
 * `linkOrCopy()` no longer replaces a target that already holds byte-identical content.
   It unlinked every existing target before linking, so the same bytes were given a new
