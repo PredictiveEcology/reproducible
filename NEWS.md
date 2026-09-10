@@ -1,6 +1,19 @@
-# reproducible 3.2.1.9012
+# reproducible 3.2.1.9022
 
 ## Bug fixes
+
+* `preProcess()` now lets only one process at a time fill `destinationPathShared` for a
+  given input, so concurrent callers share one copy instead of each keeping their own.
+  Filling the stash for one input takes several steps -- read `CHECKSUMS.txt`, download,
+  extract, hardlink in, append the rows -- and nothing serialised them. Every process read
+  the stash before any of them had written it, so every process downloaded and extracted
+  its own copy and kept it; a process could also read the stash mid-write and match a
+  `CHECKSUMS.txt` row whose file was not linked in yet, failing with
+  `No archive exists with filename: <stash>/x.zip`. Measured with 15 concurrent consumers
+  of one archive: 2 of 15 succeeded, onto 2 inodes; now 15 of 15 succeed onto 1 inode. On
+  a 15-worker run, one 0.78 GB input had accumulated 86 paths across 36 inodes. The lock
+  is keyed on the input, so unrelated inputs never wait on each other, and it times out
+  (`reproducible.stashLockTimeout`, default one hour) rather than ever blocking a run.
 
 * `destinationPathShared` now links files that came out of an archive, instead of leaving
   every destination with its own copy. The shared stash is scoped per archive by
