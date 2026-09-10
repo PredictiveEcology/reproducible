@@ -247,14 +247,32 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ctx$loadWillFollow <- !directCall
 
   ctx <- pp_resolve_files(ctx)
-  ctx <- pp_checksums_init(ctx)
-  ctx <- pp_purge(ctx)
-  ctx <- pp_resolve_needed_files(ctx)
-  ctx <- pp_check_local_sources(ctx)
-  ctx <- pp_remote_hash_check(ctx)
-  ctx <- pp_download(ctx)
-  ctx <- pp_extract(ctx)
-  ctx <- pp_link_to_destination(ctx)
+
+  ## One process at a time may fill the shared stash for a given input.
+  ##
+  ## Each caller has its own `destinationPath`, so those never collide; what they share is
+  ## `destinationPathShared`, and filling it for one input spans checksum, download,
+  ## extract and link. Concurrent workers used to interleave those steps: each read the
+  ## stash before any of them had written it, so each downloaded and extracted its own
+  ## copy, and a reader could also see the stash half-populated -- a CHECKSUMS.txt row
+  ## whose file was not there yet, giving "No archive exists with filename:
+  ## <stash>/x.zip". Serialising per input makes the waiters find the finished stash and
+  ## hardlink out of it, which is the whole point of having one. See .withStashLock() for
+  ## why this is not the Cache lock.
+  runPipeline <- function(cc) {
+    cc <- pp_checksums_init(cc)
+    cc <- pp_purge(cc)
+    cc <- pp_resolve_needed_files(cc)
+    cc <- pp_check_local_sources(cc)
+    cc <- pp_remote_hash_check(cc)
+    cc <- pp_download(cc)
+    cc <- pp_extract(cc)
+    pp_link_to_destination(cc)
+  }
+  lockKey <- .stashLockKey(ctx)
+  ctx <- if (is.null(lockKey)) runPipeline(ctx) else
+    .withStashLock(lockKey, verbose = verbose, expr = runPipeline(ctx))
+
   out <- pp_finalize(ctx)
 
   reportTime(st, mess = "`preProcess` done; took ", minSeconds = 10)
@@ -2540,6 +2558,82 @@ linkOrCopyUpdateOnly <- function(from, to, verbose) {
 messageChecksummingAllFiles <- "Checksumming all files in archive"
 
 
+
+## Serialise stash population for one input.
+##
+## Callers each have their own `destinationPath`; `destinationPathShared` is the one thing
+## they all write to, and filling it for a single input takes several steps -- read
+## CHECKSUMS.txt, download, extract, hardlink the results in, append the rows. Nothing
+## stopped N processes from running those steps interleaved, and two things went wrong as
+## a result. Every worker read the stash before any of them had written it, so every
+## worker downloaded and extracted its own copy and kept it: in production, 15 workers on
+## one 0.78 GB input left 84 paths across 34 inodes, which is the opposite of what a
+## shared stash is for. And a worker could read the stash mid-write, matching a
+## CHECKSUMS.txt row whose file was not linked in yet; preProcess then redirected
+## `destinationPath` at the stash and failed with "No archive exists with filename:
+## <stash>/x.zip".
+##
+## The key is the input, not a digest of an unknown result -- unlike the Cache lock, the
+## file names here are known before the work starts -- so different inputs never wait on
+## each other. `lockFile()` is not reusable for this: it is rooted at CacheStorageDir()
+## and is skipped entirely under the DBI backend, neither of which applies here.
+##
+## Lock files live in a hidden directory at the shared root. Hidden, because Checksums()
+## lists the stash with `list.files()`, which would otherwise checksum the locks.
+.stashLockDir <- function(sharedRoot) {
+  file.path(sharedRoot[1], ".stashLocks")
+}
+
+## The identity of the thing being fetched into the stash: the archive if there is one
+## (the stash is scoped per archive by .sharedDirsFor()), otherwise the target file.
+## NULL means there is nothing shared to serialise on, so the caller runs unlocked.
+.stashLockKey <- function(ctx) {
+  sharedRoot <- .getDestinationPathShared()
+  if (is.null(sharedRoot)) return(NULL)
+  nm <- if (!isNULLorNA(ctx$archive)) basename2(ctx$archive[1]) else
+    if (!is.null(ctx$targetFile)) basename2(ctx$targetFile[1]) else
+      if (!is.null(ctx$url)) basename2(ctx$url[1]) else NULL
+  if (is.null(nm) || !nzchar(nm)) return(NULL)
+  list(dir = .stashLockDir(sharedRoot), name = nm)
+}
+
+.stashLockPath <- function(key) {
+  checkPath(key$dir, create = TRUE)
+  ## The digest keeps the file name bounded and legal while staying one-to-one with the
+  ## input; the readable prefix is there so a stale lock can be identified by eye.
+  file.path(key$dir, paste0(substr(gsub("[^A-Za-z0-9._-]", "_", key$name), 1, 60),
+                            "_", .robustDigest(key$name), ".lock"))
+}
+
+## Locks held by this process, so a nested prepInputs() for the same input does not wait
+## on itself.
+.stashLocksHeld <- new.env(parent = emptyenv())
+
+.withStashLock <- function(key, expr,
+                           timeout = getOption("reproducible.stashLockTimeout", 60 * 60 * 1000),
+                           verbose = getOption("reproducible.verbose")) {
+  lp <- tryCatch(.stashLockPath(key), error = function(e) NULL)
+  if (is.null(lp) || !requireNamespace("filelock", quietly = TRUE)) return(force(expr))
+  if (isTRUE(.stashLocksHeld[[lp]])) return(force(expr))
+
+  lck <- tryCatch(filelock::lock(lp, timeout = timeout), error = function(e) NULL)
+  if (is.null(lck)) {
+    ## Never fail or hang a run on the lock: without it the worst case is the duplication
+    ## that happened before it existed. This is also what breaks the one deadlock this
+    ## could otherwise create -- a dlFun that itself calls prepInputs for a second input,
+    ## in the opposite order to another process.
+    messagePreProcess("could not acquire the shared-input lock at ", lp,
+                      "; proceeding unsynchronised", verbose = verbose - 1)
+    return(force(expr))
+  }
+  assign(lp, TRUE, envir = .stashLocksHeld)
+  on.exit({
+    if (exists(lp, envir = .stashLocksHeld, inherits = FALSE))
+      rm(list = lp, envir = .stashLocksHeld)
+    try(filelock::unlock(lck), silent = TRUE)
+  }, add = TRUE)
+  force(expr)
+}
 
 # may already have been changed above
 copyFromDPtoReproducibleIPs <- function(targetFilePath, destinationPathUser, destinationPath,

@@ -47,3 +47,77 @@ test_that("destinationPathShared links archive-derived files across destinations
   expect_equal(linksAcrossDestinations(mkZip("nestarc", TRUE), "nested"), 2:4)
   expect_equal(linksAcrossDestinations(mkZip("flatarc", FALSE), "flat"), 2:4)
 })
+
+test_that("concurrent consumers of one archive converge on one inode in the shared stash", {
+  skip_on_cran()
+  skip_on_ci()
+  skip_if_not_installed("filelock")
+  testInit()
+
+  ## Filling destinationPathShared for one input is a multi-step transaction -- read
+  ## CHECKSUMS.txt, download, extract, hardlink in, append rows -- and nothing serialised
+  ## it. Every process read the stash before any of them had written it, so every process
+  ## kept a private copy: 15 workers on one 0.78 GB input left 84 paths across 34 inodes
+  ## (measured, 2026-09-09), which is the opposite of what the stash is for. A reader
+  ## could also catch the stash half-written and match a CHECKSUMS.txt row whose file was
+  ## not linked in yet, failing with "No archive exists with filename: <stash>/x.zip".
+  ##
+  ## Separate R processes, not parallel::mclapply: the defect is a filesystem race between
+  ## processes, and forked children of one session share too much to exercise it.
+  src <- checkPath(file.path(tmpdir, "src"), create = TRUE)
+  inner <- checkPath(file.path(src, "arc", "arc"), create = TRUE)
+  writeBin(as.raw(sample(0:255, 2e5, TRUE)), file.path(inner, "arc.bin"))
+  owd <- setwd(file.path(src, "arc"))
+  zipped <- utils::zip(file.path(src, "arc.zip"), "arc", flags = "-rq")
+  setwd(owd)
+  skip_if_not(identical(zipped, 0L), "no zip utility")
+
+  shared <- checkPath(file.path(tmpdir, "shared"), create = TRUE)
+  libs <- .libPaths()
+  n <- 6L
+  script <- file.path(tmpdir, "consumer.R")
+  ## Under devtools/pkgload the installed reproducible is not the one being tested, and a
+  ## fresh child process would silently load the installed one -- so the child loads the
+  ## same source tree the parent did. An installed package has R/reproducible.rdb where a
+  ## source tree has R/*.R; that is the difference, and it needs no extra dependency to
+  ## ask (pkgload is not one of reproducible's).
+  pkgPath <- normalizePath(getNamespaceInfo("reproducible", "path"), mustWork = FALSE)
+  fromSource <- !file.exists(file.path(pkgPath, "R", "reproducible.rdb")) &&
+    file.exists(file.path(pkgPath, "DESCRIPTION"))
+  loadLine <- if (fromSource)
+    sprintf('library(pkgload); load_all("%s", quiet = TRUE)', pkgPath) else
+      'suppressMessages(library(reproducible))'
+  writeLines(c(
+    sprintf('.libPaths(%s)', paste0("c(", paste0('"', libs, '"', collapse = ", "), ")")),
+    loadLine,
+    'a <- commandArgs(trailingOnly = TRUE)',
+    sprintf('options(reproducible.destinationPathShared = "%s", reproducible.verbose = -1)', shared),
+    'dest <- a[1]; dir.create(dest, recursive = TRUE, showWarnings = FALSE)',
+    sprintf('prepInputs(url = "file://%s", destinationPath = dest, fun = NA, useCache = FALSE)',
+            file.path(src, "arc.zip"))
+  ), script)
+
+  dests <- file.path(tmpdir, paste0("dest", seq_len(n)))
+  logs  <- file.path(tmpdir, paste0("log", seq_len(n), ".txt"))
+  Rscript <- file.path(R.home("bin"), "Rscript")
+  ## Launched with wait = FALSE so they overlap; the marker line is how a finished
+  ## process is told from one still running, since the exit status is not returned here.
+  Map(function(d, lg) system2(Rscript, c(shQuote(script), shQuote(d)),
+                              stdout = lg, stderr = lg, wait = FALSE), dests, logs)
+  deadline <- Sys.time() + 300
+  repeat {
+    done <- file.exists(file.path(dests, "arc", "arc.bin")) |
+      vapply(logs, function(lg) any(grepl("^Error", readLines(lg, warn = FALSE))), logical(1))
+    if (all(done) || Sys.time() > deadline) break
+    Sys.sleep(1)
+  }
+
+  got <- file.path(dests, "arc", "arc.bin")
+  ## Every consumer gets its file -- concurrency is not an error.
+  errs <- unlist(lapply(logs, function(lg) grep("^Error", readLines(lg, warn = FALSE), value = TRUE)))
+  expect_length(errs, 0L)
+  expect_true(all(file.exists(got)))
+  ## ...and all of them, plus the stash copy, are the SAME inode: one file on disk.
+  expect_equal(length(unique(fs::file_info(got)$inode)), 1L)
+  expect_equal(unique(as.integer(fs::file_info(got)$hard_links)), n + 1L)
+})
