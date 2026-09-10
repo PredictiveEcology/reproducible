@@ -83,8 +83,8 @@ in subsequent calls to
 
 \item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
-\item{overwrite}{Logical. If \code{TRUE} then the download will overwrite an existing file
-if it exists.}
+\item{overwrite}{Passed on to \code{googledrive::drive_download()}, which writes into a
+temporary directory; it does not decide what is downloaded. See \code{\link[=preProcess]{preProcess()}}.}
 
 \item{alsoExtract}{Which files to fetch or extract in addition to
 \code{targetFile}. Spatial data rarely arrives as one file -- a shapefile is

@@ -1,6 +1,31 @@
-# reproducible 3.2.1.9025
+# reproducible 3.2.1.9026
 
 ## Bug fixes
+
+* `prepInputs()`'s `overwrite` now applies only to the `writeTo` file, as its help page
+  said. It was also passed to `preProcess()`, where it never caused a re-download (a file
+  matching `CHECKSUMS.txt` is kept either way) but did decide whether a damaged local copy
+  could be replaced: under the default `overwrite = FALSE`, re-running a call over such a
+  file stopped with "already exists ... Use overwrite = TRUE?". A file that fails its
+  checksum is now downloaded again and replaced whatever `overwrite` is, with a message
+  naming the local copies (both, when `reproducible.destinationPathShared` is set).
+* When `overwrite` is not supplied, `prepInputs()` replaces its own `writeTo` output, so
+  re-running a call (e.g., after a `Cache` miss from a changed module set) no longer stops
+  with "already exists and `overwrite = FALSE`". An explicit `overwrite = FALSE` still
+  stops. Seen through `LandR::prepInputs_SCANFI_LCC_FAO()` in `Biomass_borealDataPrep`.
+* `purge = 7` now downloads again. It sets aside every local copy of the call's files --
+  in `destinationPath` and, with `reproducible.destinationPathShared`, in the shared stash --
+  drops their `CHECKSUMS.txt` entries, and downloads, extracts and links them as on a first
+  run; the old copies are put back if the download fails. Before, it only dropped the
+  entries, which were then rebuilt from the files on disk, so nothing was downloaded and a
+  damaged file was accepted. The checksum-mismatch error now names every local copy and
+  suggests `purge = 7` instead of deleting files by hand.
+* A Google Drive folder `url` now decides which files to fetch by `CHECKSUMS.txt`, like a
+  single file: a file whose entry matches is kept, a missing or mismatched one is fetched,
+  and `purge = 7` fetches them all. It used to go by file name only, with `overwrite` as the
+  switch to fetch again.
+* `preProcess(overwrite)` no longer does anything and is deprecated: it is accepted, with a
+  one-time message pointing to `prepInputs(overwrite)` and `purge = 7`.
 
 * `Cache(useCloud = TRUE)` now accepts a Google Drive folder URL that ends at the folder id,
   the form Drive's address bar gives. `checkAndMakeCloudFolderID()` took the id out with a

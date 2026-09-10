@@ -101,7 +101,10 @@ as the file path to the file to load. See details and examples below.}
 \code{\link[=Cache]{Cache()}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
-\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
+\item{overwrite}{Logical. Only used for the \code{writeTo} file (see \code{\link[=postProcessTo]{postProcessTo()}}): whether
+an existing \code{writeTo} file may be replaced. If not supplied, it is replaced, so re-running
+a call rewrites its own output; \code{overwrite = FALSE} stops instead. It has no effect on
+downloading: see the "Re-downloading" section.}
 
 \item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
@@ -245,12 +248,33 @@ In options for control of purging the \code{CHECKSUMS.txt} file are:
 \item{\code{3}}{delete entry with same \code{archive}}
 \item{\code{5}}{delete entry with same \code{targetFile} & \code{alsoExtract}}
 \item{\code{6}}{delete entry with same \code{targetFile}, \code{alsoExtract} & \code{archive}}
-\item{\code{7}}{delete entry that same \code{targetFile}, \code{alsoExtract} & \code{archive} & \code{url}}
+\item{\code{7}}{download again: set aside the local copies of \code{targetFile}, \code{archive} and
+the files extracted with them -- in \code{destinationPath} and, when
+\code{reproducible.destinationPathShared} is set, in the shared stash -- drop their
+entries, then download, extract and link them as on a first run. If the download
+fails, the previous copies are put back.}
 }
-will only remove entries in the \code{CHECKSUMS.txt} that are associated with
-\code{targetFile}, \code{alsoExtract} or \code{archive} When \code{prepInputs} is called,
-it will write or append to a (if already exists) \code{CHECKSUMS.txt} file.
-If the \code{CHECKSUMS.txt} is not correct, use this argument to remove it.
+Values \code{1} to \code{6} only remove entries in the \code{CHECKSUMS.txt}; the entries are then
+rebuilt from the files already on disk, so they do not download anything.
+When \code{prepInputs} is called, it will write or append to a (if already exists)
+\code{CHECKSUMS.txt} file.
+}
+
+\section{Re-downloading}{
+
+
+Whether a file is downloaded is decided by the \file{CHECKSUMS.txt} file in
+\code{destinationPath}, not by \code{overwrite}. A file that is missing, or whose checksum does not
+match its entry, is downloaded again and replaces the local copy (and its copy in
+\code{reproducible.destinationPathShared}). A file that matches is kept.
+
+To download again on request -- for example because the file at the \code{url} has changed --
+pass \code{purge = 7}. It does this for every local copy of the call's files, including the one
+in \code{reproducible.destinationPathShared}, so there is nothing to find and delete by hand.
+
+For \code{http(s)} and Google Drive urls, a local file that has once been matched to the remote
+is trusted without asking the remote again; set
+\code{options(reproducible.checkRemoteHash = TRUE)} to re-check the remote on each call.
 }
 
 \examples{

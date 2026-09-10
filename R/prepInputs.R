@@ -105,12 +105,31 @@ utils::globalVariables(c(
 #'     \item{`3`}{delete entry with same `archive`}
 #'     \item{`5`}{delete entry with same `targetFile` & `alsoExtract`}
 #'     \item{`6`}{delete entry with same `targetFile`, `alsoExtract` & `archive`}
-#'     \item{`7`}{delete entry that same `targetFile`, `alsoExtract` & `archive` & `url`}
+#'     \item{`7`}{download again: set aside the local copies of `targetFile`, `archive` and
+#'       the files extracted with them -- in `destinationPath` and, when
+#'       `reproducible.destinationPathShared` is set, in the shared stash -- drop their
+#'       entries, then download, extract and link them as on a first run. If the download
+#'       fails, the previous copies are put back.}
 #'   }
-#' will only remove entries in the `CHECKSUMS.txt` that are associated with
-#'   `targetFile`, `alsoExtract` or `archive` When `prepInputs` is called,
-#'   it will write or append to a (if already exists) `CHECKSUMS.txt` file.
-#'   If the `CHECKSUMS.txt` is not correct, use this argument to remove it.
+#' Values `1` to `6` only remove entries in the `CHECKSUMS.txt`; the entries are then
+#'   rebuilt from the files already on disk, so they do not download anything.
+#'   When `prepInputs` is called, it will write or append to a (if already exists)
+#'   `CHECKSUMS.txt` file.
+#'
+#' @section Re-downloading:
+#'
+#' Whether a file is downloaded is decided by the \file{CHECKSUMS.txt} file in
+#' `destinationPath`, not by `overwrite`. A file that is missing, or whose checksum does not
+#' match its entry, is downloaded again and replaces the local copy (and its copy in
+#' `reproducible.destinationPathShared`). A file that matches is kept.
+#'
+#' To download again on request -- for example because the file at the `url` has changed --
+#' pass `purge = 7`. It does this for every local copy of the call's files, including the one
+#' in `reproducible.destinationPathShared`, so there is nothing to find and delete by hand.
+#'
+#' For `http(s)` and Google Drive urls, a local file that has once been matched to the remote
+#' is trusted without asking the remote again; set
+#' `options(reproducible.checkRemoteHash = TRUE)` to re-check the remote on each call.
 #'
 #' @param targetFile Character string giving the filename (without relative or
 #'   absolute path) to the eventual file
@@ -196,7 +215,10 @@ utils::globalVariables(c(
 #'   `prepInputs` will write or append to it. `1/TRUE` will deleted the entire `CHECKSUMS.txt` file.
 #'    Other options, see details.
 #'
-#' @param overwrite Logical. Passed to `writeTo` (possibly inside `postProcess`) and `postProcess`.
+#' @param overwrite Logical. Only used for the `writeTo` file (see [postProcessTo()]): whether
+#'   an existing `writeTo` file may be replaced. If not supplied, it is replaced, so re-running
+#'   a call rewrites its own output; `overwrite = FALSE` stops instead. It has no effect on
+#'   downloading: see the "Re-downloading" section.
 #'
 #' @param ... Additional arguments passed to
 #'   [postProcess()] and [reproducible::Cache()].
@@ -435,7 +457,8 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
       destinationPath = destinationPath,
       fun = funCaptured,
       quick = quick,
-      overwrite = overwrite,
+      ## `overwrite` is not passed: it is only for the writeTo file below. preProcess()
+      ## replaces a missing or damaged download by itself, and purge = 7 downloads again.
       purge = purge,
       useCache = useCache,
       .tempPath = .tempPath,
@@ -477,8 +500,13 @@ prepInputs <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   )
   if (any(needPostProcess)) {
     TopoErrors <- list() # eventually to update a Google ID #TODO
+    ## `overwrite` is only for this write. The `writeTo` file is this call's own output, so
+    ## unless the caller chose, keep postProcessTo()'s default of TRUE: the
+    ## reproducible.overwrite default (FALSE) made any re-run of the same call (e.g., after a
+    ## Cache miss) stop with "already exists and `overwrite = FALSE`".
+    overwritePost <- if (missing(overwrite)) TRUE else overwrite
     x <- withCallingHandlers(
-      postProcessTo(from = x, ..., destinationPath = destinationPath, overwrite = overwrite),
+      postProcessTo(from = x, ..., destinationPath = destinationPath, overwrite = overwritePost),
       message = function(m) {
         hasTopoExcError <- grepl("TopologyException: Input geom 0 is invalid", m$message)
         if (any(hasTopoExcError)) {
@@ -1300,8 +1328,12 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
           if (fsArch <= 10) {
             # corrupted
             unlink(archive[1])
-            message("archive (", archive[1], ") appears corrupted; deleting it; ",
-                    "you may have to manually delete it and the copy in `reproducible.destinationPathShared` if using ")
+            shared <- setdiff(.sharedCopiesOf(archive[1], archive[1]), normPath(archive[1]))
+            message("archive (", archive[1], ") appears corrupted; deleting it.",
+                    if (length(shared))
+                      paste0(" Its copy in reproducible.destinationPathShared (",
+                             paste(shared, collapse = ", "), ") may be corrupted too."),
+                    " Rerun with purge = 7 to download it again.")
             return(NULL)
           }
           needSystemCall <- needSystemCall || fsArch > 2e9

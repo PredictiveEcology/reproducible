@@ -50,7 +50,9 @@ search for the file before attempting to download. Default for that option is
 \code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
 alias.}
 
-\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
+\item{overwrite}{Deprecated and ignored. A file is downloaded again when it is missing or
+fails its \file{CHECKSUMS.txt} check, and replaces the local copy; use \code{purge = 7} to
+download again on request, and \code{\link[=prepInputs]{prepInputs()}}'s \code{overwrite} for its \code{writeTo} file.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
