@@ -271,6 +271,8 @@ downloadFile <- function(archive, targetFile, neededFiles,
                     if (nzchar(purgeTry[1])) paste0(":\n      ", paste(purgeTry, collapse = "")) else ".",
                     "\n    That replaces ", singularPlural(c("the local copy", "all local copies"), l = localCopies),
                     ":\n      ", paste(localCopies, collapse = "\n      "),
+                    "\n 3) Or remove only this file's entry from the checksums file, then rerun this call:\n",
+                    "      reproducible::purgeChecksums('", checksumFile, "', fileToRemove = '", fileToDownload, "')",
                     call. = FALSE
                   )
                 }
