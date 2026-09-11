@@ -2286,3 +2286,84 @@ test_that(".guessAtTargetAndFun ignores OS archive metadata when auto-picking", 
   )
   expect_identical(out2$targetFilePath, "data/__MACOSX/._clean_NMC_20kmBuff.shp")
 })
+
+test_that("prepInputs rewrites its own writeTo output when overwrite is not supplied", {
+  ## `overwrite` defaults to reproducible.overwrite (FALSE), a setting about replacing
+  ## downloaded sources, and prepInputs() used to pass it on to postProcessTo() too. So
+  ## re-running the same call -- as after any Cache miss -- found its own writeTo file and
+  ## stopped with "already exists and `overwrite = FALSE`". Seen through
+  ## LandR::prepInputs_SCANFI_LCC_FAO() in Biomass_borealDataPrep.
+  testInit("terra", opts = list(reproducible.overwrite = FALSE, reproducible.inputPaths = NULL))
+
+  src <- terra::rast(nrows = 20, ncols = 20, xmin = 0, xmax = 20, ymin = 0, ymax = 20,
+                     crs = "EPSG:3005", vals = 1)
+  terra::writeRaster(src, file.path(tmpdir, "src.tif"))
+  cropTo <- terra::rast(nrows = 10, ncols = 10, xmin = 5, xmax = 15, ymin = 5, ymax = 15,
+                        crs = "EPSG:3005")
+  outFile <- file.path(tmpdir, "out.tif")
+  prep <- function(...)
+    prepInputs(targetFile = "src.tif", destinationPath = tmpdir, cropTo = cropTo,
+               writeTo = "out.tif", ...)
+
+  prep(useCache = FALSE)
+  expect_true(file.exists(outFile))
+
+  ## the same call again must replace the output, not stop
+  Sys.setFileTime(outFile, Sys.time() - 3600)
+  expect_no_error(prep(useCache = FALSE))
+  expect_gt(as.numeric(file.mtime(outFile)), as.numeric(Sys.time() - 600))
+
+  ## and through Cache, on a miss, which is how modules call it
+  Sys.setFileTime(outFile, Sys.time() - 3600)
+  expect_no_error(Cache(prep(), cachePath = tmpCache))
+  expect_gt(as.numeric(file.mtime(outFile)), as.numeric(Sys.time() - 600))
+
+  ## an explicit overwrite = FALSE is still honoured
+  expect_error(prep(useCache = FALSE, overwrite = FALSE), "already exists")
+})
+
+test_that("prepInputs' overwrite does not reach downloading; a damaged file is replaced anyway", {
+  ## prepInputs() passed `overwrite` to preProcess() as well as to the writeTo write. It never
+  ## caused a re-download (a file matching CHECKSUMS.txt is kept), but it did decide whether a
+  ## damaged local copy could be replaced: under overwrite = FALSE a re-run stopped in
+  ## downloadRemote() with "already exists ... Use overwrite = TRUE?".
+  testInit(opts = list(reproducible.overwrite = FALSE, reproducible.inputPaths = NULL,
+                       reproducible.destinationPathShared = NULL,
+                       reproducible.interactiveOnDownloadFail = FALSE))
+
+  src <- file.path(tmpdir, "remote")
+  dest <- file.path(tmpdir, "dest")
+  dir.create(src)
+  dir.create(dest)
+  remote <- file.path(src, "data.csv")
+  local <- file.path(dest, "data.csv")
+  writeLines("v1", remote)
+  p <- gsub("\\\\", "/", normPath(remote))
+  url <- paste0("file://", if (!startsWith(p, "/")) "/", p)
+  prep <- function(...)
+    prepInputs(url = url, targetFile = "data.csv", destinationPath = dest, fun = NA,
+               useCache = FALSE, ...)
+
+  prep()
+  expect_identical(readLines(local), "v1")
+
+  ## overwrite = TRUE does not re-download a file that matches CHECKSUMS.txt
+  writeLines("v2", remote)
+  prep(overwrite = TRUE)
+  expect_identical(readLines(local), "v1")
+
+  ## a damaged local file is downloaded again and replaced, whatever overwrite is
+  writeLines("v1", remote)
+  writeLines("damaged", local)
+  expect_no_error(prep())
+  expect_identical(readLines(local), "v1")
+  writeLines("damaged", local)
+  expect_no_error(prep(overwrite = FALSE))
+  expect_identical(readLines(local), "v1")
+
+  ## a remote file that has changed is downloaded again on request with purge = 7 (more in
+  ## test-prepInputs-purge7.R)
+  writeLines("v2", remote)
+  expect_no_error(prep(purge = 7))
+  expect_identical(readLines(local), "v2")
+})

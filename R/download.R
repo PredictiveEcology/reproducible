@@ -12,8 +12,8 @@ utils::globalVariables(c(
 #' @inheritParams preProcess
 #' @inheritParams prepInputs
 #' @inheritParams extractFromArchive
-#' @param overwrite Logical. If `TRUE` then the download will overwrite an existing file
-#'   if it exists.
+#' @param overwrite Passed on to `googledrive::drive_download()`, which writes into a
+#'   temporary directory; it does not decide what is downloaded. See [preProcess()].
 #' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
 #' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.
@@ -104,6 +104,15 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
     if (missingNeededFiles) {
       if (needChecksums == 0) needChecksums <- 2 # use binary addition -- 1 is new file, 2 is append
+      ## Say which local copies failed their checksum: they are about to be replaced.
+      bad <- checkSums$expectedFile[checkSums$result %in% "FAIL"]
+      bad <- bad[file.exists(makeAbsolute(bad, destinationPath))]
+      if (length(bad)) {
+        badPaths <- unique(normPath(c(makeAbsolute(bad, destinationPath), .sharedCopiesOf(bad, archive))))
+        messagePreProcess("Local cop", if (length(badPaths) > 1) "ies do" else "y does",
+                          " not match CHECKSUMS.txt; downloading again to replace:\n  ",
+                          paste(badPaths, collapse = "\n  "), verbose = verbose)
+      }
     }
 
     if (missingNeededFiles) {
@@ -138,6 +147,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
               dlFun = dlFun,
               destinationPath = destinationPath,
               overwrite = overwrite,
+              purge = purge,
               needChecksums = needChecksums,
               preDigest = preDigest,
               alsoExtract = alsoExtract,
@@ -249,36 +259,20 @@ downloadFile <- function(archive, targetFile, neededFiles,
                                           "checksum (resource changed); skipping remainder of ",
                                           "test on CRAN (policy: fail gracefully)"))
                   }
+                  localCopies <- unique(normPath(c(makeAbsolute(fileToDownload, destinationPath),
+                                                   .sharedCopiesOf(fileToDownload, archive))))
                   stop(
-                    "\nDownloaded version of ",
-                    normPath(fileToDownload),
-                    " from url: ",
-                    url,
-                    " did not match expected file (checksums failed). There are several options:\n",
-                    " 1) This may be an intermittent internet problem -- try to rerun this ",
-                    "current function call.\n",
-                    " 2) The local copy of the file may have been changed or corrupted -- run:\n",
-                    "      file.remove('",
-                    normPath(fileToDownload),
-                    "')\n",
-                    "      then rerun this current function call.\n",
-                    if (!is.null(.getDestinationPathShared())) {
-                      obj <- dir(.getDestinationPathShared(), full.names = TRUE, pattern = basename(fileToDownload))
-                      if (length(obj)) {
-                        paste0(" 2b) The copy of the file in getOption('reproducible.destinationPathShared')",
-                               " may have been changed or corrupted -- run:\n",
-                               "      file.remove(c('",
-                               paste(normPath(obj), collapse = "', '"),
-                               "'))\n",
-                               "      then rerun this current function call.\n")
-                      }
-
-                    },
-                    " 3) The download is correct, and the Checksums should be rewritten for this file:\n",
-                    "      --> rerun this current function call, specifying 'purge = 7' possibly\n",
-                    purgeTry,
-                    " 4) manually run \nreproducible::purgeChecksums('", checksumFile, "', \n               fileToRemove = '", fileToDownload, "')",
-                    "      ",
+                    "\nDownloaded version of ", normPath(fileToDownload), " from url: ", url,
+                    " did not match its entry in ", checksumFile, " (checksums failed).\n",
+                    "Either the download was damaged, or the file at the url has changed since it ",
+                    "was recorded.\n",
+                    " 1) If this may be an intermittent internet problem, rerun this call.\n",
+                    " 2) To download it again and record its new checksum, rerun with purge = 7",
+                    if (nzchar(purgeTry[1])) paste0(":\n      ", paste(purgeTry, collapse = "")) else ".",
+                    "\n    That replaces ", singularPlural(c("the local copy", "all local copies"), l = localCopies),
+                    ":\n      ", paste(localCopies, collapse = "\n      "),
+                    "\n 3) Or remove only this file's entry from the checksums file, then rerun this call:\n",
+                    "      reproducible::purgeChecksums('", checksumFile, "', fileToRemove = '", fileToDownload, "')",
                     call. = FALSE
                   )
                 }
@@ -312,7 +306,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
       if (is.null(targetFile)) {
         messagePreProcess("Skipping download because all needed files are listed in ",
                           "CHECKSUMS.txt file and are present.",
-                          " If this is not correct, rerun prepInputs with purge = TRUE",
+                          " To download them again, rerun with purge = 7.",
                           verbose = verbose
         )
       } else {
@@ -2035,6 +2029,11 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 #' @param messSkipDownload The character string text to pass to messaging if download skipped
 #' @param checkSums TODO
 #' @param fileToDownload TODO
+#' @param overwrite Passed to `googledrive::drive_download()`, which writes into a temporary
+#'   directory; it does not decide what is downloaded. A downloaded file always replaces an
+#'   existing file of the same name, because it is only downloaded when that file is missing
+#'   or fails its checksum.
+#' @param purge `7` fetches every file of a Google Drive folder `url` again; see [prepInputs()].
 #' @inheritParams loadFromCache
 #' @inheritParams prepInputs
 #' @inheritParams preProcess
@@ -2042,7 +2041,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
 downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                            fileToDownload, messSkipDownload,
                            destinationPath, overwrite, needChecksums, .tempPath, preDigest,
-                           alsoExtract = "similar",
+                           alsoExtract = "similar", purge = FALSE,
                            verbose = getOption("reproducible.verbose", 1), .callingEnv = parent.frame(),
                            ...) {
   dots <- list(...)
@@ -2211,15 +2210,25 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               drive_files <- drive_files[fileIndex, ]
             }
 
-            existingFiles <- drive_files$name %in% dir(destinationPath)
-            if (any(existingFiles)) {
-              messagePreProcess("Local version of files exists")
-              if (isFALSE(overwrite)) {
-                drive_files <- drive_files[!existingFiles, ]
-                messagePreProcess("Overwrite is FALSE; only getting new ones:\n",
-                                  paste0(drive_files$name, collapse = "\n"))
-
-              }
+            ## Which files of the folder to fetch follows the rules for a single file: one
+            ## already in destinationPath whose CHECKSUMS.txt row matches is kept; one that is
+            ## missing, or does not match, is fetched and replaces the local copy. This used to
+            ## go by file name alone, with `overwrite` as the switch to fetch again. purge = 7
+            ## fetches them all.
+            refetchAll <- isTRUE(as.integer(purge) == 7L)
+            keep <- rep(FALSE, NROW(drive_files))
+            present <- drive_files$name %in% dir(destinationPath)
+            csf <- identifyCHECKSUMStxtFile(destinationPath)
+            if (!refetchAll && any(present) && file.exists(csf)) {
+              cs <- Checksums(path = destinationPath, write = FALSE, checksumFile = csf,
+                              files = drive_files$name[present], verbose = verbose - 1)
+              keep <- drive_files$name %in% cs$expectedFile[cs$result %in% "OK"]
+            }
+            if (any(keep)) {
+              messagePreProcess("Keeping file(s) already in destinationPath that match CHECKSUMS.txt:\n",
+                                paste0(drive_files$name[keep], collapse = "\n"), verbose = verbose)
+              filenamesAlreadyHave <- makeAbsolute(drive_files$name[keep], destinationPath)
+              drive_files <- drive_files[!keep, , drop = FALSE]
             }
 
             ids <- drive_files$id
@@ -2245,6 +2254,18 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
                                       needChecksums = max(vapply(downloadResults, function(x) x$needChecksums, FUN.VALUE = numeric(1))))
             } else {
               downloadResults <- list(destFile = character(), needChecksums = 0)
+            }
+            if (refetchAll && NROW(drive_files)) {
+              ## Everything is downloaded, so the local copies can go: the fresh ones replace
+              ## those in destinationPath below. Drop the old rows so the fresh copies are
+              ## recorded rather than rejected, and the stash copies so none is reused.
+              sharedRoots <- .getDestinationPathShared()
+              for (csfi in unique(identifyCHECKSUMStxtFile(c(destinationPath, sharedRoots))))
+                if (file.exists(csfi)) .removeChecksumsRows(csfi, drive_files$name)
+              if (!is.null(sharedRoots)) {
+                stashed <- file.path(sharedRoots, drive_files$name)
+                unlink(stashed[normPath(stashed) != normPath(file.path(destinationPath, drive_files$name))])
+              }
             }
 
           } else {
@@ -2353,19 +2374,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
       )) || testFTD) {
         # basename2 is OK because the destFile will be flat; it is just archive extraction that needs to allow nesting
         desiredPath <- makeAbsolute(basename2(downloadResults$destFile), destinationPath)
-        desiredPathExists <- file.exists(desiredPath)
-        if (any(desiredPathExists) && !isTRUE(overwrite)) {
-          stopMess <- paste(desiredPath, " already exists and overwrite = FALSE; would you like to overwrite anyway? Y or N:  ")
-          if (interactive()) {
-            interactiveRes <- readline(stopMess)
-            if (startsWith(tolower(interactiveRes), "y")) {
-              overwrite <- TRUE
-            }
-          }
-          if (!identical(overwrite, TRUE)) {
-            stop(targetFile, " already exists at ", desiredPath, ". Use overwrite = TRUE?")
-          }
-        }
+        ## An existing file at desiredPath is replaced. downloadFile() only downloads when the
+        ## CHECKSUMS.txt check finds the local copy missing or not matching (missingFiles()),
+        ## so a file already here is stale or damaged and the fresh download must take its
+        ## place. This used to stop unless `overwrite = TRUE`, which prepInputs() took from its
+        ## `writeTo` argument: a damaged local file could not be repaired by re-running.
 
         # Try hard link first -- the only type that R deeply recognizes
         # if that fails, fall back to copying the file.

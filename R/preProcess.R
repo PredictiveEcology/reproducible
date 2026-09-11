@@ -161,6 +161,9 @@ preProcessParams <- function(n = NULL) {
 #'  to get the remove file information (e.g., file name). With that, the connection
 #'  between the `url` and the filename used in the \file{CHECKSUMS.txt} file can be made.
 #'
+#' @param overwrite Deprecated and ignored. A file is downloaded again when it is missing or
+#'   fails its \file{CHECKSUMS.txt} check, and replaces the local copy; use `purge = 7` to
+#'   download again on request, and [prepInputs()]'s `overwrite` for its `writeTo` file.
 #' @inheritParams prepInputs
 #' @inheritParams downloadFile
 #'
@@ -197,6 +200,13 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## prepInputs always passes `.tempPath`, so a missing `.tempPath` is the
   ## signal that no load will follow and those messages should be suppressed.
   directCall <- missing(.tempPath)
+  ## `overwrite` no longer decides anything here: a file is downloaded again when it is
+  ## missing or fails its checksum, and `purge = 7` downloads again on request.
+  if (!missing(overwrite) && !"preProcess(overwrite)" %in% .pkgEnv$.deprecMsgEmitted) {
+    message("`preProcess(overwrite)` is deprecated and ignored. Use `prepInputs(overwrite)` ",
+            "for the `writeTo` file, and `purge = 7` to download again.")
+    .pkgEnv$.deprecMsgEmitted <- c(.pkgEnv$.deprecMsgEmitted, "preProcess(overwrite)")
+  }
   ## URL-log hook fires only on direct preProcess() calls. When called from
   ## prepInputs, the prepInputs head already logged (so the COG fast-path,
   ## which bypasses preProcess, is still covered).
@@ -260,6 +270,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## hardlink out of it, which is the whole point of having one. See .withStashLock() for
   ## why this is not the Cache lock.
   runPipeline <- function(cc) {
+    ## purge = 7 sets this call's local copies aside first, inside the lock, and puts them
+    ## back if the rest does not finish. See .purgeRefreshStart().
+    refresh <- .purgeRefreshStart(cc)
+    finished <- FALSE
+    on.exit(.purgeRefreshFinish(refresh, ok = finished), add = TRUE)
     cc <- pp_checksums_init(cc)
     cc <- pp_purge(cc)
     cc <- pp_resolve_needed_files(cc)
@@ -267,7 +282,9 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
     cc <- pp_remote_hash_check(cc)
     cc <- pp_download(cc)
     cc <- pp_extract(cc)
-    pp_link_to_destination(cc)
+    cc <- pp_link_to_destination(cc)
+    finished <- TRUE
+    cc
   }
   lockKey <- .stashLockKey(ctx)
   ctx <- if (is.null(lockKey)) runPipeline(ctx) else
@@ -1728,6 +1745,22 @@ isGoogleDownloadURL <- function(url) {
   )
 }
 
+## TRUE where `to` already holds byte-identical content to `from`. Size splits almost
+## every non-match without reading anything; only the survivors are digested.
+.sameFileContent <- function(from, to) {
+  same <- rep(FALSE, length(to))
+  if (!length(to)) return(same)
+  ok <- file.exists(from) & file.exists(to) & !dir.exists(from) & !dir.exists(to)
+  if (!any(ok)) return(same)
+  sameSize <- rep(FALSE, length(to))
+  sameSize[ok] <- file.size(from[ok]) == file.size(to[ok])
+  for (i in which(sameSize))
+    same[i] <- isTRUE(tryCatch(
+      identical(.robustDigest(asPath(from[i])), .robustDigest(asPath(to[i]))),
+      error = function(e) FALSE))
+  same
+}
+
 #' Hardlink, symlink, or copy a file
 #'
 #' Attempt first to make a hardlink. If that fails, try to make
@@ -1740,6 +1773,8 @@ isGoogleDownloadURL <- function(url) {
 #'                 `to` can alternatively be the path to a single existing directory.
 #' @param symlink  Logical indicating whether to use symlink (instead of hardlink).
 #'                 Default `FALSE`.
+#' @param overwrite Logical. Only used when a link cannot be made and the file is copied
+#'   instead: passed to [file.copy()], so `TRUE` replaces an existing `to`.
 #' @inheritParams prepInputs
 #' @seealso [file.link()], [file.symlink()], [file.copy()].
 #'
@@ -1793,22 +1828,6 @@ isGoogleDownloadURL <- function(url) {
 #'   ## cleanup
 #'   unlink(tmpDir, recursive = TRUE)
 #' }
-## TRUE where `to` already holds byte-identical content to `from`. Size splits almost
-## every non-match without reading anything; only the survivors are digested.
-.sameFileContent <- function(from, to) {
-  same <- rep(FALSE, length(to))
-  if (!length(to)) return(same)
-  ok <- file.exists(from) & file.exists(to) & !dir.exists(from) & !dir.exists(to)
-  if (!any(ok)) return(same)
-  sameSize <- rep(FALSE, length(to))
-  sameSize[ok] <- file.size(from[ok]) == file.size(to[ok])
-  for (i in which(sameSize))
-    same[i] <- isTRUE(tryCatch(
-      identical(.robustDigest(asPath(from[i])), .robustDigest(asPath(to[i]))),
-      error = function(e) FALSE))
-  same
-}
-
 linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                        verbose = getOption("reproducible.verbose", 1)) {
   ## A file that is already at its destination cannot be linked or copied onto
@@ -2669,6 +2688,134 @@ messageChecksummingAllFiles <- "Checksumming all files in archive"
     try(filelock::unlock(lck), silent = TRUE)
   }, add = TRUE)
   force(expr)
+}
+
+## purge = 7: download this call's inputs again.
+##
+## "Delete the file and re-run" is not something a user can be asked to do: with
+## `destinationPathShared` set there are two local copies -- the shared stash and the link or
+## copy in `destinationPath` -- and a stale one left in either is found and reused. So this
+## sets aside every local copy of this call's files (the archive, the target and what is
+## extracted with it; never a directory, never another input's files), drops their
+## CHECKSUMS.txt rows and remote-hash sidecars, and lets the rest of preProcess() download,
+## extract and link as it does on a first run.
+##
+## Set aside is a rename, not a delete: a process still reading the old file keeps its inode,
+## nothing is truncated in place, and if the download fails the old copies are put back
+## (.purgeRefreshFinish()) instead of leaving nothing. It runs inside .withStashLock(), so no
+## other process is filling the stash for this input meanwhile.
+.purgeRefreshStart <- function(ctx) {
+  purge <- ctx$purge
+  if (is.logical(purge)) purge <- as.integer(purge)
+  if (!isTRUE(purge == 7L)) return(NULL)
+
+  sharedRoots <- .getDestinationPathShared()
+  dirs <- unique(c(ctx$destinationPath, .sharedDirsFor(sharedRoots, ctx$archive)))
+  files <- .purgeRefreshFiles(ctx, dirs)
+  if (!length(files)) return(NULL)
+
+  paths <- unique(unlist(lapply(dirs, function(d) file.path(d, files))))
+  ## an archive stashed flat, before the stash was scoped per archive, is migrated back in
+  if (!is.null(sharedRoots) && !isNULLorNA(ctx$archive))
+    paths <- unique(c(paths, file.path(sharedRoots, basename2(ctx$archive[1]))))
+  paths <- paths[file.exists(paths) & !dir.exists(paths)]
+
+  tag <- paste0(".purge7_", Sys.getpid(), "_", rndstr(1, 6))
+  baks <- vapply(paths, function(p) {
+    bak <- file.path(dirname(p), paste0(".", basename(p), tag))
+    if (isTRUE(file.rename(p, bak))) bak else NA_character_
+  }, character(1), USE.NAMES = FALSE)
+
+  csfs <- unique(identifyCHECKSUMStxtFile(c(dirs, sharedRoots)))
+  csfs <- csfs[file.exists(csfs)]
+  csBaks <- vapply(csfs, function(csf) {
+    bak <- file.path(dirname(csf), paste0(".CHECKSUMS.txt", tag))
+    if (!isTRUE(file.copy(csf, bak))) return(NA_character_)
+    .removeChecksumsRows(csf, files)
+    bak
+  }, character(1), USE.NAMES = FALSE)
+
+  sidecarDirs <- unique(c(dirs, sharedRoots))
+  unlink(unlist(lapply(unique(basename2(files)), .findRemoteHashSidecars, dirs = sidecarDirs)))
+
+  if (length(paths))
+    messagePreProcess("purge = 7: downloading again; set aside the local copies:\n  ",
+                      paste(paths, collapse = "\n  "), verbose = ctx$verbose)
+  list(moved = data.frame(orig = paths, bak = baks, stringsAsFactors = FALSE),
+       checksums = data.frame(orig = csfs, bak = csBaks, stringsAsFactors = FALSE),
+       verbose = ctx$verbose)
+}
+
+## On success the set-aside copies are removed. Otherwise each is put back where nothing new
+## took its place, with the CHECKSUMS.txt it was recorded in.
+.purgeRefreshFinish <- function(refresh, ok) {
+  if (is.null(refresh)) return(invisible())
+  moved <- refresh$moved[!is.na(refresh$moved$bak), , drop = FALSE]
+  cs <- refresh$checksums[!is.na(refresh$checksums$bak), , drop = FALSE]
+  if (isTRUE(ok)) {
+    unlink(c(moved$bak, cs$bak))
+  } else {
+    back <- !file.exists(moved$orig)
+    if (any(back)) file.rename(moved$bak[back], moved$orig[back])
+    unlink(moved$bak[!back])
+    if (NROW(cs)) file.rename(cs$bak, cs$orig)
+    if (NROW(moved))
+      messagePreProcess("purge = 7 did not finish; the previous local copies were put back",
+                        verbose = refresh$verbose)
+  }
+  invisible()
+}
+
+## The files, relative to destinationPath, that this call downloads or extracts.
+.purgeRefreshFiles <- function(ctx, dirs) {
+  dp <- ctx$destinationPath
+  archive <- if (isNULLorNA(ctx$archive)) character() else makeRelative(ctx$archive, dp)
+  target <- ctx[["targetFile"]]
+  target <- target[!is.na(target) & nzchar(target)]
+  alsoExtract <- ctx$alsoExtract
+  similar <- "similar" %in% alsoExtract && length(target)
+  also <- alsoExtract[!is.na(alsoExtract) & nzchar(alsoExtract) &
+                        !alsoExtract %in% c("similar", "none", "all")]
+  sameStem <- function(x) filePathSansExt(basename2(x)) %in% filePathSansExt(basename2(target))
+
+  inArchive <- character()
+  if (length(archive)) {
+    local <- unlist(lapply(dirs, function(d) file.path(d, basename2(archive))))
+    local <- local[file.exists(local)]
+    if (length(local)) inArchive <- .listFilesInArchive(local[1])
+  }
+  extracted <- if (length(inArchive)) {
+    if (is.null(alsoExtract) || "all" %in% alsoExtract) inArchive else
+      unique(c(inArchive[inArchive %in% c(target, also) |
+                           basename2(inArchive) %in% basename2(c(target, also))],
+               intersect(.expandAlsoExtractPatterns(also, inArchive), inArchive),
+               if (similar) inArchive[sameStem(inArchive)]))
+  } else if (similar) {
+    unlist(lapply(dirs, function(d) {
+      f <- list.files(d, all.files = FALSE)
+      f[sameStem(f) & !dir.exists(file.path(d, f))]
+    }))
+  } else character()
+
+  unique(c(archive, target, also, extracted))
+}
+
+## Remove the CHECKSUMS.txt rows for `files`, keeping the file's own format.
+.removeChecksumsRows <- function(checkSumFilePath, files) {
+  cs <- try(read.table(checkSumFilePath, header = TRUE, stringsAsFactors = FALSE), silent = TRUE)
+  if (is(cs, "try-error") || !NROW(cs) || is.null(cs$file)) return(invisible(FALSE))
+  drop <- cs$file %in% files
+  if (any(drop)) writeChecksumsTable(cs[!drop, , drop = FALSE], checkSumFilePath, dots = list())
+  invisible(any(drop))
+}
+
+## The copies of `files` in destinationPathShared, for messages that need to name them.
+.sharedCopiesOf <- function(files, archive = NULL) {
+  sharedRoots <- .getDestinationPathShared()
+  if (is.null(sharedRoots) || !length(files)) return(character())
+  dirs <- unique(c(.sharedDirsFor(sharedRoots, archive), sharedRoots))
+  p <- unlist(lapply(dirs, function(d) file.path(d, basename2(files))))
+  unique(p[file.exists(p)])
 }
 
 # may already have been changed above

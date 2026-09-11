@@ -19,7 +19,8 @@ linkOrCopy(
 \item{symlink}{Logical indicating whether to use symlink (instead of hardlink).
 Default \code{FALSE}.}
 
-\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
+\item{overwrite}{Logical. Only used when a link cannot be made and the file is copied
+instead: passed to \code{\link[=file.copy]{file.copy()}}, so \code{TRUE} replaces an existing \code{to}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.

@@ -18,6 +18,7 @@ downloadRemote(
   .tempPath,
   preDigest,
   alsoExtract = "similar",
+  purge = FALSE,
   verbose = getOption("reproducible.verbose", 1),
   .callingEnv = parent.frame(),
   ...
@@ -69,7 +70,10 @@ search for the file before attempting to download. Default for that option is
 \code{options("reproducible.inputPaths")} is still accepted as a backwards-compatible
 alias.}
 
-\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
+\item{overwrite}{Passed to \code{googledrive::drive_download()}, which writes into a temporary
+directory; it does not decide what is downloaded. A downloaded file always replaces an
+existing file of the same name, because it is only downloaded when that file is missing
+or fails its checksum.}
 
 \item{needChecksums}{Logical indicating whether to generate checksums. ## TODO: add overwrite arg to the function?}
 
@@ -107,6 +111,8 @@ basename), it is passed to \code{grep()} against the archive's file list and all
 matching members are extracted. For example,
 \code{alsoExtract = "CMD_sm|CMD_sp"} extracts every file whose name contains
 \code{CMD_sm} or \code{CMD_sp}. See table in \code{\link[=preProcess]{preProcess()}}.}
+
+\item{purge}{\code{7} fetches every file of a Google Drive folder \code{url} again; see \code{\link[=prepInputs]{prepInputs()}}.}
 
 \item{verbose}{Numeric, -1 silent (where possible), 0 being very quiet,
 1 showing more messaging, 2 being more messaging, etc.
