@@ -92,11 +92,8 @@ test_that(".maybeSpawnShowCacheAsync spawns once, reaps the fork, no accumulatio
   ## job entry and the child's pid instead.
   jobOf <- function(cp)
     reproducible:::memoiseEnv(cachePath = cp)[["shownCache"]]$shownCache_jobs[[cp]]
-  alive <- function(pid) {
-    st <- trimws(suppressWarnings(system2("ps", c("-o", "stat=", "-p", pid),
-                                          stdout = TRUE, stderr = FALSE)))
-    length(st) > 0 && nzchar(st[1]) && !startsWith(st[1], "Z")
-  }
+  ## signal 0 only tests that the process exists; R reaps a detached child when it exits
+  alive <- function(pid) isTRUE(suppressWarnings(tools::pskill(pid, 0L)))
 
   ## (c) first call spawns exactly one background scan
   cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
@@ -176,13 +173,11 @@ test_that("the pre-warm child exits after its scan even when nobody collects", {
   if (exists("shownCache", envir = pe, inherits = FALSE)) rm("shownCache", envir = pe)
 
   job <- reproducible:::spawn_showCache_async(cp)
-  ## A finished child is a zombie (or gone) until collected; a blocked one stays asleep.
-  childState <- function()
-    suppressWarnings(system2("ps", c("-o", "stat=", "-p", job$pid), stdout = TRUE, stderr = FALSE))
+  ## Signal 0 only tests that the process exists: R reaps the detached child when it
+  ## exits, while a blocked (attached) child stays alive.
   exited <- FALSE
   for (i in 1:600) {
-    st <- trimws(childState())
-    if (!length(st) || !nzchar(st[1]) || startsWith(st[1], "Z")) { exited <- TRUE; break }
+    if (!isTRUE(suppressWarnings(tools::pskill(job$pid, 0L)))) { exited <- TRUE; break }
     Sys.sleep(0.1)
   }
   expect_true(exited, info = "the pre-warm child did not exit within 60 s")
