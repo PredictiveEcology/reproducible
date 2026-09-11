@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9026
+
+## Bug fixes
+
+* The `showCache()` pre-warm process (`prepopulateCacheAsync()`, and `Cache(showSimilar = TRUE)`)
+  now exits when its scan is done. It sent its result back through the fork's pipe, and an
+  attached fork stays alive until the parent collects it (a result larger than the pipe buffer
+  even blocks in the write). A batch job that never calls `showCache()` again never collects,
+  so every such job kept an idle ~400 MB process for its whole run, and the process outlived
+  the job if the job was killed. The fork is now detached: it writes its result to a temporary
+  file and exits, and the next `showCache()` call reads that file.
+
 # reproducible 3.2.1.9025
 
 ## Bug fixes
