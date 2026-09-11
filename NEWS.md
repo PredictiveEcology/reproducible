@@ -1,13 +1,6 @@
-# reproducible 3.2.1.9030
+# reproducible 3.2.1.9031
 
 ## Bug fixes
-
-* `reproducible.showCachePreWarm` now defaults to `interactive()` instead of `TRUE`. The pre-warm
-  only pays off when a later `showCache()` in the same session finds it finished, which is what
-  a person at the console waits for; a batch run (`Rscript`, `R CMD BATCH`, callr or future
-  workers, knitr) rarely does. Set the option or `R_REPRODUCIBLE_SHOWCACHE_PREWARM` to turn it on
-  there. An R session started with `R --interactive`, as the SpaDES.project queue workers are,
-  is interactive, so those workers still switch it off explicitly.
 
 * The `showCache()` pre-warm process (`prepopulateCacheAsync()`, and `Cache(showSimilar = TRUE)`)
   now exits when its scan is done. It sent its result back through the fork's pipe, and an
