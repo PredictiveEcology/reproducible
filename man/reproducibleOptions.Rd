@@ -244,8 +244,9 @@ be time consuming, so setting this to \code{FALSE} will make caching up to 10\%
 faster, depending on the objects.
 }
 \item{\code{overwrite}}{
-Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}}, \code{\link[=preProcess]{preProcess()}},
-\code{\link[=downloadFile]{downloadFile()}}, and \code{\link[=postProcess]{postProcess()}}.
+Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=postProcess]{postProcess()}} for the \code{writeTo} file.
+It does not trigger re-downloading; use \code{purge = 7} (see the "Re-downloading" section
+of \code{\link[=prepInputs]{prepInputs()}}).
 }
 \item{\code{parallel.cores}}{
 Default: \code{NULL}, meaning \code{parallelly::freeCores()}. Degree of parallelism

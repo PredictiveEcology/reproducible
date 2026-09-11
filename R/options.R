@@ -237,8 +237,9 @@
 #'     faster, depending on the objects.
 #'   }
 #'   \item{`overwrite`}{
-#'     Default: `FALSE`. Used in [prepInputs()], [preProcess()],
-#'     [downloadFile()], and [postProcess()].
+#'     Default: `FALSE`. Used in [prepInputs()] and [postProcess()] for the `writeTo` file.
+#'     It does not trigger re-downloading; use `purge = 7` (see the "Re-downloading" section
+#'     of [prepInputs()]).
 #'   }
 #'   \item{`parallel.cores`}{
 #'     Default: `NULL`, meaning `parallelly::freeCores()`. Degree of parallelism

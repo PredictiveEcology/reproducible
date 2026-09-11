@@ -65,7 +65,10 @@ its nested \verb{*Input} functions (e.g., \code{cropInputs}, \code{projectInputs
 mean internal caching is more time consuming. We recommend caching the full
 \code{prepInputs} call instead (e.g. \code{prepInputs(...) |> Cache()}).}
 
-\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
+\item{overwrite}{Logical. Only used for the \code{writeTo} file (see \code{\link[=postProcessTo]{postProcessTo()}}): whether
+an existing \code{writeTo} file may be replaced. If not supplied, it is replaced, so re-running
+a call rewrites its own output; \code{overwrite = FALSE} stops instead. It has no effect on
+downloading: see the "Re-downloading" section.}
 
 \item{action}{A character string, with one of c("nothing", "update",
 "replace", "append"). Partial matching is used ("n" is sufficient).

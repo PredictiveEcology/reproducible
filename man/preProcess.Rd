@@ -112,7 +112,9 @@ custom downloading, in addition to loading into R. Still experimental.}
 \code{\link[=Cache]{Cache()}} (the quick argument). This results in faster, though
 less robust checking of inputs. See the respective functions.}
 
-\item{overwrite}{Logical. Passed to \code{writeTo} (possibly inside \code{postProcess}) and \code{postProcess}.}
+\item{overwrite}{Deprecated and ignored. A file is downloaded again when it is missing or
+fails its \file{CHECKSUMS.txt} check, and replaces the local copy; use \code{purge = 7} to
+download again on request, and \code{\link[=prepInputs]{prepInputs()}}'s \code{overwrite} for its \code{writeTo} file.}
 
 \item{purge}{Logical or Integer. \code{0/FALSE} (default) keeps existing \code{CHECKSUMS.txt} file and
 \code{prepInputs} will write or append to it. \code{1/TRUE} will deleted the entire \code{CHECKSUMS.txt} file.
