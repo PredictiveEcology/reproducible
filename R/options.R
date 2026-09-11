@@ -341,8 +341,9 @@
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
 #'   \item{`showCachePreWarm`}{
-#'     Default `TRUE` (override with environment variable
-#'     `R_REPRODUCIBLE_SHOWCACHE_PREWARM`). When `TRUE`, a `Cache(showSimilar = TRUE)`
+#'     Default `interactive()` (override with environment variable
+#'     `R_REPRODUCIBLE_SHOWCACHE_PREWARM`): a batch run rarely calls `showCache()` again
+#'     after the pre-warm has finished. When `TRUE`, a `Cache(showSimilar = TRUE)`
 #'     call spawns a one-time background process (a fork; not on Windows) that
 #'     pre-scans the flat-file cache so the subsequent `showCache()`/`showSimilar`
 #'     lookup returns quickly for large caches. This is skipped automatically under
@@ -645,7 +646,7 @@ reproducibleOptions <- function() {
       "R_REPRODUCIBLE_SHOWCACHE_PREWARM",
       # Mirror useDBI: reflect a value already set (e.g. FALSE by tests/covr) so
       # reproducibleOptions() stays identical to options() (see test-misc.R).
-      default = getOption("reproducible.showCachePreWarm", TRUE),
+      default = getOption("reproducible.showCachePreWarm", interactive()),
       allowed = c("true", "false")
     )),
     reproducible.showSimilar = FALSE,

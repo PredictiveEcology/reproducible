@@ -321,8 +321,9 @@ it will use \code{raster::shapefile}
 Default \code{FALSE}. Passed to \code{Cache}.
 }
 \item{\code{showCachePreWarm}}{
-Default \code{TRUE} (override with environment variable
-\code{R_REPRODUCIBLE_SHOWCACHE_PREWARM}). When \code{TRUE}, a \code{Cache(showSimilar = TRUE)}
+Default \code{interactive()} (override with environment variable
+\code{R_REPRODUCIBLE_SHOWCACHE_PREWARM}): a batch run rarely calls \code{showCache()} again
+after the pre-warm has finished. When \code{TRUE}, a \code{Cache(showSimilar = TRUE)}
 call spawns a one-time background process (a fork; not on Windows) that
 pre-scans the flat-file cache so the subsequent \code{showCache()}/\code{showSimilar}
 lookup returns quickly for large caches. This is skipped automatically under
