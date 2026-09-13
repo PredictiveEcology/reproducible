@@ -823,13 +823,20 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
 ## same-session save/load keeps restoring to the original path.
 .isForeignTempPath <- function(path) {
   under <- function(p, d) identical(as.character(fs::path_common(c(p, d))), d)
+  ## Normalise the (existing) directory, not the file: normalizePath() leaves a path whose
+  ## file does not exist yet unresolved, so /var/... vs /private/var/... (macOS) or 8.3 vs long
+  ## names (Windows) would make a file under this session's own tempdir look foreign.
+  normDir <- function(p) {
+    d <- as.character(fs::path_norm(normPath(dirname(p))))
+    ifelse(nzchar(basename(p)), file.path(d, basename(p)), d)
+  }
   own <- as.character(fs::path_norm(normPath(tempdir())))
   terraTmp <- if (requireNamespace("terra", quietly = TRUE)) {
     as.character(fs::path_norm(normPath(terra::terraOptions(print = FALSE)$tempdir)))
   } else {
     character()
   }
-  vapply(as.character(fs::path_norm(normPath(path))), function(p) {
+  vapply(normDir(path), function(p) {
     if (under(p, own)) return(FALSE)
     if (length(terraTmp) && nzchar(terraTmp) && under(p, terraTmp)) return(TRUE)
     grepl("(^|/)Rtmp[A-Za-z0-9]+(/|$)", p)
