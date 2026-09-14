@@ -1130,6 +1130,13 @@ spawn_showCache_async <- function(
   showCache_fun  <- get("showCache", envir = ns)
   memoiseEnv_fun <- get("memoiseEnv", envir = ns)
 
+  ## The child saves its result here and exits. It must not send the result back through
+  ## mcparallel's pipe: an attached child stays alive until the parent collects it (and
+  ## blocks in the write itself once the result is larger than the pipe buffer), which a
+  ## batch job may never do. So the child is detached, and collect_showCache_async() polls
+  ## for this file instead.
+  resultFile <- tempfile("showCachePreWarm_", fileext = ".rds")
+
   # Build fork expression with injected function objects
   expr <- substitute({
     data.table::setDTthreads(1L)
@@ -1142,20 +1149,28 @@ spawn_showCache_async <- function(
     pkgEnv_child <- MEMOISEENV(cachePath = cp)
     sc <- pkgEnv_child[["shownCache"]][[cp]]
 
-    # mcparallel/mccollect: NULL should not be returned (reserved as error signal) [1](https://www.r-bloggers.com/2023/06/dofuture-a-better-foreach-parallelization-operator-than-dopar/)
-    if (is.null(sc)) {
+    res <- if (is.null(sc)) {
       structure(list(error = "shownCache was NULL in child", cachePath = cp),
                 class = "shownCache_error")
     } else {
       sc
     }
+    ## Write under a temporary name, then rename, so the parent never reads a partial file
+    saveRDS(res, paste0(RF, ".part"))
+    file.rename(paste0(RF, ".part"), RF)
+    NULL
   }, list(
     cp = x,
+    RF = resultFile,
     SHOWCACHE = showCache_fun,
     MEMOISEENV = memoiseEnv_fun
   ))
 
-  job <- parallel::mcparallel(expr, name = paste0("showCache:", x), silent = silent)  # [1](https://www.r-bloggers.com/2023/06/dofuture-a-better-foreach-parallelization-operator-than-dopar/)
+  ## Detached: the child exits as soon as it has written resultFile (see above)
+  job <- parallel::mcparallel(expr, name = paste0("showCache:", x), silent = silent,
+                              detached = TRUE)
+  job <- structure(list(pid = job$pid, resultFile = resultFile),
+                   class = "showCachePreWarmJob")
   assign(x, job, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
 
   invisible(job)
@@ -1184,22 +1199,20 @@ collect_showCache_async <- function(
   job <- get(x, envir = pkgEnv[["shownCache"]]$shownCache_jobs, inherits = FALSE)
 
   
-  # The warning occurs if the pid has already be deleted e.g., manually
-  suppressWarnings(
-    # Poll or wait for results
-    res_list <- parallel::mccollect(job, wait = wait, timeout = timeout)  # collect async results [1](https://www.rdocumentation.org/packages/parallel/versions/3.4.1/topics/mcparallel)[2](https://stat.ethz.ch/R-manual/R-devel/library/parallel/html/mcparallel.html)
-  )
-
-  # If still running, mccollect returns NULL (per docs)
-  if (is.null(res_list)) {
-    return(invisible(NULL))
+  ## The detached child writes its result to job$resultFile and exits; nothing comes back
+  ## through a pipe (see spawn_showCache_async()). Poll for that file for up to `timeout`
+  ## seconds (0: check once). `wait` is kept for callers of the former mccollect() version.
+  deadline <- Sys.time() + timeout
+  while (!file.exists(job$resultFile)) {
+    if (Sys.time() >= deadline) return(invisible(NULL))
+    Sys.sleep(0.05)
   }
+  sc <- readRDS(job$resultFile)
+  unlink(job$resultFile)
 
-  # Extract result (single job => first element)
-  sc <- res_list[[1]]
-
-  # If child reported an internal NULL issue, propagate as an error
+  # If the child reported an internal NULL issue, drop the job; the sync path does a full scan
   if (inherits(sc, "shownCache_error")) {
+    rm(list = x, envir = pkgEnv[["shownCache"]]$shownCache_jobs)
     return(invisible(NULL))
   }
 

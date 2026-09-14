@@ -307,7 +307,14 @@ skipCache <- function(FUN, ..., usesDots, functionName, useCache, verbose, .call
   .message$useCacheIsFALSE(.pkgEnv$.reproEnv2$nestLevel - 1, # original Cache counted differently; use -1 here
                            functionName = functionName, useCache = useCache, verbose = verbose)
   if (isTRUE(usesDots)) {
-    FUN(...)
+    ## `usesDots` says Cache() received arguments beyond its own formals. That is the
+    ## Cache(fn, args...) form -- but it is also what any argument Cache() does not have
+    ## (e.g. `.omitArgs = ` for `omitArgs = `) turns on for the Cache(fn(args)) and
+    ## fn(args) |> Cache() forms, where `FUN` is already the call's VALUE. Calling that value
+    ## failed with "could not find function FUN" (fireSense_dataPrepFit under
+    ## spades.useCache = "eventsOnly", 2026-09-13), while with caching on the stray argument
+    ## was simply ignored. Only a function takes the dots; anything else is the result.
+    if (is.function(FUN)) FUN(...) else FUN
   } else {
     eval(FUN, envir = .callingEnv)
   }

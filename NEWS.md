@@ -1,3 +1,13 @@
+# reproducible 3.2.1.9031
+
+## Bug fixes
+
+* With `useCache = FALSE`, a `Cache()` call in the `Cache(fn(args))` or `fn(args) |> Cache()` form
+  that also carried an argument `Cache()` does not have (e.g. a typo such as `.omitArgs = ` for
+  `omitArgs = `) failed with `could not find function "FUN"`: the bypass took the stray argument
+  as a sign of the `Cache(fn, args...)` form and called the already-evaluated result. It now calls
+  only a function; anything else is returned as the result, as when caching is on.
+
 # reproducible 3.2.1.9028
 
 ## Bug fixes
@@ -8,6 +18,26 @@
   workers, knitr) rarely does. Set the option or `R_REPRODUCIBLE_SHOWCACHE_PREWARM` to turn it on
   there. An R session started with `R --interactive`, as the SpaDES.project queue workers are,
   is interactive, so those workers still switch it off explicitly.
+* On a cache hit, a file-backed `SpatRaster` that had been produced in a temporary
+  directory belonging to another process -- terra's `tempdir` when it is not this
+  session's `tempdir()` (e.g. one scratch disk shared by many workers), or another R
+  session's `Rtmp*` -- is no longer restored to that path just because the file still
+  exists. The file there is named for the process that produced it, so the next clean-up
+  of that process's temp files removed it from under the live object ("[project] cannot
+  create dataset from source"). Such rasters now come back under the cache. A raster in
+  this session's own `tempdir()` is still restored to its original path.
+
+# reproducible 3.2.1.9027
+
+## Bug fixes
+
+* The `showCache()` pre-warm process (`prepopulateCacheAsync()`, and `Cache(showSimilar = TRUE)`)
+  now exits when its scan is done. It sent its result back through the fork's pipe, and an
+  attached fork stays alive until the parent collects it (a result larger than the pipe buffer
+  even blocks in the write). A batch job that never calls `showCache()` again never collects,
+  so every such job kept an idle ~400 MB process for its whole run, and the process outlived
+  the job if the job was killed. The fork is now detached: it writes its result to a temporary
+  file and exits, and the next `showCache()` call reads that file.
 
 * `prepInputs()`'s `overwrite` now applies only to the `writeTo` file, as its help page
   said. It was also passed to `preProcess()`, where it never caused a re-download (a file
