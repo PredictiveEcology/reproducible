@@ -83,3 +83,46 @@ test_that("lockFile takes a real lock under the DBI backend too", {
   expect_true(any(grepl("abc123", dir(CacheStorageDir(cp)))))
   filelock::unlock(lock)
 })
+
+test_that("concurrent tag writes to one entry lose none of them", {
+  skip_on_os("windows")
+  skip_on_cran()
+  skip_if_not_installed("filelock")
+  withr::local_options(reproducible.useDBI = FALSE)
+  cp <- withr::local_tempdir()
+  id <- "concurrent1"
+  checkPath(CacheStorageDir(cp), create = TRUE)
+  saveDBFileSingle(data.table::data.table(cacheId = id, tagKey = "seed", tagValue = "0",
+                                          createdDate = as.character(Sys.time())), cp, id)
+  nProc <- 4L
+  nEach <- 100L
+  script <- file.path(cp, "writer.R")
+  go <- file.path(cp, "go")
+  ## Each writer waits for `go`, created once all are loaded, so their writes overlap.
+  writeLines(c(
+    childProcessPreamble(),
+    'p <- commandArgs(trailingOnly = TRUE)[1]',
+    'options(reproducible.useDBI = FALSE)',
+    sprintf('file.create(paste0("%s", p))', file.path(cp, "ready")),
+    sprintf('while (!file.exists("%s")) Sys.sleep(0.05)', go),
+    sprintf('for (i in seq_len(%d)) reproducible::.addTagsRepo(cacheId = "%s", cachePath = "%s", tagKey = paste0("writer", p), tagValue = as.character(i))',
+            nEach, id, cp),
+    'cat("WRITER DONE\\n")'
+  ), script)
+  logs <- file.path(cp, paste0("writer", seq_len(nProc), ".log"))
+  Rscript <- file.path(R.home("bin"), "Rscript")
+  Map(function(p, lg) system2(Rscript, c(shQuote(script), p), stdout = lg, stderr = lg, wait = FALSE),
+      seq_len(nProc), logs)
+  finished <- function() vapply(logs, function(lg) file.exists(lg) &&
+                                  any(grepl("^WRITER DONE|^Error", readLines(lg, warn = FALSE))), logical(1))
+  deadline <- Sys.time() + 300
+  while (sum(file.exists(paste0(file.path(cp, "ready"), seq_len(nProc)))) < nProc &&
+         !all(finished()) && Sys.time() < deadline) Sys.sleep(0.1)
+  file.create(go)
+  deadline <- Sys.time() + 300
+  while (!all(finished()) && Sys.time() < deadline) Sys.sleep(0.5)
+  expect_true(all(vapply(logs, function(lg) "WRITER DONE" %in% readLines(lg, warn = FALSE), logical(1))))
+  tags <- loadFile(CacheDBFileSingle(cachePath = cp, cacheId = id), cacheId = id, cachePath = cp,
+                   drv = NULL, conn = NULL)
+  expect_equal(sum(startsWith(tags$tagKey, "writer")), nProc * nEach)
+})

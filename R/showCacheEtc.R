@@ -539,8 +539,9 @@ setMethod(
                       if (identical(getOption("reproducible.cacheSaveFormat"), .qsFormat))
                         optForUndo <- options("reproducible.qsFormat" = .qsFormat)
                       on.exit(options(optForUndo), add = TRUE)
-                      saveFilesInCacheFolder(out, fts = fil, cachePath = x,
-                                             cacheId = cacheId)
+                      withLockFile(CacheTagLockFile(x, cacheId),
+                                   saveFilesInCacheFolder(out, fts = fil, cachePath = x,
+                                                          cacheId = cacheId))
 
                       return(out)
                     }

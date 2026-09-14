@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9032
+
+## Bug fixes
+
+* On the file backend, tag changes to a cache entry were not locked. Each one reads the entry's tag file,
+  modifies it and writes it back, so processes sharing a cache could silently drop each other's tags --
+  the `accessed` tag written on every cache hit, and tags written by callers such as SpaDES.core's
+  `cacheChaining`. Every write to a tag file (`.addTagsRepo()`, `.updateTagsRepo()`, `saveDBFileSingle()`,
+  `rmFromCache()`, and the format rewrite in `showCache()`) now holds `<cacheId>.tags.lock`.
+* `Cache()`, the shared-input stash and tag writes now lock through one function, `acquireLockFile()`. A
+  process waiting on a `Cache()` lock takes it as soon as it is released, instead of re-checking every 2.5 s.
+
 # reproducible 3.2.1.9031
 
 ## Bug fixes

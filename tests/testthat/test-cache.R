@@ -237,13 +237,13 @@ test_that("test file-backed raster caching", {
       ## .rds, the file-backed .tif, and the per-key .lock -- the lock is taken for
       ## both backends now, not only the flat-file one, so that two workers reaching
       ## the same uncached key cannot both compute it. The flat-file backend ALSO
-      ## writes its tag store, whereas useDBI() keeps that in the SQLite DB.
+      ## writes its tag store and that store's .tags.lock, whereas useDBI() keeps tags in the SQLite DB.
       ##
       ## The previous formula counted 2 for useDBI() and folded the lock into the
       ## flat-file-only term as `hasFilenameInCache + 1L`, which happened to total
       ## correctly while the lock existed on one backend only.
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (3L + as.integer(!useDBI()) * hasFilenameInCache + 2L * savePreDigest))
+                    (3L + as.integer(!useDBI()) * (hasFilenameInCache + 1L) + 2L * savePreDigest))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 
