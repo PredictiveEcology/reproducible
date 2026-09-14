@@ -788,7 +788,7 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
         #   An anchor may map to several dirs (e.g. modulePath); use the first.
         absBase <- absoluteBase(anchorNm, cachePath, ...)[[1]]
         as.character(fs::path_norm(fs::path_join(c(absBase, x))))
-      } else if (fs::is_absolute_path(x) && file.exists(x)) {
+      } else if (fs::is_absolute_path(x) && file.exists(x) && !.isForeignTempPath(x)) {
         # Genuinely present on this machine (same-machine save/load): keep as-is.
         x
       } else {
@@ -810,6 +810,37 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
 
   whFiles <- newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
   list(newName = newName, whFiles = whFiles, tagsParsed = tags)
+}
+
+## An orphan path inside a temporary directory that belongs to some OTHER process -- terra's
+## tempdir when it is not this session's tempdir() (a project pointing every worker at one
+## scratch disk), or another R session's Rtmp* -- must not be resurrected on a cache hit even
+## though the file still exists. The file there is named for the process that made it, which
+## may be gone, so anything that clears that process's temp files (terra at its exit, a
+## scratch sweeper) takes the live object with it: fireSense fits, 2026-09-12, "[project]
+## cannot create dataset from source" on a rasterToMatch restored to a dead worker's
+## /scratch/terra/spat_<hex>_<pid>_<x>.tif. This session's own tempdir() is left alone, so a
+## same-session save/load keeps restoring to the original path.
+.isForeignTempPath <- function(path) {
+  under <- function(p, d) identical(as.character(fs::path_common(c(p, d))), d)
+  ## Normalise the (existing) directory, not the file: normalizePath() leaves a path whose
+  ## file does not exist yet unresolved, so /var/... vs /private/var/... (macOS) or 8.3 vs long
+  ## names (Windows) would make a file under this session's own tempdir look foreign.
+  normDir <- function(p) {
+    d <- as.character(fs::path_norm(normPath(dirname(p))))
+    ifelse(nzchar(basename(p)), file.path(d, basename(p)), d)
+  }
+  own <- as.character(fs::path_norm(normPath(tempdir())))
+  terraTmp <- if (requireNamespace("terra", quietly = TRUE)) {
+    as.character(fs::path_norm(normPath(terra::terraOptions(print = FALSE)$tempdir)))
+  } else {
+    character()
+  }
+  vapply(normDir(path), function(p) {
+    if (under(p, own)) return(FALSE)
+    if (length(terraTmp) && nzchar(terraTmp) && under(p, terraTmp)) return(TRUE)
+    grepl("(^|/)Rtmp[A-Za-z0-9]+(/|$)", p)
+  }, logical(1), USE.NAMES = FALSE)
 }
 
 #' @details
