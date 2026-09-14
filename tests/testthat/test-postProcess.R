@@ -138,14 +138,14 @@ test_that("prepInputs doesn't work (part 3)", {
   )
   nc3 <- suppressWarningsSpecific(
     {
-      sf::st_transform(nc1, CRSobj = nonLatLongProj2)
+      sf::st_transform(nc1, crs = nonLatLongProj2)
     },
     falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others"
   )
   nc4 <- cropInputs(nc3, studyArea = ncSmall)
   ncSmall2 <- suppressWarningsSpecific(
     {
-      sf::st_transform(ncSmall, CRSobj = nonLatLongProj2)
+      sf::st_transform(ncSmall, crs = nonLatLongProj2)
     },
     falseWarnings = "Discarded datum Unknown based on GRS80 ellipsoid in Proj4 definition|PROJ support is provided by the sf and terra packages among others"
   )
