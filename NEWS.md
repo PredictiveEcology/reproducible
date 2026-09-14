@@ -8,6 +8,10 @@
   failures surface at their origin. The removed `stopRcppError()` helper, which rephrased a digest
   failure as "... is corrupt ... resolved by restarting the R session", is gone with it: a corrupt
   object to be digested now raises the underlying error directly.
+* Added regression tests for the memoise stale-external-pointer recovery in
+  `dealWithCacheRecoveryErrors()`, which the above narrowed: the `Filenames()` trigger is no longer
+  reachable in normal operation, leaving the `try(output[1])` one. The tests pin the surviving
+  trigger, both error signatures it matches, and the no-op cases.
 
 # reproducible 3.2.1.9032
 
