@@ -88,41 +88,44 @@ test_that(".maybeSpawnShowCacheAsync spawns once, reaps the fork, no accumulatio
 
   withr::local_options(reproducible.useDBI = FALSE,          # exercise the flat-file fork path
                        reproducible.showCachePreWarm = TRUE) # force ON (default under R CMD check)
-  live <- function() length(parallel:::children())
-  ## Never leave stray forks behind for other tests.
-  withr::defer(for (j in parallel:::children())
-    try(parallel::mccollect(j, wait = FALSE, timeout = 0), silent = TRUE))
+  ## The fork is detached, so it is never listed by parallel:::children(); follow the
+  ## job entry and the child's pid instead.
+  jobOf <- function(cp)
+    reproducible:::memoiseEnv(cachePath = cp)[["shownCache"]]$shownCache_jobs[[cp]]
+  ## signal 0 only tests that the process exists; R reaps a detached child when it exits
+  alive <- function(pid) isTRUE(suppressWarnings(tools::pskill(pid, 0L)))
 
-  base <- live()
-
-  ## (c) first call spawns exactly one background fork
+  ## (c) first call spawns exactly one background scan
   cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
   reproducible:::.maybeSpawnShowCacheAsync(cp)
-  expect_equal(live() - base, 1L)
+  expect_false(is.null(jobOf(cp)))
 
-  ## (b) a later call reaps it once the (empty-cache) child has finished.
-  ##     The leaking, spawn-only version never reaps here, so this fails on it.
-  reaped <- FALSE
+  ## (b) a later call harvests it once the (empty-cache) child has written its result.
+  ##     The leaking, spawn-only version never harvests here, so this fails on it.
+  harvested <- FALSE
   for (i in 1:100) {
     reproducible:::.maybeSpawnShowCacheAsync(cp)
-    if (live() <= base) { reaped <- TRUE; break }
+    if (is.null(jobOf(cp))) { harvested <- TRUE; break }
     Sys.sleep(0.05)
   }
-  expect_true(reaped)
+  expect_true(harvested)
 
   ## (a) once harvested, further calls neither spawn nor leak
   for (i in 1:20) reproducible:::.maybeSpawnShowCacheAsync(cp)
-  expect_lte(live() - base, 0L)
+  expect_null(jobOf(cp))
 
-  ## across many distinct cachePaths the forks must not accumulate
+  ## across many distinct cachePaths no pre-warm process is left running
+  pids <- integer()
   for (p in 1:6) {
     cpp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
     for (k in 1:6) {
       reproducible:::.maybeSpawnShowCacheAsync(cpp)
+      if (!is.null(jobOf(cpp))) pids <- c(pids, jobOf(cpp)$pid)
       Sys.sleep(0.03)
     }
   }
-  expect_lte(live() - base, 2L)      # bounded, not ~6
+  Sys.sleep(2)
+  expect_false(any(vapply(unique(pids), alive, logical(1))))
 })
 
 test_that(".maybeSpawnShowCacheAsync never forks under a DBI backend", {
@@ -144,4 +147,43 @@ test_that(".maybeSpawnShowCacheAsync never forks under a DBI backend", {
   cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
   for (i in 1:10) reproducible:::.maybeSpawnShowCacheAsync(cp)
   expect_equal(live() - base, 0L)    # no fork ever spawned under useDBI(TRUE)
+})
+
+test_that("the pre-warm child exits after its scan even when nobody collects", {
+  ## Regression: the child returned its showCache result through the fork's pipe. Once
+  ## the result was larger than the pipe buffer (64 KB) the child blocked in that write
+  ## until the parent collected, which a batch job may never do: on fireSense fits workers
+  ## an idle ~400 MB child sat in anon_pipe_write for hours, and outlived a killed job.
+  skip_on_cran()
+  testthat::skip_on_os("windows")
+  skip_if_not_installed("parallel")
+  skip_if(isTRUE(as.logical(Sys.getenv("R_COVR", "false"))),
+          "showCache pre-warm fork disabled under covr")
+
+  withr::local_options(reproducible.useDBI = FALSE,
+                       reproducible.showCachePreWarm = TRUE,
+                       reproducible.verbose = -2)
+  withr::defer(for (j in parallel:::children())
+    try(parallel::mccollect(j, wait = FALSE, timeout = 0), silent = TRUE))
+
+  cp <- normalizePath(withr::local_tempdir(), mustWork = FALSE)
+  for (i in seq_len(150)) Cache(rnorm, i, cachePath = cp, useCloud = FALSE)
+  expect_gt(length(serialize(showCache(cp), NULL)), 64 * 1024) # larger than a pipe buffer
+  pe <- reproducible:::memoiseEnv(cachePath = cp)   # forget that scan, so only the fork can fill it
+  if (exists("shownCache", envir = pe, inherits = FALSE)) rm("shownCache", envir = pe)
+
+  job <- reproducible:::spawn_showCache_async(cp)
+  ## Signal 0 only tests that the process exists: R reaps the detached child when it
+  ## exits, while a blocked (attached) child stays alive.
+  exited <- FALSE
+  for (i in 1:600) {
+    if (!isTRUE(suppressWarnings(tools::pskill(job$pid, 0L)))) { exited <- TRUE; break }
+    Sys.sleep(0.1)
+  }
+  expect_true(exited, info = "the pre-warm child did not exit within 60 s")
+
+  ## and the result is still installed when it is collected
+  reproducible:::collect_showCache_async(cp, wait = TRUE, timeout = 10)
+  scEnv <- reproducible:::memoiseEnv(cachePath = cp)[["shownCache"]][[cp]]
+  expect_gt(NROW(scEnv$sc), 0)
 })

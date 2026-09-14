@@ -108,11 +108,14 @@ test_that("prepopulateCacheAsync() is exported and schedules one flat-file scan"
               info = "prepopulateCacheAsync() should schedule a job")
 
   ## Idempotent: a repeat call must not spawn a *second* fork for the same path
-  ## (the helper reaps/reuses the existing one -- see the lifecycle tests in
-  ## test-showCacheAsyncInstall.R). Asserted on the live-child count.
-  base <- length(parallel:::children())
+  ## (the helper harvests/reuses the existing one -- see the lifecycle tests in
+  ## test-showCacheAsyncInstall.R). The fork is detached, so it never appears in
+  ## parallel:::children(); compare the job's pid instead.
+  jobs <- reproducible:::memoiseEnv(cachePath = tmpCache)[["shownCache"]]$shownCache_jobs
+  pid1 <- jobs[[tmpCache]]$pid
   reproducible::prepopulateCacheAsync(tmpCache)
-  expect_lte(length(parallel:::children()), base)
+  pid2 <- jobs[[tmpCache]]$pid      # NULL once the first job has been harvested
+  expect_true(is.null(pid2) || identical(pid2, pid1))
 
   reproducible:::collect_showCache_async(tmpCache, wait = TRUE, timeout = 10)
 })
