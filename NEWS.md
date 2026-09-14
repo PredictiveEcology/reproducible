@@ -1,3 +1,13 @@
+# reproducible 3.2.1.9031
+
+## Bug fixes
+
+* With `useCache = FALSE`, a `Cache()` call in the `Cache(fn(args))` or `fn(args) |> Cache()` form
+  that also carried an argument `Cache()` does not have (e.g. a typo such as `.omitArgs = ` for
+  `omitArgs = `) failed with `could not find function "FUN"`: the bypass took the stray argument
+  as a sign of the `Cache(fn, args...)` form and called the already-evaluated result. It now calls
+  only a function; anything else is returned as the result, as when caching is on.
+
 # reproducible 3.2.1.9027
 
 ## Bug fixes
