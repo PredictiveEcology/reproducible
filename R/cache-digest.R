@@ -143,7 +143,7 @@ userTagsListToDT <- function(cache_key, userTagsList) {
   theChars <- vapply(userTagsList, function(x) is.character(x) | is.logical(x), logical(1))
   if (any(!theChars)) {
     for (tc in which(!theChars))
-      userTagsList[[tc]] <- tryCatch2(format(userTagsList[[tc]]), error = function(u) as.character())
+      userTagsList[[tc]] <- format(userTagsList[[tc]])
   }
   userTagsList <- utils::stack(userTagsList)
   metadataDT(cacheId = cache_key, tagKey = userTagsList$ind, tagValue = userTagsList$values)

@@ -1533,16 +1533,3 @@ usesPointer.environment <- function(x) {
 
 
 
-try2 <- function(..., silent = FALSE) {
-  if (getOption("reproducible.useTry", TRUE)) {
-    try(..., silent = silent)
-  } else
-    eval(...)
-}
-
-tryCatch2 <- function(..., silent = FALSE, error, finally) {
-  if (getOption("reproducible.useTry", TRUE)) {
-    tryCatch(..., silent = silent)
-  } else
-    eval(...)
-}

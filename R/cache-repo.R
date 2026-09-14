@@ -448,7 +448,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       #   is not great, but I could not find a better one that will fail on those Rcpp fails. The problem
       #   is that the object exists, but it's inner structure is wrong
       outputTestIntegrity <- try(output[1], silent = TRUE) # This needs to be `try`, not `try2`
-      fns <- try2(Filenames(output), silent = TRUE) # previous will only get some of the failures
+      fns <- Filenames(output) # previous will only get some of the failures
       memoiseFail <- dealWithCacheRecoveryErrors(memoiseFail, outputTestIntegrity, fns, cache_key, cachePath, outputObjects)
       # if (isTRUE(is(outputTestIntegrity, "try-error")) || isTRUE(is(fns, "try-error"))) {
       #   failMsgs <- "external pointer.+not valid|NULL value passed as symbol address"

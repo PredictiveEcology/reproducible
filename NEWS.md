@@ -1,3 +1,14 @@
+# reproducible 3.2.1.9033
+
+## Internal
+
+* Removed the internal `try2()`/`tryCatch2()` wrappers and the undocumented, non-exported
+  `reproducible.useTry` option that selected between their two branches. They date from a period of
+  debugging Rcpp/cache corruption; errors that were formerly trapped and inspected now propagate, so
+  failures surface at their origin. The removed `stopRcppError()` helper, which rephrased a digest
+  failure as "... is corrupt ... resolved by restarting the R session", is gone with it: a corrupt
+  object to be digested now raises the underlying error directly.
+
 # reproducible 3.2.1.9032
 
 ## Bug fixes
