@@ -2630,8 +2630,8 @@ messageChecksummingAllFiles <- "Checksumming all files in archive"
 ##
 ## The key is the input, not a digest of an unknown result -- unlike the Cache lock, the
 ## file names here are known before the work starts -- so different inputs never wait on
-## each other. `lockFile()` is not reusable for this: it is rooted at CacheStorageDir()
-## and is skipped entirely under the DBI backend, neither of which applies here.
+## each other. It is locked with acquireLockFile(), as the Cache lock is, at a path under the
+## shared root rather than CacheStorageDir().
 ##
 ## Lock files live in a hidden directory at the shared root. Hidden, because Checksums()
 ## lists the stash with `list.files()`, which would otherwise checksum the locks.
@@ -2660,18 +2660,15 @@ messageChecksummingAllFiles <- "Checksumming all files in archive"
                             "_", .robustDigest(key$name), ".lock"))
 }
 
-## Locks held by this process, so a nested prepInputs() for the same input does not wait
-## on itself.
-.stashLocksHeld <- new.env(parent = emptyenv())
-
+## A nested prepInputs() for the same input does not wait on itself: filelock counts a lock
+## this process already holds.
 .withStashLock <- function(key, expr,
                            timeout = getOption("reproducible.stashLockTimeout", 60 * 60 * 1000),
                            verbose = getOption("reproducible.verbose")) {
   lp <- tryCatch(.stashLockPath(key), error = function(e) NULL)
   if (is.null(lp) || !requireNamespace("filelock", quietly = TRUE)) return(force(expr))
-  if (isTRUE(.stashLocksHeld[[lp]])) return(force(expr))
 
-  lck <- tryCatch(filelock::lock(lp, timeout = timeout), error = function(e) NULL)
+  lck <- tryCatch(acquireLockFile(lp, timeout = timeout, verbose = verbose), error = function(e) NULL)
   if (is.null(lck)) {
     ## Never fail or hang a run on the lock: without it the worst case is the duplication
     ## that happened before it existed. This is also what breaks the one deadlock this
@@ -2681,12 +2678,7 @@ messageChecksummingAllFiles <- "Checksumming all files in archive"
                       "; proceeding unsynchronised", verbose = verbose - 1)
     return(force(expr))
   }
-  assign(lp, TRUE, envir = .stashLocksHeld)
-  on.exit({
-    if (exists(lp, envir = .stashLocksHeld, inherits = FALSE))
-      rm(list = lp, envir = .stashLocksHeld)
-    try(filelock::unlock(lck), silent = TRUE)
-  }, add = TRUE)
+  on.exit(try(releaseLockFile(lck), silent = TRUE), add = TRUE)
   force(expr)
 }
 

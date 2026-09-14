@@ -62,8 +62,7 @@ test_that("concurrent consumers of one archive converge on one inode in the shar
   ## could also catch the stash half-written and match a CHECKSUMS.txt row whose file was
   ## not linked in yet, failing with "No archive exists with filename: <stash>/x.zip".
   ##
-  ## Separate R processes, not parallel::mclapply: the defect is a filesystem race between
-  ## processes, and forked children of one session share too much to exercise it.
+  ## Separate R processes (childProcessPreamble()): the defect is a filesystem race between processes.
   src <- checkPath(file.path(tmpdir, "src"), create = TRUE)
   inner <- checkPath(file.path(src, "arc", "arc"), create = TRUE)
   writeBin(as.raw(sample(0:255, 2e5, TRUE)), file.path(inner, "arc.bin"))
@@ -73,23 +72,10 @@ test_that("concurrent consumers of one archive converge on one inode in the shar
   skip_if_not(identical(zipped, 0L), "no zip utility")
 
   shared <- checkPath(file.path(tmpdir, "shared"), create = TRUE)
-  libs <- .libPaths()
   n <- 6L
   script <- file.path(tmpdir, "consumer.R")
-  ## Under devtools/pkgload the installed reproducible is not the one being tested, and a
-  ## fresh child process would silently load the installed one -- so the child loads the
-  ## same source tree the parent did. An installed package has R/reproducible.rdb where a
-  ## source tree has R/*.R; that is the difference, and it needs no extra dependency to
-  ## ask (pkgload is not one of reproducible's).
-  pkgPath <- normalizePath(getNamespaceInfo("reproducible", "path"), mustWork = FALSE)
-  fromSource <- !file.exists(file.path(pkgPath, "R", "reproducible.rdb")) &&
-    file.exists(file.path(pkgPath, "DESCRIPTION"))
-  loadLine <- if (fromSource)
-    sprintf('library(pkgload); load_all("%s", quiet = TRUE)', pkgPath) else
-      'suppressMessages(library(reproducible))'
   writeLines(c(
-    sprintf('.libPaths(%s)', paste0("c(", paste0('"', libs, '"', collapse = ", "), ")")),
-    loadLine,
+    childProcessPreamble(),
     'a <- commandArgs(trailingOnly = TRUE)',
     sprintf('options(reproducible.destinationPathShared = "%s", reproducible.verbose = -1)', shared),
     'dest <- a[1]; dir.create(dest, recursive = TRUE, showWarnings = FALSE)',

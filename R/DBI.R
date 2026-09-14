@@ -439,8 +439,11 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
     DBI::dbClearResult(res)
   } else {
-    dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
-    unlink(dtFile)
+    for (id in cacheId) { # one entry at a time: each lock is released before the next is taken
+      withLockFile(CacheTagLockFile(cachePath, id),
+                   unlink(CacheDBFileSingle(cachePath = cachePath, cacheId = id, cacheSaveFormat = cacheSaveFormat)))
+      unlink(CacheTagLockFile(cachePath, id)) # an entry's lock files go with it, as in clearCache()
+    }
   }
   unlink(CacheStoredFile(cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat, readOnly = TRUE))
 }
@@ -553,13 +556,15 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       #   "tagValue" = tagValue,
       #   "createdDate" = as.character(Sys.time())
       # )
-      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
-      dt2 <- loadFile(dtFile,
-                      cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
-                      drv = drv, conn = conn, verbose = verbose)
-      dt <- rbindlist(list(dt2, dt), fill = TRUE)
-      saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId,
-                             cacheSaveFormat = cacheSaveFormat)
+      withLockFile(CacheTagLockFile(cachePath, cacheId), {
+        dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
+        dt2 <- loadFile(dtFile,
+                        cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                        drv = drv, conn = conn, verbose = verbose)
+        dt <- rbindlist(list(dt2, dt), fill = TRUE)
+        saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId,
+                               cacheSaveFormat = cacheSaveFormat)
+      })
     }
   }
 }
@@ -665,20 +670,22 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
         "tagValue" = tagValue,
         "createdDate" = as.character(Sys.time())
       )
-      dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
-      dt3 <- loadFile(dtFile,
-                      cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
-                      drv = drv, conn = conn, verbose = verbose)
-      tk <- tagKey
-      alreadyThere <- sum(dt3$tagKey == tk & dt3$cacheId == cacheId)
-      if (add && alreadyThere == 0) {
-        dt3 <- rbindlist(list(dt3, dt), fill = TRUE)
-      } else {
-        set(dt3, which(dt3$tagKey == tk & dt3$cacheId == cacheId), "tagValue", dt$tagValue)
-        # dt3[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
-      }
-      saveFilesInCacheFolder(dt3, dtFile, cachePath = cachePath, cacheId = cacheId,
-                             cacheSaveFormat = cacheSaveFormat)
+      withLockFile(CacheTagLockFile(cachePath, cacheId), {
+        dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
+        dt3 <- loadFile(dtFile,
+                        cacheId = cacheId, cachePath = cachePath, # in case it needs swapCacheFormat
+                        drv = drv, conn = conn, verbose = verbose)
+        tk <- tagKey
+        alreadyThere <- sum(dt3$tagKey == tk & dt3$cacheId == cacheId)
+        if (add && alreadyThere == 0) {
+          dt3 <- rbindlist(list(dt3, dt), fill = TRUE)
+        } else {
+          set(dt3, which(dt3$tagKey == tk & dt3$cacheId == cacheId), "tagValue", dt$tagValue)
+          # dt3[tagKey == tk & cacheId == cacheId, tagValue := dt$tagValue]
+        }
+        saveFilesInCacheFolder(dt3, dtFile, cachePath = cachePath, cacheId = cacheId,
+                               cacheSaveFormat = cacheSaveFormat)
+      })
     }
   }
 }
@@ -1285,8 +1292,9 @@ getDrv <- function(drv = NULL) {
 saveDBFileSingle <- function(dt, cachePath, cacheId,
                              cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
   dtFile <- CacheDBFileSingle(cachePath = cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat)
-  saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId,
-                         cacheSaveFormat = cacheSaveFormat)
+  withLockFile(CacheTagLockFile(cachePath, cacheId),
+               saveFilesInCacheFolder(dt, dtFile, cachePath = cachePath, cacheId = cacheId,
+                                      cacheSaveFormat = cacheSaveFormat))
   dtFile
 }
 
