@@ -1,3 +1,16 @@
+# reproducible 3.2.1.9028
+
+## Bug fixes
+
+* On a cache hit, a file-backed `SpatRaster` that had been produced in a temporary
+  directory belonging to another process -- terra's `tempdir` when it is not this
+  session's `tempdir()` (e.g. one scratch disk shared by many workers), or another R
+  session's `Rtmp*` -- is no longer restored to that path just because the file still
+  exists. The file there is named for the process that produced it, so the next clean-up
+  of that process's temp files removed it from under the live object ("[project] cannot
+  create dataset from source"). Such rasters now come back under the cache. A raster in
+  this session's own `tempdir()` is still restored to its original path.
+
 # reproducible 3.2.1.9027
 
 ## Bug fixes
