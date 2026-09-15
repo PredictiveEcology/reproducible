@@ -39,6 +39,12 @@
 
 ## Bug fixes
 
+* `reproducible.showCachePreWarm` now defaults to `interactive()` instead of `TRUE`. The pre-warm
+  only pays off when a later `showCache()` in the same session finds it finished, which is what
+  a person at the console waits for; a batch run (`Rscript`, `R CMD BATCH`, callr or future
+  workers, knitr) rarely does. Set the option or `R_REPRODUCIBLE_SHOWCACHE_PREWARM` to turn it on
+  there. An R session started with `R --interactive`, as the SpaDES.project queue workers are,
+  is interactive, so those workers still switch it off explicitly.
 * On a cache hit, a file-backed `SpatRaster` that had been produced in a temporary
   directory belonging to another process -- terra's `tempdir` when it is not this
   session's `tempdir()` (e.g. one scratch disk shared by many workers), or another R
