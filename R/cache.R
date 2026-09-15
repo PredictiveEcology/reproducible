@@ -105,16 +105,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   if (is.null(cacheId) || is.na(cacheId)) {
     cacheChainDetails <- cacheChainingSetup(.cacheChaining, callList, omitArgs, verbose)
     toDigest <- doDigestPrepare(callList$new_call, cacheChainDetails$omitArgs, .cacheExtra)
-    keyFull <- try2(doDigest(toDigest, callList$.functionName, .objects,
-                            length, algo, quick, classOptions, times$CacheDigestStart,
-                            verbose = verbose))
-    if (is(keyFull, "try-error")) {
-      # This is the bit that indicates that one or more objects in the toDigest
-      #   are corrupted and can't be digested. So, it is the inputs to the
-      #   function that are corrupted: this can't self heal. Needs better user
-      #   error message to give help.
-      stopRcppError(toDigest, .objects, length, algo, quick, classOptions)
-    }
+    keyFull <- doDigest(toDigest, callList$.functionName, .objects,
+                        length, algo, quick, classOptions, times$CacheDigestStart,
+                        verbose = verbose)
     # update with cacheChain info
     keyFull <- cacheChainingStep(keyFull, callList, .cacheChaining, cacheChainDetails, cachePaths)
 
@@ -420,21 +413,6 @@ optionsSetForCache <- function(drv = NULL, conn = NULL, envir = parent.frame(1),
 
 
 
-stopRcppError <- function(toDigest, .objects, length, algo, quick, classOptions) {
-  ooo <- Map(obj = names(toDigest), function(obj)
-    try2(.robustDigest(toDigest[[obj]], .objects = .objects,
-                      length, algo, quick, classOptions), silent = TRUE))
-  ite <- Map(o = ooo, function(o) {
-    is(o, "try-error")
-  })
-  ite <- ite[unlist(ite)]
-  if (length(ite))
-    stop(paste(names(ite), collapse = ", "), " ", isAre(ite), " corrupt. ",
-         "This can usually be resolved by restarting the R session")
-  else
-    stop("One or more objects to be digested for Cache are corrupt. ",
-         "This can usually be resolved by restarting the R session")
-}
 
 
 
@@ -694,7 +672,7 @@ dealWithCacheRecoveryErrors <- function(memoiseFail, outputTestIntegrity, fns, c
     if (!is.null(fns) && length(fns) > 0) {
       fnsInOutputObjects <- intersect(names(fns), outputObjects)
       fns <- fns[fnsInOutputObjects]
-      fnsExistBefore <- try2(file.exists(fns))
+      fnsExistBefore <- file.exists(fns)
       fnsInCache <- file.path(CacheStorageDir(cachePath),
                               basename(.prefix(fns, prefixCacheId(cacheId = cache_key))))
       hardLinkOrCopy(fnsInCache, fns, overwrite = TRUE, verbose = FALSE)

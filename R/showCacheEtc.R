@@ -467,7 +467,7 @@ setMethod(
       objsDT <- list()
       while(is(objsDT, "list")) {
         # filOutside <- character()
-        objsDT <- tryCatch2(
+        objsDT <- {
           if (!is.null(cacheId)) {
             objsDT <- rbindlist(fill = TRUE, lapply(cacheId, function(fil) {
               showCacheFast(fil, cachePath = x,
@@ -590,15 +590,8 @@ setMethod(
             scEnv$sc <- ret
             ret
 
-          }# , error = function(e) {
-          #   cacheId <- gsub(paste0(CacheDBFileSingleExt(), "|", cacheSaveFormat), "",
-          #                   basename(file))
-          #   filesToRm <- dir(dirname(file), pattern = cacheId, full.names = TRUE)
-          #   messageCache("The database file was corrupt; deleting Cache entry for ", cacheId,
-          #                   verbose = getOption("reproducible.verbose"))
-          #   unlink(filesToRm)
-          # }
-        )
+          }
+        }
       }
       if (NROW(objsDT) == 0) {
         return(.emptyCacheTable)
