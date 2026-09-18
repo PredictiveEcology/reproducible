@@ -1,3 +1,17 @@
+# reproducible 3.2.1.9037
+
+## New features
+
+* `Cache(useCache = "always")` caches a call even when `options(reproducible.useCache = FALSE)` --
+  which is what `SpaDES.core`'s `spades.useCache = "eventsOnly"` sets for a run -- and even when it
+  is nested inside a `Cache()` call whose `useCache` is `FALSE`. Otherwise it is `TRUE`: the same
+  key, hit or miss as usual. It is for a package's own calls whose repetition is known to be
+  expensive, such as `LandR`'s forest-land inputs, which `fireSense` prepared once per dataYear.
+  There is no off switch; delete the entry to recompute. It does not transfer: a `Cache()` nested
+  inside an `"always"` call keeps its own `useCache`, and an inner `TRUE` inherits `TRUE`. Before,
+  `"always"` (like any unrecognised string) happened to behave much the same, by falling through
+  to `TRUE`, but nested calls inherited the string.
+
 # reproducible 3.2.1.9036
 
 ## Enhancements

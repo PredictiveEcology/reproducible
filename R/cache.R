@@ -326,7 +326,8 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     .pkgEnv$.reproEnv2 <- new.env(parent = asNamespace("reproducible"))
     .pkgEnv$.reproEnv2$userTags <- userTags
     .pkgEnv$.reproEnv2$nestLevel <- 1
-    .pkgEnv$.reproEnv2$useCache <- useCache
+    ## what nested calls inherit: "always" is this call's own setting and does not transfer
+    .pkgEnv$.reproEnv2$useCache <- if (isUseCacheAlways(useCache)) TRUE else useCache
     on.exit2(rm(list = ".reproEnv2", envir = .pkgEnv), envir = envir)
   } else {
     userTagsOld <- .pkgEnv$.reproEnv2$userTags
@@ -362,6 +363,9 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
 
 
 useCacheFromNested <- function(useCache) {
+  ## "always" overrides both options(reproducible.useCache) and an outer Cache()'s useCache
+  if (isUseCacheAlways(useCache))
+    return(TRUE)
   isNested <- isTRUE(.pkgEnv$.reproEnv2$nestLevel > 1)
   if (isNested && isTRUE(useCache))
     useCache <- .pkgEnv$.reproEnv2$useCache
@@ -390,6 +394,11 @@ defunct <- function(argNames) {
                        "cacheRepo", "digestPathContent")
 
 
+
+## exact match: "always" must not be reached by abbreviation, nor collide with "over"/"dev"
+isUseCacheAlways <- function(useCache) {
+  identical(useCache, "always")
+}
 
 isDevMode <- function(useCache, userTags) {
   isTRUE(any(pmatch(table = useCache, "dev") %in% 1)) && !is.null(userTags)
@@ -876,6 +885,15 @@ utils::globalVariables(c(
 #' default to the behaviour of `useCache = TRUE` with a message. This means
 #' that `"devMode"` is most useful if used from the start of a project.
 #'
+#' If `useCache = "always"`, the call is cached even when `options(reproducible.useCache = FALSE)`
+#' (as `SpaDES.core` sets it under `options(spades.useCache = "eventsOnly")`) and even when it is
+#' nested inside a `Cache()` call whose `useCache` is `FALSE`. Otherwise it behaves exactly as
+#' `TRUE`: the same key, so it hits entries made with `TRUE` and vice versa. It is meant for a
+#' package's own calls whose repetition is known to be expensive. There is no option to turn it
+#' off; to recompute, delete the entry (e.g. [clearCache()]). It applies to that call only: a
+#' `Cache()` nested inside it keeps its own `useCache`, and an inner `TRUE` inherits `TRUE`, not
+#' `"always"`. Spelled out in full; it is not matched by abbreviation.
+#'
 #' @section `useCloud`:
 #' This is experimental and there are many conditions under which this is known
 #' to not work correctly. This is a way to store all or some of the local Cache in the cloud.
@@ -1043,7 +1061,7 @@ utils::globalVariables(c(
 #'        where `Cache` is not correctly detecting unchanged inputs. This will guarantee
 #'        the object will be identical each time; this may be useful in operational code.
 #'
-#' @param useCache Logical, numeric or `"overwrite"` or `"devMode"`. See details.
+#' @param useCache Logical, numeric or `"overwrite"`, `"devMode"` or `"always"`. See details.
 #'
 #' @param useCloud Logical (`TRUE` / `FALSE` / `NULL`) or one of `"pull"` /
 #'   `"push"`. See Details.

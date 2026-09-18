@@ -207,7 +207,7 @@ the object will be identical each time; this may be useful in operational code.}
 \code{getOption("reproducible.cacheSaveFormat")}. \code{qs} may be faster but appears to have
 narrower range of conditions that work; \code{rds} is safer, and may be slower.}
 
-\item{useCache}{Logical, numeric or \code{"overwrite"} or \code{"devMode"}. See details.}
+\item{useCache}{Logical, numeric or \code{"overwrite"}, \code{"devMode"} or \code{"always"}. See details.}
 
 \item{useCloud}{Logical (\code{TRUE} / \code{FALSE} / \code{NULL}) or one of \code{"pull"} /
 \code{"push"}. See Details.}
@@ -436,6 +436,15 @@ This should be used with caution as it is still experimental. Currently, if
 \code{userTags} are not unique to a single entry in the cachePath, it will
 default to the behaviour of \code{useCache = TRUE} with a message. This means
 that \code{"devMode"} is most useful if used from the start of a project.
+
+If \code{useCache = "always"}, the call is cached even when \code{options(reproducible.useCache = FALSE)}
+(as \code{SpaDES.core} sets it under \code{options(spades.useCache = "eventsOnly")}) and even when it is
+nested inside a \code{Cache()} call whose \code{useCache} is \code{FALSE}. Otherwise it behaves exactly as
+\code{TRUE}: the same key, so it hits entries made with \code{TRUE} and vice versa. It is meant for a
+package's own calls whose repetition is known to be expensive. There is no option to turn it
+off; to recompute, delete the entry (e.g. \code{\link[=clearCache]{clearCache()}}). It applies to that call only: a
+\code{Cache()} nested inside it keeps its own \code{useCache}, and an inner \code{TRUE} inherits \code{TRUE}, not
+\code{"always"}. Spelled out in full; it is not matched by abbreviation.
 }
 
 \section{\code{useCloud}}{
