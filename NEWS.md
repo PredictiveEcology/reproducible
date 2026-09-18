@@ -1,3 +1,12 @@
+# reproducible 3.2.1.9036
+
+## Enhancements
+
+* The message "useCache is FALSE; skipping Cache on function ..." is now shown on the first skipped
+  `Cache()` call in a session and then once per 50 skipped calls, and says so. With e.g. SpaDES.core's
+  `options(spades.useCache = "eventsOnly")` every module-internal `Cache()` call is skipped, and the
+  message printed hundreds of times per run, burying other output. `verbose >= 2` still shows every one.
+
 # reproducible 3.2.1.9034
 
 ## Internal

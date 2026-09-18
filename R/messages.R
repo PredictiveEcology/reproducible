@@ -483,11 +483,19 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 
 
 .message$useCacheIsFALSE <- function(nestLevel, functionName, useCache, verbose) {
+  ## With e.g. SpaDES.core's spades.useCache = "eventsOnly", every Cache() call is skipped
+  ## and this would print hundreds of times per run. Show it on the 1st skipped call and
+  ## every 50th after (one session-wide count, in .pkgEnv); verbose >= 2 shows every one.
+  n <- .pkgEnv$useCacheFALSECount <- .pkgEnv$useCacheFALSECount + 1L
+  every <- 50L
+  showAll <- isTRUE(verbose >= 2)
+  if (!showAll && (n - 1L) %% every != 0L) return(invisible())
   nestedLev <- max(0, as.numeric(nestLevel)) ## nestedLev >= 0
   spacing <- paste(collapse = "", rep("  ", nestedLev))
   messageCache(spacing, "useCache is ", useCache,
                "; skipping Cache on function ", functionName,
                if (nestedLev > -1) paste0(" (currently running nested Cache level ", nestedLev + 1, ")"),
+               if (!showAll) paste0(" (this message is shown once per ", every, " skipped calls)"),
                verbose = verbose
   )
 }
