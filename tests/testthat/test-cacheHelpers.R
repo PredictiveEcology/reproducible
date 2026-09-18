@@ -69,6 +69,7 @@ test_that("test miscellaneous unit tests cache-helpers", {
   b1 <- nextNumericName(b)
 
   ## expect_true(grepl("_2.pdf", b1)) ## TODO: this number is not consistently 2 or 3
+  .pkgEnv$useCacheFALSECount <- 0L # message is shown on the 1st skipped call, then every 50th
   aMess <- capture_messages({
     a <- Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache)
   })
@@ -76,8 +77,8 @@ test_that("test miscellaneous unit tests cache-helpers", {
     b <- Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache)
   })
   expect_false(identical(a, b))
-  expect_true(grepl("skipping Cache", aMess))
-  expect_true(grepl("skipping Cache", bMess))
+  expect_true(any(grepl("skipping Cache", aMess)))
+  expect_false(any(grepl("skipping Cache", bMess)))
 
   ## getOption("reproducible.useMemoise" = FALSE)
   opt22 <- options("reproducible.useMemoise" = FALSE)
@@ -416,4 +417,30 @@ test_that("CacheIsACache does not rename another cachePath's table (DBI)", {
   expect_identical(DBI::dbListTables(connMoved), tableA) # stale name, pre-repair
   suppressWarnings(CacheIsACache(cpMoved, drv = drv, conn = connMoved))
   expect_identical(DBI::dbListTables(connMoved), CacheDBTableName(cpMoved, drv = drv))
+})
+
+test_that("useCache = FALSE message is shown once per 50 skipped calls", {
+  testInit(verbose = 1)
+  ## In SpaDES runs with spades.useCache = "eventsOnly" every module-internal
+  ## Cache() call is skipped, and the message printed on each one -- hundreds of
+  ## times per run. It is now shown on the 1st skipped call and every 50th after.
+  .pkgEnv$useCacheFALSECount <- 0L
+  mess <- character()
+  for (i in 1:100) {
+    mess <- c(mess, capture_messages(Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache)))
+  }
+  skipMess <- grep("skipping Cache", mess, value = TRUE)
+  expect_length(skipMess, 2) # calls 1 and 51
+  expect_true(all(grepl("shown once per 50 skipped calls", skipMess)))
+
+  ## verbose >= 2 shows every one, without the (then untrue) note
+  .pkgEnv$useCacheFALSECount <- 0L
+  mess <- character()
+  for (i in 1:3) {
+    mess <- c(mess, capture_messages(Cache(rnorm, 1, useCache = FALSE, cachePath = tmpCache,
+                                           verbose = 2)))
+  }
+  skipMess <- grep("skipping Cache", mess, value = TRUE)
+  expect_length(skipMess, 3)
+  expect_false(any(grepl("shown once per 50", skipMess)))
 })

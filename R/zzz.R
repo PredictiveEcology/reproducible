@@ -10,6 +10,7 @@
 #' @rdname pkgEnv
 .pkgEnv <- new.env(parent = emptyenv())
 .pkgEnv$testCacheCounter <- 1L
+.pkgEnv$useCacheFALSECount <- 0L # see .message$useCacheIsFALSE
 
 .onLoad <- function(libname, pkgname) {
   ## set options using the approach used by devtools
