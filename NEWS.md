@@ -1,3 +1,16 @@
+# reproducible 3.2.1.9038
+
+## Bug fixes
+
+* A `Cache()` call nested inside another is now counted as nested whether or not any `userTags` are
+  present. The nesting level was only incremented when some `userTags` existed, and a non-skipped
+  outer `Cache()` supplies one (`outerFunction:<name>`) but a skipped one does not. So under an outer
+  `Cache(useCache = FALSE)` or `useCache = 0` without `userTags`, an inner `Cache(useCache = TRUE)`
+  was cached, while the same call with `userTags` on the outer call was skipped; numeric `useCache`
+  levels were miscounted the same way. Both now follow the documented rule: a nested `TRUE` takes the
+  outermost call's `useCache`. Behaviour change: code that relied on an untagged
+  `Cache(useCache = FALSE)` leaving inner `Cache()` calls on will now see them skipped.
+
 # reproducible 3.2.1.9036
 
 ## Enhancements

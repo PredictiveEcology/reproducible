@@ -329,6 +329,11 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
     .pkgEnv$.reproEnv2$useCache <- useCache
     on.exit2(rm(list = ".reproEnv2", envir = .pkgEnv), envir = envir)
   } else {
+    ## every nested Cache is one level deeper, whether or not any userTags are present
+    nestLevelOld <- .pkgEnv$.reproEnv2$nestLevel
+    .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld + 1
+    on.exit2(.pkgEnv$.reproEnv2$nestLevel <- nestLevelOld, envir = envir)
+
     userTagsOld <- .pkgEnv$.reproEnv2$userTags
     allUT1 <- c(userTagsOld, userTags)
 
@@ -349,12 +354,7 @@ setupCacheNesting <- function(userTags, useCache, envir = parent.frame(1)) {
 
       userTags <- allUT2
       .pkgEnv$.reproEnv2$userTags <- userTags
-      nestLevelOld <- .pkgEnv$.reproEnv2$nestLevel
-      .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld + 1
-      on.exit2({
-        .pkgEnv$.reproEnv2$nestLevel <- nestLevelOld
-        .pkgEnv$.reproEnv2$userTags <- userTagsOld
-      }, envir = envir)
+      on.exit2(.pkgEnv$.reproEnv2$userTags <- userTagsOld, envir = envir)
     }
   }
   userTags
