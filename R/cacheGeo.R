@@ -3,7 +3,12 @@ utils::globalVariables(c("X", "Y"))
 checkNameHasGeom <- function(existingObj) {
   hasGeomNamedCol <- names(existingObj) %in% "geom"
   if (any(hasGeomNamedCol)) {
-    names(existingObj)[hasGeomNamedCol] <- "geometry"
+    if (is(existingObj, "sf")) {
+      # renaming the column alone leaves attr "sf_column" pointing at "geom"
+      sf::st_geometry(existingObj) <- "geometry"
+    } else {
+      names(existingObj)[hasGeomNamedCol] <- "geometry"
+    }
   }
   existingObj
 }
@@ -276,6 +281,8 @@ CacheGeo <- function(targetFile = NULL,
         clearCache(cacheId = cacheId(existingObj), ask = FALSE)
     }
 
+    # A .gpkg names its geometry column "geom"; the append below uses `$geometry`
+    existingObj <- checkNameHasGeom(existingObj)
     existingObjOrig <- existingObj
 
     cn <- colnames(existingObj)
