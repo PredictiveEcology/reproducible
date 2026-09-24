@@ -1,3 +1,12 @@
+# reproducible 3.2.1.9041
+
+## Bug fixes
+
+* `prepInputs()` no longer fetches the sf "guessing a driver" web page when the caller supplied both the file
+  and `fun`. For a file extension it did not know, it looked the extension up (with rvest, over the network)
+  even though nothing was left to guess, so a call such as fireSenseUtils' lightning data (`.txt` files read by
+  an explicit `fun`) made rvest look required.
+
 # reproducible 3.2.1.9039
 
 ## Bug fixes

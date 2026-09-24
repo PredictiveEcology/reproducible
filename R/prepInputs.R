@@ -821,7 +821,10 @@ extractFromArchive <- function(archive,
     funPoss <- lapply(fileExt, function(fe) feKnown[startsWith(prefix = feKnown[[1]], fe), ])
     funPoss <- do.call(rbind, funPoss)
 
-    if (NROW(funPoss) == 0 && length(possibleFiles)) {
+    ## The sf web page only helps to guess `fun`, or to pick a file sf can read; with both
+    ## supplied there is nothing to guess, so do not fetch it (it needs rvest and the network).
+    nothingToGuess <- !is.null(fun) && length(targetFilePath) > 0
+    if (NROW(funPoss) == 0 && length(possibleFiles) && !nothingToGuess) {
       funPoss <- checkSFWebPage(funPoss, fileExt, feKnown, verbose)
     }
 
