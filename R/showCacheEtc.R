@@ -229,7 +229,11 @@ setMethod(
       filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
 
       # Way faster to gsub for the cacheId, rather than greps
-      cacheIdsOfTheseFilenames <- gsub("^.*/([0-9a-zA-Z]+)\\..*$", "\\1", filesToRemove3)
+      ## An entry's files are `<cacheId>.<ext>` and its file-backed copies `<cacheId>_<name>`
+      ##   (filenameInCacheWPrefix()), so the id ends at the first `.` or `_`. Matching only `.` (since the
+      ##   speedup in 3e5b888b) left every `<cacheId>_*` file behind whenever the entry did not also tag it,
+      ##   e.g. file-backed objects inside a cached simList.
+      cacheIdsOfTheseFilenames <- gsub("^.*/([0-9a-zA-Z]+)[._].*$", "\\1", filesToRemove3)
       cacheIdsToRm <- unique(objsDT[["cacheId"]])
       indicesToRm <- which(cacheIdsOfTheseFilenames %in% cacheIdsToRm)
       filesToRemove4 <- filesToRemove3[indicesToRm]
