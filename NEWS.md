@@ -6,6 +6,15 @@
   and `fun`. For a file extension it did not know, it looked the extension up (with rvest, over the network)
   even though nothing was left to guess, so a call such as fireSenseUtils' lightning data (`.txt` files read by
   an explicit `fun`) made rvest look required.
+  
+# reproducible 3.2.1.9040
+
+## Bug fixes
+
+* `clearCache()` removes an entry's file-backed files again. They are stored as `<cacheId>_<name>`, but since the
+  speedup in 3e5b888b (2025-11-03) `clearCache()` recognised an entry's files only as `<cacheId>.<ext>`. Entries that
+  also tag their files (a plain `Cache()` call) were still cleaned through the tags; others, such as a cached SpaDES
+  `simList`, left their rasters behind.
 
 # reproducible 3.2.1.9039
 
