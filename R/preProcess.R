@@ -1907,11 +1907,17 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       ## file.link() ERRORS on zero-length input ("no files to link from") rather than
       ## returning logical(0), so a set that is all directories -- or, now, all already
       ## present -- must not reach it.
-      result <- if (!any(linkable)) TRUE else captureWarningsToAttr(
+      linked <- if (!any(linkable)) logical(0) else captureWarningsToAttr(
         file.link(from[linkable], to[linkable])
       )
-      warns <- attr(result, "warning")
-      attr(result, "warning") <- NULL
+      warns <- attr(linked, "warning")
+      ## `result` must be one element per `from`/`to`: everything below indexes `from[!result]`.
+      ## It used to be only as long as the linkable subset, so when links failed the index was
+      ## recycled over ALL files and file.copy() also received pairs that were kept (`keepTo`).
+      ## A kept target that is a hard link of its source is then copied onto itself, and
+      ## file.copy() truncates both to 0 bytes (FireSense 2026-09-23: a cached terra raster).
+      result <- rep(TRUE, length(from))
+      result[linkable] <- as.logical(linked)
 
       if (isTRUE(all(result))) {
         messagePreProcess("Hardlinked ", hardlinkOrSymlinkMessagePrefix, ":", verbose = verbose)

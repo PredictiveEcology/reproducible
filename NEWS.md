@@ -1,3 +1,14 @@
+# reproducible 3.2.1.9039
+
+## Bug fixes
+
+* `linkOrCopy()` (used by `Cache()` to store file-backed objects) no longer empties a file that is already
+  in place. When some files could not be hard-linked (e.g., on another filesystem), the copy fallback also
+  received a file that was being kept because its destination already held it. If that destination was a
+  hard link of the source, `file.copy()` truncated both to 0 bytes: a cached terra raster and its cache copy
+  were emptied, and the job then failed with "[rast] cannot open this file as a SpatRaster". The link
+  results were one element shorter than the file list and were recycled over it.
+
 # reproducible 3.2.1.9038
 
 ## Bug fixes

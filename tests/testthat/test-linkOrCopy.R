@@ -190,3 +190,35 @@ test_that("linkOrCopy tolerates self-referential from/to pairs, alone and mixed"
   expect_true(isTRUE(all(res3)))
   expect_identical(readLines(b, warn = FALSE), "C")
 })
+
+test_that("linkOrCopy does not copy a kept hard link onto itself when other links fail", {
+  testInit()
+
+  ## Regression (FireSense, 2026-09-23): Cache saved 13 files; 12 could not be hard-linked (they
+  ## were on another filesystem), and the 13th -- a terra temp raster -- was already in the cache
+  ## as a hard link of itself. `result` was only as long as the linkable subset, so the copy
+  ## fallback recycled it over all 13 files, and file.copy() onto the hard link truncated the
+  ## raster and its cached copy to 0 bytes.
+  other <- "/dev/shm"
+  skip_if_not(dir.exists(other) && file.access(other, 2) == 0, "no /dev/shm to put files on another filesystem")
+  dOther <- file.path(other, paste0("reproducibleTest_", rndstr(1, 8)))
+  dir.create(dOther)
+  withr::defer(unlink(dOther, recursive = TRUE))
+  skip_if(identical(fs::file_info(dOther)$device_id, fs::file_info(tmpdir)$device_id),
+          "tempdir and /dev/shm are on the same filesystem")
+
+  far <- file.path(dOther, c("x.tif", "y.tif"))            # cannot be hard-linked into tmpdir
+  for (f in far) writeBin(as.raw(1:200), f)
+  near <- file.path(tmpdir, "spat_temp.tif")                # same filesystem as the cache
+  writeBin(as.raw(rep(7L, 5000)), near)
+  cacheDir <- file.path(tmpdir, "cacheOutputs")
+  dir.create(cacheDir)
+  to <- file.path(cacheDir, basename(c(far, near)))
+  file.link(near, to[3])                                    # already cached, as a hard link
+
+  suppressMessages(suppressWarnings(linkOrCopy(c(far, near), to, symlink = FALSE, verbose = 0)))
+
+  expect_equal(file.size(near), 5000)
+  expect_equal(file.size(to[3]), 5000)
+  expect_equal(file.size(to[1:2]), c(200, 200))             # the others were still copied
+})
