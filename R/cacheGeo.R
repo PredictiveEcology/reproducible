@@ -3,7 +3,12 @@ utils::globalVariables(c("X", "Y"))
 checkNameHasGeom <- function(existingObj) {
   hasGeomNamedCol <- names(existingObj) %in% "geom"
   if (any(hasGeomNamedCol)) {
-    names(existingObj)[hasGeomNamedCol] <- "geometry"
+    if (is(existingObj, "sf")) {
+      # renaming the column alone leaves attr "sf_column" pointing at "geom"
+      sf::st_geometry(existingObj) <- "geometry"
+    } else {
+      names(existingObj)[hasGeomNamedCol] <- "geometry"
+    }
   }
   existingObj
 }
@@ -252,6 +257,10 @@ CacheGeo <- function(targetFile = NULL,
   }
 
   if (isTRUE(objExisted)) {
+    ## A local file is keyed on its content, as a cloud file is on Drive's md5: the Path
+    ## argument digests only the file's name, so a changed ledger would return the first read.
+    if (is.null(cacheExtra) && file.exists(targetFileWithDP))
+      cacheExtra <- digest::digest(file = targetFileWithDP)
 
     aa <- quote(prepInputs(
       targetFile = asPath(targetFile),
@@ -264,13 +273,16 @@ CacheGeo <- function(targetFile = NULL,
     for (attempt in 1:2) {
       # There were cases where the Cache recovered, but the file was not there.
       existingObj <- eval(aa) |>
-        Cache(.cacheExtra = cacheExtra, .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra is the md5Checksum on GDrive
+        Cache(.cacheExtra = cacheExtra, useCache = useCache,
+              .functionName = paste0("prepInputs_", basename(targetFile))) # cacheExtra: the file's md5 (on Drive, or local)
       if (file.exists(targetFileWithDP))
         break
-      else
+      else if (!is.null(cacheId(existingObj))) # NULL (not cached) would clear the whole cache
         clearCache(cacheId = cacheId(existingObj), ask = FALSE)
     }
 
+    # A .gpkg names its geometry column "geom"; the append below uses `$geometry`
+    existingObj <- checkNameHasGeom(existingObj)
     existingObjOrig <- existingObj
 
     cn <- colnames(existingObj)

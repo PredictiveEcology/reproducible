@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9042
+
+## Bug fixes
+
+* `CacheGeo()` reads a local `targetFile` again when its content has changed. The read was cached on the
+  file's name alone, so after another job appended to the file, every later call returned the first
+  version. It is now keyed on the file's md5, as a Google Drive file already was. `useCache = FALSE` now
+  also reaches that cached read; before, only `options(reproducible.useCache = FALSE)` switched it off.
+* `CacheGeo()` can update a `.gpkg` `targetFile`. A `.gpkg` names its geometry column `geom`, and the append
+  step used `$geometry`, so it failed; `checkNameHasGeom()` also broke the `sf` object when renaming the column.
+  Before the fix above, the test never reached this: the `.gpkg` read returned the cached `.rds` read instead.
+
 # reproducible 3.2.1.9041
 
 ## Bug fixes
