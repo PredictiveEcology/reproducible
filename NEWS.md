@@ -1,3 +1,12 @@
+# reproducible 3.2.1.9042
+
+## Bug fixes
+
+* `CacheGeo()` reads a local `targetFile` again when its content has changed. The read was cached on the
+  file's name alone, so after another job appended to the file, every later call returned the first
+  version. It is now keyed on the file's md5, as a Google Drive file already was. `useCache = FALSE` now
+  also reaches that cached read; before, only `options(reproducible.useCache = FALSE)` switched it off.
+
 # reproducible 3.2.1.9041
 
 ## Bug fixes
