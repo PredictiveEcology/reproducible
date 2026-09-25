@@ -440,8 +440,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
       # output <- get(cache_key, envir = memoiseEnv(cachePath))
-      output <- .unwrap(get(cache_key, envir = memoiseEnv(cachePath)), cacheId = cache_key, cachePath = cachePath,
-                        drv = drv, conn = conn)
+      output <- memoiseGet(cache_key, cachePath, drv = drv, conn = conn)
       # need to update the individual files in file-backed objects from the cache; can't use memoise
 
       # Some objects, especially Rcpp objects can get stale; rerun if this is the case; the test with subsetting 1st element

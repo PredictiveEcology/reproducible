@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9043
+
+## Bug fixes
+
+* With `reproducible.useMemoise = TRUE`, `loadFromCache()` and `Cache()` store different forms of an
+  object in the shared memoise environment, and each read only its own. A `Cache()` hit after
+  `loadFromCache()` returned a `simList` as a plain `list`; `loadFromCache()` after a `Cache()` hit
+  returned a `SpatRaster` still packed. Both now read through one function, `memoiseGet()`, which
+  handles either form. SpaDES.core's `cacheChaining` jump calls `loadFromCache()` between `Cache()` hits.
+* `saveToCache()` no longer memoises. `Cache()` overwrote that entry straight away, so it was an
+  unwrap on every cache miss for nothing.
+
 # reproducible 3.2.1.9042
 
 ## Bug fixes

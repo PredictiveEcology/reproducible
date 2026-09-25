@@ -186,11 +186,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId,
                                  cacheSaveFormat = cacheSaveFormat)
   }
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
-    obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
-    obj2 <- makeMemoisable(obj)
-    assign(cacheId, obj2, envir = memoiseEnv(cachePath))
-  }
 
   fsChar <- as.character(fs)
 
@@ -269,8 +264,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   # if (isTRUE(getOption("reproducible.useMemoise"))) {
   #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
   if (isTRUE(isMemoised)) {
-    obj <- get(cacheId, envir = memoiseEnv(cachePath))
-    obj <- unmakeMemoisable(obj)
+    obj <- memoiseGet(cacheId, cachePath, drv = drv, conn = conn)
   }
   # }
   if (cacheSaveFormat %in% c(.qsFormat))
@@ -1368,6 +1362,15 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
     memEnv <- .pkgEnv[[cachePath]]
   }
   memEnv
+}
+
+## The one read of a memoised entry. Entries come in two forms: loadFromCache() stores
+## makeMemoisable() of the unwrapped object; Cache() stores its output, or the wrapped object
+## it just read from disk. Undo both, so either caller can read either form.
+memoiseGet <- function(cacheId, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+                       conn = getOption("reproducible.conn", NULL)) {
+  .unwrap(unmakeMemoisable(get(cacheId, envir = memoiseEnv(cachePath))),
+          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
 }
 
 
