@@ -2,6 +2,9 @@
 
 ## Bug fixes
 
+* `.wrap()` no longer requires terra to cache a `data.table`: it shared the terra-only branch that
+  deep-copies a `data.table`, so `Cache()` of a `data.table` failed where terra is not installed.
+
 * With `reproducible.useMemoise = TRUE`, `Cache()` memoised the object it returned, not a copy, on a
   first run. Changing the result in place (e.g. a `data.table` with `set()` or `:=`, or a later event
   changing a `simList`) changed what the next memoised hit returned. Every memoise write now goes through
