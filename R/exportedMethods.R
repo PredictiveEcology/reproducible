@@ -1176,7 +1176,8 @@ unmakeMemoisable.default <- function(x) {
   }
 
   if (any(inherits(obj, c("SpatVector", "SpatRaster", "SpatExtent", "data.table")))) {
-    if (!requireNamespace("terra", quietly = TRUE)) {
+    ## a data.table only needs its deep copy below, not terra
+    if (!is(obj, "data.table") && !requireNamespace("terra", quietly = TRUE)) {
       stop("Please install terra package")
     }
     # attrs <- attr(obj, ".Cache")

@@ -356,7 +356,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, callList, # 
 
   # Memoize the outputFromEvaluate by saving it in RAM
   if (isTRUE(useMemoise)) {
-    assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
+    memoiseAssign(detailed_key$key, outputFromEvaluate, cachePaths[[1]])
   }
 
 
@@ -440,8 +440,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
     memoiseFail <- FALSE
     if (fromMemoise && !rerun) {
       # output <- get(cache_key, envir = memoiseEnv(cachePath))
-      output <- .unwrap(get(cache_key, envir = memoiseEnv(cachePath)), cacheId = cache_key, cachePath = cachePath,
-                        drv = drv, conn = conn)
+      output <- memoiseGet(cache_key, cachePath, drv = drv, conn = conn)
       # need to update the individual files in file-backed objects from the cache; can't use memoise
 
       # Some objects, especially Rcpp objects can get stale; rerun if this is the case; the test with subsetting 1st element
@@ -525,7 +524,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       if (cache_key_in_memoiseEnv %in% FALSE) {
         # assign(cache_key, .unwrap(obj, cachePath = cachePath, cacheId = cache_key),
         #        envir = memoiseEnv(cachePath))
-        assign(cache_key, obj, envir = memoiseEnv(cachePath)) # try without .unwrap in memoiseEnv
+        memoiseAssign(cache_key, obj, cachePath) # try without .unwrap in memoiseEnv
       }
     }
 

@@ -1,3 +1,27 @@
+# reproducible 3.2.1.9044
+
+## Bug fixes
+
+* `.wrap()` no longer requires terra to cache a `data.table`: it shared the terra-only branch that
+  deep-copies a `data.table`, so `Cache()` of a `data.table` failed where terra is not installed.
+
+* With `reproducible.useMemoise = TRUE`, `Cache()` memoised the object it returned, not a copy, on a
+  first run. Changing the result in place (e.g. a `data.table` with `set()` or `:=`, or a later event
+  changing a `simList`) changed what the next memoised hit returned. Every memoise write now goes through
+  `memoiseAssign()`, which stores `makeMemoisable()` of the object.
+
+# reproducible 3.2.1.9043
+
+## Bug fixes
+
+* With `reproducible.useMemoise = TRUE`, `loadFromCache()` and `Cache()` store different forms of an
+  object in the shared memoise environment, and each read only its own. A `Cache()` hit after
+  `loadFromCache()` returned a `simList` as a plain `list`; `loadFromCache()` after a `Cache()` hit
+  returned a `SpatRaster` still packed. Both now read through one function, `memoiseGet()`, which
+  handles either form. SpaDES.core's `cacheChaining` jump calls `loadFromCache()` between `Cache()` hits.
+* `saveToCache()` no longer memoises. `Cache()` overwrote that entry straight away, so it was an
+  unwrap on every cache miss for nothing.
+
 # reproducible 3.2.1.9042
 
 ## Bug fixes

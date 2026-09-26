@@ -186,11 +186,6 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
     fs <- saveFilesInCacheFolder(cachePath = cachePath, obj, fts, cacheId = cacheId,
                                  cacheSaveFormat = cacheSaveFormat)
   }
-  if (isTRUE(getOption("reproducible.useMemoise"))) {
-    obj <- .unwrap(obj, cachePath, cacheId, drv, conn) # This takes time, but whether it happens now or later, same
-    obj2 <- makeMemoisable(obj)
-    assign(cacheId, obj2, envir = memoiseEnv(cachePath))
-  }
 
   fsChar <- as.character(fs)
 
@@ -269,8 +264,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
   # if (isTRUE(getOption("reproducible.useMemoise"))) {
   #   isMemoised <- exists(cacheId, envir = memoiseEnv(cachePath))
   if (isTRUE(isMemoised)) {
-    obj <- get(cacheId, envir = memoiseEnv(cachePath))
-    obj <- unmakeMemoisable(obj)
+    obj <- memoiseGet(cacheId, cachePath, drv = drv, conn = conn)
   }
   # }
   if (cacheSaveFormat %in% c(.qsFormat))
@@ -352,8 +346,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
   # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
-    obj2 <- makeMemoisable(obj)
-    assign(cacheId, obj2, envir = memoiseEnv(cachePath))
+    memoiseAssign(cacheId, obj, cachePath)
   }
 
   if (verbose > 3) {
@@ -1368,6 +1361,20 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
     memEnv <- .pkgEnv[[cachePath]]
   }
   memEnv
+}
+
+## The one write of a memoised entry. makeMemoisable() takes a snapshot, so a caller that modifies
+## its result by reference (a data.table, a simList's environment) cannot change the memoised copy.
+## `obj` may be wrapped (as read from disk) or not; memoiseGet() unwraps either.
+memoiseAssign <- function(cacheId, obj, cachePath) {
+  assign(cacheId, makeMemoisable(obj), envir = memoiseEnv(cachePath))
+}
+
+## The one read of a memoised entry.
+memoiseGet <- function(cacheId, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+                       conn = getOption("reproducible.conn", NULL)) {
+  .unwrap(unmakeMemoisable(get(cacheId, envir = memoiseEnv(cachePath))),
+          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
 }
 
 
