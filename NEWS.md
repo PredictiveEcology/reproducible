@@ -1,3 +1,12 @@
+# reproducible 3.2.1.9044
+
+## Bug fixes
+
+* With `reproducible.useMemoise = TRUE`, `Cache()` memoised the object it returned, not a copy, on a
+  first run. Changing the result in place (e.g. a `data.table` with `set()` or `:=`, or a later event
+  changing a `simList`) changed what the next memoised hit returned. Every memoise write now goes through
+  `memoiseAssign()`, which stores `makeMemoisable()` of the object.
+
 # reproducible 3.2.1.9043
 
 ## Bug fixes

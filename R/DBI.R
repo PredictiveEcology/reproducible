@@ -346,8 +346,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
   # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
-    obj2 <- makeMemoisable(obj)
-    assign(cacheId, obj2, envir = memoiseEnv(cachePath))
+    memoiseAssign(cacheId, obj, cachePath)
   }
 
   if (verbose > 3) {
@@ -1364,9 +1363,14 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
   memEnv
 }
 
-## The one read of a memoised entry. Entries come in two forms: loadFromCache() stores
-## makeMemoisable() of the unwrapped object; Cache() stores its output, or the wrapped object
-## it just read from disk. Undo both, so either caller can read either form.
+## The one write of a memoised entry. makeMemoisable() takes a snapshot, so a caller that modifies
+## its result by reference (a data.table, a simList's environment) cannot change the memoised copy.
+## `obj` may be wrapped (as read from disk) or not; memoiseGet() unwraps either.
+memoiseAssign <- function(cacheId, obj, cachePath) {
+  assign(cacheId, makeMemoisable(obj), envir = memoiseEnv(cachePath))
+}
+
+## The one read of a memoised entry.
 memoiseGet <- function(cacheId, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL)) {
   .unwrap(unmakeMemoisable(get(cacheId, envir = memoiseEnv(cachePath))),

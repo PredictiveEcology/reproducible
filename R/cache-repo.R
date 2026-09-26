@@ -356,7 +356,7 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, callList, # 
 
   # Memoize the outputFromEvaluate by saving it in RAM
   if (isTRUE(useMemoise)) {
-    assign(detailed_key$key, outputFromEvaluate, envir = memoiseEnv(cachePaths[[1]]))
+    memoiseAssign(detailed_key$key, outputFromEvaluate, cachePaths[[1]])
   }
 
 
@@ -524,7 +524,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
       if (cache_key_in_memoiseEnv %in% FALSE) {
         # assign(cache_key, .unwrap(obj, cachePath = cachePath, cacheId = cache_key),
         #        envir = memoiseEnv(cachePath))
-        assign(cache_key, obj, envir = memoiseEnv(cachePath)) # try without .unwrap in memoiseEnv
+        memoiseAssign(cache_key, obj, cachePath) # try without .unwrap in memoiseEnv
       }
     }
 

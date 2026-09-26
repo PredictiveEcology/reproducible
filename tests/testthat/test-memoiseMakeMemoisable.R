@@ -42,3 +42,19 @@ test_that("loadFromCache() after a Cache() memoise of the wrapped object returns
   expect_s4_class(x, "SpatRaster")
   expect_equal(terra::values(x), terra::values(o1))
 })
+
+## The memoised copy must be a snapshot: a caller that modifies its result by reference, as with a
+## data.table or a simList's environment, must not change what the next memoised hit returns.
+test_that("modifying a Cache() result by reference does not change the memoised copy", {
+  testInit("data.table", opts = list(reproducible.useMemoise = TRUE))
+  f <- function(n) data.table::data.table(a = n)
+
+  o1 <- Cache(f, 1L, cachePath = tmpCache) # first run
+  data.table::set(o1, j = "a", value = 999L)
+  o2 <- Cache(f, 1L, cachePath = tmpCache) # memoised hit
+  expect_equal(o2$a, 1L)
+
+  data.table::set(o2, j = "a", value = 999L)
+  o3 <- Cache(f, 1L, cachePath = tmpCache) # memoised hit again
+  expect_equal(o3$a, 1L)
+})
