@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9045
+
+## Bug fixes
+
+* `swapCacheFileFormat()` re-saved an entry in its new `cacheSaveFormat` without carrying over its
+  existing tags, because its callers never passed `userTags`; `saveToCache()` then defaulted to a
+  single `"otherFunctions"` tag, and the old entry (with its real tags) was removed. A format swap
+  (e.g. changing `options(reproducible.cacheSaveFormat = ...)`) now carries the entry's existing tags
+  forward, on both the file-backed and DBI cache backends. On the DBI backend, the swap also deleted
+  the newly-saved row along with the old one, because `rmFromCache()` there deletes by `cacheId` only
+  (no per-format column); the old entry is now removed before the new one is saved.
+
 # reproducible 3.2.1.9044
 
 ## Bug fixes
