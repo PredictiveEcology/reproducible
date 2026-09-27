@@ -25,7 +25,7 @@ loadFromCache(
   cacheId,
   preDigest,
   fullCacheTableForObj = NULL,
-  cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   .functionName = NULL,
   .dotsFromCache = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
@@ -40,7 +40,7 @@ rmFromCache(
   cacheId,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+  cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
   verbose = getOption("reproducible.verbose"),
   ...
 )
