@@ -126,7 +126,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   if (missing(dryRun)) dryRun <- getOption("reproducible.cacheDryRun", FALSE)
 
-  if (cacheSaveFormat %in% c(.qsFormat))
+  if (isTRUE(cacheSaveFormat %in% c(.qsFormat)))
     cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
 
   # Memoise and return if it is there #

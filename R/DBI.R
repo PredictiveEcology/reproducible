@@ -112,7 +112,7 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
                         verbose = getOption("reproducible.verbose")) {
 
   # saveToCache can be coming from a few places, not just Cache
-  if (cacheSaveFormat %in% c(.qsFormat))
+  if (isTRUE(cacheSaveFormat %in% c(.qsFormat)))
     cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
 
   if (useDBI()) {
@@ -246,7 +246,11 @@ saveToCache <- function(cachePath = getOption("reproducible.cachePath"),
 loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                           cacheId, preDigest,
                           fullCacheTableForObj = NULL,
-                          cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+                          ## Leave unset (NULL) as NULL -- forcing it to rds here made an
+                          ## existing qs2 entry look like the "wrong" format below and
+                          ## triggered a spurious convert-to-rds. CacheStoredFile() treats
+                          ## NULL as "read whatever is on disk".
+                          cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                           .functionName = NULL, .dotsFromCache = NULL,
                           drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
@@ -267,7 +271,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     obj <- memoiseGet(cacheId, cachePath, drv = drv, conn = conn)
   }
   # }
-  if (cacheSaveFormat %in% c(.qsFormat))
+  if (isTRUE(cacheSaveFormat %in% c(.qsFormat)))
     cacheSaveFormat <- getOption("reproducible.qsFormat", .qs2Format)
 
   if (!isTRUE(isMemoised)) {
@@ -404,7 +408,11 @@ extractFromCache <- function(sc, elem, ifNot = NULL) {
 rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
                         cacheId, drv = getDrv(getOption("reproducible.drv", NULL)),
                         conn = getOption("reproducible.conn", NULL),
-                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat", .rdsFormat),
+                        ## Unset (NULL) is left as-is, not forced to rds: removing an
+                        ## entry should find it in whatever format it is actually
+                        ## stored in (CacheStoredFile()/CacheDBFileSingle() treat
+                        ## NULL as "check").
+                        cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                         verbose = getOption("reproducible.verbose"), ...) {
   # backwards compatibility
   if (!is.null(list(...)$format))
@@ -796,8 +804,19 @@ CacheStorageDir <- function(cachePath = getOption("reproducible.cachePath")) {
 CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cacheId,
                             cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
                             obj = NULL, readOnly = FALSE) {
-  # if (is.null(cacheSaveFormat)) cacheSaveFormat <- getOption("reproducible.cacheSaveFormat", .rdsFormat)
   if (missing(cacheId)) cacheId <- NULL
+  ## cacheSaveFormat unset (NULL, the default) means the user has not chosen a
+  ## format: find whatever is already on disk instead of assuming rds, which
+  ## previously made an existing qs2 entry look "missing" and triggered a
+  ## spurious convert-to-rds in loadFromCacheSwitchFormat(). "check" already
+  ## does exactly this discovery (see formatCheck()), including falling back
+  ## to rds when nothing exists yet (a brand-new cacheId). A NULL cacheId (a
+  ## few callers use CacheStoredFile() just to get the storage dir) has
+  ## nothing to discover, so go straight to rds rather than ask formatCheck()
+  ## to search for a file with no name.
+  if (is.null(cacheSaveFormat)) {
+    cacheSaveFormat <- if (is.null(cacheId)) .rdsFormat else "check"
+  }
   if (any(cacheSaveFormat %in% "check")) {
     cacheSaveFormat <- formatCheck(cachePath, cacheId, cacheSaveFormat = cacheSaveFormat)
   }
@@ -1169,7 +1188,7 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
     fsOther <- sum(file.size(ftsOther))
     fts <- fts[1]
   }
-  if (cacheSaveFormat %in% c(.qsFormat, .qs2Format)) {
+  if (isTRUE(cacheSaveFormat %in% c(.qsFormat, .qs2Format))) {
     .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
     for (attempt in 1) {
       # During transition from qs to qs2; the user should not be able to save in qs, so
@@ -1200,6 +1219,10 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
 
 CacheDBFileSingle <- function(cachePath, cacheId,
                               cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
+  ## Same "unset means discover on disk" translation as CacheStoredFile(); this is
+  ## the non-DBI-backend metadata file, which is named with the same cacheSaveFormat
+  ## suffix as the object storage file it describes.
+  if (is.null(cacheSaveFormat)) cacheSaveFormat <- "check"
   fullSuff <- CacheDBFileSingleExt(cacheSaveFormat = cacheSaveFormat)
   if (any(cacheSaveFormat %in% "check")) {
     cacheSaveFormat <- formatCheck(cachePath,
@@ -1214,6 +1237,10 @@ CacheDBFileSingle <- function(cachePath, cacheId,
 }
 
 CacheDBFileSingleExt <- function(cacheSaveFormat = getOption("reproducible.cacheSaveFormat")) {
+  ## A handful of callers use this directly (as a grep pattern, or to build a
+  ## path) without going through CacheDBFileSingle()'s "check" discovery; keep
+  ## their pre-existing behaviour (assume rds) when the option is unset.
+  if (is.null(cacheSaveFormat)) cacheSaveFormat <- .rdsFormat
   paste0(suffixMultipleDBFiles(), cacheSaveFormat)
 }
 
@@ -1247,7 +1274,7 @@ formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reprodu
 
   for (ci in .cacheSaveFormats) {
     ff <- CacheStoredFile(cachePath, cacheId, cacheSaveFormat = ci, readOnly = TRUE)
-    if (file.exists(ff)) {
+    if (isTRUE(file.exists(ff))) {
       newFormat <- ci
       break
     }
@@ -1255,7 +1282,9 @@ formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reprodu
   if (exists("newFormat", inherits = FALSE)) {
     cacheSaveFormat <- newFormat
   } else if (cacheSaveFormat == "check") { # means there was no file; possibly deleted inadvertently
-    cacheSaveFormat <- getOption("reproducible.cacheSaveFormat") #getOption("reproducible.cacheSaveFormat")
+    # nothing found on disk -- this is a new entry being saved, so a concrete
+    # format is needed; fall back to rds if the user hasn't chosen one.
+    cacheSaveFormat <- getOption("reproducible.cacheSaveFormat", .rdsFormat)
   }
 
   # altFile <- dir(dirname(CacheStoredFile(cachePath, cacheId)), pattern = cacheId)

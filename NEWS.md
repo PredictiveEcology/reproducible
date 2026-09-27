@@ -1,3 +1,15 @@
+# reproducible 3.2.1.9046
+
+## Bug fixes
+
+* `options("reproducible.cacheSaveFormat")` now defaults to `NULL` instead of `"rds"`. A session
+  that never set the option was indistinguishable from one that explicitly chose `"rds"`, so
+  reading an existing `qs2` cache entry (via `loadFromCache()` or a `Cache()` hit) silently
+  converted it to `.rds` on disk. With the option unset, an entry is now read in whatever format
+  it is already stored in and is never converted; new entries are still saved as `.rds`. Setting
+  the option explicitly (`"rds"`, `"qs2"`, ...) keeps the previous behaviour, including converting
+  an existing entry to the requested format.
+
 # reproducible 3.2.1.9045
 
 ## Bug fixes
