@@ -41,8 +41,12 @@
 #'     script) to use a persistent cache.
 #'   }
 #'   \item{`cacheSaveFormat`}{
-#'     Default: `"rds"`. What save format to use; currently, `"qs"` (which will use
-#'     `qs2` package as of `reproducible` version ">= 2.1.3"), `"qs2"`, or `"rds"`.
+#'     Default: `NULL`, meaning the user has not chosen a format. New cache entries
+#'     are still saved as `"rds"`, but an existing entry is read in whatever format
+#'     it is already stored in on disk, and is never converted. Set explicitly to
+#'     `"qs"` (which will use the `qs2` package as of `reproducible` version
+#'     ">= 2.1.3"), `"qs2"`, or `"rds"` to force new entries to that format and to
+#'     convert an existing entry to it the next time it is read.
 #'   }
 #'   \item{`cacheSpeed`}{
 #'     Default `"slow"`. One of `"slow"` or `"fast"` (1 or 2).
@@ -597,7 +601,7 @@ reproducibleOptions <- function() {
     reproducible.cacheChaining = FALSE,
     reproducible.checkRemoteHash = FALSE,
     reproducible.cachePath = NULL,
-    reproducible.cacheSaveFormat = .rdsFormat,
+    reproducible.cacheSaveFormat = NULL,
     reproducible.cacheSpeed = "slow",
     reproducible.connecttimeout = 30L,              # seconds; single-stream connect/handshake cap (NOT the overall download timeout)
     reproducible.conn = NULL,

@@ -42,8 +42,12 @@ persist across sessions. Set this early (e.g. in your project setup
 script) to use a persistent cache.
 }
 \item{\code{cacheSaveFormat}}{
-Default: \code{"rds"}. What save format to use; currently, \code{"qs"} (which will use
-\code{qs2} package as of \code{reproducible} version ">= 2.1.3"), \code{"qs2"}, or \code{"rds"}.
+Default: \code{NULL}, meaning the user has not chosen a format. New cache entries
+are still saved as \code{"rds"}, but an existing entry is read in whatever format
+it is already stored in on disk, and is never converted. Set explicitly to
+\code{"qs"} (which will use the \code{qs2} package as of \code{reproducible} version
+">= 2.1.3"), \code{"qs2"}, or \code{"rds"} to force new entries to that format and to
+convert an existing entry to it the next time it is read.
 }
 \item{\code{cacheSpeed}}{
 Default \code{"slow"}. One of \code{"slow"} or \code{"fast"} (1 or 2).
