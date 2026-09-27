@@ -82,6 +82,52 @@ test_that("the migrated entry leaves exactly one object file, in the new format"
   expect_match(objFiles, "\\.qs2$")
 })
 
+test_that("loadFromCache() migrating an entry keeps its original tags", {
+  ## loadFromCacheSwitchFormat() (R/DBI.R) calls swapCacheFileFormat() without
+  ## passing the entry's userTags. swapCacheFileFormat() re-saves the entry via
+  ## saveToCache(obj, ..., userTags = userTags), and saveToCache() treats a
+  ## missing userTags as "otherFunctions" (R/DBI.R, saveToCache()), then the old
+  ## entry (and its tag file) is removed via rmFromCache(). Every other tag --
+  ## function, preDigest, accessed, elapsedTime, cacheChaining_*, and any
+  ## userTags the caller set -- is lost. Run under both cache backends: CI does
+  ## not vary reproducible.useDBI, so this loops over both itself (pattern from
+  ## "test useDBI TRUE <--> FALSE" in test-cache.R).
+  skip_if_not_installed("qs2")
+  testInit()
+
+  origUseDBI <- useDBI()
+  on.exit(useDBI(origUseDBI), add = TRUE)
+
+  for (useDBIVal in c(FALSE, TRUE)) {
+    if (useDBIVal && !requireNamespace("RSQLite", quietly = TRUE)) next
+    useDBI(useDBIVal, verbose = -1)
+    if (isTRUE(useDBIVal) && !isTRUE(useDBI())) next ## RSQLite/DBI unavailable
+
+    withr::local_options(reproducible.cachePath = NULL,
+                         reproducible.showCachePreWarm = FALSE,
+                         reproducible.ask = FALSE,
+                         reproducible.cacheSaveFormat = "rds")
+    cp <- checkPath(file.path(tmpdir, paste0("tagsPreserved-", useDBIVal)), create = TRUE)
+
+    expensive <- function(x) x + 1
+    Cache(expensive, x = 1, cachePath = cp, verbose = 0, userTags = "myUserTag:hello")
+    cacheId <- showCache(cp)$cacheId[1]
+    tagsBefore <- sort(unique(showCache(cp, cacheId = cacheId)$tagKey))
+
+    ## Directly exercise loadFromCache() with a different cacheSaveFormat than
+    ## the entry was saved in, so it goes through loadFromCacheSwitchFormat().
+    loadFromCache(cachePath = cp, cacheId = cacheId, preDigest = list(),
+                 cacheSaveFormat = "qs2", verbose = 0)
+
+    tagsAfter <- sort(unique(showCache(cp, cacheId = cacheId)$tagKey))
+
+    lbl <- paste0("useDBI=", useDBIVal)
+    expect_true("myUserTag" %in% tagsAfter, label = paste(lbl, "myUserTag"))
+    expect_true("function" %in% tagsAfter, label = paste(lbl, "function"))
+    expect_setequal(tagsAfter, tagsBefore)
+  }
+})
+
 test_that("onlyStorageFiles keeps object files and drops metadata/lock files", {
   testInit()
 

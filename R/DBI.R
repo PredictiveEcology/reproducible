@@ -1472,15 +1472,46 @@ swapCacheFileFormat <- function(wrappedObj, cachePath, drv, conn, cacheId, sameC
   messageCache(.message$changingFormat(prevFile = sameCacheID, newFile = newFile),
                verbose = verbose)
 
-  fs <- saveToCache(
-    obj = wrappedObj, cachePath = cachePath,
-    userTags = userTags, drv = drv, conn = conn,
-    cacheId = cacheId, cacheSaveFormat = fileExt(newFile)
-  )
-  rmFromCache(
-    cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
-    cacheSaveFormat = fileExt(sameCacheID)
-  )
+  ## Callers (e.g., loadFromCacheSwitchFormat()) do not always pass userTags,
+  ## which used to mean saveToCache() re-saved the entry under the single tag
+  ## "otherFunctions" and this function then deleted the old entry -- losing
+  ## the entry's real tags (function, preDigest, accessed, userTags, etc).
+  ## Carry over the existing tags of the entry being swapped when the caller
+  ## did not already supply userTags of its own.
+  if (missing(userTags)) {
+    oldTags <- showCacheFast(cacheId = cacheId, cachePath = cachePath,
+                             drv = drv, conn = conn, verbose = verbose)
+    if (NROW(oldTags))
+      userTags <- paste0(oldTags$tagKey, ":", oldTags$tagValue)
+  }
+
+  if (useDBI()) {
+    ## The DBI backend keeps one shared row set per cacheId, with no
+    ## cacheSaveFormat column to scope a DELETE by (unlike the file-backed
+    ## backend's per-cacheId `.dbFile.<ext>`). rmFromCache() there deletes every
+    ## row for cacheId. Doing that after saveToCache() (the order used below for
+    ## the file-backed backend) would delete the rows just inserted, losing the
+    ## entry outright. Remove the old entry first so only the new rows remain.
+    rmFromCache(
+      cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+      cacheSaveFormat = fileExt(sameCacheID)
+    )
+    fs <- saveToCache(
+      obj = wrappedObj, cachePath = cachePath,
+      userTags = userTags, drv = drv, conn = conn,
+      cacheId = cacheId, cacheSaveFormat = fileExt(newFile)
+    )
+  } else {
+    fs <- saveToCache(
+      obj = wrappedObj, cachePath = cachePath,
+      userTags = userTags, drv = drv, conn = conn,
+      cacheId = cacheId, cacheSaveFormat = fileExt(newFile)
+    )
+    rmFromCache(
+      cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn,
+      cacheSaveFormat = fileExt(sameCacheID)
+    )
+  }
 }
 
 
