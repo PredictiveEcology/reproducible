@@ -322,10 +322,15 @@ CacheGeo <- function(targetFile = NULL,
     }
   }
   msgActionIsNothing <- "action was 'nothing'; nothing done"
-  if ( (isFALSE(objExisted) || isFALSE(domainExisted) ) && !missing(FUN)) {
+  # `action = "update"` on a domain that is already covered must still evaluate FUN and
+  # replace the matching row(s); otherwise a refit is silently discarded (the old row is
+  # returned and FUN is never called).
+  refitUpdate <- isTRUE(objExisted) && isTRUE(domainExisted) &&
+    any(grepl("^u", action[1], ignore.case = TRUE)) && !missing(FUN)
+  if ( (isFALSE(objExisted) || isFALSE(domainExisted) || isTRUE(refitUpdate)) && !missing(FUN)) {
     if (isFALSE(objExisted)) {
       message(.message$cacheGeoNoRemoteExists)
-    } else {
+    } else if (isFALSE(domainExisted)) {
       message(.message$cacheGeoDomainNotContained)
     }
     FUNcaptured <- substitute(FUN)
@@ -353,7 +358,7 @@ CacheGeo <- function(targetFile = NULL,
 
 
   }
-  if (isFALSE(domainExisted)) {
+  if (isFALSE(domainExisted) || isTRUE(refitUpdate)) {
     if (isTRUE(objExisted)) {
       if (any(grepl("^a|^u", action[1], ignore.case = TRUE))) {
         # .gpkg seems to change geometry to "geom"
@@ -366,6 +371,21 @@ CacheGeo <- function(targetFile = NULL,
           newObj$geometry <- sf::st_cast(newObj$geometry, "MULTIPOLYGON")
         if (!is(sf::st_geometry(existingObjOrig$geometry), "MULTIPOLYGON"))
           existingObjOrig$geometry <- sf::st_cast(existingObjOrig$geometry, "MULTIPOLYGON")
+
+        # `action = "update"`: remove any rows for the same feature before appending,
+        # per docs ("remove any identical geometries before appending"). Key on
+        # `polygonID` when both sides have it (the only current use); otherwise fall
+        # back to exact geometry equality.
+        if (any(grepl("^u", action[1], ignore.case = TRUE))) {
+          if (!is.null(existingObjOrig[["polygonID"]]) && !is.null(newObj[["polygonID"]])) {
+            existingObjOrig <- existingObjOrig[!existingObjOrig$polygonID %in% newObj$polygonID, ]
+          } else {
+            existingObjOrigSF <- sf::st_as_sf(existingObjOrig)
+            eq <- sf::st_equals(existingObjOrigSF,
+                                 sf::st_transform(newObjSF, sf::st_crs(existingObjOrigSF)), sparse = FALSE)
+            existingObjOrig <- existingObjOrig[!apply(eq, 1, any), ]
+          }
+        }
 
         # THE APPEND LINE
         existingObj <- as.data.frame(rbindlist(
