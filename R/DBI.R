@@ -1115,23 +1115,36 @@ loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheForma
   # isQsAny <- isQs | isQs2
 
   if (isQsAny) {
-    csfs <- unique(c(cacheSaveFormat, qsFormats))
+    ## rds is tried last: 3.2.1.9046-9047 wrote some qs2-named tag files with
+    ## saveRDS(). Reading them here lets the next tag write save them as qs2.
+    csfs <- unique(c(cacheSaveFormat, qsFormats, .rdsFormat))
+    firstErr <- NULL
     for (csf in csfs) {# put in order by fileextension; but could be wrong
       if (csf %in% c(.qs2Format))
         .requireNamespace(.qs2Format, stopOnFALSE = TRUE)
-      else
+      else if (csf %in% .qsFormat) {
+        ## qs is only needed for a file actually named .qs; as a fallback
+        ## candidate, a missing qs must not hide the real read error.
+        if (!identical(csf, fe) && !requireNamespace(.qsFormat, quietly = TRUE))
+          next
         .requireNamespace(.qsFormat, stopOnFALSE = TRUE)
+      }
       # obj <- qs2::qs_read(file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
       # if (FALSE) {
       funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == csf]
       funRead <- eval(parse(text = funRead))
         # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
         # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
-      obj <- try(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
+      obj <- if (csf %in% .rdsFormat)
+        try(readRDS(file = file[isQsAny]), silent = TRUE)
+      else
+        try(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
         # obj <- try2(funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1)), silent = TRUE)
       # }
         if (!is(obj, "try-error")) {
-        if (!identical(csf, fe)) {
+        ## An rds read of a qs file is a misnamed file, not a format change: keep
+        ## the entry in its format rather than swapping it to rds.
+        if (!identical(csf, fe) && !csf %in% .rdsFormat) {
           if (missing(cachePath))
             cachePath <- dirname(dirname(file))
           newFile <- gsub(paste0(fe, "$"), csf, file)
@@ -1151,8 +1164,9 @@ loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheForma
         ## Only give up once every candidate format has been tried. Stopping on
         ## the first failure made the loop single-shot, so a file readable by a
         ## later format in `csfs` was reported as unreadable.
+        if (is.null(firstErr)) firstErr <- obj # the error for the file's own format
         if (csf %in% tail(csfs, 1))
-          stop(obj) # this will be caught by most outer calls to loadFile
+          stop(firstErr) # this will be caught by most outer calls to loadFile
       }
     }
     # obj <- qs2::qs_read(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
@@ -1171,6 +1185,10 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
   if (missing(fts)) {
     fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj, cacheSaveFormat = cacheSaveFormat) # adds prefix
   }
+  ## Unset (NULL) cacheSaveFormat: the path was resolved from what is on disk, so
+  ## its extension is the format. Without this, a .qs2 path was written by saveRDS().
+  if (is.null(cacheSaveFormat))
+    cacheSaveFormat <- fileExt(fts[1])
 
   fsOther <- numeric()
   if (length(fts) > 1) {
