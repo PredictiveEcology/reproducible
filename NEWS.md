@@ -1,3 +1,13 @@
+# reproducible 3.2.1.9047
+
+## Bug fixes
+
+* `CacheGeo(action = "update", ...)` returned the existing row and never evaluated `FUN` when
+  `domain` was already covered by an existing entry, so a refit (e.g. `fireSense_SpreadFit` with
+  `refitExisting = TRUE`) was silently discarded. `FUN` is now evaluated and the matching row(s)
+  replaced, keyed on the `polygonID` column when present on both sides, otherwise on exact
+  geometry equality. This is step 1 of the planned `CacheGeo` redesign.
+
 # reproducible 3.2.1.9046
 
 ## Bug fixes
