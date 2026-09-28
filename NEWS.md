@@ -1,3 +1,12 @@
+# reproducible 3.2.1.9048
+
+## Bug fixes
+
+* With `options("reproducible.cacheSaveFormat")` unset (the default since 3.2.1.9046), a `Cache()`
+  hit on a `qs2` entry rewrote its tag file (`<cacheId>.dbFile.qs2`) with `saveRDS()`. The next hit
+  could not read it and failed with "qs is required but not yet installed". The tag file is now
+  written in the format its file name says.
+
 # reproducible 3.2.1.9047
 
 ## Bug fixes

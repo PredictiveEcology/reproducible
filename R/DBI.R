@@ -1171,6 +1171,10 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
   if (missing(fts)) {
     fts <- CacheStoredFile(cachePath, cacheId = cacheId, obj = obj, cacheSaveFormat = cacheSaveFormat) # adds prefix
   }
+  ## Unset (NULL) cacheSaveFormat: the path was resolved from what is on disk, so
+  ## its extension is the format. Without this, a .qs2 path was written by saveRDS().
+  if (is.null(cacheSaveFormat))
+    cacheSaveFormat <- fileExt(fts[1])
 
   fsOther <- numeric()
   if (length(fts) > 1) {
