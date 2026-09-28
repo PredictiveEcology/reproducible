@@ -131,3 +131,31 @@ test_that("unset cacheSaveFormat keeps a qs2 entry's tag file in qs2 on a Cache(
   expect_identical(as.numeric(third), 2)
   expect_identical(runs, 1L)
 })
+
+test_that("a qs2-named tag file holding rds is read and rewritten as qs2", {
+  ## 3.2.1.9046-9047 left such files behind (see the test above); the next hit
+  ## must read them and save them back as qs2, without converting the entry.
+  skip_if_not_installed("qs2")
+  testInit()
+
+  origUseDBI <- useDBI()
+  on.exit(useDBI(origUseDBI), add = TRUE)
+  useDBI(FALSE)
+
+  cp <- checkPath(file.path(tmpdir, "rdsInQs2Tags"), create = TRUE)
+  withr::local_options(reproducible.cacheSaveFormat = "qs2")
+  runs <- 0L
+  expensive <- function(x) { runs <<- runs + 1L; x + 1 }
+  Cache(expensive, x = 1, cachePath = cp, verbose = 0)
+
+  tagFile <- dir(CacheStorageDir(cp), pattern = "\\.dbFile\\.qs2$", full.names = TRUE)
+  saveRDS(qs2::qs_read(tagFile), tagFile) # damage it as 3.2.1.9047 did
+  expect_error(qs2::qs_read(tagFile))
+
+  withr::local_options(reproducible.cacheSaveFormat = NULL)
+  out <- Cache(expensive, x = 1, cachePath = cp, verbose = 0)
+  expect_identical(as.numeric(out), 2)
+  expect_identical(runs, 1L)
+  expect_no_error(qs2::qs_read(tagFile))
+  expect_length(dir(CacheStorageDir(cp), pattern = "\\.rds$"), 0L)
+})
