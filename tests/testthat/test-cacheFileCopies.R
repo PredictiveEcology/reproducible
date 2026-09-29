@@ -180,7 +180,9 @@ test_that("two processes restoring one cached result into a shared folder do not
     'cat(if (ok) "ALLGOOD" else "BAD", "\\n")'), script)
   logs <- file.path(withr::local_tempdir("logs"), c("p1.log", "p2.log"))
   ## two processes at once, both restoring the same entry into the same folder
-  system(sprintf("Rscript %s > %s 2>&1 & Rscript %s > %s 2>&1; wait", script, logs[1], script, logs[2]))
+  Rscript <- shQuote(file.path(R.home("bin"), "Rscript")) # R CMD check refuses a bare "Rscript"
+  system(sprintf("%s %s > %s 2>&1 & %s %s > %s 2>&1; wait",
+                 Rscript, shQuote(script), shQuote(logs[1]), Rscript, shQuote(script), shQuote(logs[2])))
   for (lg in logs) expect_true(any(grepl("ALLGOOD", readLines(lg))), info = paste(readLines(lg), collapse = "\n"))
   ## nothing but the two rasters: no "_1" copies, no temporary files
   expect_identical(sort(dir(dp, all.files = TRUE, no.. = TRUE)), c("r11.tif", "r22.tif"))
