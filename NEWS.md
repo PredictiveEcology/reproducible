@@ -1,4 +1,4 @@
-# reproducible 3.2.1.9052
+# reproducible 3.2.1.9053
 
 ## Bug fixes
 
@@ -11,6 +11,10 @@
   `purge = 7` fetches into a scratch directory inside `destinationPath` and swaps each file in that way,
   leaving the old copies untouched if the download fails; a Google Drive folder `purge = 7` replaces its
   `destinationPathShared` copies the same way instead of unlinking them.
+
+* The header comment of `R/urlLog.R` said the default `reproducible.urlLog = NULL` keeps tags only and no
+  in-memory session log. The code fills the in-memory log in the default and `TRUE` modes, as `?prepInputsLog`
+  says; the comment now matches. Comments only, no change in behaviour.
 
 # reproducible 3.2.1.9051
 
