@@ -1,7 +1,7 @@
-## loadFromCache() and Cache() share one memoise environment, keyed by cacheId, but store different
-## forms there: loadFromCache() stores makeMemoisable() of the unwrapped object, Cache() the wrapped
-## object it read from disk. Each must read the other's form. SpaDES.core's cacheChaining jump calls
-## loadFromCache() between Cache() hits on the same cacheIds.
+## loadFromCache() and Cache() share one memoise environment, keyed by cacheId. Both store
+## makeMemoisable() of the WRAPPED object (as saved to, or read from, disk), and memoiseGet()
+## unwraps. SpaDES.core's cacheChaining jump calls loadFromCache() between Cache() hits on the
+## same cacheIds.
 
 test_that("a Cache() memoise hit after loadFromCache() returns the original class", {
   testInit(opts = list(reproducible.useMemoise = TRUE))

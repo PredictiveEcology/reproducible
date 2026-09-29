@@ -437,9 +437,12 @@ nextNumericName <- function(string) {
   saveFilenameSansExt <- filePathSansExt(string)
   finalNumericPattern <- "_[[:digit:]]+$"
 
-  fns <- dir(dirname(saveFilenameSansExt), pattern = basename(saveFilenameSansExt))
-  allSimilarFilesInDir <- fns[grepl(paste0("^", basename(saveFilenameSansExt), "(_[0-9]+)?$"),
-                                    sub("\\..*$", "", fns))]
+  ## Siblings are found by their name without its final extension. Cutting at the first dot, as
+  ## this did, turned "CMD_projected_4.2.2updated_1.tif" into "CMD_projected_4", so a name with a
+  ## dot in it never saw its own numbered copies and every call answered "_1".
+  base <- .regexEscape(basename(saveFilenameSansExt))
+  fns <- dir(dirname(saveFilenameSansExt), pattern = paste0("^", base))
+  allSimilarFilesInDir <- fns[grepl(paste0("^", base, "(_[0-9]+)?$"), filePathSansExt(fns))]
   allSimilarFilesInDirSansExt <- if (length(allSimilarFilesInDir) == 0) {
     unique(saveFilenameSansExt)
   } else {
@@ -460,6 +463,59 @@ nextNumericName <- function(string) {
 
   paste0(out, ".", theExt)
 }
+
+#' Put the cache's copy of a file at its destination
+#'
+#' Used when a file-backed object is restored from the cache. Two things make this safe for a
+#' destination that other processes read, or restore, at the same time: a file that already holds
+#' this entry is left alone, and a new file is written under a temporary name in the same directory
+#' and renamed into place, so the destination is never seen half-written. The cache's file never
+#' changes, so a destination of the same size and modification time is the same file (copies keep
+#' the date); a copy made by an earlier version, which did not keep the date, is compared by
+#' content once. The destination is a copy, never a hard link: through a link, a module that
+#' overwrites the restored file in place would overwrite the cache's file.
+#'
+#' @param from Character; the cache's files.
+#' @param to Character; where each is wanted. Same length as `from`.
+#' @return `to`, invisibly.
+#' @keywords internal
+publishFile <- function(from, to) {
+  stopifnot(length(from) == length(to))
+  for (i in seq_along(from)) {
+    if (identical(normPath(from[i]), normPath(to[i]))) next
+    if (file.exists(to[i]) && (.sameFileQuick(from[i], to[i]) || .sameFileContent(from[i], to[i]))) next
+    if (!file.exists(from[i])) {
+      stop("the cache has no file ", from[i], " to restore ", to[i], " from")
+    }
+    checkPath(dirname(to[i]), create = TRUE)
+    tmp <- tempfile(pattern = paste0(".", basename(to[i]), "."), tmpdir = dirname(to[i]))
+    ok <- file.copy(from[i], tmp, copy.date = TRUE)
+    if (!isTRUE(ok)) {
+      unlink(tmp)
+      stop("could not copy ", from[i], " to ", to[i])
+    }
+    if (!isTRUE(suppressWarnings(file.rename(tmp, to[i])))) {
+      unlink(to[i]) # Windows does not rename over an existing file
+      if (!isTRUE(file.rename(tmp, to[i]))) {
+        unlink(tmp)
+        stop("could not place ", to[i])
+      }
+    }
+  }
+  invisible(to)
+}
+
+## Same size and same modification time (to the millisecond: a copy that kept the date) as a
+## source that never changes. A file system that keeps times to the second could pass
+## an unrelated file of the same size written in the same second as the cache's file.
+.sameFileQuick <- function(from, to) {
+  fi <- file.info(c(from, to), extra_cols = FALSE)
+  isTRUE(fi$size[1] == fi$size[2]) &&
+    isTRUE(abs(as.numeric(fi$mtime[1]) - as.numeric(fi$mtime[2])) < 1e-3)
+}
+
+## Quote a string for use as a literal inside a regular expression
+.regexEscape <- function(x) gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", x)
 
 list2envAttempts <- function(x, envir) {
   attempt <- try(list2env(x, envir), silent = TRUE) # must be try; i.e., must always be `try`

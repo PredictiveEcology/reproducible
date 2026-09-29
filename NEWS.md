@@ -1,3 +1,25 @@
+# reproducible 3.2.1.9050
+
+## Bug fixes
+
+* `Cache()` no longer writes a copy of every file-backed raster beside its original when it memoises
+  a result (`reproducible.useMemoise = TRUE`). The memoised entry is now the wrapped object, whose
+  rasters point at the cache's own files, on every path (a new result, a disk hit, and
+  `loadFromCache()`), and a memoise hit restores files the way a disk hit does. Two processes that
+  shared an output folder used to write the same `<name>_1.tif` copy and corrupt it.
+* `Copy()` of a file-backed `SpatRaster` now follows its documentation: with no `filebackedDir` the
+  copy goes to a fresh temporary directory, `NULL` makes no copy, and a directory takes the copy.
+  It never writes beside the original.
+* `nextNumericName()` cut a file name at its first dot, so a name with a dot in it
+  (`x_4.2.2.tif`) always got `_1`.
+* Restoring a file-backed raster from the cache no longer deletes and rewrites a destination that
+  already holds it, and a new file is written under a temporary name and renamed into place, so
+  another process never reads it half-written (new internal `publishFile()`). The destination is
+  a copy, never a hard link, so overwriting it in place cannot change the cache's file.
+* A cached `SpatRaster` that uses some of its file's layers keeps their order, and a layer used
+  more than once (a stack sampled with replacement) is restored as many times; the order used to
+  come back reversed and repeats were dropped.
+
 # reproducible 3.2.1.9049
 
 ## Bug fixes
