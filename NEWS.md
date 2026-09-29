@@ -1,3 +1,11 @@
+# reproducible 3.2.1.9051
+
+## Enhancements
+
+* `Cache(cacheId = )` skips its "cacheId passed to override automatic digesting" message when the
+  `cacheId` carries the attribute `cacheIdAnnounced = TRUE`, for callers that have already said which
+  entry they are using (SpaDES.core's cacheChaining). A plain `cacheId` still prints it.
+
 # reproducible 3.2.1.9050
 
 ## Bug fixes
