@@ -1,3 +1,17 @@
+# reproducible 3.2.1.9052
+
+## Bug fixes
+
+* Replacing a file that other processes may be reading no longer leaves its path missing.
+  `linkOrCopy()` unlinked the destination and then linked or copied onto it, and `prepInputs(purge = 7)`
+  moved the local copies aside for the whole download, so a second process reading the file (two
+  FireSense workers on one input, 2026-09-29) stopped with "The file does not exist".
+  `linkOrCopy()` now makes the new file under a temporary name beside the destination and renames it over
+  (on Windows, where an existing destination can block the rename, the old file is removed first).
+  `purge = 7` fetches into a scratch directory inside `destinationPath` and swaps each file in that way,
+  leaving the old copies untouched if the download fails; a Google Drive folder `purge = 7` replaces its
+  `destinationPathShared` copies the same way instead of unlinking them.
+
 # reproducible 3.2.1.9051
 
 ## Enhancements

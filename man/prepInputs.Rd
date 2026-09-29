@@ -248,11 +248,11 @@ In options for control of purging the \code{CHECKSUMS.txt} file are:
 \item{\code{3}}{delete entry with same \code{archive}}
 \item{\code{5}}{delete entry with same \code{targetFile} & \code{alsoExtract}}
 \item{\code{6}}{delete entry with same \code{targetFile}, \code{alsoExtract} & \code{archive}}
-\item{\code{7}}{download again: set aside the local copies of \code{targetFile}, \code{archive} and
-the files extracted with them -- in \code{destinationPath} and, when
-\code{reproducible.destinationPathShared} is set, in the shared stash -- drop their
-entries, then download, extract and link them as on a first run. If the download
-fails, the previous copies are put back.}
+\item{\code{7}}{download again: fetch \code{targetFile}, \code{archive} and the files extracted
+with them afresh, then replace the local copies of each -- in \code{destinationPath} and,
+when \code{reproducible.destinationPathShared} is set, in the shared stash -- and drop their
+entries. The old copies stay in place until each is replaced, so a process reading one
+never finds it missing; if the download fails, they are untouched.}
 }
 Values \code{1} to \code{6} only remove entries in the \code{CHECKSUMS.txt}; the entries are then
 rebuilt from the files already on disk, so they do not download anything.
