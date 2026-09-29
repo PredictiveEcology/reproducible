@@ -422,7 +422,10 @@ cacheIdCheckInCache <- function(cacheId, calculatedCacheId, .functionName,
         if (!is.null(calculatedCacheId)) {
           messageCache(.message$cacheIdNotSameTxt(cacheId), verbose = verbose)
         } else {
-          messageCache(.message$cacheIdNotAssessed(cacheId), verbose = verbose)
+          ## A caller that has already told the user which entry it is using (e.g. SpaDES.core's
+          ##   cacheChaining) marks the cacheId with attribute `cacheIdAnnounced`
+          if (!isTRUE(attr(cacheId, "cacheIdAnnounced")))
+            messageCache(.message$cacheIdNotAssessed(cacheId), verbose = verbose)
         }
       }
       attr(sc, "cacheId") <- cacheId

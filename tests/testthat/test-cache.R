@@ -1996,6 +1996,19 @@ test_that("cacheId is same as calculated", {
   expect_equivalent(a, b)
 })
 
+test_that("a cacheId marked as already announced skips the 'passed to override' message", {
+  testInit()
+  withr::local_options(reproducible.cachePath = tmpCache)
+  a <- Cache(rnorm, 1)
+  cacheId <- "ca275879d5116967"
+  marked <- structure(cacheId, cacheIdAnnounced = TRUE)
+  mess <- cli::ansi_strip(capture_messages(Cache(rnorm, 1, cacheId = marked)))
+  expect_false(any(grepl("passed to override", mess)))
+  ## a user's plain cacheId still says so
+  mess <- cli::ansi_strip(capture_messages(Cache(rnorm, 1, cacheId = cacheId)))
+  expect_true(any(grepl("passed to override", mess)))
+})
+
 test_that("Cache with do.call and variables as list", {
   testInit()
 
