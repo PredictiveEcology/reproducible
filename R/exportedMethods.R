@@ -182,18 +182,22 @@ wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"),
   ## 2) have layer names renamed.
   whLayers <- seq_along(names(obj))
   if (!identical(nlyrsInFile, length(names(obj)))) {
-    rr <- terra::rast(fns);
-    objDigs <- unlist(lapply(layerNams, function(ln) .robustDigest(obj[[ln]][])))
-    digs <- character()
-    whLayers <- integer()
-
-    # don't need to go through all layers if the current file has only some; run through from start
-    for (ln in seq_len(terra::nlyr(rr))) {
-      digs[ln] <- .robustDigest(rr[[ln]][])
-      if (digs[ln] %in% objDigs)
-        whLayers <- c(ln, whLayers)
-      if (all(digs %in% objDigs))
-        break
+    rr <- terra::rast(fns)
+    ## One entry per layer of `obj`, in `obj`'s order: the index of the file layer with the same
+    ## values. A file layer may serve several object layers (a stack sampled with replacement).
+    ## File layers are digested at most once, and only as far as needed.
+    fileDigs <- rep(NA_character_, nlyrsInFile)
+    whLayers <- vapply(seq_len(terra::nlyr(obj)), function(i) {
+      dig <- .robustDigest(obj[[i]][])
+      for (ln in seq_len(nlyrsInFile)) {
+        if (is.na(fileDigs[ln])) fileDigs[ln] <<- .robustDigest(rr[[ln]][])
+        if (identical(fileDigs[ln], dig)) return(ln)
+      }
+      NA_integer_
+    }, integer(1))
+    if (anyNA(whLayers)) {
+      stop("wrapSpatRaster: layer(s) ", paste(names(obj)[is.na(whLayers)], collapse = ", "),
+           " of the object are not in its file ", fns[1])
     }
   }
   obj <- asPath(fnsMulti)
@@ -245,31 +249,21 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
                                            obj = obj, readOnly = TRUE
         )
         filenameInCache <- filenameInCacheWPrefix(filenameInCache, cacheId = cacheId, relative = FALSE)
-        # filenameInCache <- .prefix(filenameInCache, prefixCacheId(cacheId))
-        # if (!identical(filenameInCache, filenameInCache2)) browser()
         # Rebuild the destination from the stored *relative* tags (anchor + relName)
         #   rather than reusing `fns` (the producing machine's embedded absolute path).
         #   Passing `fns` as `obj` here short-circuited remapFilenames() to the verbatim
         #   producer path, which is what made a cloud-cached raster try to write back to
         #   e.g. /home/<producer>/... on a different user's machine.
         newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
-        # Clear the DESTINATION, and only after it has been computed. This used to unlink the
-        #   original files first, which broke remapFilenames(): for a raster with no resolvable
-        #   anchor it tests `is_absolute_path(x) && file.exists(x)` to decide whether the original
-        #   location is still valid, and that test was being asked about files this line had just
-        #   deleted. It therefore always failed, falling through to `file.path(cachePath,
-        #   basename(x))` -- dropping BOTH the original directory and the cacheId, so two cached
-        #   calls whose rasters share a basename silently overwrote one another in the cache root
-        #   and returned each other's data.
-        feNew <- file.exists(newFiles$newName)
-        if (any(feNew))
-          unlink(newFiles$newName[feNew])
         fromFiles <- unlist(filenameInCache)
       } else {
         newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
         fromFiles <- unlist(fns) # fnToLoad <- newFiles$newName
       }
-      hardLinkOrCopy(fromFiles, newFiles$newName, verbose = 0)
+      ## The destination is not cleared first (it used to be, which also broke remapFilenames();
+      ## see the tests): a file that already holds this entry is left alone, so a second load in
+      ## this or another process does not rewrite it, and a new file appears in one step.
+      publishFile(fromFiles, newFiles$newName)
       # tags <- parseTags(tags)
       # origRelName <- extractFromCache(tags, tagOrigRelName)
       # origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
@@ -308,12 +302,11 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
 
       obj <- eval(parse(text = extractFromCache(newFiles$tagsParsed, "loadFun")))(newFiles$whFiles)
       possNames <- strsplit(extractFromCache(newFiles$tagsParsed, "layerNames"), split = layerNamesDelimiter)[[1]]
-      namsObjs <- names(obj)
-      if (!identical(possNames, namsObjs)) {
-        whLayers <- as.integer(extractFromCache(newFiles$tagsParsed, "whLayers"))
-        if (length(whLayers) != length(namsObjs)) {
-          obj <- obj[[whLayers]]
-        }
+      ## `whLayers` is the file layer behind each layer of the object, in the object's order;
+      ## a layer may repeat (a stack sampled with replacement)
+      whLayers <- as.integer(extractFromCache(newFiles$tagsParsed, "whLayers"))
+      if (length(whLayers) && !identical(whLayers, seq_len(terra::nlyr(obj)))) {
+        obj <- obj[[whLayers]]
       }
 
       # names can be wrong e.g., with "nextNumericName" ... habitatQuality_1 instead of habitatQuality.

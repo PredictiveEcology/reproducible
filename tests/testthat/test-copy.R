@@ -109,7 +109,7 @@ test_that("Copy on data.frame is a pass-through", {
   expect_identical(out, df)
 })
 
-test_that("Copy on SpatRaster without filebackedDir keeps file in original dir", {
+test_that("Copy on SpatRaster without filebackedDir copies into a temporary dir", {
   skip_if_not_installed("terra")
   testInit("terra", tmpFileExt = ".tif")
 
@@ -118,12 +118,13 @@ test_that("Copy on SpatRaster without filebackedDir keeps file in original dir",
     falseWarnings = proj6Warn,
     writeRaster(ras, filename = tmpfile, overwrite = TRUE)
   )
-  # No filebackedDir -> hits the nextNumericName branch and copies the
-  # backing file alongside the original (numerically-suffixed).
+  # No filebackedDir -> a fresh temporary directory, never a numbered copy beside the
+  # original (two processes sharing that folder would write the same copy; see
+  # test-cacheFileCopies.R)
   ras2 <- Copy(ras)
   expect_true(all.equal(values2(ras), values2(ras2)))
   expect_false(Filenames(ras2) == Filenames(ras))
-  expect_identical(dirname(Filenames(ras2)), dirname(Filenames(ras)))
+  expect_false(identical(normPath(dirname(Filenames(ras2))), normPath(dirname(Filenames(ras)))))
 })
 
 test_that("Copy on a DBIConnection emits a no-deep-copy message", {

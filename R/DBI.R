@@ -328,6 +328,11 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
       obj <- loadFile(f, cacheId = cacheId, cachePath = cachePath,
                       drv = drv, conn = conn, verbose = verbose)#, cacheSaveFormat = cacheSaveFormat)
+      ## memoise the wrapped object, before .unwrap() (which unwraps a simList in place); see
+      ## wrapSaveToCache() for why the memoised entry is the wrapped form
+      if (getOption("reproducible.useMemoise") %in% TRUE) {
+        memoiseAssign(cacheId, obj, cachePath)
+      }
       obj <- .unwrap(obj,
                      cachePath = cachePath,
                      cacheId = cacheId,
@@ -348,10 +353,6 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
 
   obj <- do.call(.prepareOutput, args = append(list(object = obj, cachePath), .dotsFromCache))
 
-  if (isTRUE(useMemoise) && !isTRUE(isMemoised)) {
-  # if (isTRUE(getOption("reproducible.useMemoise")) && !isTRUE(isMemoised)) {
-    memoiseAssign(cacheId, obj, cachePath)
-  }
 
   if (verbose > 3) {
     endLoadTime <- Sys.time()
@@ -1412,7 +1413,8 @@ memoiseEnv <- function(cachePath, envir = .GlobalEnv) {
 
 ## The one write of a memoised entry. makeMemoisable() takes a snapshot, so a caller that modifies
 ## its result by reference (a data.table, a simList's environment) cannot change the memoised copy.
-## `obj` may be wrapped (as read from disk) or not; memoiseGet() unwraps either.
+## `obj` is the wrapped object (as saved to, or read from, disk): its file-backed parts point at the
+## cache's own files, so memoising writes nothing; memoiseGet() unwraps.
 memoiseAssign <- function(cacheId, obj, cachePath) {
   assign(cacheId, makeMemoisable(obj), envir = memoiseEnv(cachePath))
 }

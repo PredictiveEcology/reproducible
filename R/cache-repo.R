@@ -308,7 +308,8 @@ CacheDBFileCheckAndCreate <- function(cachePath, drv = NULL, conn = NULL, verbos
 wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, # userTags,
                             preDigest, .functionName, outputObjects,
                             cacheSaveFormat = getOption("reproducible.cacheSaveFormat"),
-                            drv, conn, verbose) {
+                            drv, conn, verbose,
+                            useMemoise = getOption("reproducible.useMemoise", FALSE)) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key, cacheSaveFormat = cacheSaveFormat)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
   outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
@@ -324,6 +325,14 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
                     cacheId = cache_key)
   .message$Saved(cachePath, cache_key, functionName = .functionName,
                  cacheSaveFormat = cacheSaveFormat, verbose = verbose)
+  ## The memoised entry is the wrapped object, as saved: its file-backed parts point at the cache's
+  ## own files, which never change, so memoising writes nothing and a memoise hit restores files the
+  ## way a disk hit does (memoiseGet() unwraps). Memoising the unwrapped result copied every
+  ## file-backed raster beside its original (Copy()), which two processes sharing a folder then
+  ## overwrote in each other.
+  if (isTRUE(useMemoise)) {
+    memoiseAssign(cache_key, outputToSave, cachePath)
+  }
   return(metadata)
 }
 
@@ -352,12 +361,8 @@ doSaveToCache <- function(outputFromEvaluate, metadata, cachePaths, callList, # 
                               # userTags = paste0(metadata$tagKey, ":", metadata$tagValue),
                               outputObjects = outputObjects,
                               preDigest = detailed_key$preDigest, callList$.functionName,
-                              cacheSaveFormat = cacheSaveFormat, drv, conn, verbose)
-
-  # Memoize the outputFromEvaluate by saving it in RAM
-  if (isTRUE(useMemoise)) {
-    memoiseAssign(detailed_key$key, outputFromEvaluate, cachePaths[[1]])
-  }
+                              cacheSaveFormat = cacheSaveFormat, drv, conn, verbose,
+                              useMemoise = useMemoise) # memoises the wrapped object it saved
 
 
   if (identical(outputFromEvaluate, "NULL")) outputFromEvaluate <- NULL
@@ -494,8 +499,18 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
         cacheSaveFormat <- fileExt(cache_file_orig) # setdiff(.cacheSaveFormats, cacheSaveFormat)
         # rerun <- TRUE
       }
+      ## Memoise the wrapped object, and before .unwrap(): a simList is unwrapped in place, so
+      ## afterwards `obj` is no longer wrapped (which put unwrapped rasters in the memoise and made
+      ## Copy() write "<name>_1" files beside the originals, 2026-09-28)
+      if (getOption("reproducible.useMemoise", FALSE) && !is(obj, "try-error") && !rerun) {
+        if (!exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)) {
+          memoiseAssign(cache_key, obj, cachePath)
+        }
+      }
       output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
+        if (exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE))
+          rm(list = cache_key, envir = memoiseEnv(cachePath))
         messageCache("It looks like the cache file is corrupt or was interrupted during write; deleting and recalculating")
         otherFiles2 <- dir(CacheStorageDir(cachePath), pattern = cache_key, full.names = TRUE)
         if (!is(shownCache, "try-error")) {
@@ -519,14 +534,6 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
 
     .cacheMessage(object = output, functionName = functionName, fromMemoise = fromMemoise, verbose = verbose)
 
-    if (getOption("reproducible.useMemoise", FALSE)) {
-      cache_key_in_memoiseEnv <- exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE)
-      if (cache_key_in_memoiseEnv %in% FALSE) {
-        # assign(cache_key, .unwrap(obj, cachePath = cachePath, cacheId = cache_key),
-        #        envir = memoiseEnv(cachePath))
-        memoiseAssign(cache_key, obj, cachePath) # try without .unwrap in memoiseEnv
-      }
-    }
 
     if (!is.null(output))
       output <- addCacheAttr(output, .CacheIsNew = FALSE, outputHash = cache_key, func)
