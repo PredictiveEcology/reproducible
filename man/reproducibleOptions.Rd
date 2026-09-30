@@ -387,7 +387,7 @@ Default: \code{NULL}. Controls whether \code{prepInputs()} / \code{preProcess()}
 record of the files and web addresses (URLs) they download. \code{NULL} (the
 default) records each download as a permanent tag on the matching cache
 entry, which you can look up later with
-\code{showCache(userTags = "reproducible.url")}; it keeps no in-session list.
+\code{\link[=urlLog]{urlLog()}}; it keeps no in-session list.
 \code{TRUE} additionally keeps an in-memory list for the current session, which
 you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}.
 \code{FALSE} turns the recording off completely. Advanced: you may instead

@@ -575,3 +575,97 @@ preProcessCheckURLs <- function(path = ".",
   )
   invisible(out)
 }
+
+## ---- urlLog(): accessor for the url ledger kept as Cache tags -------------
+
+## which -> where it is read from. "url", "caller", "firstSeen", "lastSeen" and
+## "hitCount" are the reproducible.url* tags; "function", "module" and "event"
+## are the Cache tags of the same entry (SpaDES.core writes "module" and
+## "eventType"); "cacheId" and "createdDate" are columns of the cache table.
+.urlLogTagKeys <- c(url = "reproducible.url", caller = "reproducible.urlFn",
+                    firstSeen = "reproducible.urlFirstSeen",
+                    lastSeen = "reproducible.urlLastSeen",
+                    hitCount = "reproducible.urlHitCount",
+                    `function` = "function", module = "module", event = "eventType")
+.urlLogWhich <- c("cacheId", "function", "module", "event", "url", "caller",
+                  "firstSeen", "lastSeen", "hitCount", "createdDate")
+
+#' The URL ledger kept in a cache
+#'
+#' `Cache()` tags every entry that came from `prepInputs()`/`preProcess()` with the
+#' url(s) it downloaded from (see the `urlLog` option in [reproducibleOptions()]).
+#' `urlLog()` reads those tags into one table, one row per cache entry and url.
+#' It reads only the `reproducible.url*` tags and the named tags of those entries, so
+#' argument digests that merely contain "url" never appear.
+#'
+#' `urlLog()` is an S3 generic. Other packages add methods for their own objects, for
+#' example SpaDES.core for a `simList`; every method returns the same column names.
+#'
+#' @param x A cache path (character), or `NULL` (the default) for
+#'   `getOption("reproducible.cachePath")`. Methods for other classes are provided by
+#'   the packages that own them.
+#' @param which Character vector of columns to return, in the order given. Allowed
+#'   values: `"cacheId"`, `"function"` (the function that was cached), `"module"` and
+#'   `"event"` (the SpaDES module and event type, `NA` outside SpaDES), `"url"`,
+#'   `"caller"` (`prepInputs` or `preProcess`), `"firstSeen"`, `"lastSeen"`,
+#'   `"hitCount"` (times the entry was reused) and `"createdDate"`.
+#' @param ... Passed to methods; unused by the default method.
+#'
+#' @return A `data.table` with the columns in `which`, `NA` where a value is absent,
+#'   sorted by `lastSeen`, most recent first. A cache with no logged urls gives a
+#'   zero-row table with the same columns.
+#'
+#' @seealso [prepInputsLog()] for the per-session log, [showCache()].
+#' @export
+#' @rdname urlLog
+#' @examples
+#' tmp <- tempfile()
+#' withr::with_options(list(reproducible.cachePath = tmp), {
+#'   urlLog(which = c("url", "function", "lastSeen"))  # empty until prepInputs() has run
+#' })
+urlLog <- function(x = NULL, ...) UseMethod("urlLog")
+
+#' @export
+#' @rdname urlLog
+urlLog.default <- function(x = NULL, which = c("function", "module", "url"), ...) {
+  which <- match.arg(which, .urlLogWhich, several.ok = TRUE)
+  if (is.null(x)) x <- getOption("reproducible.cachePath")
+  if (!is.character(x))
+    stop("urlLog() has no method for an object of class ", class(x)[1])
+  x <- x[1]
+
+  empty <- function() {
+    out <- setNames(rep(list(character()), length(which)), which)
+    setDT(out)
+  }
+  ## Only entries that carry a reproducible.url tag; userTags is a regexp, so
+  ## keep exact tagKey matches.
+  urlTags <- showCache(x, userTags = "reproducible.url", verbose = FALSE)
+  urlTags <- urlTags[urlTags$tagKey == "reproducible.url"]
+  if (NROW(urlTags) == 0L) return(empty())
+  ids <- unique(urlTags$cacheId)
+
+  tags <- showCache(x, cacheId = ids, verbose = FALSE)
+  tags <- tags[tags$tagKey %in% .urlLogTagKeys]
+
+  ## one value per (cacheId, key), the most recent if repeated; url keeps them all
+  pick <- function(key) {
+    d <- tags[tags$tagKey == key, c("cacheId", "tagValue")]
+    d[!duplicated(d$cacheId, fromLast = TRUE)]
+  }
+  out <- urlTags[, c("cacheId", "tagValue", "createdDate")]
+  setnames(out, "tagValue", "url")
+  out <- unique(out, by = c("cacheId", "url"))
+  for (nm in intersect(which, names(.urlLogTagKeys)[-1])) {
+    d <- pick(.urlLogTagKeys[[nm]])
+    out[[nm]] <- d$tagValue[match(out$cacheId, d$cacheId)]
+  }
+  if ("hitCount" %in% which) out$hitCount <- suppressWarnings(as.integer(out$hitCount))
+  for (nm in intersect(which, c("firstSeen", "lastSeen")))
+    out[[nm]] <- as.POSIXct(out[[nm]], tz = "")
+  ls <- if ("lastSeen" %in% names(out)) out$lastSeen else
+    as.POSIXct(pick("reproducible.urlLastSeen")$tagValue[
+      match(out$cacheId, pick("reproducible.urlLastSeen")$cacheId)], tz = "")
+  out <- out[order(ls, decreasing = TRUE, na.last = TRUE)]
+  out[, which, with = FALSE]
+}

@@ -407,7 +407,7 @@
 #'     record of the files and web addresses (URLs) they download. `NULL` (the
 #'     default) records each download as a permanent tag on the matching cache
 #'     entry, which you can look up later with
-#'     `showCache(userTags = "reproducible.url")`; it keeps no in-session list.
+#'     [urlLog()]; it keeps no in-session list.
 #'     `TRUE` additionally keeps an in-memory list for the current session, which
 #'     you can read with [prepInputsLog()] and empty with [clearUrlLog()].
 #'     `FALSE` turns the recording off completely. Advanced: you may instead

@@ -256,7 +256,7 @@ utils::globalVariables(c(
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso [postProcessTo()], [downloadFile()], [extractFromArchive()],
-#'          [postProcess()].
+#'          [postProcess()]; [urlLog()] lists the URLs a cache has recorded.
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE) &&
 #'   requireNamespace("withr", quietly = TRUE)) {

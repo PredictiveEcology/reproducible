@@ -390,7 +390,7 @@ if (requireNamespace("terra", quietly = TRUE) &&
 }
 \seealso{
 \code{\link[=postProcessTo]{postProcessTo()}}, \code{\link[=downloadFile]{downloadFile()}}, \code{\link[=extractFromArchive]{extractFromArchive()}},
-\code{\link[=postProcess]{postProcess()}}.
+\code{\link[=postProcess]{postProcess()}}; \code{\link[=urlLog]{urlLog()}} lists the URLs a cache has recorded.
 }
 \author{
 Eliot McIntire, Jean Marchal, and Tati Micheletti
