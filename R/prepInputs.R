@@ -26,7 +26,7 @@ utils::globalVariables(c(
 #' | Download once | Reuses the local copy while its checksum matches: Stage 1 below. |
 #' | Detect remote changes | Asks the remote (Google Drive md5, HTTP ETag) if the file changed, when `reproducible.checkRemoteHash = TRUE`: [reproducibleOptions]. |
 #' | Force a fresh copy | Downloads again and replaces the local copy: `purge = 7`, section `purge`. |
-#' | Download ledger | Records the URLs used: [prepInputsLog()] for the session, and tags on the [Cache()] entry: `reproducible.urlLog`. |
+#' | Download ledger | Records the URLs used: [prepInputsLog()] for the session; inside [Cache()] also as tags on the entry, read with [urlLog()]. Option `reproducible.urlLog`. |
 #' | Archives | Extracts zip and tar files, only what you need: `alsoExtract`. |
 #' | Checksums | Records every file in `CHECKSUMS.txt`: `quick`, [Checksums()]. |
 #' | Shared downloads | One copy for many projects, hard-linked in: `reproducible.destinationPathShared`. |
@@ -275,7 +275,7 @@ utils::globalVariables(c(
 #' @include checksums.R download.R postProcess.R
 #' @rdname prepInputs
 #' @seealso [postProcessTo()], [downloadFile()], [extractFromArchive()],
-#'          [postProcess()].
+#'          [postProcess()]; [urlLog()] lists the URLs a cache has recorded.
 #' @examples
 #' if (requireNamespace("terra", quietly = TRUE) &&
 #'   requireNamespace("withr", quietly = TRUE)) {

@@ -389,7 +389,7 @@ default) and \code{TRUE} keep an in-memory list for the current session, which
 you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}; a
 download made inside \code{Cache()} is also recorded as a permanent tag on the
 matching cache entry, which you can look up later with
-\code{showCache(userTags = "reproducible.url")}.
+\code{\link[=urlLog]{urlLog()}}.
 \code{FALSE} turns the recording off completely. Advanced: you may instead
 supply an environment (records are appended to \code{env$records}, which you
 own and manage) or a function (called once with each record).

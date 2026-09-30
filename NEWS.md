@@ -1,3 +1,12 @@
+# reproducible 3.2.1.9054
+
+## Enhancements
+
+* New exported S3 generic `urlLog()` with a default method that returns the URL ledger kept as
+  `reproducible.url*` Cache tags as a table (one row per cache entry and url; columns chosen with
+  `which`, sorted by last use). It replaces `showCache(userTags = "reproducible.url")`, which also
+  matched argument digests containing "url". Other packages, such as SpaDES.core, add methods.
+
 # reproducible 3.2.1.9053
 
 ## Bug fixes

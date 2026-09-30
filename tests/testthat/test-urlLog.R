@@ -328,3 +328,82 @@ test_that("urlLog: legacy cache hit (no tags) recovers url from matched call + s
   expect_true("reproducible.url" %in% sc1$tagKey)
   expect_true(any(sc1$tagValue == "https://example.com/legacy.tif"))
 })
+
+## ---- urlLog(): accessor for the url tags on a cache ----------------------
+
+.urlLogCache <- function(urls = "https://example.com/a.tif") {
+  ## stub prepInputs that logs the url(s) without touching the network
+  fakePrepInputs <- function(url, opts = "x") {
+    reproducible:::.logUrlAccess("prepInputs", url)
+    "ok"
+  }
+  prepInputs <- fakePrepInputs
+  Cache(prepInputs(url = urls))
+}
+
+test_that("urlLog(): returns url and function, selects/orders columns by `which`", {
+  testInit(verbose = 0)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  .urlLogCache()
+  ul <- urlLog(tmpdir)
+  expect_s3_class(ul, "data.table")
+  expect_identical(colnames(ul), c("function", "module", "url"))
+  expect_identical(ul$url, "https://example.com/a.tif")
+  expect_identical(ul[["function"]], "prepInputs")
+  expect_true(is.na(ul$module))
+
+  ## default cachePath comes from the option
+  expect_identical(urlLog()$url, ul$url)
+
+  ul2 <- urlLog(tmpdir, which = c("url", "caller", "hitCount", "cacheId", "createdDate"))
+  expect_identical(colnames(ul2), c("url", "caller", "hitCount", "cacheId", "createdDate"))
+  expect_identical(ul2$caller, "prepInputs")
+  expect_error(urlLog(tmpdir, which = "nonsense"))
+})
+
+test_that("urlLog(): never returns preDigest values that merely contain 'url'", {
+  testInit(verbose = 0)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  .urlLogCache()
+  ## a Cache entry with no url ledger whose argument digests mention "url"
+  f <- function(urlThing) urlThing
+  Cache(f, urlThing = "url-like-value")
+  sc <- showCache(tmpdir, userTags = "url", verbose = FALSE)
+  expect_true(any(grepl("url", sc$tagValue[sc$tagKey == "preDigest"], ignore.case = TRUE)))
+  ul <- urlLog(tmpdir, which = c("cacheId", "function", "url"))
+  expect_identical(NROW(ul), 1L)
+  expect_identical(ul$url, "https://example.com/a.tif")
+})
+
+test_that("urlLog(): several urls on one entry give several rows", {
+  testInit(verbose = 0)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  .urlLogCache(c("https://example.com/a.tif", "https://example.com/b.tif"))
+  ul <- urlLog(tmpdir, which = c("cacheId", "url"))
+  expect_identical(NROW(ul), 2L)
+  expect_identical(length(unique(ul$cacheId)), 1L)
+  expect_setequal(ul$url, c("https://example.com/a.tif", "https://example.com/b.tif"))
+})
+
+test_that("urlLog(): empty cache gives a zero-row table with the requested columns", {
+  testInit(verbose = 0)
+  withr::local_options(reproducible.cachePath = tmpdir)
+  ul <- urlLog(tmpdir, which = c("url", "lastSeen"))
+  expect_s3_class(ul, "data.table")
+  expect_identical(NROW(ul), 0L)
+  expect_identical(colnames(ul), c("url", "lastSeen"))
+})
+
+test_that("urlLog(): sorted by lastSeen descending", {
+  testInit(verbose = 0)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  .urlLogCache("https://example.com/a.tif")
+  Sys.sleep(1.1)
+  .urlLogCache("https://example.com/b.tif")
+  ul <- urlLog(tmpdir, which = c("url", "lastSeen"))
+  expect_identical(ul$url, c("https://example.com/b.tif", "https://example.com/a.tif"))
+})
