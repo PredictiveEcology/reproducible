@@ -40,9 +40,7 @@ example SpaDES.core for a \code{simList}; every method returns the same column n
 }
 \examples{
 tmp <- tempfile()
-withr::with_options(list(reproducible.cachePath = tmp), {
-  urlLog(which = c("url", "function", "lastSeen"))  # empty until prepInputs() has run
-})
+urlLog(tmp, which = c("url", "function", "lastSeen"))  # empty until prepInputs() has run in Cache()
 }
 \seealso{
 \code{\link[=prepInputsLog]{prepInputsLog()}} for the per-session log, \code{\link[=showCache]{showCache()}}.

@@ -623,9 +623,7 @@ preProcessCheckURLs <- function(path = ".",
 #' @rdname urlLog
 #' @examples
 #' tmp <- tempfile()
-#' withr::with_options(list(reproducible.cachePath = tmp), {
-#'   urlLog(which = c("url", "function", "lastSeen"))  # empty until prepInputs() has run
-#' })
+#' urlLog(tmp, which = c("url", "function", "lastSeen"))  # empty until prepInputs() has run in Cache()
 urlLog <- function(x = NULL, ...) UseMethod("urlLog")
 
 #' @export
