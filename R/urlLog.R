@@ -604,8 +604,8 @@ preProcessCheckURLs <- function(path = ".",
 #' `urlLog()` is an S3 generic. Other packages add methods for their own objects, for
 #' example SpaDES.core for a `simList`; every method returns the same column names.
 #'
-#' @param x A cache path (character), or `NULL` (the default) for
-#'   `getOption("reproducible.cachePath")`. Methods for other classes are provided by
+#' @param x A cache path (character); defaults to `getOption("reproducible.cachePath")`
+#'   (`NULL` means the same). Methods for other classes are provided by
 #'   the packages that own them.
 #' @param which Character vector of columns to return, in the order given. Allowed
 #'   values: `"cacheId"`, `"function"` (the function that was cached), `"module"` and
@@ -624,13 +624,13 @@ preProcessCheckURLs <- function(path = ".",
 #' @examples
 #' tmp <- tempfile()
 #' urlLog(tmp, which = c("url", "function", "lastSeen"))  # empty until prepInputs() has run in Cache()
-urlLog <- function(x = NULL, ...) UseMethod("urlLog")
+urlLog <- function(x = getOption("reproducible.cachePath"), ...) UseMethod("urlLog")
 
 #' @export
 #' @rdname urlLog
-urlLog.default <- function(x = NULL, which = c("function", "module", "url"), ...) {
+urlLog.default <- function(x = getOption("reproducible.cachePath"), which = c("function", "module", "url"), ...) {
   which <- match.arg(which, .urlLogWhich, several.ok = TRUE)
-  if (is.null(x)) x <- getOption("reproducible.cachePath")
+  if (is.null(x)) x <- getOption("reproducible.cachePath") # an explicit NULL still means the default
   if (!is.character(x))
     stop("urlLog() has no method for an object of class ", class(x)[1])
   x <- x[1]

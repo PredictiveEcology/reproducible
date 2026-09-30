@@ -5,13 +5,17 @@
 \alias{urlLog.default}
 \title{The URL ledger kept in a cache}
 \usage{
-urlLog(x = NULL, ...)
+urlLog(x = getOption("reproducible.cachePath"), ...)
 
-\method{urlLog}{default}(x = NULL, which = c("function", "module", "url"), ...)
+\method{urlLog}{default}(
+  x = getOption("reproducible.cachePath"),
+  which = c("function", "module", "url"),
+  ...
+)
 }
 \arguments{
-\item{x}{A cache path (character), or \code{NULL} (the default) for
-\code{getOption("reproducible.cachePath")}. Methods for other classes are provided by
+\item{x}{A cache path (character); defaults to \code{getOption("reproducible.cachePath")}
+(\code{NULL} means the same). Methods for other classes are provided by
 the packages that own them.}
 
 \item{...}{Passed to methods; unused by the default method.}
