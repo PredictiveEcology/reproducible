@@ -2256,15 +2256,17 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               downloadResults <- list(destFile = character(), needChecksums = 0)
             }
             if (refetchAll && NROW(drive_files)) {
-              ## Everything is downloaded, so the local copies can go: the fresh ones replace
-              ## those in destinationPath below. Drop the old rows so the fresh copies are
-              ## recorded rather than rejected, and the stash copies so none is reused.
+              ## Everything is downloaded, so the fresh copies replace those in destinationPath
+              ## below. Drop the old rows so the fresh copies are recorded rather than rejected.
+              ## The stash copies are replaced too, so none is reused -- but not unlinked first:
+              ## other processes read them, and a path must not go missing while they do.
               sharedRoots <- .getDestinationPathShared()
               for (csfi in unique(identifyCHECKSUMStxtFile(c(destinationPath, sharedRoots))))
                 if (file.exists(csfi)) .removeChecksumsRows(csfi, drive_files$name)
               if (!is.null(sharedRoots)) {
                 stashed <- file.path(sharedRoots, drive_files$name)
-                unlink(stashed[normPath(stashed) != normPath(file.path(destinationPath, drive_files$name))])
+                stashToReplace <- stashed[normPath(stashed) != normPath(file.path(destinationPath, drive_files$name)) &
+                                            file.exists(stashed)]
               }
             }
 
@@ -2395,6 +2397,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         # if (isFALSE(result)) {
         #   result <- file.copy(downloadResults$destFile, desiredPath)
         # }
+
+        if (exists("stashToReplace", inherits = FALSE) && length(stashToReplace)) {
+          hardLinkOrCopy(makeAbsolute(basename2(stashToReplace), destinationPath), stashToReplace,
+                         verbose = verbose - 3)
+        }
 
         tmpFile <- makeRelative(downloadResults$destFile, dirname(downloadResults$destFile))
         downloadResults$destFile <- makeAbsolute(tmpFile, destinationPath)

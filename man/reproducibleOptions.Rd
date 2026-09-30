@@ -385,11 +385,11 @@ seconds.
 \item{\code{urlLog}}{
 Default: \code{NULL}. Controls whether \code{prepInputs()} / \code{preProcess()} keep a
 record of the files and web addresses (URLs) they download. \code{NULL} (the
-default) records each download as a permanent tag on the matching cache
-entry, which you can look up later with
-\code{\link[=urlLog]{urlLog()}}; it keeps no in-session list.
-\code{TRUE} additionally keeps an in-memory list for the current session, which
-you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}.
+default) and \code{TRUE} keep an in-memory list for the current session, which
+you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}; a
+download made inside \code{Cache()} is also recorded as a permanent tag on the
+matching cache entry, which you can look up later with
+\code{\link[=urlLog]{urlLog()}}.
 \code{FALSE} turns the recording off completely. Advanced: you may instead
 supply an environment (records are appended to \code{env$records}, which you
 own and manage) or a function (called once with each record).

@@ -18,6 +18,25 @@ utils::globalVariables(c(
 #' To trigger the second stage, provide `studyArea` or `rasterToMatch`.
 #' See examples.
 #'
+#' @section Features:
+#'
+#' | Feature | What it does |
+#' |:--------|:-------------|
+#' | Any source | Web URL, Google Drive, or a local file or archive: `url`, `archive`, `targetFile`. |
+#' | Download once | Reuses the local copy while its checksum matches: Stage 1 below. |
+#' | Detect remote changes | Asks the remote (Google Drive md5, HTTP ETag) if the file changed, when `reproducible.checkRemoteHash = TRUE`: [reproducibleOptions]. |
+#' | Force a fresh copy | Downloads again and replaces the local copy: `purge = 7`, section `purge`. |
+#' | Download ledger | Records the URLs used: [prepInputsLog()] for the session; inside [Cache()] also as tags on the entry, read with [urlLog()]. Option `reproducible.urlLog`. |
+#' | Archives | Extracts zip and tar files, only what you need: `alsoExtract`. |
+#' | Checksums | Records every file in `CHECKSUMS.txt`: `quick`, [Checksums()]. |
+#' | Shared downloads | One copy for many projects, hard-linked in: `reproducible.destinationPathShared`. |
+#' | Mirrors | Downloads from a mirror instead of the original URL: `reproducible.urlRemap`. |
+#' | Parallel downloads | Splits a large mirrored file into ranged parts and retries failed parts: `reproducible.parallel.download`. |
+#' | Safe replace | A file being replaced is never missing for other processes reading it: section Re-downloading. |
+#' | Any loader | Loads with any function: `fun`, section `fun`. |
+#' | Fit to a study area | Crops, reprojects, masks and writes: Stage 2 below, [postProcessTo()]. |
+#' | Fast repeats | Wrap in [Cache()] and repeated calls return at once: `useCache`. |
+#'
 #' @section Stage 1 - Getting data:
 #'
 #' See [preProcess()] for combinations of arguments.
@@ -105,11 +124,11 @@ utils::globalVariables(c(
 #'     \item{`3`}{delete entry with same `archive`}
 #'     \item{`5`}{delete entry with same `targetFile` & `alsoExtract`}
 #'     \item{`6`}{delete entry with same `targetFile`, `alsoExtract` & `archive`}
-#'     \item{`7`}{download again: set aside the local copies of `targetFile`, `archive` and
-#'       the files extracted with them -- in `destinationPath` and, when
-#'       `reproducible.destinationPathShared` is set, in the shared stash -- drop their
-#'       entries, then download, extract and link them as on a first run. If the download
-#'       fails, the previous copies are put back.}
+#'     \item{`7`}{download again: fetch `targetFile`, `archive` and the files extracted
+#'       with them afresh, then replace the local copies of each -- in `destinationPath` and,
+#'       when `reproducible.destinationPathShared` is set, in the shared stash -- and drop their
+#'       entries. The old copies stay in place until each is replaced, so a process reading one
+#'       never finds it missing; if the download fails, they are untouched.}
 #'   }
 #' Values `1` to `6` only remove entries in the `CHECKSUMS.txt`; the entries are then
 #'   rebuilt from the files already on disk, so they do not download anything.
