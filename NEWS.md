@@ -16,6 +16,9 @@
   in-memory session log. The code fills the in-memory log in the default and `TRUE` modes, as `?prepInputsLog`
   says; the comment now matches. Comments only, no change in behaviour.
 
+* `?prepInputs` starts with a short Features table linking each feature to its argument, option or section.
+  `?reproducibleOptions` no longer says the default `reproducible.urlLog = NULL` keeps no in-session list.
+
 # reproducible 3.2.1.9051
 
 ## Enhancements

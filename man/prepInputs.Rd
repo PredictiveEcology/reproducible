@@ -155,6 +155,26 @@ To trigger the first stage, provide \code{url} or \code{archive}.
 To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.
 See examples.
 }
+\section{Features}{
+\tabular{ll}{
+   Feature \tab What it does \cr
+   Any source \tab Web URL, Google Drive, or a local file or archive: \code{url}, \code{archive}, \code{targetFile}. \cr
+   Download once \tab Reuses the local copy while its checksum matches: Stage 1 below. \cr
+   Detect remote changes \tab Asks the remote (Google Drive md5, HTTP ETag) if the file changed, when \code{reproducible.checkRemoteHash = TRUE}: \link{reproducibleOptions}. \cr
+   Force a fresh copy \tab Downloads again and replaces the local copy: \code{purge = 7}, section \code{purge}. \cr
+   Download ledger \tab Records the URLs used: \code{\link[=prepInputsLog]{prepInputsLog()}} for the session, and tags on the \code{\link[=Cache]{Cache()}} entry: \code{reproducible.urlLog}. \cr
+   Archives \tab Extracts zip and tar files, only what you need: \code{alsoExtract}. \cr
+   Checksums \tab Records every file in \code{CHECKSUMS.txt}: \code{quick}, \code{\link[=Checksums]{Checksums()}}. \cr
+   Shared downloads \tab One copy for many projects, hard-linked in: \code{reproducible.destinationPathShared}. \cr
+   Mirrors \tab Downloads from a mirror instead of the original URL: \code{reproducible.urlRemap}. \cr
+   Parallel downloads \tab Splits a large mirrored file into ranged parts and retries failed parts: \code{reproducible.parallel.download}. \cr
+   Safe replace \tab A file being replaced is never missing for other processes reading it: section Re-downloading. \cr
+   Any loader \tab Loads with any function: \code{fun}, section \code{fun}. \cr
+   Fit to a study area \tab Crops, reprojects, masks and writes: Stage 2 below, \code{\link[=postProcessTo]{postProcessTo()}}. \cr
+   Fast repeats \tab Wrap in \code{\link[=Cache]{Cache()}} and repeated calls return at once: \code{useCache}. \cr
+}
+}
+
 \section{Stage 1 - Getting data}{
 
 

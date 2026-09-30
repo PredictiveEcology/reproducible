@@ -405,11 +405,11 @@
 #'   \item{`urlLog`}{
 #'     Default: `NULL`. Controls whether `prepInputs()` / `preProcess()` keep a
 #'     record of the files and web addresses (URLs) they download. `NULL` (the
-#'     default) records each download as a permanent tag on the matching cache
-#'     entry, which you can look up later with
-#'     `showCache(userTags = "reproducible.url")`; it keeps no in-session list.
-#'     `TRUE` additionally keeps an in-memory list for the current session, which
-#'     you can read with [prepInputsLog()] and empty with [clearUrlLog()].
+#'     default) and `TRUE` keep an in-memory list for the current session, which
+#'     you can read with [prepInputsLog()] and empty with [clearUrlLog()]; a
+#'     download made inside `Cache()` is also recorded as a permanent tag on the
+#'     matching cache entry, which you can look up later with
+#'     `showCache(userTags = "reproducible.url")`.
 #'     `FALSE` turns the recording off completely. Advanced: you may instead
 #'     supply an environment (records are appended to `env$records`, which you
 #'     own and manage) or a function (called once with each record).
