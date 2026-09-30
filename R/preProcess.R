@@ -270,20 +270,11 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   ## hardlink out of it, which is the whole point of having one. See .withStashLock() for
   ## why this is not the Cache lock.
   runPipeline <- function(cc) {
-    ## purge = 7 sets this call's local copies aside first, inside the lock, and puts them
-    ## back if the rest does not finish. See .purgeRefreshStart().
-    refresh <- .purgeRefreshStart(cc)
-    finished <- FALSE
-    on.exit(.purgeRefreshFinish(refresh, ok = finished), add = TRUE)
-    cc <- pp_checksums_init(cc)
-    cc <- pp_purge(cc)
-    cc <- pp_resolve_needed_files(cc)
-    cc <- pp_check_local_sources(cc)
-    cc <- pp_remote_hash_check(cc)
-    cc <- pp_download(cc)
-    cc <- pp_extract(cc)
+    ## purge = 7 fetches this call's inputs into a scratch directory and swaps them in
+    ## before the rest runs. See .purgeRefresh().
+    cc <- .purgeRefresh(cc)
+    cc <- .ppFetch(cc)
     cc <- pp_link_to_destination(cc)
-    finished <- TRUE
     cc
   }
   lockKey <- .stashLockKey(ctx)
@@ -294,6 +285,17 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
 
   reportTime(st, mess = "`preProcess` done; took ", minSeconds = 10)
   out
+}
+
+## Everything from the checksum check to extraction: what puts this call's files in `destinationPath`.
+.ppFetch <- function(cc) {
+  cc <- pp_checksums_init(cc)
+  cc <- pp_purge(cc)
+  cc <- pp_resolve_needed_files(cc)
+  cc <- pp_check_local_sources(cc)
+  cc <- pp_remote_hash_check(cc)
+  cc <- pp_download(cc)
+  pp_extract(cc)
 }
 
 # ---------------------------------------------------------------------------
@@ -1899,16 +1901,23 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                           "identical; keeping ", singularPlural(c("it", "them"), l = which(keepTo)),
                           verbose = verbose - 1)
 
-      if (any(existsTo & !keepTo)) {
-        unlink(to[existsTo & !keepTo])
-      }
-      # Try hard link first -- the only type that R deeply recognizes
+      ## A target that is replaced is never unlinked first. Other processes may be reading
+      ## it (two FireSense workers on one input, 2026-09-29: one saw "The file does not
+      ## exist" between the other's unlink and its link). The new file is made under a
+      ## temporary name beside `to` and renamed over it, which replaces it in one step on one file system:
+      ## `to` always names the old file or the new one.
       linkable <- !dups & !isDir & !keepTo
+      replace <- existsTo & !keepTo & linkable
+      dest <- to
+      if (any(replace))
+        dest[replace] <- vapply(to[replace], function(x)
+          tempfile(pattern = paste0(".", basename(x), "."), tmpdir = dirname(x)), character(1))
+      # Try hard link first -- the only type that R deeply recognizes
       ## file.link() ERRORS on zero-length input ("no files to link from") rather than
       ## returning logical(0), so a set that is all directories -- or, now, all already
       ## present -- must not reach it.
       linked <- if (!any(linkable)) logical(0) else captureWarningsToAttr(
-        file.link(from[linkable], to[linkable])
+        file.link(from[linkable], dest[linkable])
       )
       warns <- attr(linked, "warning")
       ## `result` must be one element per `from`/`to`: everything below indexes `from[!result]`.
@@ -1949,7 +1958,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       # On *nix types -- try symlink
       if (isFALSE(all(result)) && isTRUE(symlink)) {
         if (!isWindows()) {
-          result <- suppressWarnings(file.symlink(from[!result], to[!result]))
+          result <- suppressWarnings(file.symlink(from[!result], dest[!result]))
           if (isTRUE(all(result))) {
             messagePreProcess("Symlinked", hardlinkOrSymlinkMessagePrefix, verbose = verbose)
             messagePreProcess("\n", toCollapsed, "\n",
@@ -1972,7 +1981,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           fromMess <- c(head(fromCollapsed[!result]), tail(fromCollapsed[!result]))
           toMess <- c(head(toCollapsed[!result], 24), "... (omitting many)", tail(toCollapsed[!result], 24))
         }
-        result2 <- try(file.copy(from[!result], to[!result], overwrite = overwrite))
+        result2 <- try(file.copy(from[!result], dest[!result], overwrite = overwrite))
         if (is(result2, "try-error")) {
           stop("Failed to copy file(s) to destination: ",
                attr(result2, "condition")$message)
@@ -1986,12 +1995,29 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
                           singularPlural(c("was", "were"), l = fromMess)," created at:\n",
                           toMessCollapsed, verbose = verbose)
       }
+      if (any(replace)) {
+        made <- replace & file.exists(dest)
+        placed <- rep(FALSE, length(to))
+        placed[made] <- vapply(which(made), function(i) .renameOver(dest[i], to[i]), logical(1))
+        unlink(dest[made & !placed]) # a temporary that could not be placed
+        if (any(made & !placed)) result <- FALSE
+      }
     } else {
       messagePreProcess("File ", fromCollapsed, " does not exist. Not copying.", verbose = verbose)
       result <- FALSE
     }
   }
   return(result)
+}
+
+## Rename `from` over `to`, which may exist. On POSIX, and on the file systems Windows
+## renames over, the path is never missing. Where an existing `to` blocks the rename (Windows,
+## some network file systems) the old file is removed and the rename retried; that leaves a
+## short gap, but only where a one-step replace is not on offer.
+.renameOver <- function(from, to) {
+  if (isTRUE(suppressWarnings(file.rename(from, to)))) return(TRUE)
+  unlink(to)
+  isTRUE(suppressWarnings(file.rename(from, to)))
 }
 
 #' @keywords internal
@@ -2692,76 +2718,81 @@ messageChecksummingAllFiles <- "Checksumming all files in archive"
 ##
 ## "Delete the file and re-run" is not something a user can be asked to do: with
 ## `destinationPathShared` set there are two local copies -- the shared stash and the link or
-## copy in `destinationPath` -- and a stale one left in either is found and reused. So this
-## sets aside every local copy of this call's files (the archive, the target and what is
-## extracted with it; never a directory, never another input's files), drops their
-## CHECKSUMS.txt rows and remote-hash sidecars, and lets the rest of preProcess() download,
-## extract and link as it does on a first run.
+## copy in `destinationPath` -- and a stale one left in either is found and reused. So the
+## files this call downloads or extracts (the archive, the target and what is extracted with
+## it; never a directory, never another input's files) are fetched afresh, from nothing, into
+## a scratch directory inside `destinationPath`, then swapped into every local copy.
 ##
-## Set aside is a rename, not a delete: a process still reading the old file keeps its inode,
-## nothing is truncated in place, and if the download fails the old copies are put back
-## (.purgeRefreshFinish()) instead of leaving nothing. It runs inside .withStashLock(), so no
-## other process is filling the stash for this input meanwhile.
-.purgeRefreshStart <- function(ctx) {
+## The old copies stay where they are until each is replaced by a rename (linkOrCopy()), so a
+## path is never missing: other processes read these files while this one downloads (two
+## FireSense workers on one input, 2026-09-29, when this moved the old copies aside and the
+## other worker's read of the target found nothing). A process still reading an old file keeps
+## its inode, and nothing is truncated in place. If the fetch fails, nothing has been touched.
+## Only then are the CHECKSUMS.txt rows of these files dropped, and the rest of preProcess()
+## records the fresh copies as it would for any file that is on disk but not listed. It runs
+## inside .withStashLock(), so no other process is filling the stash for this input meanwhile.
+.purgeRefresh <- function(ctx) {
   purge <- ctx$purge
   if (is.logical(purge)) purge <- as.integer(purge)
-  if (!isTRUE(purge == 7L)) return(NULL)
+  if (!isTRUE(purge == 7L)) return(ctx)
 
   sharedRoots <- .getDestinationPathShared()
   dirs <- unique(c(ctx$destinationPath, .sharedDirsFor(sharedRoots, ctx$archive)))
   files <- .purgeRefreshFiles(ctx, dirs)
-  if (!length(files)) return(NULL)
+  if (!length(files)) return(ctx)
 
   paths <- unique(unlist(lapply(dirs, function(d) file.path(d, files))))
   ## an archive stashed flat, before the stash was scoped per archive, is migrated back in
   if (!is.null(sharedRoots) && !isNULLorNA(ctx$archive))
     paths <- unique(c(paths, file.path(sharedRoots, basename2(ctx$archive[1]))))
   paths <- paths[file.exists(paths) & !dir.exists(paths)]
+  if (!length(paths)) return(ctx) # nothing local to replace; the ordinary run downloads it
 
-  tag <- paste0(".purge7_", Sys.getpid(), "_", rndstr(1, 6))
-  baks <- vapply(paths, function(p) {
-    bak <- file.path(dirname(p), paste0(".", basename(p), tag))
-    if (isTRUE(file.rename(p, bak))) bak else NA_character_
-  }, character(1), USE.NAMES = FALSE)
+  messagePreProcess("purge = 7: downloading again; the local copies stay until the new ones are ready:\n  ",
+                    paste(paths, collapse = "\n  "), verbose = ctx$verbose)
 
+  ## the fetch, as a first run in a directory of its own
+  dp <- ctx$destinationPath
+  staging <- file.path(dp, paste0(".purge7_", Sys.getpid(), "_", rndstr(1, 6)))
+  checkPath(staging, create = TRUE)
+  optsOld <- options(reproducible.destinationPathShared = NULL, reproducible.inputPaths = NULL)
+  on.exit({
+    options(optsOld)
+    unlink(staging, recursive = TRUE)
+  }, add = TRUE)
+  rebase <- function(x) if (isNULLorNA(x)) x else
+    moveAttributes(x, makeAbsolute(makeRelative(x, dp), staging))
+  sc <- ctx
+  sc$destinationPath <- staging
+  sc$targetFilePath <- rebase(ctx$targetFilePath)
+  sc$archive <- rebase(ctx$archive)
+  sc$checkSumFilePath <- identifyCHECKSUMStxtFile(staging)
+  sc$purge <- 0L
+  .ppFetch(sc)
+  options(optsOld)
+
+  fresh <- list.files(staging, recursive = TRUE, all.files = TRUE, no.. = TRUE)
+  fresh <- fresh[fresh != basename(sc$checkSumFilePath)]
   csfs <- unique(identifyCHECKSUMStxtFile(c(dirs, sharedRoots)))
   csfs <- csfs[file.exists(csfs)]
-  csBaks <- vapply(csfs, function(csf) {
-    bak <- file.path(dirname(csf), paste0(".CHECKSUMS.txt", tag))
-    if (!isTRUE(file.copy(csf, bak))) return(NA_character_)
-    .removeChecksumsRows(csf, files)
-    bak
-  }, character(1), USE.NAMES = FALSE)
-
   sidecarDirs <- unique(c(dirs, sharedRoots))
-  unlink(unlist(lapply(unique(basename2(files)), .findRemoteHashSidecars, dirs = sidecarDirs)))
+  oldSidecars <- unlist(lapply(unique(basename2(files)), .findRemoteHashSidecars, dirs = sidecarDirs))
 
-  if (length(paths))
-    messagePreProcess("purge = 7: downloading again; set aside the local copies:\n  ",
-                      paste(paths, collapse = "\n  "), verbose = ctx$verbose)
-  list(moved = data.frame(orig = paths, bak = baks, stringsAsFactors = FALSE),
-       checksums = data.frame(orig = csfs, bak = csBaks, stringsAsFactors = FALSE),
-       verbose = ctx$verbose)
-}
-
-## On success the set-aside copies are removed. Otherwise each is put back where nothing new
-## took its place, with the CHECKSUMS.txt it was recorded in.
-.purgeRefreshFinish <- function(refresh, ok) {
-  if (is.null(refresh)) return(invisible())
-  moved <- refresh$moved[!is.na(refresh$moved$bak), , drop = FALSE]
-  cs <- refresh$checksums[!is.na(refresh$checksums$bak), , drop = FALSE]
-  if (isTRUE(ok)) {
-    unlink(c(moved$bak, cs$bak))
-  } else {
-    back <- !file.exists(moved$orig)
-    if (any(back)) file.rename(moved$bak[back], moved$orig[back])
-    unlink(moved$bak[!back])
-    if (NROW(cs)) file.rename(cs$bak, cs$orig)
-    if (NROW(moved))
-      messagePreProcess("purge = 7 did not finish; the previous local copies were put back",
-                        verbose = refresh$verbose)
+  if (length(fresh)) {
+    for (d in dirs) {
+      placed <- hardLinkOrCopy(file.path(staging, fresh), file.path(d, fresh),
+                               verbose = ctx$verbose - 3L)
+      if (!isTRUE(all(placed)))
+        stop("purge = 7 could not place the downloaded file(s) in ", d)
+    }
+    ## rows and sidecars of the old copies; the fresh ones are recorded by the rest of preProcess()
+    for (csf in csfs) .removeChecksumsRows(csf, files)
+    newPaths <- unlist(lapply(dirs, function(d) file.path(d, fresh)))
+    unlink(setdiff(normPath(c(paths, oldSidecars)), normPath(newPaths)))
   }
-  invisible()
+
+  ctx$purge <- 6L # the fresh copies are in place: drop their rows, but there is nothing to fetch
+  ctx
 }
 
 ## The files, relative to destinationPath, that this call downloads or extracts.

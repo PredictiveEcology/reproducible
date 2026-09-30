@@ -1,21 +1,24 @@
 ## URL access logging for prepInputs / preProcess.
 ##
-## The option `reproducible.urlLog` has three modes:
-##   FALSE              -> fully off (kill switch).
-##   NULL (default)     -> "tags only": prepInputs/preProcess accesses that
-##                         flow through Cache() tag the cacheId in the cache DB
-##                         with reproducible.url* tags (permanent, on disk,
-##                         queryable via showCache). No in-memory session log.
+## The option `reproducible.urlLog` selects where accesses are recorded:
+##   FALSE              -> fully off (kill switch): no records, no tags.
+##   NULL (default)     -> in-memory session log (retrieved with prepInputsLog())
+##                         + cacheId tags. A bare prepInputs/preProcess (no Cache)
+##                         is recorded straight to the log with cacheId = NA
+##                         (.logUrlAccess()); one that flows through Cache() is
+##                         recorded with its cacheId and also tags the cacheId in
+##                         the cache DB with reproducible.url* tags (permanent, on
+##                         disk, queryable via showCache).
+##   TRUE               -> the same as NULL.
 ##   <environment>      -> tags + a session log the caller owns (e.g.
 ##                         SpaDES.core simInitAndSpades). Records appended to
 ##                         `env$records`; idempotency via `env$seen`. Caller
 ##                         decides what to do with the contents on exit.
-##   TRUE               -> tags + in-memory session log via prepInputsLog().
 ##   function(record)   -> tags + callback invoked with each record (no dedup).
 ##
-## So persistent cacheId provenance accrues by default (cheap, disk-only); the
-## live session log is opt-in. The cacheId tags also let a later cache hit be
-## replayed into the session log even though no inner code runs on a hit.
+## So both the persistent cacheId provenance and the in-memory session log accrue
+## by default. The cacheId tags also let a later cache hit be replayed into the
+## session log even though no inner code runs on a hit.
 ##
 ## How `Cache(...prepInputs(url=...)...)` is handled (incl. Cache(Map(...))):
 ##   - On Cache entry, a transient "url frame" is allocated. prepInputs and
@@ -27,8 +30,8 @@
 ##     tags from the DB (via showCacheFast + extractFromCache) and emits
 ##     replay records so the access is still visible in the run's log.
 ##
-## Idempotency key is (fn, url, cacheId). Within a scope (env, or session in
-## TRUE mode), each (fn,url,cacheId) triple produces one record. The cache-DB
+## Idempotency key is (fn, url, cacheId). Within a scope (env, or the
+## in-memory log in the default and TRUE modes), each (fn,url,cacheId) triple produces one record. The cache-DB
 ## tags carry their own hitCount counter independently.
 ##
 ## Caller-supplied extra columns: for env sinks, set `sink$extra` to a list

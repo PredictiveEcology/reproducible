@@ -155,6 +155,26 @@ To trigger the first stage, provide \code{url} or \code{archive}.
 To trigger the second stage, provide \code{studyArea} or \code{rasterToMatch}.
 See examples.
 }
+\section{Features}{
+\tabular{ll}{
+   Feature \tab What it does \cr
+   Any source \tab Web URL, Google Drive, or a local file or archive: \code{url}, \code{archive}, \code{targetFile}. \cr
+   Download once \tab Reuses the local copy while its checksum matches: Stage 1 below. \cr
+   Detect remote changes \tab Asks the remote (Google Drive md5, HTTP ETag) if the file changed, when \code{reproducible.checkRemoteHash = TRUE}: \link{reproducibleOptions}. \cr
+   Force a fresh copy \tab Downloads again and replaces the local copy: \code{purge = 7}, section \code{purge}. \cr
+   Download ledger \tab Records the URLs used: \code{\link[=prepInputsLog]{prepInputsLog()}} for the session, and tags on the \code{\link[=Cache]{Cache()}} entry: \code{reproducible.urlLog}. \cr
+   Archives \tab Extracts zip and tar files, only what you need: \code{alsoExtract}. \cr
+   Checksums \tab Records every file in \code{CHECKSUMS.txt}: \code{quick}, \code{\link[=Checksums]{Checksums()}}. \cr
+   Shared downloads \tab One copy for many projects, hard-linked in: \code{reproducible.destinationPathShared}. \cr
+   Mirrors \tab Downloads from a mirror instead of the original URL: \code{reproducible.urlRemap}. \cr
+   Parallel downloads \tab Splits a large mirrored file into ranged parts and retries failed parts: \code{reproducible.parallel.download}. \cr
+   Safe replace \tab A file being replaced is never missing for other processes reading it: section Re-downloading. \cr
+   Any loader \tab Loads with any function: \code{fun}, section \code{fun}. \cr
+   Fit to a study area \tab Crops, reprojects, masks and writes: Stage 2 below, \code{\link[=postProcessTo]{postProcessTo()}}. \cr
+   Fast repeats \tab Wrap in \code{\link[=Cache]{Cache()}} and repeated calls return at once: \code{useCache}. \cr
+}
+}
+
 \section{Stage 1 - Getting data}{
 
 
@@ -248,11 +268,11 @@ In options for control of purging the \code{CHECKSUMS.txt} file are:
 \item{\code{3}}{delete entry with same \code{archive}}
 \item{\code{5}}{delete entry with same \code{targetFile} & \code{alsoExtract}}
 \item{\code{6}}{delete entry with same \code{targetFile}, \code{alsoExtract} & \code{archive}}
-\item{\code{7}}{download again: set aside the local copies of \code{targetFile}, \code{archive} and
-the files extracted with them -- in \code{destinationPath} and, when
-\code{reproducible.destinationPathShared} is set, in the shared stash -- drop their
-entries, then download, extract and link them as on a first run. If the download
-fails, the previous copies are put back.}
+\item{\code{7}}{download again: fetch \code{targetFile}, \code{archive} and the files extracted
+with them afresh, then replace the local copies of each -- in \code{destinationPath} and,
+when \code{reproducible.destinationPathShared} is set, in the shared stash -- and drop their
+entries. The old copies stay in place until each is replaced, so a process reading one
+never finds it missing; if the download fails, they are untouched.}
 }
 Values \code{1} to \code{6} only remove entries in the \code{CHECKSUMS.txt}; the entries are then
 rebuilt from the files already on disk, so they do not download anything.
