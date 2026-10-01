@@ -150,3 +150,32 @@ test_that("CacheGeo update replaces by geometry equality when there is no polygo
   expect_equal(NROW(ledger), 1L)
   expect_equal(ledger$params[[1]], "p2")
 })
+
+## Appending to a ledger that holds an xgboost model (fireSense_ignitionFit's fits) stopped with
+## "ALTLIST classes must provide a Set_elt method": the append went through as.data.table(), whose
+## copy() fails on a list-column holding an ALTREP object read back from an rds.
+test_that("CacheGeo update appends to a ledger whose list-column holds an xgboost model", {
+  skip_if_not_installed("xgboost")
+  testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE))
+  dPath <- checkPath(tempdir2(), create = TRUE)
+  full <- sf::st_read(system.file("ex/lux.shp", package = "terra"), quiet = TRUE)[, c("NAME_2", "AREA")]
+  x <- cbind(a = c(0, 1, 2, 3, 4, 5), b = c(1, 0, 1, 0, 1, 0))
+  model <- xgboost::xgb.train(params = list(objective = "binary:logistic"),
+                              data = xgboost::xgb.DMatrix(x, label = c(0, 1, 0, 1, 0, 1)), nrounds = 2)
+  row <- function(zone, id) {
+    d <- as.data.frame(zone)
+    d$polygonID <- id
+    d$fit <- I(list(list(model)))
+    d
+  }
+  fun <- function(domain, id) row(domain, id)
+  for (i in 1:2) {   # the second write finds the first row, read back from the rds
+    id <- c("A", "B")[i]
+    CacheGeo(targetFile = "ledger.rds", domain = full[i, ], FUN = fun(domain, id = id),
+             fun = fun, row = row, id = id, destinationPath = dPath, action = "update",
+             useCache = FALSE, verbose = 0)
+  }
+  ledger <- readRDS(file.path(dPath, "ledger.rds"))
+  expect_identical(as.character(ledger$polygonID), c("A", "B"))
+  expect_length(predict(ledger$fit[[2]][[1]], x), 6L)
+})
