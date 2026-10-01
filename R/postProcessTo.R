@@ -140,7 +140,8 @@
 #' @param ... Arguments passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
 #'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
 #'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
-#'   `method`, `touches`, and `datatype`. If `filename` is passed, it will be ignored; use
+#'   `method`, `touches`, `datatype`, and `gdal` (GDAL creation options for the written file,
+#'   e.g. `c("INTERLEAVE=BAND", "TILED=YES")`; `NUM_THREADS=1` is added unless supplied). If `filename` is passed, it will be ignored; use
 #'   `writeTo = `.
 #' @inheritParams Cache
 #'
@@ -1130,6 +1131,8 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
 
       hasDatatype <- which(...names() %in% "datatype")
       datatype <- if (length(hasDatatype)) ...elt(hasDatatype) else NULL
+      hasGdal <- which(...names() %in% "gdal")
+      gdal <- if (length(hasGdal)) ...elt(hasGdal) else NULL
 
       if (isTRUE(isStack)) from <- raster::stack(from)
       if (isTRUE(isBrick)) from <- raster::brick(from)
@@ -1170,8 +1173,11 @@ writeTo <- function(from, writeTo, overwrite = getOption("reproducible.overwrite
               ## to the core count that is never released, which makes any later
               ## fork() (e.g. tiling) deadlock. `datatype = NULL` together with
               ## `gdal =` throws Rcpp::not_compatible in terra, so drop the NULL.
+              ## A caller's `gdal` creation options are kept; NUM_THREADS=1 is added unless
+              ## the caller sets NUM_THREADS.
+              if (!any(grepl("^NUM_THREADS=", gdal))) gdal <- c(gdal, "NUM_THREADS=1")
               wrArgs <- list(from, filename = writeTo, overwrite = FALSE,
-                             gdal = "NUM_THREADS=1")
+                             gdal = gdal)
               if (!is.null(datatype)) wrArgs$datatype <- datatype
               from <- do.call(terra::writeRaster, wrArgs)
               writeDone <- TRUE
