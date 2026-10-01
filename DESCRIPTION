@@ -64,6 +64,7 @@ Imports:
     tools,
     utils
 Suggests:
+    xgboost,
     archive,
     covr,
     curl (>= 7.0.0),

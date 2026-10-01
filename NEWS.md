@@ -1,3 +1,9 @@
+# reproducible (development version)
+
+## Bug fixes
+
+* `CacheGeo(action = "update"/"append")` stopped with "ALTLIST classes must provide a Set_elt method" when the ledger already had a row and a list-column held an xgboost model (`fireSense_ignitionFit`'s fits): the existing and new rows were joined through `as.data.table()`, whose `copy()` fails on that object. They are now joined with `rbindlist()` on the data.frames as they are.
+
 # reproducible 3.2.1.9057
 
 ## Enhancements
