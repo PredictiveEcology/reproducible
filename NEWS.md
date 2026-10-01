@@ -1,8 +1,13 @@
-# reproducible 3.2.1.9054
+# reproducible 3.2.1.9057
 
 ## Enhancements
 
 * `postProcessTo(writeTo = , gdal = )` (and `writeTo()`) now honour a `gdal` argument of GDAL creation options (e.g. `c("INTERLEAVE=BAND", "TILED=YES")`) for the written file; it was ignored and `NUM_THREADS=1` hardcoded. `NUM_THREADS=1` is still added unless the caller sets `NUM_THREADS`.
+
+# reproducible 3.2.1.9054
+
+## Enhancements
+
 * New exported S3 generic `urlLog()` with a default method that returns the URL ledger kept as
   `reproducible.url*` Cache tags as a table (one row per cache entry and url; columns chosen with
   `which`, sorted by last use). It replaces `showCache(userTags = "reproducible.url")`, which also
