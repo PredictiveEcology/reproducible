@@ -880,8 +880,11 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 #' An optional `type` column (`"file"`/`"dir"`) enables **directory remaps**: a
 #' `"dir"` row maps a Google Drive *folder* id (`id` column) to a bucket
 #' prefix-listing URL (its `url`). When `preProcess()` downloads such a folder, it
-#' enumerates the folder's files from that public listing instead of
-#' `googledrive::drive_ls()`, so listing the folder needs no authentication. Rows
+#' enumerates the folder's files without `googledrive::drive_ls()`, so listing the
+#' folder needs no authentication. The dir row is answered from the manifest's own
+#' file rows whose `url` lies directly under that prefix (the `?prefix=` value, or
+#' the `url` itself); the bucket listing is fetched only when no file row matches,
+#' so a bucket that denies anonymous listing still works. Rows
 #' without a `type` column (or with `type = "file"`) are ordinary file remaps,
 #' unchanged. `buckethost::makeMirrorManifest(directories = TRUE)` emits such a
 #' manifest.
@@ -973,6 +976,21 @@ makeUrlRemap <- function(manifest) {
     byDir <- byDir[keepD]
   }
 
+  # Files of each dir row's folder, taken from the manifest's own file rows: those
+  # whose url sits directly under the dir row's prefix (see `.dirPrefix()`).
+  fileUrls <- urls[fileRow]
+  fileNames <- basename2(as.character(manifest[["filename"]])[fileRow])
+  dirFiles <- lapply(byDir, function(dirUrl) {
+    prefix <- .dirPrefix(dirUrl)
+    rest <- substring(fileUrls, nchar(prefix) + 1L)
+    hit <- !is.na(fileUrls) & startsWith(fileUrls, prefix) & nzchar(rest) &
+      !grepl("/", rest, fixed = TRUE)
+    data.frame(name = ifelse(!is.na(fileNames[hit]) & nzchar(fileNames[hit]),
+                             fileNames[hit], basename2(fileUrls[hit])),
+               url = fileUrls[hit], size = rep(NA_real_, sum(hit)),
+               stringsAsFactors = FALSE)
+  })
+
   fn <- function(url, filename) {
     # Primary: match on the basename of the resolved filename (a single file). A
     # length != 1 `filename` (e.g. a Drive directory of several files) has no
@@ -996,7 +1014,31 @@ makeUrlRemap <- function(manifest) {
   # attribute, since the remap function's contract returns a single file URL.
   # `.driveDirRemap()` reads it to enumerate a Drive folder from the bucket.
   attr(fn, "byDir") <- byDir
+  attr(fn, "dirFiles") <- dirFiles
   fn
+}
+
+# The file-URL prefix (with trailing "/") that a dir row's `url` stands for: for a
+# listing URL `<base>/?prefix=<key>&delimiter=/` it is `<base>/<decoded key>`;
+# otherwise the url itself.
+.dirPrefix <- function(dirUrl) {
+  q <- regmatches(dirUrl, regexec("^([^?]*)\\?(?:.*&)?prefix=([^&]*)", dirUrl))[[1]]
+  prefix <- if (length(q)) paste0(q[[2]], utils::URLdecode(q[[3]])) else dirUrl
+  if (endsWith(prefix, "/")) prefix else paste0(prefix, "/")
+}
+
+# The files of a manifest-remapped Drive folder `url` as name/url/size: the
+# manifest's own file rows under the dir row's prefix when there are any (so a
+# bucket that denies anonymous ListBucket still works), otherwise the bucket
+# listing at `listUrl`.
+.mirrorDirFiles <- function(url, listUrl, fn = .urlRemapFn(),
+                            verbose = getOption("reproducible.verbose", 1)) {
+  mf <- attr(fn, "dirFiles", exact = TRUE)[[.extractDriveId(url)]]
+  fromManifest <- NROW(mf) > 0L
+  messagePreProcess("Listing Google Drive folder from its mirror (no auth)",
+                    if (fromManifest) " using the urlRemap manifest" else "",
+                    ":\n  ", url, "\n  -> ", listUrl, verbose = verbose)
+  if (fromManifest) mf else .bucketDirList(listUrl, verbose = verbose)
 }
 
 # The bucket prefix-listing URL for a Drive folder `url`, from the active
@@ -1093,9 +1135,7 @@ listGoogleDriveFolder <- function(url, pattern = NULL,
                                   verbose = getOption("reproducible.verbose", 1)) {
   listUrl <- .driveDirRemap(url)
   if (!is.na(listUrl)) {
-    messagePreProcess("Listing Google Drive folder from its mirror (no auth):\n  ",
-                      url, "\n  -> ", listUrl, verbose = verbose)
-    bf <- .bucketDirList(listUrl, verbose = verbose)
+    bf <- .mirrorDirFiles(url, listUrl, verbose = verbose)
     out <- data.table::data.table(name = bf$name, id = NA_character_, url = bf$url)
   } else {
     .requireNamespace("googledrive", stopOnFALSE = TRUE)
@@ -2190,9 +2230,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
           fromMirror <- !is.na(dirListUrl)
           if (fromMirror || isGoogleDriveDirectory(url)) {
             if (fromMirror) {
-              messagePreProcess("Listing Google Drive folder from its mirror (no auth):\n  ",
-                                url, "\n  -> ", dirListUrl, verbose = verbose)
-              bf <- .bucketDirList(dirListUrl, verbose = verbose)
+              bf <- .mirrorDirFiles(url, dirListUrl, verbose = verbose)
               drive_files <- data.frame(name = bf$name, id = bf$url,
                                         stringsAsFactors = FALSE)
             } else {
