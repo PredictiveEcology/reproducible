@@ -1,3 +1,9 @@
+# reproducible (development version)
+
+## Enhancements
+
+* New `CacheGeoLedger()`, `CacheGeoRead()` and `CacheGeoWrite()`, and `CacheGeo()` rebuilt on them (one help page, `?CacheGeoLedger`). A ledger is one `.rds` file of spatial rows, local or shared through a Google Drive folder, a shared-disk folder or (read-only) a URL. `CacheGeoRead()` always returns an `sf` object (0 rows if nothing matches; list-columns kept) for `match = "intersects"`, `"covers"` or `"within"`, with a `tolerance` that drops slivers; it never writes, creates a folder or uploads, and needs no Google login for a file shared "Anyone with the link". `CacheGeoWrite()` replaces the rows with the same key (or geometry) or appends, re-reads the remote just before writing, pushes only if the content changed, and merges again if another writer got in between; writers to a shared-disk folder also hold a file lock. `CacheGeo(ledger, area, compute)` runs `compute(area)` only for an area the ledger does not cover, and its errors are no longer swallowed. The old arguments (`targetFile`, `domain`, `FUN`, `action`, ...) are still accepted, with one message per session. A ledger is no longer sorted by `polygonID` version; rows stay in key order. A list-column that holds an xgboost model is kept through write, read and upsert (the rows are never passed through `as.data.table()` or `copy()`).
+
 # reproducible 3.2.1.9057
 
 ## Enhancements

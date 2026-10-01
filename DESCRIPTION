@@ -64,6 +64,7 @@ Imports:
     tools,
     utils
 Suggests:
+    xgboost,
     archive,
     covr,
     curl (>= 7.0.0),
@@ -110,6 +111,7 @@ Collate:
     'messages.R'
     'cache.R'
     'cacheGeo.R'
+    'cacheGeoFamily.R'
     'checksums.R'
     'cloud.R'
     'convertPaths.R'

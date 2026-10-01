@@ -29,6 +29,27 @@ knitr::opts_chunk$set(eval = hasSuggests && useSuggests)
 ```
 
 
+# Sharing a ledger of spatial results through Google Drive
+
+`Cache` stores results by the call that made them. When the result belongs to a *place*, e.g. a model fitted for one polygon, a *ledger* is more useful: one `.rds` file of rows (a polygon plus any columns, including fitted models), from which `CacheGeoRead()` returns the rows that overlap an area, and `CacheGeo()` computes only for an area the ledger does not yet cover. See `?CacheGeoLedger`.
+
+To share a ledger, create a Google Drive folder, share it "Anyone with the link" as a viewer, and give everyone the folder's URL as `remote`. Reading needs no Google login; the file is downloaded only when its md5 differs from the local copy's. Only the people who write need a login (`googledrive::drive_auth()`). Two writers at the same time do not lose each other's rows: `CacheGeoWrite()` reads the file on Drive again just before writing, and merges again if it changed.
+
+```{r geo-drive, eval = FALSE}
+led <- CacheGeoLedger("fitsByPolygon.rds",
+                      remote = "https://drive.google.com/drive/folders/<folder id>",
+                      destinationPath = "inputs", key = "polygonID")
+
+# anyone: the rows that overlap the study area (an sf object; 0 rows if none)
+rows <- CacheGeoRead(led, area = studyArea)
+
+# a writer: replaces the row with the same polygonID, uploads only if the file changed
+CacheGeoWrite(led, newRow)
+
+# read, and fit only what is missing
+rows <- CacheGeo(led, area = studyArea, compute = function(area) fitThisPolygon(area))
+```
+
 # Reproducible workflow
 
 As part of a reproducible workflow, caching of function calls, code chunks, and other elements of a project is a critical component.
