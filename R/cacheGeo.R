@@ -388,8 +388,10 @@ CacheGeo <- function(targetFile = NULL,
         }
 
         # THE APPEND LINE
+        ## rbindlist() takes the data.frames as they are: as.data.table() copies, and
+        ## data.table::copy() fails on a list-column holding an ALTREP object (an xgboost model)
         existingObj <- as.data.frame(rbindlist(
-          list(as.data.table(existingObjOrig), as.data.table(newObj)), fill = TRUE, use.names = TRUE))
+          list(as.data.frame(existingObjOrig), as.data.frame(newObj)), fill = TRUE, use.names = TRUE))
         existingObjSF <- sf::st_as_sf(existingObj)
 
         if (sf::st_crs(domain) != sf::st_crs(existingObjSF)) {
