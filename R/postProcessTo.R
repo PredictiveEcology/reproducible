@@ -186,9 +186,15 @@ postProcessTo <- function(from, to,
                              is.null(projectTo), is.null(writeTo))
   if (needPostProcessing) {
     if (.isGridded(from)) {
+      ## memfrac below 0.1 (even 0.01) makes terra work in tiny chunks; project() was
+      ## ~15x slower at memfrac = 0
+      co <- capture.output(origMemfrac <- terra::terraOptions()$memfrac)
+      if (isTRUE(origMemfrac < 0.1)) {
+        warning(.message$memfracTooLow(origMemfrac), call. = FALSE)
+        terra::terraOptions(memfrac = 0.1)
+        on.exit(terra::terraOptions(memfrac = origMemfrac), add = TRUE)
+      }
       if (getOption("reproducible.leaveOnDisk", TRUE)) {
-        ## todisk, not memfrac = 0: memfrac = 0 makes terra work in tiny chunks, and
-        ## terra::project became ~15x slower with it
         co <- capture.output(origToDisk <- terra::terraOptions()$todisk)
         if (!isTRUE(origToDisk)) {
           terra::terraOptions(todisk = TRUE)

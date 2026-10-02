@@ -33,3 +33,33 @@ test_that("leaveOnDisk sets todisk, not memfrac, and restores it", {
   })
   expect_false(during$todisk)
 })
+
+test_that("memfrac below 0.1 is raised to 0.1 for the call, with a warning", {
+  testInit("terra", needGoogleDriveAuth = FALSE)
+
+  from <- terra::rast(nrows = 50, ncols = 50, xmin = 0, xmax = 5e4, ymin = 0, ymax = 5e4,
+                      crs = "EPSG:3978", vals = 1)
+  templ <- terra::rast(nrows = 20, ncols = 20, xmin = 1e4, xmax = 3e4, ymin = 1e4, ymax = 3e4,
+                       crs = "EPSG:3978")
+
+  orig <- terra::terraOptions(print = FALSE)$memfrac
+  on.exit(terra::terraOptions(memfrac = orig), add = TRUE)
+
+  during <- NULL
+  local_mocked_bindings(cropTo = function(from, ...) {
+    during <<- terra::terraOptions(print = FALSE)$memfrac
+    from
+  })
+
+  for (mf in c(0, 0.01)) {
+    terra::terraOptions(memfrac = mf)
+    expect_warning(postProcessTo(from, cropTo = templ, verbose = FALSE),
+                   .message$memfracTooLowTxt, fixed = TRUE)
+    expect_equal(during, 0.1)
+    expect_equal(terra::terraOptions(print = FALSE)$memfrac, mf) # restored
+  }
+
+  terra::terraOptions(memfrac = 0.1)
+  expect_no_warning(postProcessTo(from, cropTo = templ, verbose = FALSE))
+  expect_equal(during, 0.1)
+})

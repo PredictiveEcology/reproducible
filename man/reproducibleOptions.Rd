@@ -210,6 +210,8 @@ When there is a \code{SpatRaster} object, should \code{postProcess} write its re
 disk, by temporarily setting \code{terraOptions(todisk = TRUE)}? This keeps large
 rasters out of memory, at little cost in speed. If \code{FALSE}, \code{terra} decides on
 its own (largely based on its \code{memfrac} and \code{memmax} options).
+Separately, \code{postProcess} always raises a \code{memfrac} below 0.1 to 0.1 for the call, with
+a warning, because lower values make \code{terra} very slow.
 }
 \item{\code{terraMemmax}}{
 Default: \code{2} (gigabytes). Used in \code{\link[=postProcessTo]{postProcessTo()}}.

@@ -203,6 +203,8 @@
 #'     disk, by temporarily setting `terraOptions(todisk = TRUE)`? This keeps large
 #'     rasters out of memory, at little cost in speed. If `FALSE`, `terra` decides on
 #'     its own (largely based on its `memfrac` and `memmax` options).
+#'     Separately, `postProcess` always raises a `memfrac` below 0.1 to 0.1 for the call, with
+#'     a warning, because lower values make `terra` very slow.
 #'   }
 #'   \item{`terraMemmax`}{
 #'     Default: `2` (gigabytes). Used in [postProcessTo()].

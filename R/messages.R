@@ -53,6 +53,12 @@
 .message$forkChildFailedHard <- function(n, what)
   paste0(n, " ", what, " could not be completed, even serially")
 
+.message$memfracTooLowTxt <- "terraOptions(memfrac) below 0.1 makes terra very slow"
+
+.message$memfracTooLow <- function(memfrac)
+  paste0(.message$memfracTooLowTxt, "; using memfrac = 0.1 for this call (it was ", memfrac,
+         "). To keep rasters out of memory, set terraOptions(memfrac = 0.1, todisk = TRUE).")
+
 .message$gadmFallbackTxt <- "could not retrieve GADM boundaries"
 
 .message$gadmFallback <- function(tileGrid, path, err = NULL)
