@@ -199,13 +199,12 @@
 #'   }
 #'   \item{`leaveOnDisk`}{
 #'     Default: `TRUE`. Used in [postProcess()].
-#'     When there is a `SpatRaster` object, should `postProcess` force any file-backed object,
-#'     to use the file-based, memory-safe tools within `terra` (by temporarily setting
-#'     `terraOption(memfrac = 0)`. Alternatively, if this is set to `FALSE`,
-#'     then `postProcess` will let `terra` decide on its own based on its internal
-#'     cues (largely based on `memfrac`, `maxmem` `terraOptions`). This will be ignored,
-#'     however, if the user has set the `terraOptions` away from its default of `0.5`. The default
-#'     increases predictability of whether the returned object is on disk or in memory.
+#'     When there is a `SpatRaster` object, should `postProcess` write its results to
+#'     disk, by temporarily setting `terraOptions(todisk = TRUE)`? This keeps large
+#'     rasters out of memory, at little cost in speed. If `FALSE`, `terra` decides on
+#'     its own (largely based on its `memfrac` and `memmax` options).
+#'     Separately, `postProcess` always raises a `memfrac` below 0.1 to 0.1 for the call, with
+#'     a warning, because lower values make `terra` very slow.
 #'   }
 #'   \item{`terraMemmax`}{
 #'     Default: `2` (gigabytes). Used in [postProcessTo()].

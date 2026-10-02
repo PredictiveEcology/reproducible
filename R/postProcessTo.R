@@ -97,6 +97,30 @@
 #' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
 #'
+#' @section Cropping to a raster in another CRS:
+#' When `cropTo` is a raster in a different CRS from `from`, only its extent in the CRS of
+#' `from` is needed. `cropTo()` gets it by projecting 201 points along each edge of the
+#' `cropTo` extent and taking their extent. It does not project the raster's cells, which
+#' was slow (minutes for a 5000 x 5000 raster) and, because `terra` snaps the projected
+#' cells to a new grid, could be up to one output cell too large or too small on any side.
+#' Projecting only the 4 corners of the extent misses the curvature of the edges.
+#'
+#' The table compares each way of getting the extent to the true footprint, found by
+#' projecting every cell corner. Values are how far each misses (short) or overshoots
+#' (over) on the worst side, in units of the target CRS.
+#'
+#' | Case | 4 corners | All cells (old) | Densified outline | Points along edges |
+#' |---|---|---|---|---|
+#' | Canada 5 km, EPSG:3978 to lon/lat | 12.7 short | exact | exact | exact |
+#' | Canada 5 km, EPSG:3978 to UTM 11 | 1.7 km off | 1.5 km short, 1.7 km over | exact | exact |
+#' | lon/lat Canada to EPSG:3978 | 1,300 km short | 4.7 km short | 1,110 km short | exact |
+#' | lon/lat 1 degree box to EPSG:3978 | 0.4 km over | 0.4 km short | exact | exact |
+#' | 150 km box, 300 m, Lambert to Lambert | 8 m short | 37 m over | exact | exact |
+#'
+#' "Densified outline" is `terra::densify()` on the extent polygon. It fails for a lon/lat
+#' `cropTo` because it adds points along great circles, while the edges of a lon/lat box
+#' are lines of latitude.
+#'
 #' @return
 #' An object of the same class as `from`, but potentially cropped (via [cropTo()]),
 #' projected (via [projectTo()]), masked (via [maskTo()]), and written to disk
@@ -192,15 +216,23 @@ postProcessTo <- function(from, to,
                              is.null(projectTo), is.null(writeTo))
   if (needPostProcessing) {
     if (.isGridded(from)) {
+      ## memfrac below 0.1 (even 0.01) makes terra work in tiny chunks; project() was
+      ## ~15x slower at memfrac = 0
+      co <- capture.output(origMemfrac <- terra::terraOptions()$memfrac)
+      if (isTRUE(origMemfrac < 0.1)) {
+        warning(.message$memfracTooLow(origMemfrac), call. = FALSE)
+        terra::terraOptions(memfrac = 0.1)
+        on.exit(terra::terraOptions(memfrac = origMemfrac), add = TRUE)
+      }
       if (getOption("reproducible.leaveOnDisk", TRUE)) {
-        co <- capture.output(origMemFrac <- terra::terraOptions()$memfrac)
-        if (identical(origMemFrac, 0.5)) { # 0.5 is the default in `terra` on Dec 15, 2025
-          terra::terraOptions(memfrac = 0)
+        co <- capture.output(origToDisk <- terra::terraOptions()$todisk)
+        if (!isTRUE(origToDisk)) {
+          terra::terraOptions(todisk = TRUE)
           ## add = TRUE: without it this on.exit *replaces* whatever the function has
           ## already registered, so a second restore below (or any future one) would be
           ## dropped and its option left changed process-wide. Ordering happens to save
           ## it today, which is exactly why it should not be relied on.
-          on.exit(terra::terraOptions(memfrac = origMemFrac), add = TRUE)
+          on.exit(terra::terraOptions(todisk = origToDisk), add = TRUE)
         }
       }
       # Cap terra per-raster memory for the duration of this call. On high-RAM
@@ -209,7 +241,7 @@ postProcessTo <- function(from, to,
       # IMPORTANT: only apply if the user hasn't already set memmax themselves.
       # terra treats memmax as "ignored" when NA / NULL / <= 0 (default is -1),
       # so a positive finite value means the user opted in deliberately and we
-      # must respect it -- mirrors the leaveOnDisk / memfrac handling above.
+      # must respect it -- mirrors the leaveOnDisk / todisk handling above.
       .tmMax <- getOption("reproducible.terraMemmax", NULL)
       if (!is.null(.tmMax) && is.numeric(.tmMax) && is.finite(.tmMax) && .tmMax > 0) {
         co <- capture.output(.origMemmax <- terra::terraOptions()$memmax)
@@ -982,8 +1014,17 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                 }
 
                 cropToInFromCRS <- terra::project(convH, terraCRSFrom)
+              } else if (.isGridded(cropTo)) {
+                ## only the extent is needed, so project points along its edges, not every
+                ## cell; see "Cropping to a raster in another CRS" in ?postProcessTo
+                e <- terra::ext(cropTo)
+                xs <- seq(terra::xmin(e), terra::xmax(e), length.out = 201)
+                ys <- seq(terra::ymin(e), terra::ymax(e), length.out = 201)
+                edges <- rbind(cbind(xs, terra::ymin(e)), cbind(xs, terra::ymax(e)),
+                               cbind(terra::xmin(e), ys), cbind(terra::xmax(e), ys))
+                cropToInFromCRS <- terra::project(terra::vect(edges, crs = terra::crs(cropTo)),
+                                                  terraCRSFrom)
               } else {
-                # cropToVec <- terra::as.polygons(terra::ext(cropTo), crs = terra::crs(cropTo))
                 cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
               }
               ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly

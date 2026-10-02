@@ -4,6 +4,19 @@
 
 * `postProcessTo()` has a `rasterize` argument. With `TRUE`, or a list of arguments for `terra::rasterize()` (e.g. `list(field = "value", fun = "max")`), a Vector `from` is cropped and projected as usual, then rasterized onto `projectTo` (or `to`), which must be Gridded; masking and writing are done on the raster, and a `SpatRaster` is returned.
 
+# reproducible 3.2.1.9061
+
+## Bug fixes
+
+* `cropTo()` with a raster `cropTo` in another CRS no longer reprojects the whole raster to get its extent. That took minutes for a 5000 x 5000 raster, and terra's grid snapping left the extent up to one cell too large or too small. It now projects 201 points along each edge of the extent, which matches the true footprint. A new help section, "Cropping to a raster in another CRS" in `?postProcessTo`, compares the methods.
+
+# reproducible 3.2.1.9060
+
+## Bug fixes
+
+* `reproducible.leaveOnDisk` (default `TRUE`) now sets `terraOptions(todisk = TRUE)` during `postProcessTo()`. It used to set `memfrac = 0` whenever `memfrac` was at terra's default `0.5`, which made `terra::project()` about 15 times slower (34 minutes instead of under a minute for one SCANFI study area). `memfrac` is no longer set to 0.
+* `postProcessTo()` warns when `terraOptions(memfrac)` is below 0.1 (including 0) and uses `memfrac = 0.1` for the call, because lower values make terra very slow. To keep rasters out of memory, set `terraOptions(memfrac = 0.1, todisk = TRUE)`.
+
 # reproducible 3.2.1.9059
 
 ## New features
