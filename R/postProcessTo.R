@@ -137,6 +137,12 @@
 #' @param overwrite Logical. Used if `writeTo` is not `NULL`; also if `terra` determines
 #'   that the object requires writing to disk during a `crop`, `mask` or `project` call
 #'   e.g., because it is too large.
+#' @param rasterize `FALSE` (default), `TRUE`, or a named list of arguments to
+#'   [terra::rasterize()], e.g. `list(field = "value", fun = "max", touches = TRUE)`.
+#'   If not `FALSE`, a Vector `from` is cropped and projected as usual, then rasterized onto
+#'   `projectTo` (or `to`), which must be Gridded; masking and writing are then done on the
+#'   raster, and a `SpatRaster` is returned. With `TRUE`, cells covered by a polygon are 1,
+#'   others `NA`.
 #' @param ... Arguments passed to `terra::mask` (for `maskTo`), `terra::project` (for `projectTo`)
 #'   or `terra::writeRaster` (for `writeTo`) and not used for `cropTo`, as well `postProcess`'s
 #'   `rasterToMatch` and `studyArea` arguments (see below). Commonly used arguments might be
@@ -160,7 +166,7 @@
 postProcessTo <- function(from, to,
                           cropTo = NULL, projectTo = NULL, maskTo = NULL, writeTo = NULL,
                           overwrite = TRUE, verbose = getOption("reproducible.verbose"),
-                          ...) {
+                          rasterize = FALSE, ...) {
   st <- Sys.time()
   remapOldArgs(...) # converts studyArea, rasterToMatch, filename2, useSAcrs, targetCRS
 
@@ -235,6 +241,12 @@ postProcessTo <- function(from, to,
     )
     # ASSERTION STEP
     postProcessToAssertions(from, to, cropTo, maskTo, projectTo)
+    if (!isFALSE(rasterize)) {
+      rasterizeTemplate <- if (.isGridded(projectTo)) projectTo else to
+      if (!.isVector(from) || !.isGridded(rasterizeTemplate))
+        stop("rasterize needs a Vector `from` and a Gridded `projectTo` or `to`")
+      rasterizeArgs <- if (is.list(rasterize)) rasterize else list()
+    }
 
     # Get the original class of from so that it can be recovered
     origFromClass <- is(from)
@@ -298,6 +310,14 @@ postProcessTo <- function(from, to,
         list(...),
         if (.injectMethodNear) list(method = "near")
       )) # need to project with edges intact
+      # RASTERIZE STEP: the projected Vector onto the template grid; the rest is on a raster
+      if (!isFALSE(rasterize)) {
+        if (!.isSpatVector(from)) from <- terra::vect(from)
+        from <- do.call(terra::rasterize, c(list(x = from,
+                                                 y = terra::rast(rasterizeTemplate)), rasterizeArgs))
+        isSpatRasterHere <- TRUE
+        origFromClass <- is(from)
+      }
       from <- maskTo(from, maskTo, verbose = verbose, ..., overwrite = overwrite)
       from <- cropTo(from, cropTo, needBuffer = FALSE, verbose = verbose, ..., overwrite = overwrite) # need to recrop to trim excess pixels in new projection
 

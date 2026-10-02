@@ -1,3 +1,9 @@
+# reproducible (development version)
+
+## New features
+
+* `postProcessTo()` has a `rasterize` argument. With `TRUE`, or a list of arguments for `terra::rasterize()` (e.g. `list(field = "value", fun = "max")`), a Vector `from` is cropped and projected as usual, then rasterized onto `projectTo` (or `to`), which must be Gridded; masking and writing are done on the raster, and a `SpatRaster` is returned.
+
 # reproducible 3.2.1.9059
 
 ## New features
