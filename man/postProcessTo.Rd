@@ -18,6 +18,7 @@ postProcessTo(
   writeTo = NULL,
   overwrite = TRUE,
   verbose = getOption("reproducible.verbose"),
+  rasterize = FALSE,
   ...
 )
 
@@ -30,6 +31,7 @@ postProcessTerra(
   writeTo = NULL,
   overwrite = TRUE,
   verbose = getOption("reproducible.verbose"),
+  rasterize = FALSE,
   ...
 )
 
@@ -118,6 +120,13 @@ e.g., because it is too large.}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{rasterize}{\code{FALSE} (default), \code{TRUE}, or a named list of arguments to
+\code{\link[terra:rasterize]{terra::rasterize()}}, e.g. \code{list(field = "value", fun = "max", touches = TRUE)}.
+If not \code{FALSE}, a Vector \code{from} is cropped and projected as usual, then rasterized onto
+\code{projectTo} (or \code{to}), which must be Gridded; masking and writing are then done on the
+raster, and a \code{SpatRaster} is returned. With \code{TRUE}, cells covered by a polygon are 1,
+others \code{NA}.}
 
 \item{...}{Arguments passed to \code{terra::mask} (for \code{maskTo}), \code{terra::project} (for \code{projectTo})
 or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}, as well \code{postProcess}'s
