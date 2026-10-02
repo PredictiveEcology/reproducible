@@ -1,5 +1,5 @@
 ## `terraOptions()` is process-wide, so postProcessTo() restores what it changes with
-## on.exit(). It changes up to two options -- memfrac and memmax -- and registers a
+## on.exit(). It changes up to two options -- todisk and memmax -- and registers a
 ## restore for each, so every one of those on.exit() calls must pass `add = TRUE`:
 ## without it, a later registration replaces an earlier one and that option is left
 ## changed for the rest of the session. Whether the bug bites depends only on which

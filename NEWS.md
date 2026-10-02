@@ -1,3 +1,9 @@
+# reproducible 3.2.1.9060
+
+## Bug fixes
+
+* `reproducible.leaveOnDisk` (default `TRUE`) now sets `terraOptions(todisk = TRUE)` during `postProcessTo()`. It used to set `memfrac = 0` whenever `memfrac` was at terra's default `0.5`, which made `terra::project()` about 15 times slower (34 minutes instead of under a minute for one SCANFI study area). `memfrac` is no longer touched.
+
 # reproducible 3.2.1.9059
 
 ## New features

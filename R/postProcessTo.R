@@ -187,14 +187,16 @@ postProcessTo <- function(from, to,
   if (needPostProcessing) {
     if (.isGridded(from)) {
       if (getOption("reproducible.leaveOnDisk", TRUE)) {
-        co <- capture.output(origMemFrac <- terra::terraOptions()$memfrac)
-        if (identical(origMemFrac, 0.5)) { # 0.5 is the default in `terra` on Dec 15, 2025
-          terra::terraOptions(memfrac = 0)
+        ## todisk, not memfrac = 0: memfrac = 0 makes terra work in tiny chunks, and
+        ## terra::project became ~15x slower with it
+        co <- capture.output(origToDisk <- terra::terraOptions()$todisk)
+        if (!isTRUE(origToDisk)) {
+          terra::terraOptions(todisk = TRUE)
           ## add = TRUE: without it this on.exit *replaces* whatever the function has
           ## already registered, so a second restore below (or any future one) would be
           ## dropped and its option left changed process-wide. Ordering happens to save
           ## it today, which is exactly why it should not be relied on.
-          on.exit(terra::terraOptions(memfrac = origMemFrac), add = TRUE)
+          on.exit(terra::terraOptions(todisk = origToDisk), add = TRUE)
         }
       }
       # Cap terra per-raster memory for the duration of this call. On high-RAM
@@ -203,7 +205,7 @@ postProcessTo <- function(from, to,
       # IMPORTANT: only apply if the user hasn't already set memmax themselves.
       # terra treats memmax as "ignored" when NA / NULL / <= 0 (default is -1),
       # so a positive finite value means the user opted in deliberately and we
-      # must respect it -- mirrors the leaveOnDisk / memfrac handling above.
+      # must respect it -- mirrors the leaveOnDisk / todisk handling above.
       .tmMax <- getOption("reproducible.terraMemmax", NULL)
       if (!is.null(.tmMax) && is.numeric(.tmMax) && is.finite(.tmMax) && .tmMax > 0) {
         co <- capture.output(.origMemmax <- terra::terraOptions()$memmax)

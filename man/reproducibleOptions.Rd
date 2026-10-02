@@ -206,13 +206,10 @@ Retained for backwards compatibility.
 }
 \item{\code{leaveOnDisk}}{
 Default: \code{TRUE}. Used in \code{\link[=postProcess]{postProcess()}}.
-When there is a \code{SpatRaster} object, should \code{postProcess} force any file-backed object,
-to use the file-based, memory-safe tools within \code{terra} (by temporarily setting
-\code{terraOption(memfrac = 0)}. Alternatively, if this is set to \code{FALSE},
-then \code{postProcess} will let \code{terra} decide on its own based on its internal
-cues (largely based on \code{memfrac}, \code{maxmem} \code{terraOptions}). This will be ignored,
-however, if the user has set the \code{terraOptions} away from its default of \code{0.5}. The default
-increases predictability of whether the returned object is on disk or in memory.
+When there is a \code{SpatRaster} object, should \code{postProcess} write its results to
+disk, by temporarily setting \code{terraOptions(todisk = TRUE)}? This keeps large
+rasters out of memory, at little cost in speed. If \code{FALSE}, \code{terra} decides on
+its own (largely based on its \code{memfrac} and \code{memmax} options).
 }
 \item{\code{terraMemmax}}{
 Default: \code{2} (gigabytes). Used in \code{\link[=postProcessTo]{postProcessTo()}}.
