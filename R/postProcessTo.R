@@ -97,6 +97,30 @@
 #' the extent of the `from` (as it is after crop, project, mask). Thus the second
 #' crop removes all NA cells so they are tight to the mask.
 #'
+#' @section Cropping to a raster in another CRS:
+#' When `cropTo` is a raster in a different CRS from `from`, only its extent in the CRS of
+#' `from` is needed. `cropTo()` gets it by projecting 201 points along each edge of the
+#' `cropTo` extent and taking their extent. It does not project the raster's cells, which
+#' was slow (minutes for a 5000 x 5000 raster) and, because `terra` snaps the projected
+#' cells to a new grid, could be up to one output cell too large or too small on any side.
+#' Projecting only the 4 corners of the extent misses the curvature of the edges.
+#'
+#' The table compares each way of getting the extent to the true footprint, found by
+#' projecting every cell corner. Values are how far each misses (short) or overshoots
+#' (over) on the worst side, in units of the target CRS.
+#'
+#' | Case | 4 corners | All cells (old) | Densified outline | Points along edges |
+#' |---|---|---|---|---|
+#' | Canada 5 km, EPSG:3978 to lon/lat | 12.7 short | exact | exact | exact |
+#' | Canada 5 km, EPSG:3978 to UTM 11 | 1.7 km off | 1.5 km short, 1.7 km over | exact | exact |
+#' | lon/lat Canada to EPSG:3978 | 1,300 km short | 4.7 km short | 1,110 km short | exact |
+#' | lon/lat 1 degree box to EPSG:3978 | 0.4 km over | 0.4 km short | exact | exact |
+#' | 150 km box, 300 m, Lambert to Lambert | 8 m short | 37 m over | exact | exact |
+#'
+#' "Densified outline" is `terra::densify()` on the extent polygon. It fails for a lon/lat
+#' `cropTo` because it adds points along great circles, while the edges of a lon/lat box
+#' are lines of latitude.
+#'
 #' @return
 #' An object of the same class as `from`, but potentially cropped (via [cropTo()]),
 #' projected (via [projectTo()]), masked (via [maskTo()]), and written to disk
@@ -962,8 +986,17 @@ cropTo <- function(from, cropTo = NULL, needBuffer = FALSE, overwrite = FALSE,
                 }
 
                 cropToInFromCRS <- terra::project(convH, terraCRSFrom)
+              } else if (.isGridded(cropTo)) {
+                ## only the extent is needed, so project points along its edges, not every
+                ## cell; see "Cropping to a raster in another CRS" in ?postProcessTo
+                e <- terra::ext(cropTo)
+                xs <- seq(terra::xmin(e), terra::xmax(e), length.out = 201)
+                ys <- seq(terra::ymin(e), terra::ymax(e), length.out = 201)
+                edges <- rbind(cbind(xs, terra::ymin(e)), cbind(xs, terra::ymax(e)),
+                               cbind(terra::xmin(e), ys), cbind(terra::xmax(e), ys))
+                cropToInFromCRS <- terra::project(terra::vect(edges, crs = terra::crs(cropTo)),
+                                                  terraCRSFrom)
               } else {
-                # cropToVec <- terra::as.polygons(terra::ext(cropTo), crs = terra::crs(cropTo))
                 cropToInFromCRS <- terra::project(cropTo, terraCRSFrom)
               }
               ext <- terra::ext(cropToInFromCRS) # create extent as an object; keeps crs correctly
