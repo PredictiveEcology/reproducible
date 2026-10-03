@@ -83,12 +83,12 @@ test_that(".wrap(copyFiles = TRUE) makes a file-backed SpatRaster self-contained
   terra::writeRaster(terra::rast(nrows = 3, ncols = 2, vals = 1:6), tif)
   rr <- list(r = terra::rast(tif), n = 1)
 
-  w <- .wrap(rr, cachePath = dest, copyFiles = TRUE)
+  w <- .wrap(rr, filebackedPath = dest, copyFiles = TRUE)
   rds <- file.path(dest, "x.rds")
   saveRDS(w, rds)
   unlink(src, recursive = TRUE) ## original is gone
 
-  back <- .unwrap(readRDS(rds), cachePath = dest)
+  back <- .unwrap(readRDS(rds), filebackedPath = dest)
   expect_equal(terra::values(back$r)[, 1], 1:6)
   expect_identical(back$n, 1)
 
@@ -96,6 +96,33 @@ test_that(".wrap(copyFiles = TRUE) makes a file-backed SpatRaster self-contained
   dest2 <- withr::local_tempdir("destDir2")
   dir.create(src)
   terra::writeRaster(terra::rast(nrows = 3, ncols = 2, vals = 1:6), tif)
-  .wrap(terra::rast(tif), cachePath = dest2)
+  .wrap(terra::rast(tif), filebackedPath = dest2)
   expect_false(dir.exists(file.path(dest2, "cacheOutputs")))
+})
+
+test_that(".wrap/.unwrap: `filebackedPath` is the argument; `cachePath` still works with a message", {
+  skip_if_not_installed("terra")
+  testInit("terra")
+
+  src <- withr::local_tempdir("srcDir")
+  dest <- withr::local_tempdir("destDir")
+  tif <- file.path(src, "layer.tif")
+  terra::writeRaster(terra::rast(nrows = 3, ncols = 2, vals = 1:6), tif)
+  r <- terra::rast(tif)
+
+  expect_no_message(w <- .wrap(r, filebackedPath = dest, copyFiles = TRUE))
+  unlink(src, recursive = TRUE)
+  expect_no_message(back <- .unwrap(w, filebackedPath = dest))
+  expect_equal(terra::values(back)[, 1], 1:6)
+
+  ## old name: same result, with a message
+  dir.create(src)
+  terra::writeRaster(terra::rast(nrows = 3, ncols = 2, vals = 1:6), tif)
+  expect_message(w2 <- .wrap(terra::rast(tif), cachePath = dest, copyFiles = TRUE), "filebackedPath")
+  unlink(src, recursive = TRUE)
+  expect_message(back2 <- .unwrap(w2, cachePath = dest), "filebackedPath")
+  expect_equal(terra::values(back2)[, 1], 1:6)
+
+  ## list and environment methods too
+  expect_message(.unwrap(.wrap(list(a = 1), cachePath = dest), cachePath = dest), "filebackedPath")
 })

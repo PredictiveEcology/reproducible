@@ -334,7 +334,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         memoiseAssign(cacheId, obj, cachePath)
       }
       obj <- .unwrap(obj,
-                     cachePath = cachePath,
+                     filebackedPath = cachePath,
                      cacheId = cacheId,
                      drv = drv, conn = conn
       )
@@ -1423,7 +1423,7 @@ memoiseAssign <- function(cacheId, obj, cachePath) {
 memoiseGet <- function(cacheId, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL)) {
   .unwrap(unmakeMemoisable(get(cacheId, envir = memoiseEnv(cachePath))),
-          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+          filebackedPath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
 }
 
 
@@ -1486,7 +1486,7 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
         verbose = verbose
       )
 
-      obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn, cacheId = cacheId)
+      obj2 <- .wrap(obj, filebackedPath = cachePath, drv = drv, conn = conn, cacheId = cacheId)
       swapCacheFileFormat(wrappedObj = obj2, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId, sameCacheID = sameCacheID, newFile = f, verbose = verbose)
       # fs <- saveToCache(

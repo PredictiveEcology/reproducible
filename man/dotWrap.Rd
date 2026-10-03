@@ -17,129 +17,142 @@
 \usage{
 .wrap(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
   cacheId = NULL,
-  ...
+  ...,
+  cachePath
 )
 
 \method{.wrap}{list}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
   cacheId = NULL,
-  ...
+  ...,
+  cachePath
 )
 
 \method{.wrap}{environment}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
   cacheId = NULL,
-  ...
+  ...,
+  cachePath
 )
 
 \method{.wrap}{default}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   preDigest,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
   verbose = getOption("reproducible.verbose"),
   outputObjects = NULL,
   cacheId = NULL,
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{default}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 .unwrap(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{environment}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{list}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{PackedSpatExtent2}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{PackedSpatVector2}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{data.table}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 
 \method{.unwrap}{PackedSpatVector}(
   obj,
-  cachePath = getOption("reproducible.cachePath"),
+  filebackedPath = getOption("reproducible.cachePath"),
   cacheId = NULL,
   drv = getDrv(getOption("reproducible.drv", NULL)),
   conn = getOption("reproducible.conn", NULL),
-  ...
+  ...,
+  cachePath
 )
 }
 \arguments{
 \item{obj}{Any arbitrary R object.}
 
-\item{cachePath}{A repository used for storing cached objects.
-This is optional if \code{Cache} is used inside a SpaDES module.}
+\item{filebackedPath}{Directory under which file-backed objects (e.g., a file-backed \code{SpatRaster})
+are anchored and, with \code{copyFiles = TRUE}, stored (in \verb{cacheOutputs/}). \code{Cache()} uses its
+\code{cachePath}; outside of \code{Cache()} it is any directory, e.g., the one holding an \code{.rds}.}
 
 \item{preDigest}{The list of \code{preDigest} that comes from \code{CacheDigest} of an object}
 
@@ -161,9 +174,11 @@ return. This is only relevant for list, environment (or similar) objects}
 Default is \code{NULL}.}
 
 \item{...}{Arguments passed to methods. For a file-backed \code{SpatRaster}, \code{copyFiles = TRUE}
-copies the backing file(s) into \verb{cacheOutputs/} under \code{cachePath} (as \code{Cache()} does), so
-the wrapped object can be saved with \code{saveRDS} and restored by \code{.unwrap(obj, cachePath)}
+copies the backing file(s) into \verb{cacheOutputs/} under \code{filebackedPath} (as \code{Cache()} does), so
+the wrapped object can be saved with \code{saveRDS} and restored by \code{.unwrap(obj, filebackedPath)}
 even if the original file is gone. The default \code{FALSE} only records the file's location.}
+
+\item{cachePath}{Deprecated; the former name of \code{filebackedPath}. It still works, with a message.}
 }
 \value{
 Returns an object that can be saved to disk e.g., via \code{saveRDS}.

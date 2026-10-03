@@ -95,13 +95,13 @@ test_that("wrapSpatRaster requires named dots", {
   ## NB the list must be the 4th argument: the signature is
   ## (obj, cachePath, cacheId, ...), so positions 2 and 3 are consumed first.
   expect_error(
-    wrapSpatRaster(r, cachePath = tmpdir, cacheId = NULL, list("unnamed")),
+    wrapSpatRaster(r, filebackedPath = tmpdir, cacheId = NULL, list("unnamed")),
     "named list"
   )
 
   ## The same list, named, is accepted.
   expect_no_error(
-    wrapSpatRaster(r, cachePath = tmpdir, cacheId = NULL, list(cachePath = tmpdir))
+    wrapSpatRaster(r, filebackedPath = tmpdir, cacheId = NULL, list(cachePath = tmpdir))
   )
 })
 

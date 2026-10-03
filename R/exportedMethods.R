@@ -168,7 +168,19 @@ relativeToWhat <- function(file, cachePath = getOption("reproducible.cachePath")
 
 ## non-exported wrap functions --------------------------------------------------
 
-wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+## `cachePath` was the name of the first path argument of `.wrap()`/`.unwrap()` and their methods; it is
+## also where file-backed objects are saved or found outside of `Cache()`, so it is now `filebackedPath`.
+## Methods call this with both so that the old name keeps working, with a message.
+.filebackedPath <- function(filebackedPath, filebackedPathMissing, cachePath, cachePathMissing) {
+  if (cachePathMissing) return(filebackedPath)
+  if (filebackedPathMissing) {
+    message("`cachePath` is deprecated in `.wrap()` and `.unwrap()`; use `filebackedPath`.")
+    return(cachePath)
+  }
+  filebackedPath
+}
+
+wrapSpatRaster <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                            ..., copyFiles = FALSE) {
   fns <- Filenames(obj, allowMultiple = FALSE)
 
@@ -203,11 +215,11 @@ wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"),
   }
   obj <- asPath(fnsMulti)
 
-  relToWhere <- relativeToWhat(obj, cachePath, ...)
+  relToWhere <- relativeToWhat(obj, filebackedPath, ...)
   # if ("" %in% names(relToWhere)) {
   #   # absBase <- browser()
   # }
-  # absBase <- absoluteBase(names(relToWhere), cachePath, ...)
+  # absBase <- absoluteBase(names(relToWhere), filebackedPath, ...)
   relPath <- unname(unlist(relToWhere))
   relName <- file.path(relPath, basename2(obj))
 
@@ -215,7 +227,7 @@ wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"),
   filenameInCache <- filenameInCacheWPrefix(obj, cacheId)
   if (isTRUE(copyFiles)) {
     ## same place and names that Cache() uses (see saveFilesInCacheFolder) and that unwrapSpatRaster reads from
-    hardLinkOrCopy(fnsMulti, file.path(CacheStorageDir(cachePath), filenameInCache), verbose = -2)
+    hardLinkOrCopy(fnsMulti, file.path(CacheStorageDir(filebackedPath), filenameInCache), verbose = -2)
   }
   # filenameInCache <- if (is.null(cacheId)) obj else .prefix(obj, prefixCacheId(cacheId))
   # filenameInCache <- basename2(filenameInCache)
@@ -243,14 +255,13 @@ wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"),
   obj
 }
 
-unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
-                           ..., copyFiles = FALSE) {
+unwrapSpatRaster <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL, ...) {
   fns <- Filenames(obj)
   if (isTRUE(any(nchar(fns) > 0))) {
     tags <- attr(obj, "tags")
     if (!is.null(tags)) {
-      if (!is.null(cachePath)) {
-        filenameInCache <- CacheStoredFile(cachePath,
+      if (!is.null(filebackedPath)) {
+        filenameInCache <- CacheStoredFile(filebackedPath,
                                            # cacheId = tools::file_path_sans_ext(basename(obj)),
                                            obj = obj, readOnly = TRUE
         )
@@ -260,10 +271,10 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
         #   Passing `fns` as `obj` here short-circuited remapFilenames() to the verbatim
         #   producer path, which is what made a cloud-cached raster try to write back to
         #   e.g. /home/<producer>/... on a different user's machine.
-        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
+        newFiles <- remapFilenames(tags = tags, cachePath = filebackedPath, ...)
         fromFiles <- unlist(filenameInCache)
       } else {
-        newFiles <- remapFilenames(tags = tags, cachePath = cachePath, ...)
+        newFiles <- remapFilenames(tags = tags, cachePath = filebackedPath, ...)
         fromFiles <- unlist(fns) # fnToLoad <- newFiles$newName
       }
       ## The destination is not cleared first (it used to be, which also broke remapFilenames();
@@ -274,16 +285,16 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
       # origRelName <- extractFromCache(tags, tagOrigRelName)
       # origFilename <- extractFromCache(tags, tagOrigFilename) # tv[tk == tagOrigFilename]
       # relToWhere <- extractFromCache(tags, "relToWhere")
-      # # possPaths <- modifyListPaths(cachePath, ...)
-      # absBase <- absoluteBase(relToWhere, cachePath, ...)
+      # # possPaths <- modifyListPaths(filebackedPath, ...)
+      # absBase <- absoluteBase(relToWhere, filebackedPath, ...)
       # newName <- file.path(absBase, origRelName)
 
       # if (FALSE) {
       #   isAbs <- isAbsolutePath(origRelName)
-      #   if (any(isAbs) || is.null(cachePath)) { # means that it had a specific path, not just relative
+      #   if (any(isAbs) || is.null(filebackedPath)) { # means that it had a specific path, not just relative
       #     newName2 <- file.path(normPath(extractFromCache(tags, "origDirname")), origFilename)
       #   } else {
-      #     newName2 <- file.path(cachePath, origRelName)
+      #     newName2 <- file.path(filebackedPath, origRelName)
       #   }
       # }
 
@@ -291,8 +302,8 @@ unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"
 
       # whFiles <- newFiles$newName[match(basename(extractFromCache(tags, tagFilesToLoad)), origFilename)]
 
-      # if (!is.null(cachePath)) {
-      #   filenameInCache <- CacheStoredFile(cachePath,
+      # if (!is.null(filebackedPath)) {
+      #   filenameInCache <- CacheStoredFile(filebackedPath,
       #                                      # cacheId = tools::file_path_sans_ext(basename(obj)),
       #                                      obj = obj
       #   )
@@ -1025,9 +1036,13 @@ unmakeMemoisable.default <- function(x) {
 #' cannot be saved without first wrapping them. Also, file-backed objects are similar.
 #'
 #' @param obj Any arbitrary R object.
+#' @param filebackedPath Directory under which file-backed objects (e.g., a file-backed `SpatRaster`)
+#'   are anchored and, with `copyFiles = TRUE`, stored (in `cacheOutputs/`). `Cache()` uses its
+#'   `cachePath`; outside of `Cache()` it is any directory, e.g., the one holding an `.rds`.
+#' @param cachePath Deprecated; the former name of `filebackedPath`. It still works, with a message.
 #' @param ... Arguments passed to methods. For a file-backed `SpatRaster`, `copyFiles = TRUE`
-#'   copies the backing file(s) into `cacheOutputs/` under `cachePath` (as `Cache()` does), so
-#'   the wrapped object can be saved with `saveRDS` and restored by `.unwrap(obj, cachePath)`
+#'   copies the backing file(s) into `cacheOutputs/` under `filebackedPath` (as `Cache()` does), so
+#'   the wrapped object can be saved with `saveRDS` and restored by `.unwrap(obj, filebackedPath)`
 #'   even if the original file is gone. The default `FALSE` only records the file's location.
 #' @inheritParams Cache
 #' @inheritParams loadFromCache
@@ -1036,19 +1051,20 @@ unmakeMemoisable.default <- function(x) {
 #'
 #' @export
 #' @rdname dotWrap
-.wrap <- function(obj, cachePath = getOption("reproducible.cachePath"), preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap <- function(obj, filebackedPath = getOption("reproducible.cachePath"), preDigest,  drv = getDrv(getOption("reproducible.drv", NULL)),
                   conn = getOption("reproducible.conn", NULL),
                   verbose = getOption("reproducible.verbose"), outputObjects  = NULL,
-                  cacheId = NULL, ...) {
+                  cacheId = NULL, ..., cachePath) {
   UseMethod(".wrap")
 }
 
 #' @export
 #' @rdname dotWrap
-.wrap.list <- function(obj, cachePath = getOption("reproducible.cachePath"), preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.list <- function(obj, filebackedPath = getOption("reproducible.cachePath"), preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL),
                        verbose = getOption("reproducible.verbose"), outputObjects = NULL,
-                       cacheId = NULL, ...) {
+                       cacheId = NULL, ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
 
   if (!is.null(outputObjects)) {
     allObjs <- names(obj)
@@ -1058,12 +1074,12 @@ unmakeMemoisable.default <- function(x) {
 
   attrsOrig <- attributes(obj)
   ## this is not calling the right method:
-  # obj <- lapply(obj, .wrap, preDigest = preDigest, cachePath = cachePath, drv = drv,
+  # obj <- lapply(obj, .wrap, preDigest = preDigest, filebackedPath = filebackedPath, drv = drv,
                 # conn = conn, verbose = verbose, ...)
 
   obj <- lapply(obj, function(objj, ...) {
     .wrap(objj, ...)
-  }, preDigest = preDigest, cachePath = cachePath, drv = drv,
+  }, preDigest = preDigest, filebackedPath = filebackedPath, drv = drv,
      conn = conn, verbose = verbose, cacheId = cacheId, ...)
   hasTagAttr <- lapply(obj, function(x) attr(x, "tags"))
   tagAttr <- unname(unlist(hasTagAttr)) # this removed name
@@ -1084,10 +1100,11 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.wrap.environment <- function(obj, cachePath = getOption("reproducible.cachePath"), preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.environment <- function(obj, filebackedPath = getOption("reproducible.cachePath"), preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                               conn = getOption("reproducible.conn", NULL),
                               verbose = getOption("reproducible.verbose"), outputObjects = NULL,
-                              cacheId = NULL, ...) {
+                              cacheId = NULL, ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   if (!is.null(outputObjects)) {
     allObjs <- ls(obj)
     nullify <- setdiff(allObjs, outputObjects)
@@ -1096,7 +1113,7 @@ unmakeMemoisable.default <- function(x) {
 
   if (length(ls(obj, all.names = TRUE)) > 0) {
     obj2 <- as.list(obj, all.names = TRUE)
-    out <- .wrap(obj2, cachePath = cachePath, preDigest = preDigest, drv = drv,
+    out <- .wrap(obj2, filebackedPath = filebackedPath, preDigest = preDigest, drv = drv,
                  conn = conn, verbose = verbose, outputObjects = outputObjects, cacheId = cacheId, ...)
     # obj <- Copy(obj)
     obj2 <- list2envAttempts(out, obj)
@@ -1116,10 +1133,12 @@ unmakeMemoisable.default <- function(x) {
 #'   ex1 <- .unwrap(exWrapped)
 #' }
 #'
-.wrap.default <- function(obj, cachePath = getOption("reproducible.cachePath"), preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
+.wrap.default <- function(obj, filebackedPath = getOption("reproducible.cachePath"), preDigest, drv = getDrv(getOption("reproducible.drv", NULL)),
                           conn = getOption("reproducible.conn", NULL),
                           verbose = getOption("reproducible.verbose"), outputObjects = NULL,
-                          cacheId = NULL, ...) {
+                          cacheId = NULL, ..., cachePath) {
+  pathGiven <- !missing(filebackedPath) || !missing(cachePath)
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   rasters <- is(obj, "Raster")
   atts <- attributes(obj)
   reassignAtts <- TRUE
@@ -1127,7 +1146,7 @@ unmakeMemoisable.default <- function(x) {
     .requireNamespace("raster", stopOnFALSE = TRUE)
     objOrig <- obj
     obj <- .prepareFileBackedRaster(obj,
-                                    repoDir = cachePath,
+                                    repoDir = filebackedPath,
                                     overwrite = FALSE, drv = drv, conn = conn,
                                     verbose = verbose
     )
@@ -1190,9 +1209,9 @@ unmakeMemoisable.default <- function(x) {
     if (.isSpatRaster(obj)) {
       if (all(nzchar(Filenames(obj)))) {
         useWrap <- FALSE
-        obj <- wrapSpatRaster(obj, cachePath, cacheId = cacheId, ...)
+        obj <- wrapSpatRaster(obj, filebackedPath, cacheId = cacheId, ...)
       }
-    } else if (is(obj, "SpatVector") && !missing(cachePath)) {
+    } else if (is(obj, "SpatVector") && pathGiven) {
       useWrap <- FALSE
       obj <- wrapSpatVector(obj)
     } else if (is(obj, "SpatExtent")) {
@@ -1228,9 +1247,10 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.unwrap.default <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.default <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                             drv = getDrv(getOption("reproducible.drv", NULL)),
-                            conn = getOption("reproducible.conn", NULL), ...) {
+                            conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   atts <- attributes(obj)
   if (any(inherits(obj, "PackedSpatVectorCollection"))) {
     obj <- lapply(obj, .unwrap)
@@ -1243,11 +1263,11 @@ unmakeMemoisable.default <- function(x) {
     }
 
   } else if (is(obj, "Path")) {
-    obj <- unwrapSpatRaster(obj, cachePath, cacheId = cacheId, ...)
-    # obj2 <- try(unwrapSpatRaster(obj, cachePath, ...))
+    obj <- unwrapSpatRaster(obj, filebackedPath, cacheId = cacheId, ...)
+    # obj2 <- try(unwrapSpatRaster(obj, filebackedPath, ...))
     # if (is(obj2, "try-error")) {
     #   browser()
-    #   clearCache(cacheId = cacheId, x = cachePath, ask = FALSE, drv = drv, conn = conn)
+    #   clearCache(cacheId = cacheId, x = filebackedPath, ask = FALSE, drv = drv, conn = conn)
     #   messageCache("Removing ", cacheId, " from the Cache as the file-backing is missing or corrupt")
     #   obj <- .returnNothing
     # } else {
@@ -1264,23 +1284,24 @@ unmakeMemoisable.default <- function(x) {
 #' @param cacheId Used strictly for messaging. This should be the cacheId of the object being recovered.
 #'   Default is `NULL`.
 #' @rdname dotWrap
-.unwrap <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                     drv = getDrv(getOption("reproducible.drv", NULL)),
-                    conn = getOption("reproducible.conn", NULL), ...) {
+                    conn = getOption("reproducible.conn", NULL), ..., cachePath) {
   UseMethod(".unwrap")
 }
 
 #' @export
 #' @rdname dotWrap
-.unwrap.environment <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.environment <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                                 drv = getDrv(getOption("reproducible.drv", NULL)),
-                                conn = getOption("reproducible.conn", NULL), ...) {
+                                conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   # the as.list doesn't get everything. But with a simList, this is OK; rest will stay
   atts <- attributes(obj)
   # if (!is.null(obj$fireSense_dataPrepFit$.objects$studyAreaUnion)) browser()
   objList <- as.list(obj, all.names = TRUE) # don't overwrite everything, just the ones in the list part; but need .mods, .objects etc.
 
-  outList <- .unwrap(objList, cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn, ...)
+  outList <- .unwrap(objList, filebackedPath = filebackedPath, cacheId = cacheId, drv = drv, conn = conn, ...)
   output2 <- list2envAttempts(outList, obj) # don't return it if the list2env retured nothing (a normal environment situation; not simList)
   if (!is.null(output2)) obj <- output2
 
@@ -1292,9 +1313,10 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.unwrap.list <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.list <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                          drv = getDrv(getOption("reproducible.drv", NULL)),
-                         conn = getOption("reproducible.conn", NULL), ...) {
+                         conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   atts <- attributes(obj)
   anyNames <- names(obj)
   # isSpatVector <- if (is.null(anyNames) || length(anyNames) == 0) FALSE else {
@@ -1306,10 +1328,10 @@ unmakeMemoisable.default <- function(x) {
   # } else {
     isRaster <- isTRUE("cacheRaster" %in% names(obj))
     if (isRaster) {
-      obj <- unwrapRaster(obj, cachePath, cacheId)
+      obj <- unwrapRaster(obj, filebackedPath, cacheId)
     } else {
       obj <- lapply(obj, function(out) {
-        ret <- .unwrap(out, cachePath, cacheId = cacheId, drv, conn, ...)
+        ret <- .unwrap(out, filebackedPath, cacheId = cacheId, drv, conn, ...)
         if (is.character(ret))
           if (identical(.returnNothing, ret))
             FAIL <<- TRUE
@@ -1327,9 +1349,10 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.unwrap.PackedSpatExtent2 <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.PackedSpatExtent2 <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                                       drv = getDrv(getOption("reproducible.drv", NULL)),
-                                      conn = getOption("reproducible.conn", NULL), ...) {
+                                      conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   atts <- attributes(obj)
   obj <- terra::ext(unlist(obj))
   # put attributes back on the potentially packed object
@@ -1342,9 +1365,10 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.unwrap.PackedSpatVector2 <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.PackedSpatVector2 <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                             drv = getDrv(getOption("reproducible.drv", NULL)),
-                            conn = getOption("reproducible.conn", NULL), ...) {
+                            conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   atts <- attributes(obj)
   obj <- unwrapSpatVector(obj)
   # put attributes back on the potentially packed object
@@ -1356,9 +1380,10 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.unwrap.data.table <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.data.table <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                                      drv = getDrv(getOption("reproducible.drv", NULL)),
-                                     conn = getOption("reproducible.conn", NULL), ...) {
+                                     conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   atts <- attributes(obj)
   obj <- data.table::copy(obj)
   # put attributes back on the potentially packed object
@@ -1370,9 +1395,10 @@ unmakeMemoisable.default <- function(x) {
 
 #' @export
 #' @rdname dotWrap
-.unwrap.PackedSpatVector <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+.unwrap.PackedSpatVector <- function(obj, filebackedPath = getOption("reproducible.cachePath"), cacheId = NULL,
                                       drv = getDrv(getOption("reproducible.drv", NULL)),
-                                      conn = getOption("reproducible.conn", NULL), ...) {
+                                      conn = getOption("reproducible.conn", NULL), ..., cachePath) {
+  filebackedPath <- .filebackedPath(filebackedPath, missing(filebackedPath), cachePath, missing(cachePath))
   atts <- attributes(obj)
   obj <- terra::vect(obj)
   # put attributes back on the potentially packed object

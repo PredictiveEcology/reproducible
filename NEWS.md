@@ -3,6 +3,7 @@
 ## Bug fixes
 
 * `.wrap()` of a file-backed `SpatRaster` (R/exportedMethods.R, `wrapSpatRaster()`) only recorded the file's location, so a wrapped object saved with `saveRDS` could not be restored once the original file was gone. A new `copyFiles = TRUE` (passed through `...`) copies the backing file(s) into `cacheOutputs/` under `cachePath`, the place `.unwrap()` reads from, using the same helper `Cache()` uses. The default is unchanged, so `Cache()` does not copy twice.
+* The first path argument of `.wrap()`, `.unwrap()` and their methods is now `filebackedPath` (it was `cachePath`): it anchors and stores file-backed objects whether or not `Cache()` is involved. `cachePath` still works and gives a message. Packages that define `.wrap`/`.unwrap` methods (e.g., SpaDES.core's `simList` methods) should rename their formal; `Cache()` now passes `filebackedPath`.
 
 ## New features
 

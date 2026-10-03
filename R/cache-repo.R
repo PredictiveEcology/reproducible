@@ -312,7 +312,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
                             useMemoise = getOption("reproducible.useMemoise", FALSE)) {
   cacheIdIdentical <- cache_Id_Identical(metadata, cachePath, cache_key, cacheSaveFormat = cacheSaveFormat)
   linkToCacheId <- if (!is.null(cacheIdIdentical)) filePathSansExt(basename(cacheIdIdentical))  else NULL
-  outputToSave <- .wrap(outputFromEvaluate, cachePath = cachePath, preDigest = preDigest,
+  outputToSave <- .wrap(outputFromEvaluate, filebackedPath = cachePath, preDigest = preDigest,
                         outputObjects = outputObjects,
                         cacheId = cache_key, verbose = verbose)
   metadata <- metadata_update(outputToSave, metadata, cache_key) # .wrap may have added tags
@@ -507,7 +507,7 @@ loadFromDiskOrMemoise <- function(fromMemoise = FALSE, useCache,
           memoiseAssign(cache_key, obj, cachePath)
         }
       }
-      output <- try(.unwrap(obj, cachePath = cachePath, cacheId = cache_key))
+      output <- try(.unwrap(obj, filebackedPath = cachePath, cacheId = cache_key))
       if (is(obj, "try-error") || rerun || is(output, "try-error")) {
         if (exists(cache_key, envir = memoiseEnv(cachePath), inherits = FALSE))
           rm(list = cache_key, envir = memoiseEnv(cachePath))
