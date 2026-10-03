@@ -176,10 +176,10 @@ relativeToWhat <- function(file, cachePath = getOption("reproducible.cachePath")
 #' @rdname dotWrap
 .filebackedPath <- function(filebackedPath, filebackedPathMissing, cachePath, cachePathMissing) {
   if (cachePathMissing) return(filebackedPath)
-  if (filebackedPathMissing) {
-    message("`cachePath` is deprecated in `.wrap()` and `.unwrap()`; use `filebackedPath`.")
-    return(cachePath)
-  }
+  ## the old name is accepted silently for now: SpaDES.core and clusters still pass it, and a
+  ## message there breaks their "no unexpected messages" tests. Add a deprecation message once
+  ## they use filebackedPath (SpaDES.core#481, clusters#38).
+  if (filebackedPathMissing) return(cachePath)
   filebackedPath
 }
 

@@ -115,14 +115,14 @@ test_that(".wrap/.unwrap: `filebackedPath` is the argument; `cachePath` still wo
   expect_no_message(back <- .unwrap(w, filebackedPath = dest))
   expect_equal(terra::values(back)[, 1], 1:6)
 
-  ## old name: same result, with a message
+  ## old name: same result, silently (deprecation message to come once downstream packages use the new name)
   dir.create(src)
   terra::writeRaster(terra::rast(nrows = 3, ncols = 2, vals = 1:6), tif)
-  expect_message(w2 <- .wrap(terra::rast(tif), cachePath = dest, copyFiles = TRUE), "filebackedPath")
+  expect_no_message(w2 <- .wrap(terra::rast(tif), cachePath = dest, copyFiles = TRUE))
   unlink(src, recursive = TRUE)
-  expect_message(back2 <- .unwrap(w2, cachePath = dest), "filebackedPath")
+  expect_no_message(back2 <- .unwrap(w2, cachePath = dest))
   expect_equal(terra::values(back2)[, 1], 1:6)
 
   ## list and environment methods too
-  expect_message(.unwrap(.wrap(list(a = 1), cachePath = dest), cachePath = dest), "filebackedPath")
+  expect_no_message(.unwrap(.wrap(list(a = 1), cachePath = dest), cachePath = dest))
 })
