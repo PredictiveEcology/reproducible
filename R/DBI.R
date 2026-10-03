@@ -1300,7 +1300,9 @@ formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reprodu
   }
   if (exists("newFormat", inherits = FALSE)) {
     cacheSaveFormat <- newFormat
-  } else if (cacheSaveFormat == "check") { # means there was no file; possibly deleted inadvertently
+  } else if (is.null(cacheSaveFormat) || identical(cacheSaveFormat, "check")) {
+    # no file: possibly deleted inadvertently, or another process has not finished writing it.
+    # NULL is an unset option (as in a fresh subprocess); `NULL == "check"` is logical(0), and if() errors
     # nothing found on disk -- this is a new entry being saved, so a concrete
     # format is needed; fall back to rds if the user hasn't chosen one.
     cacheSaveFormat <- getOption("reproducible.cacheSaveFormat", .rdsFormat)

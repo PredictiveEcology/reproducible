@@ -1,3 +1,7 @@
+# reproducible (development version)
+
+* `formatCheck()` (R/DBI.R) errored with "argument is of length zero" when no cache file existed yet and `reproducible.cacheSaveFormat` was unset, as in a fresh subprocess while another process is still writing the entry (`NULL == "check"`). It now falls back to rds, as it already did for `"check"`.
+
 # reproducible 3.2.1.9062
 
 ## Bug fixes
