@@ -15,10 +15,10 @@ test_that(".wrap/.unwrap round-trip an environment", {
   e$a <- 1:3
   e$b <- "x"
 
-  w <- .wrap(e, cachePath = cp, preDigest = list(), cacheId = "wrapEnvId")
+  w <- .wrap(e, filebackedPath = cp, preDigest = list(), cacheId = "wrapEnvId")
   expect_true(is.environment(w))
 
-  u <- .unwrap(w, cachePath = cp, cacheId = "wrapEnvId")
+  u <- .unwrap(w, filebackedPath = cp, cacheId = "wrapEnvId")
   expect_true(is.environment(u))
   ## Contents survive the round trip unchanged -- this is what Cache() relies on
   ## when an environment is cached and later restored.
@@ -37,7 +37,7 @@ test_that(".wrap.environment drops everything outside outputObjects", {
   ## NOTE: this mutates `e` in place (rm(list = ..., envir = obj)), it does not
   ## work on a copy. Asserted here because a caller passing a live environment
   ## will see its contents removed.
-  .wrap(e, cachePath = cp, preDigest = list(), cacheId = "outputObjId",
+  .wrap(e, filebackedPath = cp, preDigest = list(), cacheId = "outputObjId",
         outputObjects = "keep")
 
   expect_identical(ls(e), "keep")

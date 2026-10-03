@@ -1,5 +1,10 @@
 # reproducible (development version)
 
+## Bug fixes
+
+* `.wrap()` of a file-backed `SpatRaster` (R/exportedMethods.R, `wrapSpatRaster()`) only recorded the file's location, so a wrapped object saved with `saveRDS` could not be restored once the original file was gone. A new `copyFiles = TRUE` (passed through `...`) copies the backing file(s) into `cacheOutputs/` under `cachePath`, the place `.unwrap()` reads from, using the same helper `Cache()` uses. The default is unchanged, so `Cache()` does not copy twice.
+* The first path argument of `.wrap()`, `.unwrap()` and their methods is now `filebackedPath` (it was `cachePath`): it anchors and stores file-backed objects whether or not `Cache()` is involved. `cachePath` still works, silently for now; a deprecation message will follow once SpaDES.core and clusters use `filebackedPath`. Packages that define `.wrap`/`.unwrap` methods (e.g., SpaDES.core's `simList` methods) should rename their formal; `Cache()` now passes `filebackedPath`.
+
 ## New features
 
 * `postProcessTo()` has a `rasterize` argument. With `TRUE`, or a list of arguments for `terra::rasterize()` (e.g. `list(field = "value", fun = "max")`), a Vector `from` is cropped and projected as usual, then rasterized onto `projectTo` (or `to`), which must be Gridded; masking and writing are done on the raster, and a `SpatRaster` is returned.
