@@ -160,7 +160,10 @@ return. This is only relevant for list, environment (or similar) objects}
 \item{cacheId}{Used strictly for messaging. This should be the cacheId of the object being recovered.
 Default is \code{NULL}.}
 
-\item{...}{Arguments passed to methods; default does not use anything in \code{...}.}
+\item{...}{Arguments passed to methods. For a file-backed \code{SpatRaster}, \code{copyFiles = TRUE}
+copies the backing file(s) into \verb{cacheOutputs/} under \code{cachePath} (as \code{Cache()} does), so
+the wrapped object can be saved with \code{saveRDS} and restored by \code{.unwrap(obj, cachePath)}
+even if the original file is gone. The default \code{FALSE} only records the file's location.}
 }
 \value{
 Returns an object that can be saved to disk e.g., via \code{saveRDS}.

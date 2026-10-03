@@ -168,7 +168,8 @@ relativeToWhat <- function(file, cachePath = getOption("reproducible.cachePath")
 
 ## non-exported wrap functions --------------------------------------------------
 
-wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL, ...) {
+wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+                           ..., copyFiles = FALSE) {
   fns <- Filenames(obj, allowMultiple = FALSE)
 
   cls <- class(obj)
@@ -212,6 +213,10 @@ wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"),
 
   # Change the filename of the file-backing to include the cachdId as a prefix
   filenameInCache <- filenameInCacheWPrefix(obj, cacheId)
+  if (isTRUE(copyFiles)) {
+    ## same place and names that Cache() uses (see saveFilesInCacheFolder) and that unwrapSpatRaster reads from
+    hardLinkOrCopy(fnsMulti, file.path(CacheStorageDir(cachePath), filenameInCache), verbose = -2)
+  }
   # filenameInCache <- if (is.null(cacheId)) obj else .prefix(obj, prefixCacheId(cacheId))
   # filenameInCache <- basename2(filenameInCache)
   # if (!identical(filenameInCache, filenameInCache2)) browser()
@@ -238,7 +243,8 @@ wrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"),
   obj
 }
 
-unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL, ...) {
+unwrapSpatRaster <- function(obj, cachePath = getOption("reproducible.cachePath"), cacheId = NULL,
+                           ..., copyFiles = FALSE) {
   fns <- Filenames(obj)
   if (isTRUE(any(nchar(fns) > 0))) {
     tags <- attr(obj, "tags")
@@ -1019,7 +1025,10 @@ unmakeMemoisable.default <- function(x) {
 #' cannot be saved without first wrapping them. Also, file-backed objects are similar.
 #'
 #' @param obj Any arbitrary R object.
-#' @param ... Arguments passed to methods; default does not use anything in `...`.
+#' @param ... Arguments passed to methods. For a file-backed `SpatRaster`, `copyFiles = TRUE`
+#'   copies the backing file(s) into `cacheOutputs/` under `cachePath` (as `Cache()` does), so
+#'   the wrapped object can be saved with `saveRDS` and restored by `.unwrap(obj, cachePath)`
+#'   even if the original file is gone. The default `FALSE` only records the file's location.
 #' @inheritParams Cache
 #' @inheritParams loadFromCache
 #'
