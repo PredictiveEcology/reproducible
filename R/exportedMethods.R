@@ -170,7 +170,10 @@ relativeToWhat <- function(file, cachePath = getOption("reproducible.cachePath")
 
 ## `cachePath` was the name of the first path argument of `.wrap()`/`.unwrap()` and their methods; it is
 ## also where file-backed objects are saved or found outside of `Cache()`, so it is now `filebackedPath`.
-## Methods call this with both so that the old name keeps working, with a message.
+## Methods (also those in other packages) call this so that the old name keeps working, with a message.
+#' @param filebackedPathMissing,cachePathMissing `missing()` of the two arguments in the calling method.
+#' @export
+#' @rdname dotWrap
 .filebackedPath <- function(filebackedPath, filebackedPathMissing, cachePath, cachePathMissing) {
   if (cachePathMissing) return(filebackedPath)
   if (filebackedPathMissing) {
