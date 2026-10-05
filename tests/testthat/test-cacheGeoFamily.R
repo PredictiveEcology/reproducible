@@ -353,9 +353,11 @@ test_that("Drive remote: write, public-style read, no upload on read, no folder 
   expect_identical(NROW(googledrive::drive_ls(remote)), 1L)
 
   ## a read of a folder name that does not exist creates nothing
-  before <- NROW(googledrive::drive_find(pattern = paste0("^", folderName, "_missing$")))
+  ## A server-side name query: drive_find(pattern =) would list the whole Drive and filter locally
+  missingQuery <- sprintf("name = '%s_missing'", folderName)
+  before <- NROW(googledrive::drive_find(q = missingQuery))
   ghost <- CacheGeoLedger("toy.rds", remote = paste0(folderName, "_missing"), remoteType = "drive",
                           destinationPath = checkPath(tempdir2(), create = TRUE))
   suppressWarnings(CacheGeoRead(ghost, area = NULL, verbose = 0))
-  expect_identical(NROW(googledrive::drive_find(pattern = paste0("^", folderName, "_missing$"))), before)
+  expect_identical(NROW(googledrive::drive_find(q = missingQuery)), before)
 })
