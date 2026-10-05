@@ -1890,7 +1890,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       ## So, identify the dirs in the `from`, and those ones will also be dirs in `to`
       fromDirs <- dir.exists(from)
       toDirs2 <- to[fromDirs]
-      dirDoesntExist2 <- rep(TRUE, length(toDirs2))
+      dirDoesntExist2 <- !dir.exists(toDirs2)
 
       if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
         needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))
