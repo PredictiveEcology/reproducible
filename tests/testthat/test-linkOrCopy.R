@@ -222,3 +222,32 @@ test_that("linkOrCopy does not copy a kept hard link onto itself when other link
   expect_equal(file.size(to[3]), 5000)
   expect_equal(file.size(to[1:2]), c(200, 200))             # the others were still copied
 })
+
+test_that("linkOrCopy links the files inside a directory, not just the directory", {
+  testInit()
+
+  ## Regression (FIIS TSA02, 2026-10-04): preProcess linked `tsa22_thlb.gdb` -- an ESRI file
+  ## geodatabase, which is a directory -- out of destinationPathShared. linkOrCopy() created
+  ## the directory at `to`, linked nothing into it, and reported "Hardlinked ... no copy/copies
+  ## made", so terra::vect() then failed on an empty directory.
+  src <- file.path(tmpdir, "shared", "x.gdb")
+  dir.create(file.path(src, "sub"), recursive = TRUE)
+  files <- c("a00000001.gdbtable", "gdb", file.path("sub", "timestamps"))
+  for (f in files) writeLines(f, file.path(src, f))
+  to <- file.path(tmpdir, "dest", "x.gdb")
+
+  res <- suppressMessages(linkOrCopy(src, to, symlink = FALSE, verbose = 0))
+
+  expect_true(isTRUE(all(res)))
+  expect_setequal(list.files(to, recursive = TRUE), files)
+  expect_identical(readLines(file.path(to, "sub", "timestamps"), warn = FALSE),
+                   file.path("sub", "timestamps"))
+
+  ## The directory listed together with its own files, as preProcess passes them: each
+  ## file is placed once.
+  to2 <- file.path(tmpdir, "dest2", "x.gdb")
+  res <- suppressMessages(linkOrCopy(c(src, file.path(src, files)), c(to2, file.path(to2, files)),
+                                     symlink = FALSE, verbose = 0))
+  expect_true(isTRUE(all(res)))
+  expect_setequal(list.files(to2, recursive = TRUE), files)
+})
