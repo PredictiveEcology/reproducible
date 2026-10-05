@@ -239,7 +239,7 @@ test_that("an existing empty directory targetFile is not taken as present", {
   withr::local_options(reproducible.destinationPathShared = shared)
   pp <- function(dest)
     preProcess(url = paste0("file://", file.path(tmpdir, "src", "x.zip")),
-               destinationPath = dest, targetFile = "x.gdb", useCache = FALSE, verbose = -1)
+               destinationPath = dest, targetFile = "x.gdb", fun = NA, useCache = FALSE, verbose = -1)
 
   pp(checkPath(file.path(tmpdir, "d1"), create = TRUE)) # fills the stash
 
