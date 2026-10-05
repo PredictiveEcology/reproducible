@@ -334,7 +334,7 @@ loadFromCache <- function(cachePath = getOption("reproducible.cachePath"),
         memoiseAssign(cacheId, obj, cachePath)
       }
       obj <- .unwrap(obj,
-                     cachePath = cachePath,
+                     filebackedPath = cachePath,
                      cacheId = cacheId,
                      drv = drv, conn = conn
       )
@@ -1300,7 +1300,9 @@ formatCheck <- function(cachePath, cacheId, cacheSaveFormat = getOption("reprodu
   }
   if (exists("newFormat", inherits = FALSE)) {
     cacheSaveFormat <- newFormat
-  } else if (cacheSaveFormat == "check") { # means there was no file; possibly deleted inadvertently
+  } else if (is.null(cacheSaveFormat) || identical(cacheSaveFormat, "check")) {
+    # no file: possibly deleted inadvertently, or another process has not finished writing it.
+    # NULL is an unset option (as in a fresh subprocess); `NULL == "check"` is logical(0), and if() errors
     # nothing found on disk -- this is a new entry being saved, so a concrete
     # format is needed; fall back to rds if the user hasn't chosen one.
     cacheSaveFormat <- getOption("reproducible.cacheSaveFormat", .rdsFormat)
@@ -1423,7 +1425,7 @@ memoiseAssign <- function(cacheId, obj, cachePath) {
 memoiseGet <- function(cacheId, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
                        conn = getOption("reproducible.conn", NULL)) {
   .unwrap(unmakeMemoisable(get(cacheId, envir = memoiseEnv(cachePath))),
-          cachePath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
+          filebackedPath = cachePath, cacheId = cacheId, drv = drv, conn = conn)
 }
 
 
@@ -1486,7 +1488,7 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
         verbose = verbose
       )
 
-      obj2 <- .wrap(obj, cachePath = cachePath, drv = drv, conn = conn, cacheId = cacheId)
+      obj2 <- .wrap(obj, filebackedPath = cachePath, drv = drv, conn = conn, cacheId = cacheId)
       swapCacheFileFormat(wrappedObj = obj2, cachePath = cachePath, drv = drv, conn = conn,
                           cacheId = cacheId, sameCacheID = sameCacheID, newFile = f, verbose = verbose)
       # fs <- saveToCache(

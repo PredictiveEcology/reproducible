@@ -4,6 +4,52 @@
 
 * New `CacheGeoLedger()`, `CacheGeoRead()` and `CacheGeoWrite()`, and `CacheGeo()` rebuilt on them (one help page, `?CacheGeoLedger`). A ledger is one `.rds` file of spatial rows, local or shared through a Google Drive folder, a shared-disk folder or (read-only) a URL. `CacheGeoRead()` always returns an `sf` object (0 rows if nothing matches; list-columns kept) for `match = "intersects"`, `"covers"` or `"within"`, with a `tolerance` that drops slivers; it never writes, creates a folder or uploads, and needs no Google login for a file shared "Anyone with the link". `CacheGeoWrite()` replaces the rows with the same key (or geometry) or appends, re-reads the remote just before writing, pushes only if the content changed, and merges again if another writer got in between; writers to a shared-disk folder also hold a file lock. `CacheGeo(ledger, area, compute)` runs `compute(area)` only for an area the ledger does not cover, and its errors are no longer swallowed. The old arguments (`targetFile`, `domain`, `FUN`, `action`, ...) are still accepted, with one message per session. A ledger is no longer sorted by `polygonID` version; rows stay in key order. A list-column that holds an xgboost model is kept through write, read and upsert (the rows are never passed through `as.data.table()` or `copy()`).
 
+# reproducible 3.2.1.9066
+
+* `Cache()` (R/cache.R, `returnInClassOfInput()` in R/cache-helpers.R) now returns a cache hit that is an `sf` or `SpatVector` in the class of the first `sf`/`SpatVector` argument of the call. Because `sf` and `SpatVector` share a cacheId (`reproducible.digestVersion` >= 4), a call first cached with one class used to return that class when rerun with the other. The cacheId is unchanged.
+
+# reproducible 3.2.1.9065
+
+* An existing but empty directory `targetFile` (e.g. an ESRI `x.gdb/` left by an earlier failed run) counted as present: `Checksums()` (R/checksums.R) gives every directory the checksum `"dir"`, so it matched its `"dir"` row in CHECKSUMS.txt whatever it held. `preProcess()` then skipped download, extraction and the copy from `destinationPathShared`, and returned the empty directory. A `"dir"` row now passes only when the files recorded under it exist (or, with none recorded, when the directory is not empty). `linkOrCopy()` also no longer warns "already exists" for a destination directory that is already there.
+
+# reproducible 3.2.1.9064
+
+* `linkOrCopy()` (R/preProcess.R), given a directory, created an empty directory at the destination, linked none of its files, and still reported "Hardlinked ... no copy/copies made". A `targetFile` that is a directory, such as an ESRI file geodatabase (`x.gdb/`), could then arrive empty when `preProcess()` linked it from `destinationPathShared`. It now links every file inside the directory.
+
+# reproducible 3.2.1.9063
+
+* `formatCheck()` (R/DBI.R) errored with "argument is of length zero" when no cache file existed yet and `reproducible.cacheSaveFormat` was unset, as in a fresh subprocess while another process is still writing the entry (`NULL == "check"`). It now falls back to rds, as it already did for `"check"`.
+
+# reproducible 3.2.1.9062
+
+## Bug fixes
+
+* `.wrap()` of a file-backed `SpatRaster` (R/exportedMethods.R, `wrapSpatRaster()`) only recorded the file's location, so a wrapped object saved with `saveRDS` could not be restored once the original file was gone. A new `copyFiles = TRUE` (passed through `...`) copies the backing file(s) into `cacheOutputs/` under `cachePath`, the place `.unwrap()` reads from, using the same helper `Cache()` uses. The default is unchanged, so `Cache()` does not copy twice.
+* The first path argument of `.wrap()`, `.unwrap()` and their methods is now `filebackedPath` (it was `cachePath`): it anchors and stores file-backed objects whether or not `Cache()` is involved. `cachePath` still works, silently for now; a deprecation message will follow once SpaDES.core and clusters use `filebackedPath`. Packages that define `.wrap`/`.unwrap` methods (e.g., SpaDES.core's `simList` methods) should rename their formal; `Cache()` now passes `filebackedPath`.
+
+## New features
+
+* `postProcessTo()` has a `rasterize` argument. With `TRUE`, or a list of arguments for `terra::rasterize()` (e.g. `list(field = "value", fun = "max")`), a Vector `from` is cropped and projected as usual, then rasterized onto `projectTo` (or `to`), which must be Gridded; masking and writing are done on the raster, and a `SpatRaster` is returned.
+
+# reproducible 3.2.1.9061
+
+## Bug fixes
+
+* `cropTo()` with a raster `cropTo` in another CRS no longer reprojects the whole raster to get its extent. That took minutes for a 5000 x 5000 raster, and terra's grid snapping left the extent up to one cell too large or too small. It now projects 201 points along each edge of the extent, which matches the true footprint. A new help section, "Cropping to a raster in another CRS" in `?postProcessTo`, compares the methods.
+
+# reproducible 3.2.1.9060
+
+## Bug fixes
+
+* `reproducible.leaveOnDisk` (default `TRUE`) now sets `terraOptions(todisk = TRUE)` during `postProcessTo()`. It used to set `memfrac = 0` whenever `memfrac` was at terra's default `0.5`, which made `terra::project()` about 15 times slower (34 minutes instead of under a minute for one SCANFI study area). `memfrac` is no longer set to 0.
+* `postProcessTo()` warns when `terraOptions(memfrac)` is below 0.1 (including 0) and uses `memfrac = 0.1` for the call, because lower values make terra very slow. To keep rasters out of memory, set `terraOptions(memfrac = 0.1, todisk = TRUE)`.
+
+# reproducible 3.2.1.9059
+
+## New features
+
+* A `type = "dir"` row in the `reproducible.urlRemap` manifest is now answered from the manifest's own file rows under that folder's prefix, so `listGoogleDriveFolder()` and Drive-folder downloads work with buckets that deny anonymous ListBucket. The bucket listing is used only when no file row matches.
+
 # reproducible 3.2.1.9058
 
 ## Bug fixes

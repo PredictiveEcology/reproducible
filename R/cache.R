@@ -142,7 +142,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
       .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                               isHit = TRUE, .callingEnv = .callingEnv,
                               urlFrameId = .urlFrameId)
-      return(outputFromMemoise)
+      return(returnInClassOfInput(outputFromMemoise, callList$func_call, verbose))
     }
 
     # After memoising fail, try files; need to check Cache dir and set lockfile
@@ -173,7 +173,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
       .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                               isHit = TRUE, .callingEnv = .callingEnv,
                               urlFrameId = .urlFrameId)
-      return(outputFromDisk)
+      return(returnInClassOfInput(outputFromDisk, callList$func_call, verbose))
     }
 
   }
@@ -199,7 +199,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                             isHit = TRUE, .callingEnv = .callingEnv,
                             urlFrameId = .urlFrameId)
-    return(outputFromDisk)
+    return(returnInClassOfInput(outputFromDisk, callList$func_call, verbose))
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
 
   times$EvaluateStart <- Sys.time()

@@ -18,6 +18,7 @@ postProcessTo(
   writeTo = NULL,
   overwrite = TRUE,
   verbose = getOption("reproducible.verbose"),
+  rasterize = FALSE,
   ...
 )
 
@@ -30,6 +31,7 @@ postProcessTerra(
   writeTo = NULL,
   overwrite = TRUE,
   verbose = getOption("reproducible.verbose"),
+  rasterize = FALSE,
   ...
 )
 
@@ -118,6 +120,13 @@ e.g., because it is too large.}
 Default is 1. Above 3 will output much more information about the internals of
 Caching, which may help diagnose Caching challenges. Can set globally with an
 option, e.g., \verb{options('reproducible.verbose' = 0) to reduce to minimal}}
+
+\item{rasterize}{\code{FALSE} (default), \code{TRUE}, or a named list of arguments to
+\code{\link[terra:rasterize]{terra::rasterize()}}, e.g. \code{list(field = "value", fun = "max", touches = TRUE)}.
+If not \code{FALSE}, a Vector \code{from} is cropped and projected as usual, then rasterized onto
+\code{projectTo} (or \code{to}), which must be Gridded; masking and writing are then done on the
+raster, and a \code{SpatRaster} is returned. With \code{TRUE}, cells covered by a polygon are 1,
+others \code{NA}.}
 
 \item{...}{Arguments passed to \code{terra::mask} (for \code{maskTo}), \code{terra::project} (for \code{projectTo})
 or \code{terra::writeRaster} (for \code{writeTo}) and not used for \code{cropTo}, as well \code{postProcess}'s
@@ -245,6 +254,32 @@ the crop is no longer tight. Under some conditions, masking will effectively mas
 one step, but under some conditions, this is not true, and the mask leaves padded NAs out to
 the extent of the \code{from} (as it is after crop, project, mask). Thus the second
 crop removes all NA cells so they are tight to the mask.
+}
+
+\section{Cropping to a raster in another CRS}{
+
+When \code{cropTo} is a raster in a different CRS from \code{from}, only its extent in the CRS of
+\code{from} is needed. \code{cropTo()} gets it by projecting 201 points along each edge of the
+\code{cropTo} extent and taking their extent. It does not project the raster's cells, which
+was slow (minutes for a 5000 x 5000 raster) and, because \code{terra} snaps the projected
+cells to a new grid, could be up to one output cell too large or too small on any side.
+Projecting only the 4 corners of the extent misses the curvature of the edges.
+
+The table compares each way of getting the extent to the true footprint, found by
+projecting every cell corner. Values are how far each misses (short) or overshoots
+(over) on the worst side, in units of the target CRS.\tabular{lllll}{
+   Case \tab 4 corners \tab All cells (old) \tab Densified outline \tab Points along edges \cr
+   Canada 5 km, EPSG:3978 to lon/lat \tab 12.7 short \tab exact \tab exact \tab exact \cr
+   Canada 5 km, EPSG:3978 to UTM 11 \tab 1.7 km off \tab 1.5 km short, 1.7 km over \tab exact \tab exact \cr
+   lon/lat Canada to EPSG:3978 \tab 1,300 km short \tab 4.7 km short \tab 1,110 km short \tab exact \cr
+   lon/lat 1 degree box to EPSG:3978 \tab 0.4 km over \tab 0.4 km short \tab exact \tab exact \cr
+   150 km box, 300 m, Lambert to Lambert \tab 8 m short \tab 37 m over \tab exact \tab exact \cr
+}
+
+
+"Densified outline" is \code{terra::densify()} on the extent polygon. It fails for a lon/lat
+\code{cropTo} because it adds points along great circles, while the edges of a lon/lat box
+are lines of latitude.
 }
 
 \examples{

@@ -1854,6 +1854,23 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
     to <- to[!selfRef]
   }
 
+  ## A directory in `from` is only created at `to` below; it is never linked itself. Its
+  ## files must be added here, or `to` is left an empty directory while this reports
+  ## success. An ESRI file geodatabase (`x.gdb/`) is such a target (TSA02, 2026-10-04).
+  fromIsDir <- dir.exists(from)
+  if (any(fromIsDir)) {
+    inDirs <- lapply(which(fromIsDir), function(i) {
+      inDir <- list.files(from[i], recursive = TRUE, all.files = TRUE, no.. = TRUE)
+      list(from = file.path(sub("/+$", "", from[i]), inDir),
+           to = file.path(sub("/+$", "", to[i]), inDir))
+    })
+    fromInDirs <- unlist(lapply(inDirs, `[[`, "from"))
+    toInDirs <- unlist(lapply(inDirs, `[[`, "to"))
+    isNew <- !normPath(fromInDirs) %in% normPath(from)
+    from <- c(from, fromInDirs[isNew])
+    to <- c(to, toInDirs[isNew])
+  }
+
   existsLogical <- file.exists(from)
   existsTo <- file.exists(to)
 
@@ -1873,7 +1890,7 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
       ## So, identify the dirs in the `from`, and those ones will also be dirs in `to`
       fromDirs <- dir.exists(from)
       toDirs2 <- to[fromDirs]
-      dirDoesntExist2 <- rep(TRUE, length(toDirs2))
+      dirDoesntExist2 <- !dir.exists(toDirs2)
 
       if (any(dirDoesntExist1) || any(dirDoesntExist2)) {
         needCreate <- unique(c(toDirs1[dirDoesntExist1], toDirs2[dirDoesntExist2]))

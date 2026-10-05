@@ -211,6 +211,56 @@ test_that("listGoogleDriveFolder lists from the mirror (no drive_ls) when remapp
                    "a.tif")
 })
 
+# A bucket that denies anonymous ListBucket cannot be listed; the manifest's own
+# file rows under the dir row's prefix answer the folder listing instead.
+mirrorDirManifest <- function(dirUrl, dirId) {
+  base <- "https://mirror/b/SCANFI_v2/"
+  data.frame(
+    filename = c("2020", "a.tif", "b.tif", "deep.tif", "other.tif"),
+    url = c(dirUrl, paste0(base, "2020/a.tif"), paste0(base, "2020/b.tif"),
+            paste0(base, "2020/sub/deep.tif"), paste0(base, "2010/other.tif")),
+    id = c(dirId, "fA", "fB", "fD", "fO"),
+    type = c("dir", "file", "file", "file", "file"),
+    stringsAsFactors = FALSE)
+}
+
+test_that("listGoogleDriveFolder lists direct-child file rows from the manifest, not the bucket (listing-URL form)", {
+  skip_if_not_installed("googledrive")
+  dirId <- "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi"
+  withr::local_options(reproducible.urlRemap = mirrorDirManifest(
+    "https://mirror/b/?prefix=SCANFI_v2%2F2020%2F&delimiter=/", dirId))
+  testthat::local_mocked_bindings(
+    .bucketDirList = function(...) stop("must not list"))
+  out <- reproducible::listGoogleDriveFolder(dirId, verbose = 0)
+  expect_identical(out$name, c("a.tif", "b.tif"))
+  expect_identical(out$url, c("https://mirror/b/SCANFI_v2/2020/a.tif",
+                              "https://mirror/b/SCANFI_v2/2020/b.tif"))
+})
+
+test_that("listGoogleDriveFolder lists from the manifest for a plain-prefix dir url", {
+  skip_if_not_installed("googledrive")
+  dirId <- "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi"
+  withr::local_options(reproducible.urlRemap = mirrorDirManifest(
+    "https://mirror/b/SCANFI_v2/2020", dirId)) # no trailing slash
+  testthat::local_mocked_bindings(
+    .bucketDirList = function(...) stop("must not list"))
+  out <- reproducible::listGoogleDriveFolder(dirId, verbose = 0)
+  expect_identical(out$name, c("a.tif", "b.tif"))
+})
+
+test_that("a dir row with no matching file rows falls back to .bucketDirList", {
+  skip_if_not_installed("googledrive")
+  dirId <- "15T4HIFeqzwp0TuOuxmYoexuXdLFnCZBi"
+  withr::local_options(reproducible.urlRemap = data.frame(
+    filename = "2030", url = "https://mirror/b/?prefix=SCANFI_v2%2F2030%2F&delimiter=/",
+    id = dirId, type = "dir", stringsAsFactors = FALSE))
+  testthat::local_mocked_bindings(
+    .bucketDirList = function(u, verbose = 1) data.frame(
+      name = "z.tif", url = "https://mirror/b/SCANFI_v2/2030/z.tif", size = 1,
+      stringsAsFactors = FALSE))
+  expect_identical(reproducible::listGoogleDriveFolder(dirId, verbose = 0)$name, "z.tif")
+})
+
 test_that("listGoogleDriveFolder falls back to drive_ls (Drive file urls) when not remapped", {
   skip_if_not_installed("googledrive")
   withr::local_options(reproducible.urlRemap = NULL)

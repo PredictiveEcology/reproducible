@@ -292,6 +292,7 @@ setMethod(
     data.table::setorderv(out, "result", order = -1L, na.last = TRUE)
     out <- out[, .SD[1, ], by = "expectedFile"]
     out <- checksumsDirsOk(out)
+    out <- checksumsDirsEmptyFail(out, txtRead, path)
 
     results.df <- out[, list(
       "result" = result,
@@ -448,6 +449,26 @@ checksumsDirsOk <- function(out) {
     if (length(dirsHave)) {
       out[get(cscol) %in% "dir" & expectedFile %in% dirsHave, result := "OK"]
     }
+  }
+  out
+}
+
+## A directory's checksum is the constant "dir", so an existing directory always matched its
+## "dir" row, even when empty. An empty `x.gdb/` then counted as present and preProcess skipped
+## extracting or linking its files (FIIS TSA02, 2026-10-04). A "dir" row is OK only when every
+## file recorded under it in the CHECKSUMS file exists, or, with none recorded, when the
+## directory is not empty.
+checksumsDirsEmptyFail <- function(out, txtRead, path) {
+  isDirOK <- out$i.checksum %in% "dir" & out$result %in% "OK"
+  for (i in which(isDirOK)) {
+    d <- out$expectedFile[i]
+    under <- txtRead$file[startsWith(txtRead$file, paste0(d, "/"))]
+    present <- if (length(under)) {
+      all(file.exists(makeAbsolute(under, path)))
+    } else {
+      length(list.files(makeAbsolute(d, path), all.files = TRUE, no.. = TRUE)) > 0
+    }
+    if (!present) set(out, i, "result", "FAIL")
   }
   out
 }

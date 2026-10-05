@@ -41,8 +41,11 @@ download be redirected to the (public) mirror with no authentication at all.
 An optional \code{type} column (\code{"file"}/\code{"dir"}) enables \strong{directory remaps}: a
 \code{"dir"} row maps a Google Drive \emph{folder} id (\code{id} column) to a bucket
 prefix-listing URL (its \code{url}). When \code{preProcess()} downloads such a folder, it
-enumerates the folder's files from that public listing instead of
-\code{googledrive::drive_ls()}, so listing the folder needs no authentication. Rows
+enumerates the folder's files without \code{googledrive::drive_ls()}, so listing the
+folder needs no authentication. The dir row is answered from the manifest's own
+file rows whose \code{url} lies directly under that prefix (the \verb{?prefix=} value, or
+the \code{url} itself); the bucket listing is fetched only when no file row matches,
+so a bucket that denies anonymous listing still works. Rows
 without a \code{type} column (or with \code{type = "file"}) are ordinary file remaps,
 unchanged. \code{buckethost::makeMirrorManifest(directories = TRUE)} emits such a
 manifest.
