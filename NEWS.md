@@ -1,6 +1,7 @@
 # reproducible 3.2.1.9063
 
 * `formatCheck()` (R/DBI.R) errored with "argument is of length zero" when no cache file existed yet and `reproducible.cacheSaveFormat` was unset, as in a fresh subprocess while another process is still writing the entry (`NULL == "check"`). It now falls back to rds, as it already did for `"check"`.
+* `linkOrCopy()` (R/preProcess.R), given a directory, created an empty directory at the destination, linked none of its files, and still reported "Hardlinked ... no copy/copies made". A `targetFile` that is a directory, such as an ESRI file geodatabase (`x.gdb/`), could then arrive empty when `preProcess()` linked it from `destinationPathShared`. It now links every file inside the directory.
 
 # reproducible 3.2.1.9062
 
