@@ -282,6 +282,7 @@ test_that("a list-column holding an xgboost model survives write, read, upsert a
 })
 
 test_that("two processes upserting different keys into one shared-disk ledger both survive", {
+  skip_on_os("windows")
   skip_on_cran()
   skip_if_not_installed("sf")
   cp <- checkPath(tempfile("concurrent"), create = TRUE)
