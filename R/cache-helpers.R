@@ -702,3 +702,37 @@ isUpdated <- function(x) {
 
   cond1 || cond2
 }
+
+#' Return a cache hit in the spatial-vector class of the call's input
+#'
+#' `sf` and `SpatVector` objects share a cacheId (see `.robustDigest()`), so a
+#' call first cached with one class can be hit by the other. If the cached
+#' `output` is an `sf` or `SpatVector`, convert it to the class of the first
+#' `sf` or `SpatVector` among the evaluated arguments of `func_call`.
+#' Anything else is returned unchanged.
+#'
+#' @param output The object loaded from the cache (memoised or on disk).
+#' @param func_call The call with evaluated arguments (`callList$func_call`).
+#' @param verbose Passed to `messageCache`.
+#' @return `output`, possibly converted.
+#' @keywords internal
+#' @noRd
+returnInClassOfInput <- function(output, func_call, verbose = getOption("reproducible.verbose")) {
+  isSf <- function(x) inherits(x, "sf")
+  isVect <- function(x) inherits(x, "SpatVector")
+  if (!(isSf(output) || isVect(output))) return(output)
+  inp <- Find(function(x) isSf(x) || isVect(x), as.list(func_call)[-1])
+  if (is.null(inp) || isSf(inp) == isSf(output)) return(output)
+  if (isSf(inp)) {
+    if (!requireNamespace("sf", quietly = TRUE)) return(output)
+    out <- sf::st_as_sf(output)
+    cls <- c("SpatVector", "sf")
+  } else {
+    if (!requireNamespace("terra", quietly = TRUE)) return(output)
+    out <- terra::vect(output)
+    cls <- c("sf", "SpatVector")
+  }
+  messageCache("Cached result was a ", cls[1], "; returned as ", cls[2], " to match the input",
+               verbose = verbose)
+  out
+}

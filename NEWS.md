@@ -1,3 +1,7 @@
+# reproducible 3.2.1.9066
+
+* `Cache()` (R/cache.R, `returnInClassOfInput()` in R/cache-helpers.R) now returns a cache hit that is an `sf` or `SpatVector` in the class of the first `sf`/`SpatVector` argument of the call. Because `sf` and `SpatVector` share a cacheId (`reproducible.digestVersion` >= 4), a call first cached with one class used to return that class when rerun with the other. The cacheId is unchanged.
+
 # reproducible 3.2.1.9065
 
 * An existing but empty directory `targetFile` (e.g. an ESRI `x.gdb/` left by an earlier failed run) counted as present: `Checksums()` (R/checksums.R) gives every directory the checksum `"dir"`, so it matched its `"dir"` row in CHECKSUMS.txt whatever it held. `preProcess()` then skipped download, extraction and the copy from `destinationPathShared`, and returned the empty directory. A `"dir"` row now passes only when the files recorded under it exist (or, with none recorded, when the directory is not empty). `linkOrCopy()` also no longer warns "already exists" for a destination directory that is already there.
