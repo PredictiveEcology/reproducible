@@ -218,3 +218,35 @@ test_that("linkOrCopy handles a set with nothing to link", {
   to <- file.path(tmpdir, "dest", "sub")
   expect_error(linkOrCopy(file.path(d, "sub"), to, symlink = FALSE, verbose = -1), NA)
 })
+
+test_that("an existing empty directory targetFile is not taken as present", {
+  skip_on_cran()
+  testInit()
+
+  ## Regression (FIIS TSA02, 2026-10-04): a directory's checksum is the constant "dir", so an
+  ## empty `x.gdb/` in destinationPath matched the stash's "x.gdb" "dir" row. preProcess then
+  ## skipped download, extraction and the copy from destinationPathShared, and returned the
+  ## empty directory.
+  src <- checkPath(file.path(tmpdir, "src", "x.gdb"), create = TRUE)
+  files <- c("a00000001.gdbtable", "gdb", "timestamps")
+  for (f in files) writeBin(as.raw(sample(0:255, 1000, TRUE)), file.path(src, f))
+  owd <- setwd(dirname(src))
+  zipped <- utils::zip(file.path(tmpdir, "src", "x.zip"), "x.gdb", flags = "-rq")
+  setwd(owd)
+  skip_if_not(identical(zipped, 0L), "no zip utility")
+
+  shared <- checkPath(file.path(tmpdir, "shared"), create = TRUE)
+  withr::local_options(reproducible.destinationPathShared = shared)
+  pp <- function(dest)
+    preProcess(url = paste0("file://", file.path(tmpdir, "src", "x.zip")),
+               destinationPath = dest, targetFile = "x.gdb", fun = NA, useCache = FALSE, verbose = -1)
+
+  pp(checkPath(file.path(tmpdir, "d1"), create = TRUE)) # fills the stash
+
+  ## The state an earlier failed run left: an empty directory and a header-only CHECKSUMS.txt.
+  dest <- checkPath(file.path(tmpdir, "d2", "x.gdb"), create = TRUE)
+  writeLines('"file" "checksum" "filesize" "algorithm"', file.path(dirname(dest), "CHECKSUMS.txt"))
+  pp(dirname(dest))
+
+  expect_setequal(list.files(dest), files)
+})

@@ -1,6 +1,7 @@
 # reproducible 3.2.1.9064
 
 * `linkOrCopy()` (R/preProcess.R), given a directory, created an empty directory at the destination, linked none of its files, and still reported "Hardlinked ... no copy/copies made". A `targetFile` that is a directory, such as an ESRI file geodatabase (`x.gdb/`), could then arrive empty when `preProcess()` linked it from `destinationPathShared`. It now links every file inside the directory.
+* An existing but empty directory `targetFile` (e.g. an ESRI `x.gdb/` left by an earlier failed run) counted as present: `Checksums()` (R/checksums.R) gives every directory the checksum `"dir"`, so it matched its `"dir"` row in CHECKSUMS.txt whatever it held. `preProcess()` then skipped download, extraction and the copy from `destinationPathShared`, and returned the empty directory. A `"dir"` row now passes only when the files recorded under it exist (or, with none recorded, when the directory is not empty). `linkOrCopy()` also no longer warns "already exists" for a destination directory that is already there.
 
 # reproducible 3.2.1.9063
 
