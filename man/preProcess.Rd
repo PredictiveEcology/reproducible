@@ -105,7 +105,11 @@ in the function call, it must be a call naming
 as the file path to the file to load. See details and examples below.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
-custom downloading, in addition to loading into R. Still experimental.}
+custom downloading, in addition to loading into R. Still experimental.
+In a quoted \code{dlFun}, \code{targetFile} and \code{destinationPath} are the values
+\code{prepInputs()} is using (\code{destinationPath} is the shared folder when
+\code{reproducible.destinationPathShared} is set), the \code{...} values are visible,
+and other names resolve from the calling environment.}
 
 \item{quick}{Logical. This is passed internally to \code{\link[=Checksums]{Checksums()}}
 (the quickCheck argument), and to

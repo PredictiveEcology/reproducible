@@ -16,6 +16,10 @@ utils::globalVariables(c(
 #'   temporary directory; it does not decide what is downloaded. See [preProcess()].
 #' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
+#'              In a quoted `dlFun`, `targetFile` and `destinationPath` are the values
+#'              `prepInputs()` is using (`destinationPath` is the shared folder when
+#'              `reproducible.destinationPathShared` is set), the `...` values are visible,
+#'              and other names resolve from the calling environment.
 #' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.
 #' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
@@ -2187,6 +2191,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
         }
 
+        if (is(out, "try-error")) {
+          # never save the error object as if it were the downloaded file
+          stop("dlFun '", substr(deparse1(dlFunName), 1, 60), "' failed for targetFile '",
+               paste(targetFile, collapse = ", "), "': ", sub("^Error in [^:]*: |^Error : ", "", out))
+        }
         if (is(out, "try-error")) {
           # never save the error object as if it were the downloaded file
           stop("dlFun '", substr(deparse1(dlFunName), 1, 60), "' failed for targetFile '",

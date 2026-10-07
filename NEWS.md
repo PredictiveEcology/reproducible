@@ -2,6 +2,7 @@
 
 ## Enhancements
 
+* A quoted-call `dlFun` is first evaluated once in an environment with `targetFile` and `destinationPath` as `prepInputs()` uses them (the shared folder when `reproducible.destinationPathShared` is set), the `...` values, and `.callingEnv` as parent. It used to be re-run over the calling frames until its names resolved; that search remains as the fallback if the first evaluation fails.
 * New `CacheGeoLedger()`, `CacheGeoRead()` and `CacheGeoWrite()`, and `CacheGeo()` rebuilt on them (one help page, `?CacheGeoLedger`). A ledger is one `.rds` file of spatial rows, local or shared through a Google Drive folder, a shared-disk folder or (read-only) a URL. `CacheGeoRead()` always returns an `sf` object (0 rows if nothing matches; list-columns kept) for `match = "intersects"`, `"covers"` or `"within"`, with a `tolerance` that drops slivers; it never writes, creates a folder or uploads, and needs no Google login for a file shared "Anyone with the link". `CacheGeoWrite()` replaces the rows with the same key (or geometry) or appends, re-reads the remote just before writing, pushes only if the content changed, and merges again if another writer got in between; writers to a shared-disk folder also hold a file lock. `CacheGeo(ledger, area, compute)` runs `compute(area)` only for an area the ledger does not cover, and its errors are no longer swallowed. The old arguments (`targetFile`, `domain`, `FUN`, `action`, ...) are still accepted, with one message per session. A ledger is no longer sorted by `polygonID` version; rows stay in key order. A list-column that holds an xgboost model is kept through write, read and upsert (the rows are never passed through `as.data.table()` or `copy()`).
 
 # reproducible 3.2.1.9066
@@ -24,6 +25,7 @@
 
 ## Bug fixes
 
+* `prepInputs()`/`preProcess()` with a `dlFun` that fails no longer saves the error object at `targetFile` (R/download.R, `downloadRemote()`); it stops with the `dlFun` error message and writes nothing, so the next call does not pick up the error as data.
 * `prepInputs()`/`preProcess()` with a `dlFun` that fails no longer saves the error object at `targetFile` (R/download.R, `downloadRemote()`); it stops with the `dlFun` error message and writes nothing. A quoted-call `dlFun` is now evaluated once, with `targetFile` and `destinationPath` as `prepInputs()` uses them (the shared store when `reproducible.destinationPathShared` is set); only an object-not-found failure falls back to searching the calling frames, as before.
 
 * `.wrap()` of a file-backed `SpatRaster` (R/exportedMethods.R, `wrapSpatRaster()`) only recorded the file's location, so a wrapped object saved with `saveRDS` could not be restored once the original file was gone. A new `copyFiles = TRUE` (passed through `...`) copies the backing file(s) into `cacheOutputs/` under `cachePath`, the place `.unwrap()` reads from, using the same helper `Cache()` uses. The default is unchanged, so `Cache()` does not copy twice.

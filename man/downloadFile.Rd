@@ -65,7 +65,11 @@ less robust checking of inputs. See the respective functions.}
 file.}
 
 \item{dlFun}{Optional "download function" name, such as \code{"raster::getData"}, which does
-custom downloading, in addition to loading into R. Still experimental.}
+custom downloading, in addition to loading into R. Still experimental.
+In a quoted \code{dlFun}, \code{targetFile} and \code{destinationPath} are the values
+\code{prepInputs()} is using (\code{destinationPath} is the shared folder when
+\code{reproducible.destinationPathShared} is set), the \code{...} values are visible,
+and other names resolve from the calling environment.}
 
 \item{checkSums}{A checksums file, e.g., created by Checksums(..., write = TRUE)}
 
