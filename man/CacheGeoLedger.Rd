@@ -31,13 +31,13 @@ CacheGeoWrite(
 )
 
 CacheGeo(
+  ...,
   ledger,
   area,
   compute,
   match = .cacheGeoMatches,
   tolerance = 0,
   verbose = getOption("reproducible.verbose", 1),
-  ...,
   targetFile = NULL,
   domain,
   FUN,
@@ -90,10 +90,13 @@ geometry column. They are transformed to the ledger's CRS.}
 
 \item{mode}{\code{"upsert"} (default) or \code{"append"}; see above.}
 
+\item{...}{In \code{CacheGeo()}, the named objects that the old \code{FUN} call uses. Unnamed
+arguments are \code{ledger}, \code{area}, \code{compute}, \code{match}, \code{tolerance} and \code{verbose}, in that
+order. \code{...} comes first so that an object named e.g. \code{le} is not partially matched to
+\code{ledger}; the arguments after it must be named in full.}
+
 \item{compute}{A function of one argument, the \code{area}, that returns the rows for it (an
 \code{sf} object or a data.frame with a geometry column).}
-
-\item{...}{In \code{CacheGeo()}, the named objects that the old \code{FUN} call uses.}
 
 \item{targetFile, domain, FUN, cloudFolderID, useCloud, action, bufferOK, purge, useCache, overwrite}{The old arguments of \code{CacheGeo()}; see above.}
 }
