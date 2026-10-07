@@ -2151,15 +2151,16 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (is.call(dlFun)) {
-          # Evaluate once where `targetFile` and `destinationPath` are the values prepInputs is
-          # using (the shared store when `reproducible.destinationPathShared` is set).
+          # `targetFile` and `destinationPath` as prepInputs is using them (the shared store when
+          #   `reproducible.destinationPathShared` is set), then `...`; other names resolve
+          #   from `.callingEnv` by normal lexical scoping
           env0 <- new.env(parent = .callingEnv)
-          list2env(c(list(...), Filter(Negate(is.null),
-                                       list(targetFile = targetFile, destinationPath = destinationPath))),
-                   env0)
+          env0$targetFile <- targetFile
+          env0$destinationPath <- destinationPath
+          list2env(list(...), env0)
           out <- try(eval(dlFun, envir = env0), silent = TRUE)
-          # Only a failure to find a symbol or function falls back to searching the frames
-          if (is(out, "try-error") && grepl("not found|could not find", out)) {
+          # on any failure, search the calling frames as before
+          if (is(out, "try-error")) {
             sfs <- sys.frames()
             for (i in seq_along(sfs)) {
               env1 <- new.env(parent = sys.frame(-i))
@@ -2191,11 +2192,6 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
         }
 
-        if (is(out, "try-error")) {
-          # never save the error object as if it were the downloaded file
-          stop("dlFun '", substr(deparse1(dlFunName), 1, 60), "' failed for targetFile '",
-               paste(targetFile, collapse = ", "), "': ", sub("^Error in [^:]*: |^Error : ", "", out))
-        }
         if (is(out, "try-error")) {
           # never save the error object as if it were the downloaded file
           stop("dlFun '", substr(deparse1(dlFunName), 1, 60), "' failed for targetFile '",
