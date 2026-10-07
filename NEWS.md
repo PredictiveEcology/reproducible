@@ -24,6 +24,8 @@
 
 ## Bug fixes
 
+* `prepInputs()`/`preProcess()` with a `dlFun` that fails no longer saves the error object at `targetFile` (R/download.R, `downloadRemote()`); it stops with the `dlFun` error message and writes nothing. A quoted-call `dlFun` is now evaluated once, with `targetFile` and `destinationPath` as `prepInputs()` uses them (the shared store when `reproducible.destinationPathShared` is set); only an object-not-found failure falls back to searching the calling frames, as before.
+
 * `.wrap()` of a file-backed `SpatRaster` (R/exportedMethods.R, `wrapSpatRaster()`) only recorded the file's location, so a wrapped object saved with `saveRDS` could not be restored once the original file was gone. A new `copyFiles = TRUE` (passed through `...`) copies the backing file(s) into `cacheOutputs/` under `cachePath`, the place `.unwrap()` reads from, using the same helper `Cache()` uses. The default is unchanged, so `Cache()` does not copy twice.
 * The first path argument of `.wrap()`, `.unwrap()` and their methods is now `filebackedPath` (it was `cachePath`): it anchors and stores file-backed objects whether or not `Cache()` is involved. `cachePath` still works, silently for now; a deprecation message will follow once SpaDES.core and clusters use `filebackedPath`. Packages that define `.wrap`/`.unwrap` methods (e.g., SpaDES.core's `simList` methods) should rename their formal; `Cache()` now passes `filebackedPath`.
 

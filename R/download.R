@@ -2147,8 +2147,15 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (is.call(dlFun)) {
-          out <- try(eval(dlFun, envir = .callingEnv), silent = TRUE)
-          if (is(out, "try-error")) {
+          # Evaluate once where `targetFile` and `destinationPath` are the values prepInputs is
+          # using (the shared store when `reproducible.destinationPathShared` is set).
+          env0 <- new.env(parent = .callingEnv)
+          list2env(c(list(...), Filter(Negate(is.null),
+                                       list(targetFile = targetFile, destinationPath = destinationPath))),
+                   env0)
+          out <- try(eval(dlFun, envir = env0), silent = TRUE)
+          # Only a failure to find a symbol or function falls back to searching the frames
+          if (is(out, "try-error") && grepl("not found|could not find", out)) {
             sfs <- sys.frames()
             for (i in seq_along(sfs)) {
               env1 <- new.env(parent = sys.frame(-i))
@@ -2180,6 +2187,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
         }
 
+        if (is(out, "try-error")) {
+          # never save the error object as if it were the downloaded file
+          stop("dlFun '", substr(deparse1(dlFunName), 1, 60), "' failed for targetFile '",
+               paste(targetFile, collapse = ", "), "': ", sub("^Error in [^:]*: |^Error : ", "", out))
+        }
         needSave <- !is.null(out) # TRUE
         if (noTargetFile) {
           # recursive gets rid of directories
