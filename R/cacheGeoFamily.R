@@ -53,8 +53,11 @@
 #' objects in `...`), `cloudFolderID`, `useCloud`, `action`, `bufferOK`, `purge`, `useCache`
 #' and `overwrite` are still accepted, with one message per session. `action = "nothing"`
 #' neither computes nor writes, `"update"` always calls `FUN` and replaces the rows with the
-#' same `polygonID` (or the same geometry), `"append"` adds. `bufferOK = TRUE` becomes a
-#' `tolerance` of 2.5% of the ledger's extent. `purge`, `useCache` and `overwrite` are ignored.
+#' same `polygonID` (or the same geometry), `"append"` adds. Unless `match` is given, the rows
+#' are chosen as the old `CacheGeo()` chose them: every row that intersects `domain` (one that
+#' only touches it included), and none unless together they cover it; with `bufferOK = TRUE` a
+#' gap is closed by buffering the rows by 10 km. `purge`, `useCache` and `overwrite` are
+#' ignored.
 #' A `targetFile` that is not `.rds` is written as `.rds`.
 #'
 #' @param file The ledger's file name, e.g. `"fireSenseParams.rds"`.
@@ -205,14 +208,13 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     action <- match.arg(action)
     .geoLegacyNote()
     ledger <- .geoLegacyLedger(targetFile, destinationPath, useCloud, cloudFolderID)
-    match <- if (missing(match)) "covers" else match.arg(match)
+    match <- if (missing(match)) "legacy" else match.arg(match)
     if (missing(area)) {
       area <- if (missing(domain)) {
         message("Spatial domain is missing; returning entire spatial domain")
         NULL
       } else domain
     }
-    if (isTRUE(bufferOK)) tolerance <- .geoBufferOK
     if (!missing(FUN)) {
       compute <- .geoLegacyCompute(substitute(FUN), dots, parent.frame())
       refit <- identical(action, "update") # a refit replaces the row of a covered area
@@ -224,7 +226,7 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     action <- "update"
   }
 
-  sel <- .geoRead(ledger, area, match, tolerance, verbose, wantCovered = TRUE)
+  sel <- .geoRead(ledger, area, match, tolerance, verbose, wantCovered = TRUE, bufferOK = bufferOK)
   if (isTRUE(sel$covered)) {
     message(.message$cacheGeoDomainContained)
     if (!refit) return(sel$rows)
@@ -247,7 +249,7 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   if (legacy && is.null(ledger$key) && "polygonID" %in% names(newRows)) ledger$key <- "polygonID"
   merged <- CacheGeoWrite(ledger, newRows, mode = if (identical(action, "append")) "append" else "upsert",
                           verbose = verbose)
-  .geoSelect(merged, area, match, tolerance, verbose, key = ledger$key)$rows
+  .geoSelect(merged, area, match, tolerance, verbose, key = ledger$key, bufferOK = bufferOK)$rows
 }
 
 ## ---- the old CacheGeo() arguments -------------------------------------------------------------
@@ -288,21 +290,15 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   }
 }
 
-## The old `bufferOK = TRUE` buffered by 2.5% of the extent of the ledger
-.geoBufferOK <- function(rows) {
-  sides <- vapply(list(c("xmin", "xmax"), c("ymin", "ymax")), function(mm)
-    abs(diff(sf::st_bbox(rows)[mm])), numeric(1))
-  mean(sides) * 0.025
-}
-
 ## ---- reading -----------------------------------------------------------------------------------
 
 ## Fetch the remote if it changed, read the file, select the rows. `wantCovered`: also say whether
 ## the area is covered (the rule of `match = "covers"`), whatever `match` is.
-.geoRead <- function(ledger, area, match, tolerance, verbose, wantCovered = FALSE) {
+.geoRead <- function(ledger, area, match, tolerance, verbose, wantCovered = FALSE, bufferOK = FALSE) {
   sync <- .geoWithRemote(ledger, login = FALSE, verbose = verbose, expr = .geoSync(ledger, verbose))
   all <- if (sync$exists) .geoLoad(ledger$path, sync$md5) else .geoEmpty()
-  sel <- .geoSelect(all, area, match, tolerance, verbose, key = ledger$key, wantCovered = wantCovered)
+  sel <- .geoSelect(all, area, match, tolerance, verbose, key = ledger$key, wantCovered = wantCovered,
+                    bufferOK = bufferOK)
   messagePreProcess("CacheGeoRead: ", ledger$file, ": ", NROW(sel$rows), " of ", NROW(all),
                     " row(s) matched (", sync$state, ")", verbose = verbose)
   if (verbose >= 2) print(sel$rows)
@@ -370,7 +366,11 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   hit
 }
 
-.geoSelect <- function(all, area, match, tolerance, verbose, key = NULL, wantCovered = FALSE) {
+## `match = "legacy"` is the rule of the old CacheGeo() (its `bufferOK` too), used by a call with
+## the old arguments and no `match`: every row that intersects the area, touching included, with
+## no sliver dropped, and none unless together they cover it.
+.geoSelect <- function(all, area, match, tolerance, verbose, key = NULL, wantCovered = FALSE,
+                       bufferOK = FALSE) {
   if (is.null(area)) return(list(rows = all, covered = TRUE))
   if (!NROW(all)) return(list(rows = all, covered = FALSE))
   if (is.function(tolerance)) tolerance <- tolerance(all)
@@ -379,6 +379,11 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     if (identical(match, "within")) {
       widened <- if (tolerance > 0) sf::st_buffer(areaGeom, tolerance) else areaGeom
       list(rows = all[lengths(sf::st_within(sf::st_geometry(all), widened)) > 0, ], covered = NA)
+    } else if (identical(match, "legacy")) {
+      rows <- all[lengths(sf::st_intersects(sf::st_geometry(all), areaGeom)) > 0, ]
+      covered <- .geoCovered(rows, areaGeom, tolerance, bufferOK = bufferOK)
+      if (!covered) rows <- rows[integer(0), ]
+      list(rows = rows, covered = covered)
     } else {
       rows <- all[.geoOverlaps(all, areaGeom, tolerance, key, verbose), ]
       covered <- if (identical(match, "covers") || wantCovered) .geoCovered(rows, areaGeom, tolerance) else NA
@@ -389,11 +394,12 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 }
 
 ## Is `areaGeom` covered by the union of `rows`, apart from gaps narrower than `tolerance`?
-.geoCovered <- function(rows, areaGeom, tolerance) {
+## `bufferOK`: or by the union of the rows buffered by 10 km (the old CacheGeo() rule).
+.geoCovered <- function(rows, areaGeom, tolerance, bufferOK = FALSE) {
   if (!NROW(rows)) return(FALSE)
   geomOnly <- sf::st_sf(geometry = sf::st_geometry(rows))
   extractPolygonIfWithin(domain = sf::st_sf(geometry = areaGeom), existingObjSF = geomOnly,
-                         bufferOK = FALSE, existingObj = geomOnly, verbose = FALSE,
+                         bufferOK = bufferOK, existingObj = geomOnly, verbose = FALSE,
                          tolerance = tolerance)$domainExisted
 }
 

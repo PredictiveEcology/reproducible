@@ -265,6 +265,36 @@ test_that("legacy CacheGeo update returns FUN's xgboost model itself, not a copy
     row <- sq(id, if (id == "A") 0 else 10)
     out <- CacheGeo(targetFile = "boost.rds", destinationPath = dPath, domain = row,
                     FUN = le(ledgerRow), le = le, ledgerRow = row, action = "update", verbose = 0)
-    expect_identical(out$fit[[1]]$model, model)
+    ## B touches A, so the rows returned are A and B, as the old CacheGeo() returned them
+    expect_identical(out$fit[[which(out$polygonID == id)]]$model, model)
   }
+})
+
+## fireSense_dataPrepFit reads the spread-fit ledger with the old arguments and `bufferOK = TRUE`.
+## That became a `tolerance` of 2.5% of the ledger's extent (86 km on the FireSense ledger), and
+## the study area's own row, narrower than twice that, was dropped as a sliver: 0 rows, where the
+## old CacheGeo() returned the row and its touching neighbour (ELF 13.1, 2026-10-08).
+test_that("legacy CacheGeo read returns the rows the old CacheGeo returned, for a narrow polygon in a wide ledger", {
+  testInit("sf", opts = list("reproducible.overwrite" = TRUE))
+  dPath <- checkPath(tempdir2(), create = TRUE)
+  box <- function(id, x0, x1, y0 = 0, y1 = 100) {
+    sf::st_sf(polygonID = id, params = I(list(id)),
+              geometry = sf::st_sfc(sf::st_polygon(list(1000 * rbind(c(x0, y0), c(x1, y0), c(x1, y1),
+                                                                     c(x0, y1), c(x0, y0)))),
+                                    crs = 32618))
+  }
+  ## A is 10 km wide; B touches it; C, far away, makes the ledger 1100 km wide
+  saveRDS(as.data.frame(rbind(box("A", 0, 10), box("B", 10, 20), box("C", 1000, 1100))),
+          file.path(dPath, "ledger.rds"))
+  read <- function(domain, bufferOK)
+    CacheGeo(cloudFolderID = NULL, targetFile = "ledger.rds", purge = 7, domain = domain,
+             action = "nothing", useCache = FALSE, destinationPath = dPath, bufferOK = bufferOK,
+             verbose = 0)
+  areaA <- box("A", 0, 10)["polygonID"]
+  for (bufferOK in c(TRUE, FALSE))
+    expect_identical(sort(read(areaA, bufferOK)$polygonID), c("A", "B"))
+  ## 5 km wider than A on the left: covered only with bufferOK's 10 km buffer
+  wider <- box("A", -5, 10)["polygonID"]
+  expect_identical(sort(read(wider, TRUE)$polygonID), c("A", "B"))
+  expect_identical(NROW(read(wider, FALSE)), 0L)
 })
