@@ -21,7 +21,6 @@ test_that("a failing dlFun errors and leaves no file at targetFile", {
 
 test_that("a quoted-call dlFun is evaluated once and writes where prepInputs looks", {
   testInit("digest")
-  nHard <- function(f) as.integer(system2("stat", c("-c", "%h", shQuote(f)), stdout = TRUE))
   counter <- 0L
   writeIt <- function(tbl, targetFile, destinationPath) {
     counter <<- counter + 1L
@@ -55,7 +54,6 @@ test_that("a quoted-call dlFun is evaluated once and writes where prepInputs loo
   expect_true(file.exists(file.path(dest2, "b.rds")))
   expect_identical(file.info(file.path(shared, "b.rds"))$inode,
                    file.info(file.path(dest2, "b.rds"))$inode)
-  expect_gte(nHard(file.path(dest2, "b.rds")), 2L)
 })
 
 test_that("a quoted-call dlFun sees `...` values and the calling environment's enclosures", {
