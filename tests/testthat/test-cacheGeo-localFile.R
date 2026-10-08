@@ -298,3 +298,63 @@ test_that("legacy CacheGeo read returns the rows the old CacheGeo returned, for 
   expect_identical(sort(read(wider, TRUE)$polygonID), c("A", "B"))
   expect_identical(NROW(read(wider, FALSE)), 0L)
 })
+
+## What the old call form returns, path by path, as reproducible 3.2.1.9065 returned it. An area
+## with no rows was NULL, not a 0-row sf: fireSense_dataPrepFit tests `is.data.frame()` and, with
+## a 0-row sf, took an ELF with no ledger row (6.2.2, 2026-10-08) as fitted and stopped.
+test_that("legacy CacheGeo returns what the old CacheGeo returned, on every path", {
+  testInit("sf", opts = list("reproducible.overwrite" = TRUE))
+  box <- function(id, x0, x1, y0 = 0, y1 = 100) {
+    sf::st_sf(polygonID = id, params = I(list(id)),
+              geometry = sf::st_sfc(sf::st_polygon(list(1000 * rbind(c(x0, y0), c(x1, y0), c(x1, y1),
+                                                                     c(x0, y1), c(x0, y0)))),
+                                    crs = 32618))
+  }
+  seeded <- function(withFile = TRUE) {
+    dPath <- checkPath(tempdir2(), create = TRUE)
+    if (withFile)
+      saveRDS(as.data.frame(rbind(box("A", 0, 100), box("B", 100, 200), box("C", 1000, 1100))),
+              file.path(dPath, "l.rds"))
+    dPath
+  }
+  le <- function(x) x
+  far <- box("far", 500, 600)["polygonID"]
+  part <- box("p", 150, 300)["polygonID"]
+  inA <- box("in", 10, 20, 10, 20)["polygonID"]
+  ids <- function(x) if (is.null(x)) NULL else sort(as.character(x$polygonID))
+  for (bufferOK in c(FALSE, TRUE)) {
+    read <- function(domain, withFile = TRUE, ...)
+      CacheGeo(targetFile = "l.rds", domain = domain, destinationPath = seeded(withFile),
+               bufferOK = bufferOK, useCache = FALSE, verbose = 0, ...)
+    readAll <- function(withFile)
+      CacheGeo(targetFile = "l.rds", action = "nothing", destinationPath = seeded(withFile),
+               bufferOK = bufferOK, useCache = FALSE, verbose = 0)
+    ## no rows for the area, nothing written: NULL
+    expect_null(read(far, action = "nothing"))
+    expect_null(read(part, action = "nothing"))
+    expect_null(read(far, withFile = FALSE, action = "nothing"))
+    expect_null(read(far, action = "nothing", FUN = le(r), le = le, r = box("N", 500, 600)))
+    expect_null(readAll(withFile = FALSE))
+    ## rows found: the rows for the area; no area: the whole ledger
+    expect_identical(ids(read(inA, action = "nothing")), "A")
+    expect_identical(ids(read(box("ab", 50, 150)["polygonID"], action = "nothing")), c("A", "B"))
+    expect_identical(ids(read(inA, action = "nothing", FUN = le(r), le = le, r = box("A", 0, 100))), "A")
+    expect_identical(ids(readAll(withFile = TRUE)), c("A", "B", "C"))
+    ## no ledger file and action = "nothing": FUN's rows, not written
+    dPath <- seeded(FALSE)
+    got <- CacheGeo(targetFile = "l.rds", domain = far, destinationPath = dPath, bufferOK = bufferOK,
+                    FUN = le(r), le = le, r = box("N", 500, 600), action = "nothing", verbose = 0)
+    expect_identical(ids(got), "N")
+    expect_false(file.exists(file.path(dPath, "l.rds")))
+    ## a write: the whole ledger
+    for (action in c("update", "append"))
+      expect_identical(ids(read(far, action = action, FUN = le(r), le = le, r = box("N", 500, 600))),
+                       c("A", "B", "C", "N"))
+    expect_identical(ids(read(part, action = "update", FUN = le(r), le = le, r = box("N", 150, 300))),
+                     c("A", "B", "C", "N"))
+    expect_identical(ids(read(inA, action = "update", FUN = le(r), le = le, r = box("A", 0, 100))),
+                     c("A", "B", "C"))
+    expect_identical(ids(read(far, withFile = FALSE, action = "update", FUN = le(r), le = le,
+                              r = box("N", 500, 600))), "N")
+  }
+})

@@ -52,12 +52,14 @@
 #' `targetFile`, `domain`, `FUN` (an unevaluated call that may use `domain` and the named
 #' objects in `...`), `cloudFolderID`, `useCloud`, `action`, `bufferOK`, `purge`, `useCache`
 #' and `overwrite` are still accepted, with one message per session. `action = "nothing"`
-#' neither computes nor writes, `"update"` always calls `FUN` and replaces the rows with the
+#' writes nothing (it computes `FUN` only when there is no ledger file yet, and returns its
+#' rows), `"update"` always calls `FUN` and replaces the rows with the
 #' same `polygonID` (or the same geometry), `"append"` adds. Unless `match` is given, the rows
 #' are chosen as the old `CacheGeo()` chose them: every row that intersects `domain` (one that
 #' only touches it included), and none unless together they cover it; with `bufferOK = TRUE` a
-#' gap is closed by buffering the rows by 10 km. `purge`, `useCache` and `overwrite` are
-#' ignored.
+#' gap is closed by buffering the rows by 10 km. As before, the call returns `NULL` when it
+#' finds no rows and writes nothing, and the whole ledger after a write. `purge`, `useCache`
+#' and `overwrite` are ignored.
 #' A `targetFile` that is not `.rds` is written as `.rds`.
 #'
 #' @param file The ledger's file name, e.g. `"fireSenseParams.rds"`.
@@ -227,6 +229,10 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   }
 
   sel <- .geoRead(ledger, area, match, tolerance, verbose, wantCovered = TRUE, bufferOK = bufferOK)
+  ## The old CacheGeo() returned NULL whenever it found no rows for the area (no ledger file, or an
+  ## area the ledger does not cover) and wrote nothing, and the whole ledger after a write. Callers
+  ## test for NULL (`is.data.frame()`), so the old call form keeps those return values.
+  if (legacy && !sel$exists) sel$covered <- FALSE # a missing file covers nothing, even with no area
   if (isTRUE(sel$covered)) {
     message(.message$cacheGeoDomainContained)
     if (!refit) return(sel$rows)
@@ -235,20 +241,23 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   } else {
     message(.message$cacheGeoDomainNotContained)
   }
+  noRows <- if (legacy) NULL else sel$rows
   if (missing(compute)) {
     message("FUN is missing; no evaluation possible")
-    return(sel$rows)
+    return(noRows)
   }
   if (identical(action, "nothing")) {
     message("The spatial domain is new, and should be added, but\n")
     message("action was 'nothing'; nothing done")
-    return(sel$rows)
+    ## the old CacheGeo() evaluated FUN, without writing it, when there was no ledger file yet
+    return(if (legacy && !sel$exists) .geoToSf(compute(area)) else noRows)
   }
 
   newRows <- .geoToSf(compute(area))
   if (legacy && is.null(ledger$key) && "polygonID" %in% names(newRows)) ledger$key <- "polygonID"
   merged <- CacheGeoWrite(ledger, newRows, mode = if (identical(action, "append")) "append" else "upsert",
                           verbose = verbose)
+  if (legacy) return(merged)
   .geoSelect(merged, area, match, tolerance, verbose, key = ledger$key, bufferOK = bufferOK)$rows
 }
 
