@@ -16,6 +16,10 @@ utils::globalVariables(c(
 #'   temporary directory; it does not decide what is downloaded. See [preProcess()].
 #' @param dlFun Optional "download function" name, such as `"raster::getData"`, which does
 #'              custom downloading, in addition to loading into R. Still experimental.
+#'              In a quoted `dlFun`, `targetFile` and `destinationPath` are the values
+#'              `prepInputs()` is using (`destinationPath` is the shared folder when
+#'              `reproducible.destinationPathShared` is set), the `...` values are visible,
+#'              and other names resolve from the calling environment.
 #' @param ... Passed to `dlFun`. Still experimental. Can be e.g., `type` for google docs.
 #' @param checksumFile A character string indicating the absolute path to the `CHECKSUMS.txt`
 #'                     file.
@@ -2147,7 +2151,15 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
         }
 
         if (is.call(dlFun)) {
-          out <- try(eval(dlFun, envir = .callingEnv), silent = TRUE)
+          # `targetFile` and `destinationPath` as prepInputs is using them (the shared store when
+          #   `reproducible.destinationPathShared` is set), then `...`; other names resolve
+          #   from `.callingEnv` by normal lexical scoping
+          env0 <- new.env(parent = .callingEnv)
+          env0$targetFile <- targetFile
+          env0$destinationPath <- destinationPath
+          list2env(list(...), env0)
+          out <- try(eval(dlFun, envir = env0), silent = TRUE)
+          # on any failure, search the calling frames as before
           if (is(out, "try-error")) {
             sfs <- sys.frames()
             for (i in seq_along(sfs)) {
@@ -2180,6 +2192,11 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
         }
 
+        if (is(out, "try-error")) {
+          # never save the error object as if it were the downloaded file
+          stop("dlFun '", substr(deparse1(dlFunName), 1, 60), "' failed for targetFile '",
+               paste(targetFile, collapse = ", "), "': ", sub("^Error in [^:]*: |^Error : ", "", out))
+        }
         needSave <- !is.null(out) # TRUE
         if (noTargetFile) {
           # recursive gets rid of directories
