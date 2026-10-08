@@ -123,7 +123,8 @@ Google login.
 (or, with no \code{key}, the same geometry); \code{mode = "append"} always adds. It reads the
 remote again just before writing, writes, pushes only if the content changed, and checks
 the push. If another writer changed the remote in between, it merges again, up to 3
-times. On a shared-disk folder the write is also held under a file lock. Writing to Google
+times. The whole write is held under a file lock, so writers on one machine (or, on a
+shared-disk folder, on every machine that mounts it) take turns. Writing to Google
 Drive needs a Google login (see \code{googledrive::drive_auth()}).
 \item \code{CacheGeo()} reads; if the \code{area} is not covered by the ledger it calls \code{compute(area)},
 writes the result and returns the rows. An error in \code{compute} is an error in \code{CacheGeo()}.

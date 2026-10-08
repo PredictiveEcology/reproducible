@@ -32,7 +32,8 @@
 #'   (or, with no `key`, the same geometry); `mode = "append"` always adds. It reads the
 #'   remote again just before writing, writes, pushes only if the content changed, and checks
 #'   the push. If another writer changed the remote in between, it merges again, up to 3
-#'   times. On a shared-disk folder the write is also held under a file lock. Writing to Google
+#'   times. The whole write is held under a file lock, so writers on one machine (or, on a
+#'   shared-disk folder, on every machine that mounts it) take turns. Writing to Google
 #'   Drive needs a Google login (see `googledrive::drive_auth()`).
 #' * `CacheGeo()` reads; if the `area` is not covered by the ledger it calls `compute(area)`,
 #'   writes the result and returns the rows. An error in `compute` is an error in `CacheGeo()`.
@@ -412,11 +413,24 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   force(expr)
 }
 
-## One writer at a time on a shared-disk folder
+## One writer at a time: the read, merge, save and push of a write are all held under one lock
+## across processes, so no writer merges onto a ledger another is about to replace. A shared-disk
+## ledger is locked beside the remote file, which every machine that mounts it sees. A Google
+## Drive ledger is locked in this user's cache directory, keyed on the file name, so every
+## process of this user on this machine shares the lock whatever its `destinationPath`; writers on
+## other machines are not held by it. A local-only ledger is locked beside the file.
 .geoWithLock <- function(ledger, expr) {
-  if (!identical(ledger$remoteType, "disk")) return(expr)
-  dir.create(ledger$remote, recursive = TRUE, showWarnings = FALSE)
-  withLockFile(file.path(ledger$remote, paste0(ledger$file, suffixLockFile())), expr)
+  lockFile <- paste0(ledger$file, suffixLockFile())
+  lockPath <- switch(ledger$remoteType,
+    disk = {
+      dir.create(ledger$remote, recursive = TRUE, showWarnings = FALSE)
+      file.path(ledger$remote, lockFile)
+    },
+    drive = file.path(tools::R_user_dir("reproducible", "cache"), "CacheGeo", lockFile),
+    none = file.path(ledger$destinationPath, paste0(".", lockFile)), # hidden: prepInputs lists this folder
+    NULL)
+  if (is.null(lockPath)) return(expr)
+  withLockFile(lockPath, expr)
 }
 
 ## The Drive folder as a dribble. NULL if it does not exist and `create` is FALSE.
@@ -455,7 +469,7 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
       resources <- files$drive_resource
       modified <- vapply(resources, `[[`, character(1), "modifiedTime") # ISO times sort as text
       latest <- resources[[order(modified, decreasing = TRUE)[1]]]
-      list(exists = TRUE, md5 = latest$md5Checksum, url = latest$webViewLink)
+      list(exists = TRUE, md5 = latest$md5Checksum, url = latest$webViewLink, id = latest$id)
     })
 }
 
@@ -471,12 +485,15 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     } else {
       if (identical(ledger$remoteType, "disk")) {
         .geoReplaceFile(remote$url, ledger$path)
+      } else if (identical(ledger$remoteType, "drive")) {
+        ## The md5 differs, so fetch. Not through prepInputs(): it keeps a local copy that matches
+        ## its own CHECKSUMS.txt (or the destinationPathShared one), which is the old ledger here.
+        .geoDriveDownload(remote$id, ledger$path)
       } else {
         dir.create(ledger$destinationPath, recursive = TRUE, showWarnings = FALSE)
-        ## Drive: the md5 differs, so fetch. A URL has no md5 to compare: prepInputs() decides from its hash sidecar.
+        ## A URL has no md5 to compare: prepInputs() decides from its hash sidecar.
         prepInputs(url = remote$url, targetFile = ledger$file, destinationPath = ledger$destinationPath,
-                   fun = NA, overwrite = !identical(ledger$remoteType, "url"), useCache = FALSE,
-                   verbose = verbose - 2)
+                   fun = NA, overwrite = FALSE, useCache = FALSE, verbose = verbose - 2)
       }
       state <- if (identical(md5, localMd5())) "up to date" else "downloaded"
       md5 <- localMd5()
@@ -495,6 +512,18 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     stop("Could not replace ", to)
   }
   invisible(to)
+}
+
+## Download the Drive file `id` over `path`, by a rename, so `path` is never partly written and a
+## hard link at `path` (e.g. to a destinationPathShared copy) is replaced, not written through.
+.geoDriveDownload <- function(id, path) {
+  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+  tmp <- tempfile(pattern = paste0(".", basename(path), "."), tmpdir = dirname(path))
+  on.exit(unlink(tmp))
+  retry(quote(googledrive::with_drive_quiet(
+    googledrive::drive_download(googledrive::as_id(id), path = tmp, overwrite = TRUE))))
+  if (!file.rename(tmp, path)) stop("Could not replace ", path)
+  invisible(path)
 }
 
 .geoPush <- function(ledger) {
