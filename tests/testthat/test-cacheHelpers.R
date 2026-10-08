@@ -52,6 +52,17 @@ test_that("test miscellaneous unit tests cache-helpers", {
   # studyAreaName with random object
   expect_error(studyAreaName(integer(0)))
 
+  # studyAreaName: notSupplied names the setting and the object hashed, as written in the call
+  sim <- list(studyArea = StudyArea)
+  expect_silent(nm <- studyAreaName(sim$studyArea))
+  mess <- capture_messages(nm2 <- studyAreaName(sim$studyArea, notSupplied = ".studyAreaName"))
+  expect_identical(nm2, nm)
+  expect_length(mess, 1)
+  expect_match(mess, "`.studyAreaName` not supplied; using a hash of `sim$studyArea`", fixed = TRUE)
+  expect_match(mess, nm, fixed = TRUE)
+  withr::with_options(list(reproducible.verbose = 0),
+                      expect_silent(studyAreaName(sim$studyArea, notSupplied = ".studyAreaName")))
+
   # .checkCacheRepo
   withr::local_options(reproducible.cachePath = .reproducibleTempCacheDir())
   mess <- capture_message(.checkCacheRepo(a))

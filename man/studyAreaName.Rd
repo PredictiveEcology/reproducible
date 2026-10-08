@@ -6,16 +6,21 @@
 \alias{studyAreaName,ANY-method}
 \title{Get a unique name for a given study area}
 \usage{
-studyAreaName(studyArea, ...)
+studyAreaName(studyArea, ..., notSupplied = NULL)
 
-\S4method{studyAreaName}{character}(studyArea, ...)
+\S4method{studyAreaName}{character}(studyArea, ..., notSupplied = NULL)
 
-\S4method{studyAreaName}{ANY}(studyArea, ...)
+\S4method{studyAreaName}{ANY}(studyArea, ..., notSupplied = NULL)
 }
 \arguments{
 \item{studyArea}{Spatial object.}
 
 \item{...}{Other arguments (not currently used)}
+
+\item{notSupplied}{\code{NULL} (the default) or the name of the setting this hash stands in for,
+e.g. \code{".studyAreaName"}. If given, a message says that setting was not supplied, names
+the object that was hashed as it was written in the call (e.g. \code{sim$studyArea}), and
+gives the hash. Must be named in full.}
 }
 \value{
 A character string using the \code{.robustDigest} of the \code{studyArea}. This is only intended
@@ -28,4 +33,6 @@ e.g., when using \code{filename2} in \code{prepInputs}.
 }
 \examples{
 studyAreaName("Ontario")
+## in a module, when the user did not set .studyAreaName:
+## P(sim)$.studyAreaName <- studyAreaName(sim$studyArea, notSupplied = ".studyAreaName")
 }
