@@ -1371,7 +1371,7 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
 
   if (needDwnFl) {
-    out <- try(download.file(url, destfile = destFile))
+    out <- try(download.file(url, destfile = destFile, mode = "wb"))
     if (is(out, "try-error")) {
       unlink(destFile)
       stop(.txtDownloadFailedFn("httr2"))

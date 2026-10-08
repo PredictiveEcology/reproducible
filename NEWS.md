@@ -2,6 +2,10 @@
 
 ## Bug fixes
 
+* `prepInputs()`/`preProcess()`: on Windows without httr2, a download no longer corrupts a binary file such as SQLite. The `download.file()` fallback now uses `mode = "wb"` (#635).
+
+## Bug fixes
+
 * `CacheGeo()` with the old arguments stopped with "`area` is required" when an object for `FUN` in `...` had a name that is the start of `ledger`, `area`, `compute`, `match` or `tolerance` (e.g. `le = le`, as in fireSense_spreadFit and fireSense_ignitionFit): R partially matched it to that argument, which came before `...`. `...` now comes first in `CacheGeo()`, so those arguments must be named in full; unnamed arguments are still `ledger`, `area`, `compute`, ... in that order.
 * The rows `CacheGeo()` and `CacheGeoWrite()` return after a write hold copies of the new rows' list-column objects: `.geoMerge()` (R/cacheGeoFamily.R) passed them through `as.data.frame()` on a data.table, which `copy()`s. A copied xgboost model is a new booster, equal but not identical to the one `FUN`/`compute` returned (fireSense_ignitionFit tests that it is). The merge now uses `setDF()`, so nothing is copied.
 
