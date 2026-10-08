@@ -113,6 +113,10 @@ padYears <- function(years) {
 #'
 #' @param studyArea Spatial object.
 #' @param ... Other arguments (not currently used)
+#' @param notSupplied `NULL` (the default) or the name of the setting this hash stands in for,
+#'   e.g. `".studyAreaName"`. If given, a message says that setting was not supplied, names
+#'   the object that was hashed as it was written in the call (e.g. `sim$studyArea`), and
+#'   gives the hash. Must be named in full.
 #'
 #' @export
 #' @return
@@ -120,8 +124,16 @@ padYears <- function(years) {
 #' for use with spatial objects.
 #' @examples
 #' studyAreaName("Ontario")
-setGeneric("studyAreaName", function(studyArea, ...) {
-  standardGeneric("studyAreaName")
+#' ## in a module, when the user did not set .studyAreaName:
+#' ## P(sim)$.studyAreaName <- studyAreaName(sim$studyArea, notSupplied = ".studyAreaName")
+setGeneric("studyAreaName", function(studyArea, ..., notSupplied = NULL) {
+  out <- standardGeneric("studyAreaName")
+  ## here, not in a method: inside a method substitute() gives only `studyArea`
+  if (!is.null(notSupplied))
+    messageColoured("`", notSupplied, "` not supplied; using a hash of `",
+                    deparse1(substitute(studyArea)), "`: ", out,
+                    verbose = getOption("reproducible.verbose", 1))
+  out
 })
 
 # @export

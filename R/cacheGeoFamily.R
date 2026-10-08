@@ -82,7 +82,10 @@
 #' @param mode `"upsert"` (default) or `"append"`; see above.
 #' @param compute A function of one argument, the `area`, that returns the rows for it (an
 #'   `sf` object or a data.frame with a geometry column).
-#' @param ... In `CacheGeo()`, the named objects that the old `FUN` call uses.
+#' @param ... In `CacheGeo()`, the named objects that the old `FUN` call uses. Unnamed
+#'   arguments are `ledger`, `area`, `compute`, `match`, `tolerance` and `verbose`, in that
+#'   order. `...` comes first so that an object named e.g. `le` is not partially matched to
+#'   `ledger`; the arguments after it must be named in full.
 #' @param targetFile,domain,FUN,cloudFolderID,useCloud,action,bufferOK,purge,useCache,overwrite
 #'   The old arguments of `CacheGeo()`; see above.
 #' @param verbose `0` is silent, `1` (default) gives one short message per call, `2` also
@@ -175,14 +178,24 @@ CacheGeoWrite <- function(ledger, rows, mode = .cacheGeoModes,
 
 #' @export
 #' @rdname CacheGeoLedger
-CacheGeo <- function(ledger, area, compute, match = .cacheGeoMatches, tolerance = 0,
-                     verbose = getOption("reproducible.verbose", 1), ...,
+CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, tolerance = 0,
+                     verbose = getOption("reproducible.verbose", 1),
                      targetFile = NULL, domain, FUN,
                      destinationPath = getOption("reproducible.destinationPath", "."),
                      useCloud = getOption("reproducible.useCloud", FALSE), cloudFolderID = NULL,
                      purge = FALSE, useCache = getOption("reproducible.useCache"),
                      overwrite = getOption("reproducible.overwrite"),
                      action = c("nothing", "update", "replace", "append"), bufferOK = FALSE) {
+  dots <- list(...)
+  named <- if (is.null(names(dots))) rep(FALSE, length(dots)) else nzchar(names(dots))
+  if (!all(named)) {
+    slots <- c("ledger", "area", "compute", "match", "tolerance", "verbose")
+    slots <- slots[c(missing(ledger), missing(area), missing(compute), missing(match),
+                     missing(tolerance), missing(verbose))]
+    if (sum(!named) > length(slots)) stop("Too many unnamed arguments")
+    for (i in seq_len(sum(!named))) assign(slots[i], dots[!named][[i]])
+    dots <- dots[named]
+  }
   legacy <- missing(ledger) || is.character(ledger)
   refit <- FALSE
   if (legacy) {
@@ -200,13 +213,13 @@ CacheGeo <- function(ledger, area, compute, match = .cacheGeoMatches, tolerance 
     }
     if (isTRUE(bufferOK)) tolerance <- .geoBufferOK
     if (!missing(FUN)) {
-      compute <- .geoLegacyCompute(substitute(FUN), list(...), parent.frame())
+      compute <- .geoLegacyCompute(substitute(FUN), dots, parent.frame())
       refit <- identical(action, "update") # a refit replaces the row of a covered area
     }
   } else {
     match <- match.arg(match)
     if (missing(area)) stop("`area` is required; use `area = NULL` to read the whole ledger")
-    if (...length()) stop("Unused arguments: ", paste(names(list(...)), collapse = ", "))
+    if (length(dots)) stop("Unused arguments: ", paste(names(dots), collapse = ", "))
     action <- "update"
   }
 
@@ -546,11 +559,13 @@ CacheGeo <- function(ledger, area, compute, match = .cacheGeoMatches, tolerance 
   keep <- if (identical(mode, "upsert")) !.geoReplaced(current, rows, key) else rep(TRUE, NROW(current))
   current <- current[keep, ]
   ## rbindlist() takes the data.frames as they are. Not as.data.table() or copy(): they stop on a
-  ## list-column that holds an ALTREP object read back from an rds (an xgboost model).
-  attrs <- data.table::rbindlist(list(sf::st_drop_geometry(current), sf::st_drop_geometry(rows)),
-                                 fill = TRUE, use.names = TRUE)
+  ## list-column that holds an ALTREP object read back from an rds (an xgboost model). setDF(), not
+  ## as.data.frame(), which copy()s: a copied xgboost model is a new one, so the rows returned
+  ## would no longer be identical to those `compute` returned.
+  attrs <- data.table::setDF(data.table::rbindlist(
+    list(sf::st_drop_geometry(current), sf::st_drop_geometry(rows)), fill = TRUE, use.names = TRUE))
   geom <- c(.geoMultiPolygon(sf::st_geometry(current)), .geoMultiPolygon(sf::st_geometry(rows)))
-  merged <- sf::st_sf(as.data.frame(attrs), geometry = geom)
+  merged <- sf::st_sf(attrs, geometry = geom)
   if (!is.null(key) && key %in% names(merged)) merged <- merged[order(merged[[key]]), ]
   rownames(merged) <- NULL
   merged
