@@ -2,6 +2,7 @@
 
 ## Bug fixes
 
+* `CacheGeo()` with the old arguments (`targetFile`, `domain`, ...) chooses rows as the old `CacheGeo()` did again: every row that intersects `domain`, one that only touches it included, and none unless together they cover it (with `bufferOK = TRUE`, after a 10 km buffer). The rebuild had turned `bufferOK = TRUE` into a sliver `tolerance` of 2.5% of the ledger's extent, so a narrow polygon's own row was dropped: fireSense_dataPrepFit got 0 rows for ELF 13.1 and stopped. Calls that give `match` are unchanged.
 * `CacheGeoWrite()` (and `CacheGeo()` writes) to a Google Drive ledger lost rows that other writers had added. The fetch before the merge went through `prepInputs()`, which kept a local copy that matched its own CHECKSUMS.txt (or the `destinationPathShared` copy), so a writer merged onto an old ledger even with no other process running; it is now downloaded directly. And only a shared-disk ledger was locked, so two processes could both read, then both push, and the later push dropped the other's rows (FireSense, 2026-10-08). The whole read, merge and push is now held under a file lock for a Drive ledger (in the user's cache directory, so all of a user's processes on one machine share it) and for a local-only ledger (beside the file) too.
 * `prepInputs()`/`preProcess()`: on Windows without httr2, a download no longer corrupts a binary file such as SQLite. The `download.file()` fallback now uses `mode = "wb"` (#635).
 

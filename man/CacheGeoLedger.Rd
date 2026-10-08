@@ -148,8 +148,11 @@ need a Google login.
 objects in \code{...}), \code{cloudFolderID}, \code{useCloud}, \code{action}, \code{bufferOK}, \code{purge}, \code{useCache}
 and \code{overwrite} are still accepted, with one message per session. \code{action = "nothing"}
 neither computes nor writes, \code{"update"} always calls \code{FUN} and replaces the rows with the
-same \code{polygonID} (or the same geometry), \code{"append"} adds. \code{bufferOK = TRUE} becomes a
-\code{tolerance} of 2.5\% of the ledger's extent. \code{purge}, \code{useCache} and \code{overwrite} are ignored.
+same \code{polygonID} (or the same geometry), \code{"append"} adds. Unless \code{match} is given, the rows
+are chosen as the old \code{CacheGeo()} chose them: every row that intersects \code{domain} (one that
+only touches it included), and none unless together they cover it; with \code{bufferOK = TRUE} a
+gap is closed by buffering the rows by 10 km. \code{purge}, \code{useCache} and \code{overwrite} are
+ignored.
 A \code{targetFile} that is not \code{.rds} is written as \code{.rds}.
 }
 
