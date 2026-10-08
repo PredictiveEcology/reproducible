@@ -10,6 +10,23 @@ test_that("dlGeneric works", {
   unlink(res$destFile)
 })
 
+test_that("dlGeneric without httr2 downloads in binary mode (#635)", {
+  testInit()
+  ## Without httr2, dlGeneric falls back to download.file(). In the default text
+  ## mode, Windows writes every LF byte as CRLF, which corrupts binary files.
+  mode <- NULL
+  local_mocked_bindings(
+    .requireNamespace = function(pkg, ...) FALSE,
+    download.file = function(url, destfile, mode = "w", ...) {
+      mode <<- mode
+      0L
+    }
+  )
+  dlGeneric("https://example.com/download?id=1", tmpdir,
+            targetFile = "a.sqlite", applyRemap = FALSE, verbose = 0)
+  expect_identical(mode, "wb")
+})
+
 test_that("prepInputs reads Google Drive spreadsheets", {
   skip_on_cran()
   skip_if_not_installed("googledrive")
