@@ -334,6 +334,100 @@ test_that("two processes upserting different keys into one shared-disk ledger bo
   expect_identical(anyDuplicated(final$polygonID), 0L)
 })
 
+## Two writers on one machine, for the remotes that had no lock: a Google Drive folder (faked by a
+## folder, with the Drive calls mocked) and no remote (one local file). Each write is slowed so the
+## second writer reads the ledger before the first has written it back; without a lock across
+## processes the later write drops the earlier writer's row (the lost update of 2026-10-08).
+for (remoteType in c("drive", "none")) {
+  test_that(paste0("two processes writing one ledger both keep their rows (remote: ", remoteType, ")"), {
+    skip_on_os("windows")
+    skip_on_cran()
+    skip_if_not_installed("sf")
+    skip_if_not_installed("googledrive")
+    cp <- checkPath(tempfile("concurrent"), create = TRUE)
+    fakeDrive <- checkPath(file.path(cp, "fakeDrive"), create = TRUE)
+    nProc <- 2L
+    nEach <- 2L
+    script <- file.path(cp, "writer.R")
+    go <- file.path(cp, "go")
+    dPath <- if (identical(remoteType, "none")) 'file.path(cp, "local")' else 'file.path(cp, paste0("local", p))'
+    writeLines(c(
+      childProcessPreamble(),
+      'p <- as.integer(commandArgs(trailingOnly = TRUE)[1])',
+      sprintf('cp <- "%s"; fakeDrive <- "%s"', cp, fakeDrive),
+      'mock <- function(name, value) utils::assignInNamespace(name, value, "reproducible")',
+      '## Drive, as a folder: the state is the file and its md5; a push copies; a fetch copies back',
+      'mock(".gdrivePrepareAuth", function(...) "token")',
+      'mock(".gdriveRestoreAuth", function(...) invisible(NULL))',
+      'mock(".geoRemoteState", function(ledger) {',
+      '  f <- file.path(fakeDrive, ledger$file)',
+      '  if (identical(ledger$remoteType, "drive") && file.exists(f))',
+      '    list(exists = TRUE, md5 = digest::digest(file = f), url = f, id = f) else list(exists = FALSE, md5 = NULL, url = NULL)',
+      '})',
+      'mock(".geoPush", function(ledger) {',
+      '  reproducible:::.geoReplaceFile(ledger$path, file.path(fakeDrive, ledger$file)); invisible(NULL)',
+      '})',
+      'mock(".geoDriveDownload", function(id, path) reproducible:::.geoReplaceFile(id, path))',
+      '## the slow step: the merge takes 1 s, so the writers overlap',
+      'merge <- reproducible:::.geoMerge',
+      'mock(".geoMerge", function(...) { Sys.sleep(1); merge(...) })',
+      sprintf('remote <- if ("%s" == "drive") "fakeFolderId" else NULL', remoteType),
+      sprintf('led <- CacheGeoLedger("toy.rds", remote = remote, remoteType = "%s", destinationPath = %s, key = "polygonID")',
+              if (identical(remoteType, "drive")) "drive" else "auto", dPath),
+      sprintf('file.create(paste0("%s", p))', file.path(cp, "ready")),
+      sprintf('while (!file.exists("%s")) Sys.sleep(0.05)', go),
+      'Sys.sleep((p - 1) * 0.5)',
+      sprintf('for (i in seq_len(%d)) {', nEach),
+      '  x0 <- (p * 100 + i) * 20',
+      '  box <- sf::st_polygon(list(rbind(c(x0, 0), c(x0 + 10, 0), c(x0 + 10, 10), c(x0, 10), c(x0, 0))))',
+      '  row <- sf::st_sf(polygonID = paste0("w", p, "_", i), geometry = sf::st_sfc(box, crs = 32618))',
+      '  CacheGeoWrite(led, row, verbose = 0)',
+      '}',
+      'cat("WRITER DONE\\n")'
+    ), script)
+    logs <- file.path(cp, paste0("writer", seq_len(nProc), ".log"))
+    Rscript <- file.path(R.home("bin"), "Rscript")
+    withr::with_envvar(c(R_USER_CACHE_DIR = file.path(cp, "userCache")),
+      Map(function(p, lg) system2(Rscript, c(shQuote(script), p), stdout = lg, stderr = lg, wait = FALSE),
+          seq_len(nProc), logs))
+    finished <- function() vapply(logs, function(lg) file.exists(lg) &&
+                                    any(grepl("^WRITER DONE|^Error", readLines(lg, warn = FALSE))), logical(1))
+    deadline <- Sys.time() + 300
+    while (sum(file.exists(paste0(file.path(cp, "ready"), seq_len(nProc)))) < nProc &&
+           !all(finished()) && Sys.time() < deadline) Sys.sleep(0.1)
+    file.create(go)
+    deadline <- Sys.time() + 300
+    while (!all(finished()) && Sys.time() < deadline) Sys.sleep(0.5)
+    expect_true(all(vapply(logs, function(lg) "WRITER DONE" %in% readLines(lg, warn = FALSE), logical(1))))
+    final <- readRDS(if (identical(remoteType, "drive")) file.path(fakeDrive, "toy.rds") else
+      file.path(cp, "local", "toy.rds"))
+    expect_setequal(final$polygonID, paste0("w", rep(seq_len(nProc), each = nEach), "_", seq_len(nEach)))
+  })
+}
+
+## Each write must start from the ledger as it is on Drive. Fetched through prepInputs(), a
+## writer whose destinationPath (or the destinationPathShared stash) already held an older copy
+## kept it, and its write dropped the rows written since, with no other process running.
+test_that("Drive remote: writers in turn, each with its own destinationPath, keep every row", {
+  skip_on_cran()
+  testInit(c("sf", "terra"), needGoogleDriveAuth = TRUE)
+  folder <- googledrive::drive_mkdir(paste0("cacheGeoFamily_", rndstr(1, 6)))
+  on.exit(try(googledrive::drive_rm(folder), silent = TRUE), add = TRUE)
+  shared <- checkPath(tempdir2(), create = TRUE)
+  withr::local_options(reproducible.destinationPathShared = shared)
+  dPaths <- list(A = tempdir2(), B = tempdir2())
+  writer <- function(who) CacheGeoLedger("toy.rds", remote = googledrive::as_id(folder$id),
+                                         destinationPath = dPaths[[who]], key = "polygonID")
+  CacheGeoWrite(writer("A"), toySquare("a1", 0, 10), verbose = 0)
+  CacheGeoWrite(writer("B"), toySquare("b1", 20, 30), verbose = 0)
+  CacheGeoWrite(writer("A"), toySquare("a2", 40, 50), verbose = 0)
+  final <- CacheGeoWrite(writer("B"), toySquare("b2", 60, 70), verbose = 0)
+  expect_setequal(final$polygonID, c("a1", "b1", "a2", "b2"))
+  reader <- CacheGeoLedger("toy.rds", remote = googledrive::as_id(folder$id),
+                           destinationPath = checkPath(tempdir2(), create = TRUE), key = "polygonID")
+  expect_setequal(CacheGeoRead(reader, area = NULL, verbose = 0)$polygonID, c("a1", "b1", "a2", "b2"))
+})
+
 ## Google Drive: needs a token, as the other Drive tests do. The folder is created for the test.
 test_that("Drive remote: write, public-style read, no upload on read, no folder creation on read", {
   skip_on_cran()
