@@ -147,12 +147,14 @@ need a Google login.
 \code{targetFile}, \code{domain}, \code{FUN} (an unevaluated call that may use \code{domain} and the named
 objects in \code{...}), \code{cloudFolderID}, \code{useCloud}, \code{action}, \code{bufferOK}, \code{purge}, \code{useCache}
 and \code{overwrite} are still accepted, with one message per session. \code{action = "nothing"}
-neither computes nor writes, \code{"update"} always calls \code{FUN} and replaces the rows with the
+writes nothing (it computes \code{FUN} only when there is no ledger file yet, and returns its
+rows), \code{"update"} always calls \code{FUN} and replaces the rows with the
 same \code{polygonID} (or the same geometry), \code{"append"} adds. Unless \code{match} is given, the rows
 are chosen as the old \code{CacheGeo()} chose them: every row that intersects \code{domain} (one that
 only touches it included), and none unless together they cover it; with \code{bufferOK = TRUE} a
-gap is closed by buffering the rows by 10 km. \code{purge}, \code{useCache} and \code{overwrite} are
-ignored.
+gap is closed by buffering the rows by 10 km. As before, the call returns \code{NULL} when it
+finds no rows and writes nothing, and the whole ledger after a write. \code{purge}, \code{useCache}
+and \code{overwrite} are ignored.
 A \code{targetFile} that is not \code{.rds} is written as \code{.rds}.
 }
 
