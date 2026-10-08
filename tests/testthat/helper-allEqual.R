@@ -605,6 +605,17 @@ expect_match_noSlashN <- function(object, regexp, ...) {
 
 }
 
+## CacheGeo keeps every ledger it reads in .cacheGeoSession for the rest of the process, and covr's
+## traces reach it: covr saves one from every forked child and at exit. An xgboost model left there
+## hangs the forked child (xgboost serializes it with OpenMP threads the child does not have) and
+## fails at exit (xgboost has already freed it), so a test that puts one in a ledger takes the
+## ledgers it read back out when it ends.
+local_cacheGeoReads <- function(envir = parent.frame()) {
+  reads <- .cacheGeoSession$reads
+  before <- ls(reads)
+  withr::defer(rm(list = setdiff(ls(reads), before), envir = reads), envir = envir)
+}
+
 ## Drive layout for the test suite:
 ##
 ##   testsForPkgs/                        <- stable parent, NEVER deleted

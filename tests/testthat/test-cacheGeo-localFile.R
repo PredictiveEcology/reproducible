@@ -157,6 +157,7 @@ test_that("CacheGeo update replaces by geometry equality when there is no polygo
 test_that("CacheGeo update appends to a ledger whose list-column holds an xgboost model", {
   skip_if_not_installed("xgboost")
   testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE))
+  local_cacheGeoReads()
   dPath <- checkPath(tempdir2(), create = TRUE)
   full <- sf::st_read(system.file("ex/lux.shp", package = "terra"), quiet = TRUE)[, c("NAME_2", "AREA")]
   x <- cbind(a = c(0, 1, 2, 3, 4, 5), b = c(1, 0, 1, 0, 1, 0))
@@ -248,6 +249,7 @@ test_that("legacy CacheGeo: objects for FUN in ... are not taken by ledger/area/
 test_that("legacy CacheGeo update returns FUN's xgboost model itself, not a copy", {
   skip_if_not_installed("xgboost")
   testInit(c("sf", "terra"), opts = list("reproducible.overwrite" = TRUE))
+  local_cacheGeoReads()
   dPath <- checkPath(tempdir2(), create = TRUE)
   x <- cbind(a = c(0, 1, 2, 3, 4, 5), b = c(1, 0, 1, 0, 1, 0))
   model <- xgboost::xgb.train(params = list(objective = "binary:logistic", nthread = 1),

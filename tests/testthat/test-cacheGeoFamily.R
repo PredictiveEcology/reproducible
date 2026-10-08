@@ -260,6 +260,7 @@ test_that("CacheGeo computes only when the area is not covered, and compute erro
 test_that("a list-column holding an xgboost model survives write, read, upsert and a second writer", {
   skip_if_not_installed("xgboost")
   testInit(c("sf", "terra"))
+  local_cacheGeoReads()
   x <- cbind(a = c(0, 1, 2, 3, 4, 5), b = c(1, 0, 1, 0, 1, 0))
   model <- xgboost::xgb.train(params = list(objective = "binary:logistic"),
                               data = xgboost::xgb.DMatrix(x, label = c(0, 1, 0, 1, 0, 1)), nrounds = 2)
@@ -279,6 +280,14 @@ test_that("a list-column holding an xgboost model survives write, read, upsert a
   rows <- CacheGeoRead(other, area = NULL, verbose = 0)
   expect_identical(rows$polygonID, c("A", "B"))
   expect_length(predict(rows$fit[[2]][[1]], x), 6L)
+})
+
+## The xgboost tests here and in test-cacheGeo-localFile.R take their ledgers back out of the
+## session cache: see local_cacheGeoReads().
+test_that("no xgboost model is left in the CacheGeo session cache", {
+  hasBooster <- function(x) inherits(x, "xgb.Booster") ||
+    (is.list(x) && any(vapply(x, hasBooster, logical(1))))
+  expect_false(hasBooster(unname(eapply(.cacheGeoSession$reads, `[[`, "rows"))))
 })
 
 test_that("two processes upserting different keys into one shared-disk ledger both survive", {
