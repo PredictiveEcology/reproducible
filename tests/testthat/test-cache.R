@@ -433,6 +433,29 @@ test_that("test file-backed raster caching", {
   # })
 })
 
+test_that("Cache keeps categories of a file-backed raster after its files are deleted", {
+  testInit("terra", tmpFileExt = c(".tif", ".tif"))
+  lev <- data.frame(ID = 1:3, cls = c("a", "b", "c"))
+  mkFile <- function(f) {
+    r <- terra::rast(nrows = 4, ncols = 4, vals = rep(1:3, length.out = 16))
+    levels(r) <- lev
+    terra::writeRaster(r, f, overwrite = TRUE)
+  }
+  for (f in tmpfile) {
+    a <- Cache(mkFile, f, cachePath = tmpdir)
+    expect_true(terra::is.factor(a))
+    # Only the .aux.xml gone, then all files gone
+    for (del in list(paste0(f, ".aux.xml"), c(f, paste0(f, ".aux.xml")))) {
+      unlink(del)
+      b <- Cache(mkFile, f, cachePath = tmpdir)
+      expect_true(terra::is.factor(b))
+      expect_equal(terra::cats(b)[[1]]$cls, lev$cls)
+      # Restored sidecar sits beside the restored .tif, so terra reads it
+      expect_true(file.exists(paste0(Filenames(b, allowMultiple = FALSE), ".aux.xml")))
+    }
+  }
+})
+
 test_that("test memory backed raster robustDigest", {
   testInit("terra", tmpFileExt = c(".tif", ".tif"))
   set.seed(123)

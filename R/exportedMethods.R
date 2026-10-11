@@ -189,6 +189,7 @@ wrapSpatRaster <- function(obj, filebackedPath = getOption("reproducible.cachePa
 
   cls <- class(obj)
   fnsMulti <- Filenames(obj, allowMultiple = TRUE)
+  fnsMulti <- c(fnsMulti, existingSidecars(fnsMulti))
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
   nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
@@ -801,8 +802,10 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
         #   An anchor may map to several dirs (e.g. modulePath); use the first.
         absBase <- absoluteBase(anchorNm, cachePath, ...)[[1]]
         as.character(fs::path_norm(fs::path_join(c(absBase, x))))
-      } else if (fs::is_absolute_path(x) && file.exists(x) && !.isForeignTempPath(x)) {
-        # Genuinely present on this machine (same-machine save/load): keep as-is.
+      } else if (fs::is_absolute_path(x) && (file.exists(x) || file.exists(sidecarOwner(x))) &&
+                 !.isForeignTempPath(x)) {
+        # Genuinely present on this machine (same-machine save/load): keep as-is. A sidecar
+        #   (`x.tif.aux.xml`) that was deleted goes back beside its file, not into the cache.
         x
       } else {
         # Anchor missing on this machine, or a foreign/orphan absolute path: make the
