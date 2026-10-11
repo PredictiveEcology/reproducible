@@ -214,6 +214,13 @@ existingSidecars <- function(fns) {
   setdiff(cand[file.exists(cand)], fns)
 }
 
+# `Filenames(obj, allowMultiple = TRUE)` plus the sidecars that exist beside those files: the
+#   files that go into, and come back out of, the cache for `obj`.
+filenamesWithSidecars <- function(obj) {
+  fns <- Filenames(obj, allowMultiple = TRUE)
+  c(fns, existingSidecars(fns))
+}
+
 # The file a sidecar (as named by `existingSidecars()`) belongs to; `fns` unchanged if none.
 sidecarOwner <- function(fns) {
   suffixes <- getOption("reproducible.sidecarCandidates")$append

@@ -444,6 +444,8 @@ test_that("Cache keeps categories of a file-backed raster after its files are de
   for (f in tmpfile) {
     a <- Cache(mkFile, f, cachePath = tmpdir)
     expect_true(terra::is.factor(a))
+    # What the cloud upload predicts for the raster includes the sidecar
+    expect_true(any(endsWith(CacheStoredFile(tmpdir, "abc", "check", obj = a), ".tif.aux.xml")))
     # Only the .aux.xml gone, then all files gone
     for (del in list(paste0(f, ".aux.xml"), c(f, paste0(f, ".aux.xml")))) {
       unlink(del)

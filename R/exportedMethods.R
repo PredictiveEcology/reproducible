@@ -188,8 +188,7 @@ wrapSpatRaster <- function(obj, filebackedPath = getOption("reproducible.cachePa
   fns <- Filenames(obj, allowMultiple = FALSE)
 
   cls <- class(obj)
-  fnsMulti <- Filenames(obj, allowMultiple = TRUE)
-  fnsMulti <- c(fnsMulti, existingSidecars(fnsMulti))
+  fnsMulti <- filenamesWithSidecars(obj)
   obj2 <- asPath(Filenames(obj, allowMultiple = FALSE))
   nlyrsInFile <- as.integer(terra::nlyr(terra::rast(fns)))
   layerNams <- paste(names(obj), collapse = layerNamesDelimiter)
