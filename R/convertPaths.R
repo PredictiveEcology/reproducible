@@ -205,6 +205,28 @@ setMethod(
 )
 
 
+# Companion files that exist beside `fns` and are named by appending to the whole
+#   file name (e.g. `x.tif.aux.xml`, which holds a GeoTIFF's categories). The suffixes
+#   come from `reproducible.sidecarCandidates`.
+existingSidecars <- function(fns) {
+  suffixes <- getOption("reproducible.sidecarCandidates")$append
+  cand <- unique(as.vector(outer(fns[nzchar(fns)], suffixes, paste0)))
+  setdiff(cand[file.exists(cand)], fns)
+}
+
+# `Filenames(obj, allowMultiple = TRUE)` plus the sidecars that exist beside those files: the
+#   files that go into, and come back out of, the cache for `obj`.
+filenamesWithSidecars <- function(obj) {
+  fns <- Filenames(obj, allowMultiple = TRUE)
+  c(fns, existingSidecars(fns))
+}
+
+# The file a sidecar (as named by `existingSidecars()`) belongs to; `fns` unchanged if none.
+sidecarOwner <- function(fns) {
+  suffixes <- getOption("reproducible.sidecarCandidates")$append
+  sub(paste0("(", paste(gsub(".", "\\.", suffixes, fixed = TRUE), collapse = "|"), ")$"), "", fns)
+}
+
 allowMultipleFNs <- function(allowMultiple, fns) {
   if (!is.null(fns)) {
     if (isTRUE(allowMultiple)) {

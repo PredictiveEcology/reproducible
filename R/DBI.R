@@ -851,7 +851,7 @@ CacheStoredFile <- function(cachePath = getOption("reproducible.cachePath"), cac
     }
   }
 
-  fns <- Filenames(obj, allowMultiple = TRUE)
+  fns <- filenamesWithSidecars(obj)
   if (length(fns)) {
     dirs <- fs::is_dir(fns)
     if (isTRUE(any(dirs)))
@@ -1194,7 +1194,7 @@ saveFilesInCacheFolder <- function(obj, fts, cachePath, cacheId,
   fsOther <- numeric()
   if (length(fts) > 1) {
     ftsOther <- fts[-1]
-    fnsExtras <- Filenames(obj, allowMultiple = TRUE)
+    fnsExtras <- filenamesWithSidecars(obj)
 
     fnsExtrasBase <- basename(fnsExtras)
     ftsOtherBase <- gsub(paste0(cacheId, "_"), "", basename(ftsOther))
