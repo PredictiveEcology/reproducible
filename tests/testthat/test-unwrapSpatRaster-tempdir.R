@@ -50,3 +50,40 @@ test_that(".isForeignTempPath: own tempdir is not foreign; other Rtmp and terra 
   expect_false(.isForeignTempPath("/data/project/inputs/x.tif"))
   expect_identical(.isForeignTempPath(c(own, otherRtmp)), c(FALSE, TRUE))
 })
+
+## SpaDES.core sets reproducible.fileBackedAnchors = paths(sim), which includes terraPath, so a
+## terra temp file is saved as relToWhere = "terraPath" + "./spat_<hash>_<pid>_<x>.tif". The
+## anchor branch of remapFilenames() then rebuilt <terraPath>/spat_..._<producerPID>_...tif on
+## a cache hit, without the foreign-tempdir check. Such a file must come back under the cache.
+test_that("a raster saved relative to a terraPath anchor is restored under the cache, not there", {
+  skip_if_not_installed("terra")
+  testInit("terra", opts = list(
+    "reproducible.showSimilar" = FALSE,
+    "reproducible.useMemoise" = FALSE
+  ))
+  withr::local_options(reproducible.cachePath = tmpdir)
+
+  terraTmp <- file.path(dirname(tempdir()), paste0("terraScratch_", rndstr(1, 8)))
+  dir.create(terraTmp)
+  withr::defer(unlink(terraTmp, recursive = TRUE))
+  oldTmp <- terra::terraOptions(print = FALSE)$tempdir
+  terra::terraOptions(tempdir = terraTmp)
+  withr::defer(terra::terraOptions(tempdir = oldTmp))
+  withr::local_options(reproducible.fileBackedAnchors = list(cachePath = tmpdir, terraPath = terraTmp))
+
+  producedAt <- file.path(terraTmp, "spat_0123456789ab_424242_abcdefghijk.tif")
+  mk <- function(val) {
+    terra::writeRaster(terra::rast(nrows = 10, ncols = 10, vals = val), producedAt, overwrite = TRUE)
+  }
+
+  onMiss <- Cache(mk(222), .functionName = "mkScratchAnchor")
+  expect_equal(terra::values(onMiss)[1], 222)
+
+  onHit <- Cache(mk(222), .functionName = "mkScratchAnchor")
+  expect_equal(terra::values(onHit)[1], 222)
+  expect_false(startsWith(normPath(terra::sources(onHit)), normPath(terraTmp)))
+  expect_true(startsWith(normPath(terra::sources(onHit)), normPath(tmpdir)))
+
+  unlink(producedAt)
+  expect_equal(terra::values(onHit)[1], 222)
+})
