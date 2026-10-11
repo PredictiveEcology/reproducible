@@ -795,12 +795,15 @@ remapFilenames <- function(obj, tags, cachePath = getOption("reproducible.cacheP
       anchorNm <- if (length(relToWhere) >= i) relToWhere[[i]] else ""
       anchorResolves <- nzchar(anchorNm) && anchorNm %in% names(possRelPaths) &&
         !fs::is_absolute_path(x)
-      if (isTRUE(anchorResolves)) {
-        # The anchor exists on this machine: restore the file to its original
-        #   *relative* location under the receiver's own anchor (e.g. their inputPath).
-        #   An anchor may map to several dirs (e.g. modulePath); use the first.
-        absBase <- absoluteBase(anchorNm, cachePath, ...)[[1]]
-        as.character(fs::path_norm(fs::path_join(c(absBase, x))))
+      # The anchor exists on this machine: restore the file to its original
+      #   *relative* location under the receiver's own anchor (e.g. their inputPath).
+      #   An anchor may map to several dirs (e.g. modulePath); use the first.
+      #   Unless that lands in another process's temp dir (e.g. terraPath, which holds
+      #   spat_<hash>_<producerPID>_<x>.tif): then treat it as an orphan, below.
+      anchored <- if (isTRUE(anchorResolves))
+        as.character(fs::path_norm(fs::path_join(c(absoluteBase(anchorNm, cachePath, ...)[[1]], x))))
+      if (!is.null(anchored) && !.isForeignTempPath(anchored)) {
+        anchored
       } else if (fs::is_absolute_path(x) && file.exists(x) && !.isForeignTempPath(x)) {
         # Genuinely present on this machine (same-machine save/load): keep as-is.
         x
