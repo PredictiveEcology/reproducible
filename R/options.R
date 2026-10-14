@@ -461,6 +461,15 @@
 #'   \item{`useCloud`}{
 #'     Default `FALSE`. Passed to `Cache`.
 #'   }
+#'   \item{`useCOG`}{
+#'     Default `TRUE`. When `prepInputs` is given a web URL to a GeoTIFF and a spatial
+#'     argument (`to`, `cropTo` or `maskTo`), it reads only the part of the file it needs,
+#'     if the server provides the file as a Cloud Optimized GeoTIFF (COG). For a single
+#'     study area this is much faster than downloading the whole file. If a project uses
+#'     MANY different study areas with the same file, setting `FALSE` may be faster: the
+#'     full file is downloaded once, and each study area then runs its `postProcess`
+#'     steps on that local copy. See `prepInputsCOG()`.
+#'   }
 #'   \item{`useDBI`}{
 #'     Default: `FALSE`, i.e., the file-backed cache metadata backend, which writes
 #'     one small metadata file per `cacheId` alongside the cached object in

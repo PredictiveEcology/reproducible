@@ -440,6 +440,15 @@ be identical to using a previous version of \verb{reproducible (<3.0)}.
 \item{\code{useCloud}}{
 Default \code{FALSE}. Passed to \code{Cache}.
 }
+\item{\code{useCOG}}{
+Default \code{TRUE}. When \code{prepInputs} is given a web URL to a GeoTIFF and a spatial
+argument (\code{to}, \code{cropTo} or \code{maskTo}), it reads only the part of the file it needs,
+if the server provides the file as a Cloud Optimized GeoTIFF (COG). For a single
+study area this is much faster than downloading the whole file. If a project uses
+MANY different study areas with the same file, setting \code{FALSE} may be faster: the
+full file is downloaded once, and each study area then runs its \code{postProcess}
+steps on that local copy. See \code{prepInputsCOG()}.
+}
 \item{\code{useDBI}}{
 Default: \code{FALSE}, i.e., the file-backed cache metadata backend, which writes
 one small metadata file per \code{cacheId} alongside the cached object in
