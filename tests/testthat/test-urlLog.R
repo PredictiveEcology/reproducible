@@ -407,3 +407,78 @@ test_that("urlLog(): sorted by lastSeen descending", {
   ul <- urlLog(tmpdir, which = c("url", "lastSeen"))
   expect_identical(ul$url, c("https://example.com/b.tif", "https://example.com/a.tif"))
 })
+
+test_that("logUrlAccess(): a download by other means lands in the session log under the caller's name", {
+  testInit()
+  withr::local_options(reproducible.urlLog = NULL)
+  clearUrlLog()
+  myFetch <- function() logUrlAccess("https://example.com/other.csv", destinationPath = ".")
+  myFetch()
+  rec <- prepInputsLog()[[1]]
+  expect_equal(rec$url, "https://example.com/other.csv")
+  expect_equal(rec$fn, "myFetch")
+  expect_true(is.na(rec$cacheId))
+  logUrlAccess("https://example.com/two.csv", fn = "byHand")
+  expect_equal(prepInputsLog()[[2]]$fn, "byHand")
+})
+
+test_that("logUrlAccess(): inside Cache() it tags the cacheId and replays on a hit", {
+  testInit(needInternet = FALSE)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  fetcher <- function(x) {
+    logUrlAccess("https://example.com/viaCache.csv")
+    x
+  }
+  Cache(fetcher(1))
+  expect_equal(prepInputsLog()[[1]]$url, "https://example.com/viaCache.csv")
+  expect_false(is.na(prepInputsLog()[[1]]$cacheId))
+  ul <- urlLog(tmpdir, which = c("url", "caller"))
+  expect_equal(ul$url, "https://example.com/viaCache.csv")
+  expect_equal(ul$caller, "fetcher")
+
+  clearUrlLog()
+  Cache(fetcher(1)) # hit: fetcher() does not run, the tags are replayed
+  rec <- prepInputsLog()
+  expect_length(rec, 1L)
+  expect_equal(rec[[1]]$url, "https://example.com/viaCache.csv")
+  expect_equal(rec[[1]]$fn, "fetcher")
+})
+
+test_that("logUrlAccess(): reproducible.urlLog = FALSE turns it off", {
+  testInit(needInternet = FALSE)
+  withr::local_options(reproducible.urlLog = FALSE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  logUrlAccess("https://example.com/off.csv")
+  fetcher <- function(x) { logUrlAccess("https://example.com/off.csv"); x }
+  Cache(fetcher(1))
+  expect_length(prepInputsLog(), 0L)
+  expect_equal(NROW(showCache(tmpdir, userTags = "reproducible.url", verbose = FALSE)), 0L)
+})
+
+test_that("CacheGeo's Drive ledger read and write are recorded in the url ledger", {
+  skip_if_not_installed("googledrive")
+  testInit()
+  withr::local_options(reproducible.urlLog = NULL)
+  clearUrlLog()
+  local_mocked_bindings(
+    drive_download = function(file, path, overwrite, ...) {
+      file.create(path)
+      data.frame(local_path = path)
+    },
+    with_drive_quiet = function(code) code,
+    drive_put = function(media, path, name, ...) {
+      structure(list(id = "ABC123"), class = "fakeDribble")
+    },
+    drive_link = function(file) paste0("https://drive.google.com/file/d/", file$id, "/view"),
+    .package = "googledrive")
+  reproducible:::.geoDriveDownload("XYZ", file.path(tmpdir, "ledger.rds"),
+                                   url = "https://drive.google.com/file/d/XYZ/view")
+  ledger <- list(remoteType = "drive", remote = "folder", file = "ledger.rds",
+                 path = file.path(tmpdir, "ledger.rds"))
+  local_mocked_bindings(.geoDriveFolder = function(ledger, create) list(id = "FOLDER"))
+  reproducible:::.geoPush(ledger)
+  urls <- vapply(prepInputsLog(), `[[`, character(1), "url")
+  expect_true("https://drive.google.com/file/d/XYZ/view" %in% urls)
+  expect_true("https://drive.google.com/file/d/ABC123/view" %in% urls)
+})

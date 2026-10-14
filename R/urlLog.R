@@ -61,30 +61,111 @@
   invisible()
 }
 
-#' URL access log for `prepInputs` / `preProcess`
+#' The download ledger: a record of the data a run read from outside
 #'
-#' Controlled by `getOption("reproducible.urlLog")`. See the package option
-#' documentation for modes. `prepInputsLog()` returns the package-level
-#' in-memory records, which are populated in the default (`NULL`) and `TRUE`
-#' modes; `clearUrlLog()` empties them. Records written to an environment or
-#' function sink live there instead and are not retrievable through these
-#' accessors. Set the option to `FALSE` to disable logging entirely.
+#' reproducible keeps a ledger of the web addresses (URLs) and Google Drive files that
+#' data were read from, so that a finished run can say where its inputs came from.
+#' `prepInputsLog()` returns the ledger of the current R session, `clearUrlLog()` empties it,
+#' [urlLog()] reads the ledger kept in a cache, and `logUrlAccess()` adds an access that
+#' did not go through `prepInputs()`.
 #'
-#' @return `prepInputsLog()` returns a list of record lists. `clearUrlLog()`
-#'   returns `NULL` invisibly.
+#' @section What is recorded, and when:
+#' One record is written each time one of these is called with a URL:
+#' \itemize{
+#'   \item [prepInputs()] and [preProcess()] (`fn` is `"prepInputs"` or `"preProcess"`);
+#'   \item the listing of a directory-index URL that `preProcess()` expands into files
+#'     (`fn` is `"prepInputs (directory index)"`);
+#'   \item [CacheGeo()] and [CacheGeoWrite()], for the Google Drive ledger file they read or
+#'     write;
+#'   \item `logUrlAccess()`, called by any code that fetches data by other means.
+#' }
+#' A record has the columns `time`, `fn`, `url`, `targetFile`, `archive`, `alsoExtract`,
+#' `destinationPath` and `cacheId` (`NA` outside [Cache()]). Within one scope a repeated
+#' `fn`, `url` and `cacheId` gives one record, not several. A URL is recorded when it is
+#' used, before the download starts, so a download that fails is recorded too.
+#'
+#' @section Inside `Cache()`:
+#' A record made while a [Cache()] call is evaluating is held until the call has
+#' finished. Cache then writes the record with that call's `cacheId` and stores the
+#' URLs as tags on the cache entry: `reproducible.url`, `reproducible.urlFn`,
+#' `reproducible.urlFirstSeen`, `reproducible.urlLastSeen` and `reproducible.urlHitCount`.
+#' The tags stay in the cache, so [urlLog()] and `showCache(userTags = "reproducible.url")`
+#' report them later. On a cache hit nothing is evaluated, so no download is made, but the
+#' tags are read and the same records are written again to the ledger, and `hitCount` is
+#' increased. An entry that holds URLs from more than one function is replayed under the
+#' name of the first.
+#'
+#' @section The option `reproducible.urlLog`:
+#' Where records go is set by `options(reproducible.urlLog = )`:
+#' \describe{
+#'   \item{`NULL` (default) or `TRUE`}{the in-memory list read by `prepInputsLog()`, plus the
+#'     cache tags above.}
+#'   \item{`FALSE`}{recording is off: no records, no tags.}
+#'   \item{an environment}{records are appended to `env$records` (and keys to `env$seen`);
+#'     anything in the list `env$extra` is added to each record as extra columns. The
+#'     caller owns the environment.}
+#'   \item{a function}{called with each record (a list); there is no de-duplication.}
+#' }
+#' SpaDES.core uses the environment form: with `options(spades.urlLog = TRUE)` (the
+#' default) each `simList` carries its own ledger, with `module` and `event` columns,
+#' read with `urlLog(sim)`. `spades.urlLog = FALSE` turns that off. `prepInputsLog()` is
+#' the ledger of the session; `urlLog(sim)` is the ledger of one run.
+#'
+#' @section Why a ledger can miss an access:
+#' The ledger holds only what was passed to `prepInputs()`, `preProcess()` or
+#' `logUrlAccess()`. Code that downloads another way (`download.file()`,
+#' `googledrive::drive_download()`, a package that reads a web service) is not seen unless it
+#' calls `logUrlAccess()`. A cache entry made before URL tags existed has no tags; the
+#' URL is recovered only for the direct form `Cache(prepInputs(url = ...))`, and the tags are
+#' then added. Inside a `Cache()` call that is itself a cache hit the inner code does not
+#' run, so only the tags on that entry can be replayed. SpaDES.core's `cacheChaining`
+#' can restore the cache entries of several events without running them; their records are
+#' replayed from the tags too, so an access without a tag is missing. With
+#' `reproducible.urlLog = FALSE` nothing is recorded.
+#'
+#' @section Recording a download made by other means:
+#' A package or module author who fetches data without `prepInputs()` calls
+#' `logUrlAccess()` with the address, once per access, just before the download. Inside
+#' `Cache()` that tags the cache entry and is replayed on a hit, exactly as for
+#' `prepInputs()`. See the example.
+#'
+#' @param url Character. The address (or addresses) read: a URL, a Google Drive link, or
+#'   any identifier of the remote source. `NULL` or empty is ignored.
+#' @param fn Character. The name recorded in the `fn` column. The default is the name of
+#'   the function that called `logUrlAccess()`.
+#' @param targetFile,archive,alsoExtract,destinationPath Optional. Recorded as in
+#'   [prepInputs()], when they apply to the download.
+#'
+#' @return `prepInputsLog()` returns a list of record lists. `clearUrlLog()` and
+#'   `logUrlAccess()` return `NULL` invisibly.
+#'
+#' @seealso [urlLog()] for the ledger kept in a cache, [reproducibleOptions()] for the
+#'   option, [prepInputs()], [preProcess()], [Cache()].
 #'
 #' @rdname prepInputsLog
 #' @export
 #'
-#' @examplesIf identical(Sys.getenv("NOT_CRAN"), "true")
-#' # Every prepInputs()/preProcess() call that resolves a url records it, so a
-#' # completed run can report exactly which data sources it pulled.
+#' @examples
 #' clearUrlLog()
 #' prepInputsLog() # empty at the start of a session
 #'
-#' # After any prepInputs()/preProcess() work, the log holds one record per url;
-#' # rbindlist() turns it into a table for reporting.
-#' # data.table::rbindlist(prepInputsLog())
+#' # A function that downloads by its own means says so with logUrlAccess().
+#' getMyTable <- function(url = "https://example.com/table.csv") {
+#'   logUrlAccess(url)      # fn is "getMyTable"
+#'   # download.file(url, tempfile()) ... here
+#'   data.frame(x = 1)
+#' }
+#' getMyTable()
+#' data.table::rbindlist(prepInputsLog())[, c("fn", "url")]
+#'
+#' # Inside Cache() the url is also stored on the cache entry, and recorded again on a hit.
+#' \donttest{
+#' withr::with_options(list(reproducible.cachePath = tempfile()), {
+#'   Cache(getMyTable())
+#'   urlLog(which = c("url", "caller"))
+#' })
+#' }
+#' clearUrlLog()
 prepInputsLog <- function() .urlLogEnv$records
 
 #' @rdname prepInputsLog
@@ -92,6 +173,20 @@ prepInputsLog <- function() .urlLogEnv$records
 clearUrlLog <- function() {
   .urlLogEnv$records <- list()
   .urlLogEnv$seen    <- character()
+  invisible()
+}
+
+#' @rdname prepInputsLog
+#' @export
+logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
+                         alsoExtract = NULL, destinationPath = NULL) {
+  if (is.null(fn)) {
+    caller <- sys.call(-1L)
+    fn <- if (is.null(caller)) "logUrlAccess" else
+      paste(deparse(caller[[1L]], width.cutoff = 500L), collapse = "")
+  }
+  .logUrlAccess(fn = fn, url = url, targetFile = targetFile, archive = archive,
+                alsoExtract = alsoExtract, destinationPath = destinationPath)
   invisible()
 }
 

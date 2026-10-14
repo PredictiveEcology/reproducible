@@ -3,33 +3,136 @@
 \name{prepInputsLog}
 \alias{prepInputsLog}
 \alias{clearUrlLog}
-\title{URL access log for \code{prepInputs} / \code{preProcess}}
+\alias{logUrlAccess}
+\title{The download ledger: a record of the data a run read from outside}
 \usage{
 prepInputsLog()
 
 clearUrlLog()
+
+logUrlAccess(
+  url,
+  fn = NULL,
+  targetFile = NULL,
+  archive = NULL,
+  alsoExtract = NULL,
+  destinationPath = NULL
+)
+}
+\arguments{
+\item{url}{Character. The address (or addresses) read: a URL, a Google Drive link, or
+any identifier of the remote source. \code{NULL} or empty is ignored.}
+
+\item{fn}{Character. The name recorded in the \code{fn} column. The default is the name of
+the function that called \code{logUrlAccess()}.}
+
+\item{targetFile, archive, alsoExtract, destinationPath}{Optional. Recorded as in
+\code{\link[=prepInputs]{prepInputs()}}, when they apply to the download.}
 }
 \value{
-\code{prepInputsLog()} returns a list of record lists. \code{clearUrlLog()}
-returns \code{NULL} invisibly.
+\code{prepInputsLog()} returns a list of record lists. \code{clearUrlLog()} and
+\code{logUrlAccess()} return \code{NULL} invisibly.
 }
 \description{
-Controlled by \code{getOption("reproducible.urlLog")}. See the package option
-documentation for modes. \code{prepInputsLog()} returns the package-level
-in-memory records, which are populated in the default (\code{NULL}) and \code{TRUE}
-modes; \code{clearUrlLog()} empties them. Records written to an environment or
-function sink live there instead and are not retrievable through these
-accessors. Set the option to \code{FALSE} to disable logging entirely.
+reproducible keeps a ledger of the web addresses (URLs) and Google Drive files that
+data were read from, so that a finished run can say where its inputs came from.
+\code{prepInputsLog()} returns the ledger of the current R session, \code{clearUrlLog()} empties it,
+\code{\link[=urlLog]{urlLog()}} reads the ledger kept in a cache, and \code{logUrlAccess()} adds an access that
+did not go through \code{prepInputs()}.
 }
+\section{What is recorded, and when}{
+
+One record is written each time one of these is called with a URL:
+\itemize{
+\item \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}} (\code{fn} is \code{"prepInputs"} or \code{"preProcess"});
+\item the listing of a directory-index URL that \code{preProcess()} expands into files
+(\code{fn} is \code{"prepInputs (directory index)"});
+\item \code{\link[=CacheGeo]{CacheGeo()}} and \code{\link[=CacheGeoWrite]{CacheGeoWrite()}}, for the Google Drive ledger file they read or
+write;
+\item \code{logUrlAccess()}, called by any code that fetches data by other means.
+}
+A record has the columns \code{time}, \code{fn}, \code{url}, \code{targetFile}, \code{archive}, \code{alsoExtract},
+\code{destinationPath} and \code{cacheId} (\code{NA} outside \code{\link[=Cache]{Cache()}}). Within one scope a repeated
+\code{fn}, \code{url} and \code{cacheId} gives one record, not several. A URL is recorded when it is
+used, before the download starts, so a download that fails is recorded too.
+}
+
+\section{Inside \code{Cache()}}{
+
+A record made while a \code{\link[=Cache]{Cache()}} call is evaluating is held until the call has
+finished. Cache then writes the record with that call's \code{cacheId} and stores the
+URLs as tags on the cache entry: \code{reproducible.url}, \code{reproducible.urlFn},
+\code{reproducible.urlFirstSeen}, \code{reproducible.urlLastSeen} and \code{reproducible.urlHitCount}.
+The tags stay in the cache, so \code{\link[=urlLog]{urlLog()}} and \code{showCache(userTags = "reproducible.url")}
+report them later. On a cache hit nothing is evaluated, so no download is made, but the
+tags are read and the same records are written again to the ledger, and \code{hitCount} is
+increased. An entry that holds URLs from more than one function is replayed under the
+name of the first.
+}
+
+\section{The option \code{reproducible.urlLog}}{
+
+Where records go is set by \code{options(reproducible.urlLog = )}:
+\describe{
+\item{\code{NULL} (default) or \code{TRUE}}{the in-memory list read by \code{prepInputsLog()}, plus the
+cache tags above.}
+\item{\code{FALSE}}{recording is off: no records, no tags.}
+\item{an environment}{records are appended to \code{env$records} (and keys to \code{env$seen});
+anything in the list \code{env$extra} is added to each record as extra columns. The
+caller owns the environment.}
+\item{a function}{called with each record (a list); there is no de-duplication.}
+}
+SpaDES.core uses the environment form: with \code{options(spades.urlLog = TRUE)} (the
+default) each \code{simList} carries its own ledger, with \code{module} and \code{event} columns,
+read with \code{urlLog(sim)}. \code{spades.urlLog = FALSE} turns that off. \code{prepInputsLog()} is
+the ledger of the session; \code{urlLog(sim)} is the ledger of one run.
+}
+
+\section{Why a ledger can miss an access}{
+
+The ledger holds only what was passed to \code{prepInputs()}, \code{preProcess()} or
+\code{logUrlAccess()}. Code that downloads another way (\code{download.file()},
+\code{googledrive::drive_download()}, a package that reads a web service) is not seen unless it
+calls \code{logUrlAccess()}. A cache entry made before URL tags existed has no tags; the
+URL is recovered only for the direct form \code{Cache(prepInputs(url = ...))}, and the tags are
+then added. Inside a \code{Cache()} call that is itself a cache hit the inner code does not
+run, so only the tags on that entry can be replayed. SpaDES.core's \code{cacheChaining}
+can restore the cache entries of several events without running them; their records are
+replayed from the tags too, so an access without a tag is missing. With
+\code{reproducible.urlLog = FALSE} nothing is recorded.
+}
+
+\section{Recording a download made by other means}{
+
+A package or module author who fetches data without \code{prepInputs()} calls
+\code{logUrlAccess()} with the address, once per access, just before the download. Inside
+\code{Cache()} that tags the cache entry and is replayed on a hit, exactly as for
+\code{prepInputs()}. See the example.
+}
+
 \examples{
-\dontshow{if (identical(Sys.getenv("NOT_CRAN"), "true")) withAutoprint(\{ # examplesIf}
-# Every prepInputs()/preProcess() call that resolves a url records it, so a
-# completed run can report exactly which data sources it pulled.
 clearUrlLog()
 prepInputsLog() # empty at the start of a session
 
-# After any prepInputs()/preProcess() work, the log holds one record per url;
-# rbindlist() turns it into a table for reporting.
-# data.table::rbindlist(prepInputsLog())
-\dontshow{\}) # examplesIf}
+# A function that downloads by its own means says so with logUrlAccess().
+getMyTable <- function(url = "https://example.com/table.csv") {
+  logUrlAccess(url)      # fn is "getMyTable"
+  # download.file(url, tempfile()) ... here
+  data.frame(x = 1)
+}
+getMyTable()
+data.table::rbindlist(prepInputsLog())[, c("fn", "url")]
+
+# Inside Cache() the url is also stored on the cache entry, and recorded again on a hit.
+\donttest{
+withr::with_options(list(reproducible.cachePath = tempfile()), {
+  Cache(getMyTable())
+  urlLog(which = c("url", "caller"))
+})
+}
+clearUrlLog()
+}
+\seealso{
+\code{\link[=urlLog]{urlLog()}} for the ledger kept in a cache, \code{\link[=reproducibleOptions]{reproducibleOptions()}} for the
+option, \code{\link[=prepInputs]{prepInputs()}}, \code{\link[=preProcess]{preProcess()}}, \code{\link[=Cache]{Cache()}}.
 }

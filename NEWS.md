@@ -1,5 +1,9 @@
 # reproducible (development version)
 
+## Enhancements
+
+* New `logUrlAccess()` records a download made without `prepInputs()`/`preProcess()` in the download ledger (`prepInputsLog()`; inside `Cache()` also as tags on the entry, replayed on a hit). `CacheGeo()`/`CacheGeoWrite()` now record the Google Drive ledger file they read or write with it. `?prepInputsLog` now describes the whole ledger: what is recorded, the cache tags and replay, the `reproducible.urlLog` modes, and why a ledger can miss an access.
+
 ## Bug fixes
 
 * `Cache()` of a file-backed `SpatRaster` now also stores the companion files that exist beside its file (`.aux.xml`, `.ovr`, `.msk`; `reproducible.sidecarCandidates`), and restores a deleted one beside the file that is still there. With recent terra/GDAL a GeoTIFF's categories live only in the `.tif.aux.xml`, so a cache hit after the original files (or just the `.aux.xml`) were deleted returned a raster with no categories. `Filenames()` is unchanged.

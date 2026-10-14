@@ -503,7 +503,7 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
       } else if (identical(ledger$remoteType, "drive")) {
         ## The md5 differs, so fetch. Not through prepInputs(): it keeps a local copy that matches
         ## its own CHECKSUMS.txt (or the destinationPathShared one), which is the old ledger here.
-        .geoDriveDownload(remote$id, ledger$path)
+        .geoDriveDownload(remote$id, ledger$path, url = remote$url)
       } else {
         dir.create(ledger$destinationPath, recursive = TRUE, showWarnings = FALSE)
         ## A URL has no md5 to compare: prepInputs() decides from its hash sidecar.
@@ -531,7 +531,10 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 
 ## Download the Drive file `id` over `path`, by a rename, so `path` is never partly written and a
 ## hard link at `path` (e.g. to a destinationPathShared copy) is replaced, not written through.
-.geoDriveDownload <- function(id, path) {
+## The access is recorded in the url ledger (`url` is the file's Drive link), as it does not go
+## through prepInputs().
+.geoDriveDownload <- function(id, path, url) {
+  logUrlAccess(url, fn = "CacheGeo", targetFile = basename(path), destinationPath = dirname(path))
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   tmp <- tempfile(pattern = paste0(".", basename(path), "."), tmpdir = dirname(path))
   on.exit(unlink(tmp))
@@ -546,8 +549,11 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     disk = .geoReplaceFile(ledger$path, .geoRemoteFile(ledger)),
     drive = {
       folder <- .geoDriveFolder(ledger, create = TRUE)
-      retry(quote(googledrive::drive_put(media = ledger$path, path = googledrive::as_id(folder$id),
-                                         name = ledger$file)))
+      pushed <- retry(quote(googledrive::drive_put(media = ledger$path,
+                                                   path = googledrive::as_id(folder$id),
+                                                   name = ledger$file)))
+      logUrlAccess(googledrive::drive_link(pushed), fn = "CacheGeoWrite", targetFile = ledger$file,
+                   destinationPath = dirname(ledger$path))
     })
   invisible(NULL)
 }

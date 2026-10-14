@@ -408,7 +408,8 @@
 #'     you can read with [prepInputsLog()] and empty with [clearUrlLog()]; a
 #'     download made inside `Cache()` is also recorded as a permanent tag on the
 #'     matching cache entry, which you can look up later with
-#'     [urlLog()].
+#'     [urlLog()]. Code that downloads by other means records its downloads with
+#'     [logUrlAccess()]. The full description of the ledger is in [prepInputsLog()].
 #'     `FALSE` turns the recording off completely. Advanced: you may instead
 #'     supply an environment (records are appended to `env$records`, which you
 #'     own and manage) or a function (called once with each record).
