@@ -2,6 +2,8 @@
 
 ## Enhancements
 
+* Calls to Google Drive (`drive_get`, `drive_ls`, `drive_download`, `drive_upload` and the others, in the cloud cache, `CacheGeo()`, `prepInputs()` and the tile download) are run again after a brief failure: a timeout, DNS or connection error, HTTP 5xx, or failed token refresh, with a wait of 2 s times the attempt number. A 403 or 404 and any other error are raised at once. The default of `reproducible.gdriveAuthRetries` is now 6 (was 2) and it sets the number of retries of every Drive call, so a project no longer needs to set it; `0` turns retrying off. The cloud cache no longer calls `retry()`: one mechanism, so a non-transient failure now raises its own error at once, not after five attempts.
+* `Cache(useCloud = TRUE)` reads an entry from a Google Drive folder shared "Anyone with the link" without a Google sign-in, which a batch run could not do: the cloud path called googledrive directly, which tried to authenticate. It now reaches Drive as `prepInputs()` does (a loaded token, then a configured identity, then anonymously). With no identity a miss is computed and saved locally, and the upload and folder creation are skipped with one message. Interactive sessions and folders given by name keep googledrive's own sign-in.
 * New `logUrlAccess()` records a download made without `prepInputs()`/`preProcess()` in the download ledger (`prepInputsLog()`; inside `Cache()` also as tags on the entry, replayed on a hit). `CacheGeo()`/`CacheGeoWrite()` now record the Google Drive ledger file they read or write with it. `?prepInputsLog` now describes the whole ledger: what is recorded, the cache tags and replay, the `reproducible.urlLog` modes, and why a ledger can miss an access.
 
 ## Bug fixes

@@ -504,7 +504,7 @@ isGoogleDriveDirectory <- function(url) {
   isFold <- grepl("folders", url)
   if (isFold %in% FALSE && is(url, "drive_id")) {
     # second check if it is just a google id
-    driveMeta <- googledrive::drive_get(url)
+    driveMeta <- .gdriveRetry(googledrive::drive_get(url))
     isFold <- isGoogleDriveDirectoryFromTibble(driveMeta)
   }
   isFold

@@ -102,6 +102,14 @@ replayed from the tags too, so an access without a tag is missing. With
 \code{reproducible.urlLog = FALSE} nothing is recorded.
 }
 
+\section{Cloud caches}{
+
+Reading or writing a \code{Cache(useCloud = TRUE)} entry on Google Drive is not recorded in the
+ledger; the URLs tagged on an entry are those of the \code{prepInputs()} calls that made it.
+Such a cache folder shared "Anyone with the link" is read without a Google sign-in (see
+\code{useCloud} in \code{\link[=Cache]{Cache()}}).
+}
+
 \section{Recording a download made by other means}{
 
 A package or module author who fetches data without \code{prepInputs()} calls

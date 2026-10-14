@@ -913,7 +913,7 @@ rmFromCloudFolder <- function(cloudFolderID, x, cacheIds, otherFiles,
     toDelete <- gdriveLs[isInCloud, ]
   }
   if (any(isInCloud)) {
-    retry(quote(googledrive::drive_rm(toDelete)))
+    .gdriveRetry(googledrive::drive_rm(toDelete))
   }
 
   return(invisible())

@@ -584,6 +584,46 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(grepl("\\((403|404)\\)|\\b40[34]\\b|File not found|insufficient", msg, ignore.case = TRUE))
 }
 
+# Is this error a transient Drive/network failure -- a timeout, DNS, a reset or refused
+# connection, an HTTP 5xx or 429, a token refresh against oauth2.googleapis.com -- that is
+# worth running again? A denial (403/404) never is.
+.gdriveIsTransient <- function(e) {
+  if (.gdriveIsDenial(e)) return(FALSE)
+  msg <- conditionMessage(e)
+  if (inherits(e, "error") && !is.null(e$parent)) msg <- paste(msg, conditionMessage(e$parent))
+  isTRUE(grepl(paste0("time(d)? ?out|timeout|resolve host|could not resolve|name resolution|",
+                      "connection (reset|refused|closed)|recv failure|ssl|reset by peer|",
+                      "\\(5[0-9]{2}\\)|\\b5[0-9]{2}\\b|\\b429\\b|oauth2[.]googleapis[.]com|",
+                      "temporarily unavailable|HTTP request"),
+               msg, ignore.case = TRUE))
+}
+
+# How many times a googledrive call is re-run after a transient failure (also the number of
+# retries of a configured identity in .gdrivePrepareAuth()), and the wait before the next one.
+.gdriveRetries <- function() getOption("reproducible.gdriveAuthRetries", 6L)
+.gdriveRetryWait <- function(attempt) Sys.sleep(2L * attempt)
+
+# Run a googledrive call, and run it again after a transient failure (see .gdriveIsTransient())
+# up to `retries` more times, waiting 2 s x attempt between them. A denial and any other error
+# are raised at once, so callers keep their own handling of "File not found". `retries = 0`
+# runs the call once. Wrap the call itself: .gdriveRetry(googledrive::drive_ls(...)).
+.gdriveRetry <- function(expr, retries = .gdriveRetries(),
+                         verbose = getOption("reproducible.verbose", 1)) {
+  exprSub <- substitute(expr)
+  envir <- parent.frame()
+  attempt <- 0L
+  repeat {
+    res <- tryCatch(list(value = eval(exprSub, envir)), error = function(e) e)
+    if (!inherits(res, "error")) return(res$value)
+    if (attempt >= retries || !.gdriveIsTransient(res)) stop(res)
+    attempt <- attempt + 1L
+    messagePreProcess("Google Drive: transient failure (", substr(conditionMessage(res), 1L, 80L),
+                      "); retrying in ", 2L * attempt, " s (", attempt, " of ", retries, ")",
+                      verbose = verbose)
+    .gdriveRetryWait(attempt)
+  }
+}
+
 # What happened to the configured identities during the most recent cascade. Read
 # by .stopGoogleDriveAccess(): when anonymous access then gets a 404 on a private
 # file, the useful fact is *why* the authenticated attempt was abandoned, not the 404.
@@ -648,7 +688,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   # configured identity to anonymous access: on a private file that ends in a
   # misleading 404. Six workers starting 20 s apart and refreshing one cached
   # token did exactly that. Retry such failures; a 403/404 denial is final.
-  retries <- getOption("reproducible.gdriveAuthRetries", 2L)
+  retries <- .gdriveRetries()
   .gdriveLastAuth$attempts <- character()
   .gdriveLastAuth$deauthed <- FALSE
   .gdriveLastAuth$restoreEmail <- NULL
@@ -679,7 +719,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       messagePreProcess("Google Drive: transient failure (",
                         substr(conditionMessage(res), 1L, 80L), "); retrying in ",
                         2L * attempt, " s", verbose = verbose)
-      Sys.sleep(2L * attempt)
+      .gdriveRetryWait(attempt)
     }
     if (ok) return("token")
     if (.gdriveIsDenial(res)) {
@@ -1143,8 +1183,8 @@ listGoogleDriveFolder <- function(url, pattern = NULL,
     out <- data.table::data.table(name = bf$name, id = NA_character_, url = bf$url)
   } else {
     .requireNamespace("googledrive", stopOnFALSE = TRUE)
-    d <- as.data.table(googledrive::with_drive_quiet(
-      googledrive::drive_ls(googledrive::as_id(url))))
+    d <- as.data.table(.gdriveRetry(googledrive::with_drive_quiet(
+      googledrive::drive_ls(googledrive::as_id(url)))))
     out <- data.table::data.table(
       name = d$name, id = d$id,
       url = paste0("https://drive.google.com/file/d/", d$id))
@@ -2251,7 +2291,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               drive_files <- data.frame(name = bf$name, id = bf$url,
                                         stringsAsFactors = FALSE)
             } else {
-              drive_files <- googledrive::drive_ls(googledrive::as_id(url))
+              drive_files <- .gdriveRetry(googledrive::drive_ls(googledrive::as_id(url)))
             }
             if (!is.null(alsoExtract) && length(alsoExtract) > 0) {
               fileIndex <- seq_len(NROW(drive_files))
@@ -2531,21 +2571,18 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   fileAttr <- tryCatch({
     if (isTRUE(isDirectory(url, FALSE))) {
       Cache(
-        retry(retries = 1, googledrive::drive_ls(googledrive::as_id(url),
-                                                 shared_drive = team_drive)),
+        .gdriveRetry(googledrive::drive_ls(googledrive::as_id(url), shared_drive = team_drive)),
         verbose = FALSE
       )
     } else {
       if (packageVersion("googledrive") < "2.0.0") {
         Cache(
-          retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
-                                                    team_drive = team_drive)),
+          .gdriveRetry(googledrive::drive_get(googledrive::as_id(url), team_drive = team_drive)),
           verbose = FALSE
         )
       } else {
         Cache(
-          retry(retries = 1, googledrive::drive_get(googledrive::as_id(url),
-                                                    shared_drive = team_drive)),
+          .gdriveRetry(googledrive::drive_get(googledrive::as_id(url), shared_drive = team_drive)),
           verbose = FALSE
         )
       }
@@ -2839,7 +2876,7 @@ download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileS
 
     completed <- FALSE
     if (isGD) {
-      gdriveDetails <- googledrive::drive_get(file_name)
+      gdriveDetails <- .gdriveRetry(googledrive::drive_get(file_name))
     }
   } else {
     isGD <- TRUE
@@ -3002,7 +3039,7 @@ googledriveIDtoHumanURL <- function(id) {
 
 getRemoteFileSize <- function(isGD, url) {
   if (isGD) {
-    file <- googledrive::drive_get(url)
+    file <- .gdriveRetry(googledrive::drive_get(url))
     file_id <- file$id
     download_url <- googledriveIDtoDownloadURL(file_id)
     total_size <- as.numeric(file$drive_resource[[1]]$size)

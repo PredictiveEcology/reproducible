@@ -538,8 +538,8 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   tmp <- tempfile(pattern = paste0(".", basename(path), "."), tmpdir = dirname(path))
   on.exit(unlink(tmp))
-  retry(quote(googledrive::with_drive_quiet(
-    googledrive::drive_download(googledrive::as_id(id), path = tmp, overwrite = TRUE))))
+  .gdriveRetry(googledrive::with_drive_quiet(
+    googledrive::drive_download(googledrive::as_id(id), path = tmp, overwrite = TRUE)))
   if (!file.rename(tmp, path)) stop("Could not replace ", path)
   invisible(path)
 }
@@ -549,9 +549,9 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     disk = .geoReplaceFile(ledger$path, .geoRemoteFile(ledger)),
     drive = {
       folder <- .geoDriveFolder(ledger, create = TRUE)
-      pushed <- retry(quote(googledrive::drive_put(media = ledger$path,
-                                                   path = googledrive::as_id(folder$id),
-                                                   name = ledger$file)))
+      pushed <- .gdriveRetry(googledrive::drive_put(media = ledger$path,
+                                                    path = googledrive::as_id(folder$id),
+                                                    name = ledger$file))
       logUrlAccess(googledrive::drive_link(pushed), fn = "CacheGeoWrite", targetFile = ledger$file,
                    destinationPath = dirname(ledger$path))
     })

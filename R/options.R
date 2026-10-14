@@ -152,6 +152,14 @@
 #'     **Deprecated — do not use** (see `gdalwarp` above). Default: `2`.
 #'     Previously set `-wo NUM_THREADS=` for `gdalProject`.
 #'   }
+#'   \item{`gdriveAuthRetries`}{
+#'     Default: `6`. How many times a call to Google Drive is run again after a brief
+#'     failure: a timeout, a network or DNS error, a server (HTTP 5xx) error, or a failed
+#'     token refresh. The wait before each retry is 2 seconds times the attempt number
+#'     (about 42 seconds in all). A refused request (HTTP 403 or 404) and any other error are
+#'     not retried. `0` turns retrying off. It also sets how often [prepInputs()] retries a
+#'     configured Google identity before falling back to anonymous access.
+#'   }
 #'   \item{`gdriveNoAuth`}{
 #'     Default: `FALSE`. Used in [prepInputs()] and [preProcess()].
 #'     When `TRUE`, Google Drive files are accessed without a `googledrive` token
@@ -613,6 +621,7 @@ reproducibleOptions <- function() {
     reproducible.fileBackedAnchors = NULL, # named list of semantic project paths (e.g. SpaDES paths(sim)); used to store/restore file-backed object paths *relative* to a portable anchor
     reproducible.futurePlan = FALSE, # no effect as of 3.2.0; kept because downstream sets it
     reproducible.gdalwarpThreads = 2L,
+    reproducible.gdriveAuthRetries = 6L,
     reproducible.gdriveNoAuth = FALSE,
     reproducible.inputPath = file.path(tempdir(), "reproducible", "input"),
     reproducible.destinationPathShared = NULL,

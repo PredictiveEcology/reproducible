@@ -202,7 +202,7 @@ setMethod(
       forDig <- .wrap(object)
     } else if (inherits(object, "drive_id")) {
       if (.requireNamespace("googledrive")) {
-        forDig <- try(googledrive::drive_get(object))
+        forDig <- try(.gdriveRetry(googledrive::drive_get(object)))
         if (inherits(forDig, "try-error")) {
           message("Detected that object is a googledrive id; can't access it online; ",
                   "evaluating only the url as character string")

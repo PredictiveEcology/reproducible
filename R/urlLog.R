@@ -123,6 +123,12 @@
 #' replayed from the tags too, so an access without a tag is missing. With
 #' `reproducible.urlLog = FALSE` nothing is recorded.
 #'
+#' @section Cloud caches:
+#' Reading or writing a `Cache(useCloud = TRUE)` entry on Google Drive is not recorded in the
+#' ledger; the URLs tagged on an entry are those of the `prepInputs()` calls that made it.
+#' Such a cache folder shared "Anyone with the link" is read without a Google sign-in (see
+#' `useCloud` in [Cache()]).
+#'
 #' @section Recording a download made by other means:
 #' A package or module author who fetches data without `prepInputs()` calls
 #' `logUrlAccess()` with the address, once per access, just before the download. Inside

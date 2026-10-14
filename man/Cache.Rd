@@ -487,6 +487,14 @@ consulted at all (the Google Drive listing is deferred until after the
 local lookup fails). When neither local nor cloud has the object, the
 call falls back to a normal local-only Cache run.
 }
+
+Reading does not need a Google sign-in when the folder is shared "Anyone with the link"
+and \code{cloudFolderID} is its id or link. Google Drive is reached as in \code{\link[=prepInputs]{prepInputs()}}: a token
+already loaded, else a configured identity (\code{gargle_oauth_email}, a service-account file in
+\code{GOOGLEDRIVE_AUTH}), else anonymously. With no identity, cloud hits are downloaded
+as usual, and a miss is computed and saved locally only: nothing is uploaded and no folder
+is created, and one message says so (\code{useCloud} then acts as \code{"pull"}). An interactive
+session, and a folder given by name, keep \pkg{googledrive}'s own sign-in.
 }
 
 \section{Object attributes}{
