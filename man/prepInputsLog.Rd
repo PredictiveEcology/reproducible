@@ -133,10 +133,10 @@ data.table::rbindlist(prepInputsLog())[, c("fn", "url")]
 
 # Inside Cache() the url is also stored on the cache entry, and recorded again on a hit.
 \donttest{
-withr::with_options(list(reproducible.cachePath = tempfile()), {
-  Cache(getMyTable())
-  urlLog(which = c("url", "caller"))
-})
+op <- options(reproducible.cachePath = tempfile())
+Cache(getMyTable())
+urlLog(which = c("url", "caller"))
+options(op)
 }
 clearUrlLog()
 }
