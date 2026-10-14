@@ -337,9 +337,9 @@
 #'     Can be set using environment variable `R_REPRODUCIBLE_RASTER_READ`.
 #'   }
 #'   \item{`shapefileRead`}{
-#'     Default `NULL`. Used during `prepInputs` when reading a `.shp` file.
-#'     If `NULL`, it will use `sf::st_read` if `sf` package is available; otherwise,
-#'     it will use `raster::shapefile`
+#'     Default `"sf::st_read"`. Used during `prepInputs` when reading a `.shp` file.
+#'     If the `sf` or `DBI` package is not installed, `"terra::vect"` is used instead.
+#'     Set `"terra::vect"` to get a `SpatVector` regardless.
 #'   }
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.

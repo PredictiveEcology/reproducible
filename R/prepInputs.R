@@ -856,9 +856,9 @@ extractFromArchive <- function(archive,
           if (requireNamespace("sf", quietly = TRUE)) {
             if (!isTRUE(grepl("st_read", fun))) {
               messagePreProcess(
-                "Using sf::st_read on shapefile because sf package is available; to force old ",
-                "behaviour with 'raster::shapefile' use fun = 'raster::shapefile' or ",
-                "options('reproducible.shapefileRead' = 'raster::shapefile')"
+                "Using sf::st_read on shapefile because sf package is available; to read it ",
+                "with terra instead, use fun = 'terra::vect' or ",
+                "options('reproducible.shapefileRead' = 'terra::vect')"
               )
             }
           }

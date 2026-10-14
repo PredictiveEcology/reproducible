@@ -317,9 +317,9 @@ Default: \code{terra::rast}. Can be \code{raster::raster} for backwards compatib
 Can be set using environment variable \code{R_REPRODUCIBLE_RASTER_READ}.
 }
 \item{\code{shapefileRead}}{
-Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
-If \code{NULL}, it will use \code{sf::st_read} if \code{sf} package is available; otherwise,
-it will use \code{raster::shapefile}
+Default \code{"sf::st_read"}. Used during \code{prepInputs} when reading a \code{.shp} file.
+If the \code{sf} or \code{DBI} package is not installed, \code{"terra::vect"} is used instead.
+Set \code{"terra::vect"} to get a \code{SpatVector} regardless.
 }
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
