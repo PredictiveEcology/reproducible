@@ -345,9 +345,9 @@
 #'     Can be set using environment variable `R_REPRODUCIBLE_RASTER_READ`.
 #'   }
 #'   \item{`shapefileRead`}{
-#'     Default `NULL`. Used during `prepInputs` when reading a `.shp` file.
-#'     If `NULL`, it will use `sf::st_read` if `sf` package is available; otherwise,
-#'     it will use `raster::shapefile`
+#'     Default `"sf::st_read"`. Used during `prepInputs` when reading a `.shp` file.
+#'     If the `sf` or `DBI` package is not installed, `"terra::vect"` is used instead.
+#'     Set `"terra::vect"` to get a `SpatVector` regardless.
 #'   }
 #'   \item{`showSimilar`}{
 #'     Default `FALSE`. Passed to `Cache`.
@@ -469,6 +469,15 @@
 #'   }
 #'   \item{`useCloud`}{
 #'     Default `FALSE`. Passed to `Cache`.
+#'   }
+#'   \item{`useCOG`}{
+#'     Default `TRUE`. When `prepInputs` is given a web URL to a GeoTIFF and a spatial
+#'     argument (`to`, `cropTo` or `maskTo`), it reads only the part of the file it needs,
+#'     if the server provides the file as a Cloud Optimized GeoTIFF (COG). For a single
+#'     study area this is much faster than downloading the whole file. If a project uses
+#'     MANY different study areas with the same file, setting `FALSE` may be faster: the
+#'     full file is downloaded once, and each study area then runs its `postProcess`
+#'     steps on that local copy. See `prepInputsCOG()`.
 #'   }
 #'   \item{`useDBI`}{
 #'     Default: `FALSE`, i.e., the file-backed cache metadata backend, which writes

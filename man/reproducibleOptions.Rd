@@ -325,9 +325,9 @@ Default: \code{terra::rast}. Can be \code{raster::raster} for backwards compatib
 Can be set using environment variable \code{R_REPRODUCIBLE_RASTER_READ}.
 }
 \item{\code{shapefileRead}}{
-Default \code{NULL}. Used during \code{prepInputs} when reading a \code{.shp} file.
-If \code{NULL}, it will use \code{sf::st_read} if \code{sf} package is available; otherwise,
-it will use \code{raster::shapefile}
+Default \code{"sf::st_read"}. Used during \code{prepInputs} when reading a \code{.shp} file.
+If the \code{sf} or \code{DBI} package is not installed, \code{"terra::vect"} is used instead.
+Set \code{"terra::vect"} to get a \code{SpatVector} regardless.
 }
 \item{\code{showSimilar}}{
 Default \code{FALSE}. Passed to \code{Cache}.
@@ -448,6 +448,15 @@ be identical to using a previous version of \verb{reproducible (<3.0)}.
 }
 \item{\code{useCloud}}{
 Default \code{FALSE}. Passed to \code{Cache}.
+}
+\item{\code{useCOG}}{
+Default \code{TRUE}. When \code{prepInputs} is given a web URL to a GeoTIFF and a spatial
+argument (\code{to}, \code{cropTo} or \code{maskTo}), it reads only the part of the file it needs,
+if the server provides the file as a Cloud Optimized GeoTIFF (COG). For a single
+study area this is much faster than downloading the whole file. If a project uses
+MANY different study areas with the same file, setting \code{FALSE} may be faster: the
+full file is downloaded once, and each study area then runs its \code{postProcess}
+steps on that local copy. See \code{prepInputsCOG()}.
 }
 \item{\code{useDBI}}{
 Default: \code{FALSE}, i.e., the file-backed cache metadata backend, which writes
