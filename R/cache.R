@@ -119,9 +119,19 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   CacheDBFileCheckAndCreate(cachePaths[[1]], drv, conn, verbose = verbose) # checks that we are using multiDBfile backend
 
+  cloudAuth <- NULL
+  if (cloudWriteOrRead(useCloud)) {
+    cloudAuth <- .cloudAuth(cloudFolderID, verbose = verbose)
+    on.exit(.gdriveRestoreAuth(), add = TRUE)
+    if (identical(cloudAuth, "anon") && cloudWrite(useCloud)) {
+      messageCache("No Google Drive sign-in: reading the cloud folder as a public folder; ",
+                   "new entries are not uploaded (useCloud treated as 'pull')", verbose = verbose)
+      useCloud <- "pull"
+    }
+  }
   if (cloudWrite(useCloud)) {
     cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePaths[[1]], create = TRUE, verbose = verbose)
-    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)))
+    gdriveLs <- driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)
   }
 
   if (missing(dryRun)) dryRun <- getOption("reproducible.cacheDryRun", FALSE)
@@ -181,8 +191,9 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
 
   cache_file <- CacheStoredFile(cachePaths[[1]], keyFull$key) # now we know it is not in Cache; use 1st cachePath
   if (cloudReadOnly(useCloud)) {# now that it is established it isn't in cache locally
-    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePaths[[1]], create = TRUE, verbose = verbose)
-    gdriveLs <- retry(quote(driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)))
+    cloudFolderID <- checkAndMakeCloudFolderID(cloudFolderID, cachePaths[[1]],
+                                               create = !identical(cloudAuth, "anon"), verbose = verbose)
+    gdriveLs <- driveLs(cloudFolderID, keyFull$key, cachePath = cachePaths[[1]], verbose = verbose)
   }
 
   if (cloudWriteOrRead(useCloud) && isTRUE(any(keyInGdriveLs(keyFull$key, gdriveLs)))) {
@@ -932,6 +943,14 @@ utils::globalVariables(c(
 #'   consulted at all (the Google Drive listing is deferred until after the
 #'   local lookup fails). When neither local nor cloud has the object, the
 #'   call falls back to a normal local-only Cache run.
+#'
+#' Reading does not need a Google sign-in when the folder is shared "Anyone with the link"
+#' and `cloudFolderID` is its id or link. Google Drive is reached as in [prepInputs()]: a token
+#' already loaded, else a configured identity (`gargle_oauth_email`, a service-account file in
+#' `GOOGLEDRIVE_AUTH`), else anonymously. With no identity, cloud hits are downloaded
+#' as usual, and a miss is computed and saved locally only: nothing is uploaded and no folder
+#' is created, and one message says so (`useCloud` then acts as `"pull"`). An interactive
+#' session, and a folder given by name, keep \pkg{googledrive}'s own sign-in.
 #'
 #' @section Object attributes:
 #' Users should be cautioned that object attributes may not be preserved, especially

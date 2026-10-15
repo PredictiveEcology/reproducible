@@ -367,7 +367,7 @@ for (remoteType in c("drive", "none")) {
       'mock(".geoPush", function(ledger) {',
       '  reproducible:::.geoReplaceFile(ledger$path, file.path(fakeDrive, ledger$file)); invisible(NULL)',
       '})',
-      'mock(".geoDriveDownload", function(id, path) reproducible:::.geoReplaceFile(id, path))',
+      'mock(".geoDriveDownload", function(id, path, ...) reproducible:::.geoReplaceFile(id, path))',
       '## the slow step: the merge takes 1 s, so the writers overlap',
       'merge <- reproducible:::.geoMerge',
       'mock(".geoMerge", function(...) { Sys.sleep(1); merge(...) })',

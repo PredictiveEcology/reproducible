@@ -162,7 +162,7 @@ See examples.
    Download once \tab Reuses the local copy while its checksum matches: Stage 1 below. \cr
    Detect remote changes \tab Asks the remote (Google Drive md5, HTTP ETag) if the file changed, when \code{reproducible.checkRemoteHash = TRUE}: \link{reproducibleOptions}. \cr
    Force a fresh copy \tab Downloads again and replaces the local copy: \code{purge = 7}, section \code{purge}. \cr
-   Download ledger \tab Records the URLs used: \code{\link[=prepInputsLog]{prepInputsLog()}} for the session; inside \code{\link[=Cache]{Cache()}} also as tags on the entry, read with \code{\link[=urlLog]{urlLog()}}. Option \code{reproducible.urlLog}. \cr
+   Download ledger \tab Records the URLs used: \code{\link[=prepInputsLog]{prepInputsLog()}} for the session; inside \code{\link[=Cache]{Cache()}} also as tags on the entry, read with \code{\link[=urlLog]{urlLog()}}. Option \code{reproducible.urlLog}. See \code{\link[=prepInputsLog]{prepInputsLog()}} for what is recorded and what can be missed, and \code{\link[=logUrlAccess]{logUrlAccess()}} to record a download made by other means. \cr
    Archives \tab Extracts zip and tar files, only what you need: \code{alsoExtract}. \cr
    Checksums \tab Records every file in \code{CHECKSUMS.txt}: \code{quick}, \code{\link[=Checksums]{Checksums()}}. \cr
    Shared downloads \tab One copy for many projects, hard-linked in: \code{reproducible.destinationPathShared}. \cr

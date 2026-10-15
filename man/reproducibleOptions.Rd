@@ -155,6 +155,14 @@ compatibility and will be removed in a future release.
 \strong{Deprecated — do not use} (see \code{gdalwarp} above). Default: \code{2}.
 Previously set \verb{-wo NUM_THREADS=} for \code{gdalProject}.
 }
+\item{\code{gdriveAuthRetries}}{
+Default: \code{6}. How many times a call to Google Drive is run again after a brief
+failure: a timeout, a network or DNS error, a server (HTTP 5xx) error, or a failed
+token refresh. The wait before each retry is 2 seconds times the attempt number
+(about 42 seconds in all). A refused request (HTTP 403 or 404) and any other error are
+not retried. \code{0} turns retrying off. It also sets how often \code{\link[=prepInputs]{prepInputs()}} retries a
+configured Google identity before falling back to anonymous access.
+}
 \item{\code{gdriveNoAuth}}{
 Default: \code{FALSE}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
 When \code{TRUE}, Google Drive files are accessed without a \code{googledrive} token
@@ -388,7 +396,8 @@ default) and \code{TRUE} keep an in-memory list for the current session, which
 you can read with \code{\link[=prepInputsLog]{prepInputsLog()}} and empty with \code{\link[=clearUrlLog]{clearUrlLog()}}; a
 download made inside \code{Cache()} is also recorded as a permanent tag on the
 matching cache entry, which you can look up later with
-\code{\link[=urlLog]{urlLog()}}.
+\code{\link[=urlLog]{urlLog()}}. Code that downloads by other means records its downloads with
+\code{\link[=logUrlAccess]{logUrlAccess()}}. The full description of the ledger is in \code{\link[=prepInputsLog]{prepInputsLog()}}.
 \code{FALSE} turns the recording off completely. Advanced: you may instead
 supply an environment (records are appended to \code{env$records}, which you
 own and manage) or a function (called once with each record).

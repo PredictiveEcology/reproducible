@@ -383,12 +383,12 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
 
   # Create subfolder named after original raster filename
   subfolder_name <- basename(tools::file_path_sans_ext(thisFilename))
-  subfolder <- googledrive::with_drive_quiet(
-    googledrive::drive_find(q = paste0("name = '", subfolder_name, "' and '", parent_id, "' in parents")))
+  subfolder <- .gdriveRetry(googledrive::with_drive_quiet(
+    googledrive::drive_find(q = paste0("name = '", subfolder_name, "' and '", parent_id, "' in parents"))))
 
   if (nrow(subfolder) == 0) {
-    subfolder <- googledrive::with_drive_quiet(googledrive::drive_mkdir(subfolder_name,
-                                                                        path = googledrive::as_id(parent_id)))
+    subfolder <- .gdriveRetry(googledrive::with_drive_quiet(googledrive::drive_mkdir(subfolder_name,
+                                                                        path = googledrive::as_id(parent_id))))
     messagePreProcess("Created subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
   } else {
     messagePreProcess("Found existing subfolder: ", .messageFunctionFn(subfolder_name), verbose = verbose)
@@ -398,14 +398,14 @@ upload_tiles_to_drive_url_parallel <- function(local_dir, drive_folder_url, this
   tif_files <- dir(local_dir, pattern = "\\.tif$", full.names = TRUE)
 
   # Get existing files in Drive subfolder
-  existingAll <- googledrive::with_drive_quiet(googledrive::drive_ls(subfolder$id))
+  existingAll <- .gdriveRetry(googledrive::with_drive_quiet(googledrive::drive_ls(subfolder$id)))
   existing_names <- existingAll$name
 
   # Upload helper
   upload_one <- function(file_path) {
     file_name <- basename(file_path)
     if (!(file_name %in% existing_names)) {
-      googledrive::drive_upload(file_path, path = googledrive::as_id(subfolder$id))
+      .gdriveRetry(googledrive::drive_upload(file_path, path = googledrive::as_id(subfolder$id)))
       return(paste("Uploaded:", file_name))
     } else {
       return(paste("Skipped (already exists):", file_name))
@@ -616,17 +616,17 @@ makePaddedNamesForTiles <- function(tileIds) {
 
 lsExistingTilesOnGoogleDrive <- function(urlTiles, targetFile) {
   urlTilesID <- googledrive::as_id(extract_drive_id(urlTiles))
-  tile_folder_onGoogleDrive <- googledrive::drive_get(urlTilesID)
+  tile_folder_onGoogleDrive <- .gdriveRetry(googledrive::drive_get(urlTilesID))
   # targetFile <- "alnu_rub.tif"
 
   # List all files in the folder
-  existing_tiles <- googledrive::with_drive_quiet(googledrive::drive_ls(tile_folder_onGoogleDrive))
+  existing_tiles <- .gdriveRetry(googledrive::with_drive_quiet(googledrive::drive_ls(tile_folder_onGoogleDrive)))
   whFolders <- sapply(seq(NROW(existing_tiles)), function(x)
     isGoogleDriveDirectoryFromTibble(existing_tiles[x,]))
   hasSubfolder <- grep(filePathSansExt(targetFile), existing_tiles$name[whFolders])
   if (length(hasSubfolder)) {
     tile_subfolder <- existing_tiles[hasSubfolder, ]$id
-    existing_tiles <- googledrive::with_drive_quiet(googledrive::drive_ls(tile_subfolder))
+    existing_tiles <- .gdriveRetry(googledrive::with_drive_quiet(googledrive::drive_ls(tile_subfolder)))
   } else {
     existing_tiles <- NULL
   }
@@ -1119,7 +1119,7 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     isGDurl <- isGoogleDriveURL(url) || isGoogleID(url)
   if (isGDurl) {
     # Cache indefinitely — same rationale as assessGoogle().
-    file <- googledrive::drive_get(url) |>
+    file <- .gdriveRetry(googledrive::drive_get(url)) |>
       Cache(verbose = FALSE)
     fileSize <- file$drive_resource[[1]]$size
     remoteHash <- file$drive_resource[[1]]$md5Checksum
@@ -1271,9 +1271,9 @@ purgeLocalTiles <- function(tilesFolderFullPath, verbose) {
 
 purgeGoogleTiles <- function(urlTiles, targetFile, verbose) {
   messagePreProcess("purging GoogleDrive tiles...", verbose = verbose)
-  folderID <- googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
-                                    pattern = filePathSansExt(targetFile))
-  googledrive::drive_rm(folderID)
+  folderID <- .gdriveRetry(googledrive::drive_ls(googledrive::as_id(extract_drive_id(urlTiles)),
+                                                 pattern = filePathSansExt(targetFile)))
+  .gdriveRetry(googledrive::drive_rm(folderID))
   existing_tiles <- NULL
   existing_tiles
 }
