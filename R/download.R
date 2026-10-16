@@ -858,6 +858,8 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
   messagePreProcess("URL remapped via 'reproducible.urlRemap':\n  ", url, "\n  -> ", newUrl,
                     verbose = verbose)
+  ## remembered so dlGeneric() still treats it as remapped when it is handed the mirror url later
+  .pkgEnv[["remappedUrls"]] <- union(.pkgEnv[["remappedUrls"]], newUrl)
   newUrl
 }
 
@@ -1305,7 +1307,8 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   if (isTRUE(applyRemap)) {
     filename <- if (haveTarget) basename2(targetFile) else basename2(url)
     remappedUrl <- .applyUrlRemap(url, filename, verbose = verbose)
-    wasRemapped <- !identical(remappedUrl, url)
+    ## a url remapped earlier (prepInputs()/preProcess() remap before downloading) maps to itself here
+    wasRemapped <- !identical(remappedUrl, url) || url %in% .pkgEnv[["remappedUrls"]]
     url <- remappedUrl
   }
 

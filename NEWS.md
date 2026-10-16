@@ -8,6 +8,7 @@
 
 ## Bug fixes
 
+* A file that `prepInputs()` sends to a mirror through `reproducible.urlRemap` is downloaded in parallel pieces again, as the remap intends. `prepInputs()` remaps the url before downloading, so the downloader saw only the mirror url, which maps to itself, took it as not remapped and used a single stream.
 * `preProcess()` now applies `reproducible.urlRemap` to a Google Drive URL before contacting Drive, as `prepInputs()` already did. It first asked Drive for the file's metadata to guess its name, so a file the user cannot see failed with a 404 even when the remap sent it to a public mirror.
 * `Cache()` of a file-backed `SpatRaster` now also stores the companion files that exist beside its file (`.aux.xml`, `.ovr`, `.msk`; `reproducible.sidecarCandidates`), and restores a deleted one beside the file that is still there. With recent terra/GDAL a GeoTIFF's categories live only in the `.tif.aux.xml`, so a cache hit after the original files (or just the `.aux.xml`) were deleted returned a raster with no categories. `Filenames()` is unchanged.
 * On a cache hit, a file-backed raster saved relative to an anchor that is another process's temp directory (SpaDES.core's `terraPath`, which holds `spat_<hash>_<pid>_<x>.tif`) is restored under the cache, not into that directory (completes #601). The anchor branch of `remapFilenames()` had no foreign-tempdir check, so the object was backed by a dead worker's scratch file that a clean-up deleted ("[readStart] file does not exist"). Entries already in the cache are fixed without re-caching.
