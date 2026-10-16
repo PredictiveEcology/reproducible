@@ -323,6 +323,7 @@ wrapSaveToCache <- function(outputFromEvaluate, metadata, cache_key, cachePath, 
                     cacheSaveFormat = cacheSaveFormat,
                     drv = drv, conn = conn,
                     cacheId = cache_key)
+  .resultHashIndexSet(cachePath, metadata, cache_key)
   .message$Saved(cachePath, cache_key, functionName = .functionName,
                  cacheSaveFormat = cacheSaveFormat, verbose = verbose)
   ## The memoised entry is the wrapped object, as saved: its file-backed parts point at the cache's

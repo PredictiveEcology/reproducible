@@ -50,7 +50,8 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   validateUseCloud(useCloud)
 
   ## Lazy showCache async pre-populate, but ONLY when this call will actually
-  ## consume it. showSimilar=TRUE is the sole Cache() path that calls showCache()
+  ## consume it. showSimilar=TRUE is the only Cache() path that calls showCache() without a cacheId
+  ## in the multifile backend (the DBI backend also calls it in cache_Id_Identical())
   ## (which harvests + reaps the fork at showCacheEtc.R). With the default
   ## showSimilar=FALSE nothing ever harvests it, so an unconditional spawn leaks
   ## one background process per cachePath for the life of the session -- measured

@@ -1120,7 +1120,8 @@ test_that("test file link with duplicate Cache", {
   expect_true(any(cli::ansi_grepl(.message$LoadedCacheResult(), mess1)))
   # There are intermittent "status 5" warnings on next line on Windows -- not relevant here
   warns <- capture_warnings({
-    out1 <- try(system2("du", paste0("\"", tmpCache, "\""), stdout = TRUE), silent = TRUE)
+    ## -s: the total only; per-folder lines (e.g. the small resultHashes index) would be compared too
+    out1 <- try(system2("du", c("-s", paste0("\"", tmpCache, "\"")), stdout = TRUE), silent = TRUE)
   })
   # out1 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
   if (!is(out1, "try-error")) {
@@ -1142,7 +1143,7 @@ test_that("test file link with duplicate Cache", {
   })
   # Different inputs AND different output -- so no cache recovery and no file link
   expect_match(regexp = gsub("\\!", ".", .message$SavedTxt), mess2, all = FALSE)
-  out2 <- try(system2("du", tmpCache, stdout = TRUE), silent = TRUE)
+  out2 <- try(system2("du", c("-s", tmpCache), stdout = TRUE), silent = TRUE)
   if (!is(out2, "try-error")) {
     fs2 <- as.numeric(gsub("([[:digit:]]*).*", "\\1", out2))
     expect_true(all(fs1 * 1.5 < fs2)) # macos needed this to be smaller than 1.9; I think b/c mac uses 8kb block size

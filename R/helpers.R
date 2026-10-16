@@ -549,6 +549,16 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
   genFormals
 }
 
+## Readers and writers of the cache's own file formats (extension, fun, saveFun, type). Fixed, so
+## loadFile() uses this rather than .fileExtsKnown(), which costs ~2 ms a call.
+.cacheFileFuns <- function() {
+  rbind(
+    c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
+    c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
+    c(.qs2Format, "qs2::qs_read", "qs2::qs_save", .qs2Format)
+  )
+}
+
 .fileExtsKnown <- function() {
   if (requireNamespace("sf", quietly = TRUE) && requireNamespace("DBI", quietly = TRUE)) {
     shpFile <- getOption("reproducible.shapefileRead", "sf::st_read")
@@ -577,9 +587,7 @@ methodFormals <- function(fun, signature = character(), envir = parent.frame()) 
 
   df <- data.frame(
     rbind(
-      c(.rdsFormat, "base::readRDS", "base::saveRDS", "binary"),
-      c(.qsFormat, "qs::qread", "qs::qsave", .qsFormat),
-      c(.qs2Format, "qs2::qs_read", "qs2::qs_save", .qs2Format),
+      .cacheFileFuns(),
       cbind(
         c("asc", "grd", "tif"), griddedFile, griddedFileSave,
         rasterType(rasterRead = griddedFile)
