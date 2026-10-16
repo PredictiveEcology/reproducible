@@ -1132,7 +1132,7 @@ loadFile <- function(file, cacheId, cachePath, # in case it needs swapCacheForma
       }
       # obj <- qs2::qs_read(file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
       # if (FALSE) {
-      funRead <- .fileExtsKnown()$fun[.fileExtsKnown()$extension == csf]
+      funRead <- .cacheFileFuns()[.cacheFileFuns()[, 1] == csf, 2]
       funRead <- eval(parse(text = funRead))
         # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))
         # obj <- funRead(file = file[isQsAny], nthreads = getOption("reproducible.nThreads", 1))

@@ -196,6 +196,7 @@ setMethod(
       }
 
       unlink(CacheStorageDir(x), recursive = TRUE)
+      unlink(CacheResultHashDir(x), recursive = TRUE)
 
       if (useDBI()) {
         unlink(file.path(x, "rasters"), recursive = TRUE)
@@ -478,10 +479,11 @@ setMethod(
                             drv = drv, conn = conn)
             }))
           } else {
-            dd <- dir(CacheStorageDir(x),
-                      pattern = paste(CacheDBFileSingleExt(cacheSaveFormat = .cacheSaveFormats), collapse = "|"),
-                      full.names = TRUE
-            )
+            ## one listing filtered in R: an alternation regex over a 1M-entry folder took ~10x longer
+            dd <- dir(CacheStorageDir(x))
+            isDBFile <- Reduce(`|`, lapply(CacheDBFileSingleExt(cacheSaveFormat = .cacheSaveFormats),
+                                            endsWith, x = dd))
+            dd <- file.path(CacheStorageDir(x), dd[isDBFile])
             lapplyFun <- lapply
             curFileInfo <- file.info(dd) |> setDT(keep.rownames = "filename")
 
