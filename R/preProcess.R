@@ -230,6 +230,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   dlFunCaptured <- substitute(dlFun)
   prepInputsAssertions(environment())
 
+  # Apply the `reproducible.urlRemap` hook before anything contacts Google Drive, as
+  # prepInputs() does: guessing the file name (.guessAtFile) asks Drive for the file's
+  # metadata, which fails for a file the user cannot see even when the remap covers it.
+  # A url already remapped by prepInputs() comes back unchanged.
+  url <- .remapUrlEarly(url, verbose = verbose, ...)
+
   # Three cases for the captured expression:
   #   (a) quote(fn(...))            -> unwrap with eval to get the inner call
   #   (b) fn(...) or pkg::fn(...)   -> keep as a deferred call object (the
