@@ -857,3 +857,26 @@ test_that("fork counts respect _R_CHECK_LIMIT_CORES_, download does not", {
     expect_identical(reproducible:::.parallelUpload(), 7L)
   })
 })
+
+test_that("preProcess remaps a Drive URL by id before contacting Drive", {
+  testInit()
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
+                         id = id, stringsAsFactors = FALSE)
+  withr::local_options(reproducible.urlRemap = manifest)
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    assessGoogle = function(...) stop("assessGoogle must not be called when id matches"),
+    .remoteDirProbe = function(...) FALSE,
+    dlGeneric = function(url, destinationPath, targetFile, ...) {
+      seen <<- url
+      f <- file.path(destinationPath, "a.tif")
+      writeLines("x", f)
+      list(destFile = f)
+    })
+  tmpdir <- withr::local_tempdir()
+  preProcess(url = paste0("https://drive.google.com/file/d/", id, "/view"),
+             targetFile = "a.tif", destinationPath = tmpdir, fun = NA, verbose = 0)
+  expect_identical(seen, "https://mirror/a.tif")
+  expect_true(file.exists(file.path(tmpdir, "a.tif")))
+})
