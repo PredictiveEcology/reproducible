@@ -27,10 +27,16 @@ cache_Id_Identical <- function(metadata, cachePaths, cache_key,
 
   if (!identical(os, "NA") && skipPreDigest %in% FALSE) {
     if (isTRUE(as.numeric(os) > .objectSizeMinForBig)) {
+      resultHash <- metadata$tagValue[metadata$tagKey == "resultHash"]
       for (cachePath in cachePaths) {
+        if (!useDBI()) {
+          ## multifile: showCache() would read every entry's tag file, minutes on a large cache
+          id <- .resultHashIndexGet(cachePath, resultHash, cache_key)
+          if (!is.null(id)) linkToCacheId <- id
+          next
+        }
         allCache <- showCache(x = cachePath, verbose = -2)
         if (NROW(allCache)) {
-          resultHash <- metadata$tagValue[metadata$tagKey == "resultHash"]
           alreadyExists <- allCache[allCache$tagKey == "resultHash" &
                                       allCache[[.cacheTableTagColName()]] %in% resultHash &
                                       allCache[[.cacheTableHashColName()]] != cache_key]
@@ -403,6 +409,43 @@ CacheDigest <- function(objsToDigest, ..., algo = "xxhash64", calledFrom = "Cach
 spatVectorNamesForCache <- c("x", "type", "atts", "crs")
 
 
+
+## Index of the big results of a multifile cache by their resultHash, so cache_Id_Identical() can
+## find an identical result to link to without reading every cache entry. One small file per big
+## result, named by its resultHash and holding its cacheId, in a folder beside cacheOutputs so it
+## never enlarges the cacheOutputs listings. An entry is checked against the cache before use, so a
+## stale one (cleared or replaced entry) is ignored.
+CacheResultHashDir <- function(cachePath) {
+  file.path(cachePath, "resultHashes")
+}
+
+.resultHashIndexGet <- function(cachePath, resultHash, cache_key) {
+  if (length(resultHash) != 1L || !nzchar(resultHash)) return(NULL)
+  f <- file.path(CacheResultHashDir(cachePath), resultHash)
+  if (!file.exists(f)) return(NULL)
+  id <- readLines(f, n = 1L, warn = FALSE)
+  if (!length(id) || identical(id, cache_key)) return(NULL)
+  tags <- tryCatch(showCacheFast(id, cachePath = cachePath), error = function(e) NULL)
+  if (!resultHash %in% tags$tagValue[tags$tagKey == "resultHash"]) return(NULL)
+  id
+}
+
+## Record a just-saved big result; an existing index entry is kept, so links point at the first copy.
+.resultHashIndexSet <- function(cachePath, metadata, cache_key) {
+  if (useDBI()) return(invisible())
+  os <- metadata$tagValue[metadata$tagKey == "object.size"]
+  resultHash <- metadata$tagValue[metadata$tagKey == "resultHash"]
+  if (!isTRUE(as.numeric(os) > .objectSizeMinForBig) || length(resultHash) != 1L ||
+      !nzchar(resultHash))
+    return(invisible())
+  d <- CacheResultHashDir(cachePath)
+  f <- file.path(d, resultHash)
+  if (!file.exists(f)) {
+    dir.create(d, showWarnings = FALSE, recursive = TRUE)
+    try(writeLines(cache_key, f), silent = TRUE)
+  }
+  invisible()
+}
 
 .objectSizeMinForBig <- 5e6
 
