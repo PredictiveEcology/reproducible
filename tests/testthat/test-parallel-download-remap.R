@@ -659,6 +659,36 @@ test_that("dlGeneric takes the parallel path when the URL was redirected by the 
   expect_identical(basename(res$destFile), "big.tif")
 })
 
+test_that("dlGeneric takes the parallel path for a URL remapped earlier (prepInputs/preProcess)", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  manifest <- data.frame(filename = "big.tif", url = "http://x/big.tif",
+                         id = id, stringsAsFactors = FALSE)
+  withr::local_options(
+    reproducible.parallel.streams = 8L,
+    reproducible.parallel.threshold = 1L,
+    reproducible.urlRemap = manifest
+  )
+  old <- reproducible:::.pkgEnv[["remappedUrls"]]
+  withr::defer(assign("remappedUrls", old, envir = reproducible:::.pkgEnv))
+  url <- reproducible:::.remapUrlEarly(paste0("https://drive.google.com/file/d/", id), verbose = 0)
+  expect_identical(url, "http://x/big.tif")
+  dp <- withr::local_tempdir()
+  called <- FALSE
+  testthat::local_mocked_bindings(
+    .probeRange = function(...) list(size = 1e6, acceptRanges = TRUE),
+    .parallelRangedDownload = function(url, destFile, size, n, verbose) {
+      called <<- TRUE
+      writeBin(as.raw(rep(0L, 10)), destFile)
+      TRUE
+    }
+  )
+  # the mirror url maps to itself in the manifest, so dlGeneric's own remap changes nothing
+  reproducible:::dlGeneric(url, destinationPath = dp, verbose = 0)
+  expect_true(called)
+})
+
 test_that("dlGeneric does NOT use the parallel path when the URL was not redirected", {
   skip_if_not_installed("curl")
   skip_if_not_installed("httr2")
@@ -826,4 +856,27 @@ test_that("fork counts respect _R_CHECK_LIMIT_CORES_, download does not", {
   withr::with_envvar(c("_R_CHECK_LIMIT_CORES_" = NA), {
     expect_identical(reproducible:::.parallelUpload(), 7L)
   })
+})
+
+test_that("preProcess remaps a Drive URL by id before contacting Drive", {
+  testInit()
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  manifest <- data.frame(filename = "a.tif", url = "https://mirror/a.tif",
+                         id = id, stringsAsFactors = FALSE)
+  withr::local_options(reproducible.urlRemap = manifest)
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    assessGoogle = function(...) stop("assessGoogle must not be called when id matches"),
+    .remoteDirProbe = function(...) FALSE,
+    dlGeneric = function(url, destinationPath, targetFile, ...) {
+      seen <<- url
+      f <- file.path(destinationPath, "a.tif")
+      writeLines("x", f)
+      list(destFile = f)
+    })
+  tmpdir <- withr::local_tempdir()
+  preProcess(url = paste0("https://drive.google.com/file/d/", id, "/view"),
+             targetFile = "a.tif", destinationPath = tmpdir, fun = NA, verbose = 0)
+  expect_identical(seen, "https://mirror/a.tif")
+  expect_true(file.exists(file.path(tmpdir, "a.tif")))
 })
