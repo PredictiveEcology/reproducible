@@ -659,6 +659,36 @@ test_that("dlGeneric takes the parallel path when the URL was redirected by the 
   expect_identical(basename(res$destFile), "big.tif")
 })
 
+test_that("dlGeneric takes the parallel path for a URL remapped earlier (prepInputs/preProcess)", {
+  skip_if_not_installed("curl")
+  skip_if_not_installed("httr2")
+  id <- "13-atqi_7ogRPIFxOoJZoUDYdQCJ5-a_u"
+  manifest <- data.frame(filename = "big.tif", url = "http://x/big.tif",
+                         id = id, stringsAsFactors = FALSE)
+  withr::local_options(
+    reproducible.parallel.streams = 8L,
+    reproducible.parallel.threshold = 1L,
+    reproducible.urlRemap = manifest
+  )
+  old <- reproducible:::.pkgEnv[["remappedUrls"]]
+  withr::defer(assign("remappedUrls", old, envir = reproducible:::.pkgEnv))
+  url <- reproducible:::.remapUrlEarly(paste0("https://drive.google.com/file/d/", id), verbose = 0)
+  expect_identical(url, "http://x/big.tif")
+  dp <- withr::local_tempdir()
+  called <- FALSE
+  testthat::local_mocked_bindings(
+    .probeRange = function(...) list(size = 1e6, acceptRanges = TRUE),
+    .parallelRangedDownload = function(url, destFile, size, n, verbose) {
+      called <<- TRUE
+      writeBin(as.raw(rep(0L, 10)), destFile)
+      TRUE
+    }
+  )
+  # the mirror url maps to itself in the manifest, so dlGeneric's own remap changes nothing
+  reproducible:::dlGeneric(url, destinationPath = dp, verbose = 0)
+  expect_true(called)
+})
+
 test_that("dlGeneric does NOT use the parallel path when the URL was not redirected", {
   skip_if_not_installed("curl")
   skip_if_not_installed("httr2")
