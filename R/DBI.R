@@ -1506,8 +1506,10 @@ loadFromCacheSwitchFormat <- function(f, verbose, cachePath, fullCacheTableForOb
 
 checkSameCacheId <- function(f) {
   cacheId <- filePathSansExt(basename(f))
-  sameCacheID <- grep("\\.lock$", dir(dirname(f), pattern = cacheId), invert = TRUE, value = TRUE)
-  sameCacheID <- grep(paste0(paste(.cacheSaveFormats, collapse = "|"), "$"), sameCacheID, value = TRUE)
+  ## the entry's files in any save format, by name: dir(pattern = cacheId) read every name in the
+  ## storage dir, ~1 s per Cache() miss in a 1M-file cache
+  candidates <- paste0(cacheId, c(".", suffixMultipleDBFiles()), rep(.cacheSaveFormats, each = 2))
+  sameCacheID <- sort(candidates[file.exists(file.path(dirname(f), candidates))])
   if (!useDBI() && length(sameCacheID) > 1) {
     ## dirname(f) is the storage dir (cacheOutputs/), so its parent is the
     ## cachePath. Derived from `f` rather than from the option, which is unset

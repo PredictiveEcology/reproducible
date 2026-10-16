@@ -607,6 +607,14 @@
 #'     Use this with caution, as some objects will have *many* `NA` values in their first
 #'     *many* elements
 #'   }
+#'   \item{`lockFileRemove`}{
+#'     Default: `TRUE`. Delete each lock file (e.g. `<cacheId>.lock` in the cache) when its lock is
+#'     released, so lock files exist only while in use. Needs a `filelock` whose `unlock()` has a
+#'     `remove` argument (PredictiveEcology/filelock >= 1.0.3.9002); with any other `filelock`, or on
+#'     Windows, the files are kept as before. Set it to `FALSE` while processes with an older
+#'     `filelock` share a cache or lock files with newer ones: an older `filelock` does not notice
+#'     that a file it waits on was deleted, so it could hold a lock at the same time as a newer one.
+#'   }
 #'   \item{`useragent`}{
 #'     Default: `"https://github.com/PredictiveEcology/reproducible"`.
 #'     User agent for downloads using this package.
@@ -639,6 +647,7 @@ reproducibleOptions <- function() {
     reproducible.inputPathsRecursive = FALSE, # deprecated alias for reproducible.destinationPathSharedRecursive
     reproducible.leaveOnDisk = TRUE,
     reproducible.length = Inf,
+    reproducible.lockFileRemove = TRUE,
     reproducible.terraMemmax = 2, # GB; chunked path is faster on high-RAM machines
 
     reproducible.memoisePersist = FALSE,

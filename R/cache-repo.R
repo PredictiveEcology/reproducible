@@ -128,18 +128,21 @@ check_and_get_memoised_copy <- function(detailed_key, cachePaths, functionName, 
 
 
 releaseLockFile <- function(locked) {
-  filelock::unlock(locked)
-  ## Do NOT delete the lock file: the fcntl lock is what protects the critical
-  ## section, not the file's existence.  Deleting and recreating the file under
-  ## concurrent load creates two bugs:
-  ##   1. Workers that were blocked on fcntl(F_SETLKW) already have the old inode
-  ##      open; a fresh caller that arrives after the delete creates a *new* inode
-  ##      at the same path — both callers hold a "lock" on different inodes and
-  ##      the critical section is no longer protected.
-  ##   2. If a prior run was executed as root (or another user), a stale .lock file
-  ##      with wrong ownership is left behind; the next caller gets EACCES at
-  ##      open(O_RDWR|O_CREAT) — "Permission denied".
-  ## Leaving the (empty) .lock file in place is safe and correct.
+  ## The fcntl lock protects the critical section, not the file's existence. Deleting the file is
+  ## only safe if every waiter notices it is gone: filelock >= 1.0.3.9002 (PredictiveEcology) checks,
+  ## after acquiring, that the file it locked is still the one at the path, and deletes the file
+  ## before releasing with `remove = TRUE`. Without that, a waiter on the deleted file and a newcomer
+  ## on a new file at the same path would both hold "the" lock. So the file is deleted only when
+  ## this filelock supports it, and reproducible.lockFileRemove (default TRUE) is not FALSE; else it
+  ## is kept, as before, and one empty lock file per cache entry accumulates.
+  if (isTRUE(getOption("reproducible.lockFileRemove", TRUE)) && .filelockCanRemove())
+    filelock::unlock(locked, remove = TRUE)
+  else
+    filelock::unlock(locked)
+}
+
+.filelockCanRemove <- function() {
+  "remove" %in% names(formals(filelock::unlock))
 }
 
 

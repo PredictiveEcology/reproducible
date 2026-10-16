@@ -242,8 +242,13 @@ test_that("test file-backed raster caching", {
       ## The previous formula counted 2 for useDBI() and folded the lock into the
       ## flat-file-only term as `hasFilenameInCache + 1L`, which happened to total
       ## correctly while the lock existed on one backend only.
+      ## The .lock (both backends) and .tags.lock (flat-file) are deleted on release when filelock
+      ## can (reproducible.lockFileRemove; not on Windows), so they are counted only when kept.
+      locksKept <- !(isTRUE(getOption("reproducible.lockFileRemove", TRUE)) && .filelockCanRemove()) ||
+        identical(.Platform$OS.type, "windows")
       expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) ==
-                    (3L + as.integer(!useDBI()) * (hasFilenameInCache + 1L) + 2L * savePreDigest))
+                    (2L + as.integer(!useDBI()) * hasFilenameInCache +
+                       as.integer(locksKept) * (1L + as.integer(!useDBI())) + 2L * savePreDigest))
       # expect_true(length(dir(CacheStorageDir(tmpCache), pattern = origFile)) == 1 + !useDBI())
     }
 
