@@ -2367,3 +2367,24 @@ test_that("prepInputs' overwrite does not reach downloading; a damaged file is r
   expect_no_error(prep(purge = 7))
   expect_identical(readLines(local), "v2")
 })
+
+test_that("a quoted-call fun hits the Cache when other files enter destinationPath's CHECKSUMS.txt", {
+  ## the key held the whole CHECKSUMS.txt table, so the 2nd identical call and any new file missed
+  testInit(opts = list(reproducible.inputPaths = NULL))
+  withr::local_options(reproducible.cachePath = tmpCache)
+  for (nm in c("a", "b")) {
+    f <- file.path(tmpdir, paste0(nm, ".csv"))
+    write.csv(data.frame(x = 1:3), f, row.names = FALSE)
+    withr::with_dir(tmpdir, zip(paste0(nm, ".zip"), basename(f), flags = "-q"))
+    unlink(f)
+  }
+  load <- function() prepInputs(archive = "a.zip", targetFile = "a.csv", destinationPath = tmpdir,
+                                fun = quote(utils::read.csv(targetFile)), useCache = TRUE)
+  nEntries <- function() length(unique(showCache(tmpCache, verbose = FALSE)$cacheId))
+  load()
+  load()
+  expect_identical(nEntries(), 1L)
+  prepInputs(archive = "b.zip", targetFile = "b.csv", destinationPath = tmpdir, fun = NA)
+  load()
+  expect_identical(nEntries(), 1L)
+})

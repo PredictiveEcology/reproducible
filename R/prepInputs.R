@@ -1786,7 +1786,10 @@ process <- function(out, funCaptured,
                 )
                 # out[["targetFile"]] <- out[["targetFilePath"]] # handle both
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
-                outProcess <- Cache(eval(theFun, envir = out, enclos = .callingEnv),
+                # key on what the call uses: the rest of `out` holds every CHECKSUMS.txt row in
+                #  destinationPath, so any new file there would miss. .cacheExtra keys the target files
+                outUsed <- out[intersect(names(out), all.vars(theFun))]
+                outProcess <- Cache(eval(theFun, envir = outUsed, enclos = .callingEnv),
                                     useCache = useCache2, .cacheExtra = .cacheExtra,
                                     .functionName = funChar, omitArgs = "enclos"
                 )
