@@ -2388,3 +2388,24 @@ test_that("a quoted-call fun hits the Cache when other files enter destinationPa
   load()
   expect_identical(nEntries(), 1L)
 })
+
+test_that("a quoted-call fun re-runs when the local file or a caller variable changes, and only then", {
+  testInit(opts = list(reproducible.inputPaths = NULL))
+  withr::local_options(reproducible.cachePath = tmpCache)
+  for (sidecar in c(FALSE, TRUE)) {
+    d <- withr::local_tempdir(tmpdir = tmpdir)
+    ## a remote .hash file next to the target: its CHECKSUMS row then has no checksum
+    if (sidecar) writeLines("xxhash64 0123456789abcdef", file.path(d, ".a.csv_example.com_a_12345678.hash"))
+    put <- function(n) write.csv(data.frame(x = seq_len(n)), file.path(d, "a.csv"), row.names = FALSE)
+    k <- 10
+    load <- function() prepInputs(targetFile = "a.csv", destinationPath = d, useCache = TRUE,
+                                  fun = quote(utils::read.csv(targetFile, nrows = k)))
+    put(3)
+    expect_identical(nrow(load()), 3L)
+    expect_false(attr(load(), ".Cache")$newCache)  # unchanged: a hit
+    put(5)
+    expect_identical(nrow(load()), 5L)             # file content changed
+    k <- 2
+    expect_identical(nrow(load()), 2L)             # caller variable changed
+  }
+})
