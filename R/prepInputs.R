@@ -1786,8 +1786,20 @@ process <- function(out, funCaptured,
                 )
                 # out[["targetFile"]] <- out[["targetFilePath"]] # handle both
                 if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
-                outProcess <- Cache(eval(theFun, envir = out, enclos = .callingEnv),
-                                    useCache = useCache2, .cacheExtra = .cacheExtra,
+                # key on what the call uses: the rest of `out` holds every CHECKSUMS.txt row in
+                #  destinationPath, so any new file there would miss
+                outUsed <- out[intersect(names(out), all.vars(theFun))]
+                # objects the call takes from the caller are inputs too
+                fromCaller <- setdiff(all.vars(theFun), names(out))
+                fromCaller <- fromCaller[vapply(fromCaller, exists, logical(1), envir = .callingEnv)]
+                outUsed <- append(outUsed, mget(fromCaller, envir = .callingEnv, inherits = TRUE))
+                # each target file by its checksum; one without (local, or verified by a remote
+                #  .hash file) is hashed, as the function-name form below does
+                summed <- otherFiles$expectedFile[!is.na(otherFiles$checksum.x)]
+                noSum <- out$targetFilePath[!makeRelative(out$targetFilePath, out$destinationPath) %in% summed]
+                callExtra <- if (length(noSum)) list(.cacheExtra, asPath(noSum)) else .cacheExtra
+                outProcess <- Cache(eval(theFun, envir = outUsed, enclos = .callingEnv),
+                                    useCache = useCache2, .cacheExtra = callExtra,
                                     .functionName = funChar, omitArgs = "enclos"
                 )
               } else {
