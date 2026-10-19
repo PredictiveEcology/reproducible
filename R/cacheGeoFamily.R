@@ -48,6 +48,19 @@
 #' as a viewer, and give the folder's URL as `remote` to everyone. Only the people who write
 #' need a Google login.
 #'
+#' @section Offline:
+#' When the remote cannot be reached (a connection failure: the host name does not resolve, the
+#' connection fails or times out; e.g. on a compute node with no internet), the ledger keeps
+#' working on its local file. A read uses the local copy (0 rows if there is none). A write
+#' merges into and saves the local file, and records the written rows in a hidden file beside
+#' it (`.<file>.unpushed.rds`); no Google login is needed for that. While that file exists the
+#' local file is never replaced by the remote copy. The next write that reaches the remote merges
+#' the remote, the pending rows and the new rows, pushes, checks the push and deletes the file;
+#' a read that reaches the remote returns the remote merged with the pending rows and pushes them
+#' too when a Google login is available. `CacheGeoPush()` pushes the pending rows at once, and
+#' stops with an error if the remote is still unreachable. Any other error (login, permission,
+#' a missing folder) is raised as usual.
+#'
 #' @section Old arguments of `CacheGeo()`:
 #' `targetFile`, `domain`, `FUN` (an unevaluated call that may use `domain` and the named
 #' objects in `...`), `cloudFolderID`, `useCloud`, `action`, `bufferOK`, `purge`, `useCache`
@@ -99,7 +112,8 @@
 #'
 #' @return `CacheGeoLedger()` a `CacheGeoLedger` object. `CacheGeoRead()` and `CacheGeo()` an
 #'   `sf` object in the ledger's CRS, possibly with 0 rows. `CacheGeoWrite()` the whole ledger
-#'   as an `sf` object, invisibly.
+#'   as an `sf` object, invisibly. `CacheGeoPush()` the whole ledger, invisibly (`NULL` if
+#'   nothing was pending).
 #'
 #' @export
 #' @examplesIf requireNamespace("sf", quietly = TRUE) && requireNamespace("terra", quietly = TRUE)
@@ -177,8 +191,20 @@ CacheGeoWrite <- function(ledger, rows, mode = .cacheGeoModes,
          "to it. Use a Google Drive folder or a shared-disk folder as `remote`.")
   rows <- .geoToSf(rows)
   dir.create(ledger$destinationPath, recursive = TRUE, showWarnings = FALSE)
-  .geoWithRemote(ledger, login = TRUE, verbose = verbose, expr =
+  .geoWithRemote(ledger, verbose = verbose, expr =
     .geoWithLock(ledger, .geoWriteAttempts(ledger, rows, mode, verbose))
+  )
+}
+
+#' @export
+#' @rdname CacheGeoLedger
+CacheGeoPush <- function(ledger, verbose = getOption("reproducible.verbose", 1)) {
+  if (!.geoHasPending(ledger)) {
+    messagePreProcess("CacheGeoPush: ", ledger$file, ": no pending rows", verbose = verbose)
+    return(invisible(NULL))
+  }
+  .geoWithRemote(ledger, verbose = verbose, expr =
+    .geoWithLock(ledger, .geoWriteAttempts(ledger, rows = NULL, mode = "upsert", verbose))
   )
 }
 
@@ -304,12 +330,21 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 ## Fetch the remote if it changed, read the file, select the rows. `wantCovered`: also say whether
 ## the area is covered (the rule of `match = "covers"`), whatever `match` is.
 .geoRead <- function(ledger, area, match, tolerance, verbose, wantCovered = FALSE, bufferOK = FALSE) {
-  sync <- .geoWithRemote(ledger, login = FALSE, verbose = verbose, expr = .geoSync(ledger, verbose))
+  sync <- .geoWithRemote(ledger, verbose = verbose, expr = {
+    if (.geoHasPending(ledger) && .geoHasLogin()) .geoPushOnRead(ledger, verbose)
+    .geoSync(ledger, verbose)
+  })
+  if (isTRUE(sync$unreachable))
+    messagePreProcess("CacheGeoRead: ", ledger$file, ": remote unreachable, ",
+                      if (sync$exists) "using the local copy" else "there is no local copy", verbose = verbose)
   all <- if (sync$exists) .geoLoad(ledger$path, sync$md5) else .geoEmpty()
   sel <- .geoSelect(all, area, match, tolerance, verbose, key = ledger$key, wantCovered = wantCovered,
                     bufferOK = bufferOK)
   messagePreProcess("CacheGeoRead: ", ledger$file, ": ", NROW(sel$rows), " of ", NROW(all),
                     " row(s) matched (", sync$state, ")", verbose = verbose)
+  if (!isTRUE(sync$unreachable) && .geoHasPending(ledger))
+    messagePreProcess("CacheGeoRead: ", ledger$file, ": rows written offline are kept, not pushed ",
+                      "(no Google login); CacheGeoPush() or the next write pushes them", verbose = verbose)
   if (verbose >= 2) print(sel$rows)
   c(sel, list(exists = sync$exists))
 }
@@ -415,17 +450,77 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 ## ---- remotes -----------------------------------------------------------------------------------
 
 ## Google Drive reads need no login for a file shared "Anyone with the link"; googledrive is left
-## anonymous then. A write needs one.
-.geoWithRemote <- function(ledger, login, verbose, expr) {
+## anonymous then. A write needs one (see .geoRequireLogin()).
+.geoWithRemote <- function(ledger, verbose, expr) {
+  .cacheGeoSession$login <- TRUE
   if (identical(ledger$remoteType, "drive")) {
     .requireNamespace("googledrive", stopOnFALSE = TRUE, messageStart = "to use google drive files")
     mode <- .gdrivePrepareAuth(ledger$remote, verbose = verbose - 1)
     on.exit(.gdriveRestoreAuth())
-    if (isTRUE(login) && !identical(mode, "token"))
-      stop("CacheGeoWrite() to Google Drive needs a Google login: run googledrive::drive_auth() first. ",
-           "(Reading a file shared 'Anyone with the link' does not.)")
+    .cacheGeoSession$login <- identical(mode, "token")
+    on.exit(.cacheGeoSession$login <- TRUE, add = TRUE)
   }
   force(expr)
+}
+
+## Is there a Google login (always, for a remote that is not Google Drive)? Set by .geoWithRemote().
+.geoHasLogin <- function() isTRUE(.cacheGeoSession$login)
+
+## A write needs a login only when it reaches Drive, so this is asked after the remote answered: a
+## write while offline never gets here.
+.geoRequireLogin <- function() {
+  if (!.geoHasLogin())
+    stop("CacheGeoWrite() to Google Drive needs a Google login: run googledrive::drive_auth() first. ",
+         "(Reading a file shared 'Anyone with the link' does not.)")
+}
+
+## ---- an unreachable remote ---------------------------------------------------------------------
+
+## Is this error a failure to connect (as opposed to a refusal: login, permission, no such folder)?
+.geoUnreachable <- function(e) {
+  msg <- conditionMessage(e)
+  if (!is.null(e$parent)) msg <- paste(msg, conditionMessage(e$parent))
+  grepl(paste0("could(n't| not) resolve host|failed to connect|could(n't| not) connect to server|",
+               "timeout was reached"), msg, ignore.case = TRUE)
+}
+
+## Evaluate `expr`: list(value) if it ran, NULL if the remote could not be reached. Any other error
+## is raised as it was.
+.geoReach <- function(expr) {
+  tryCatch(list(value = expr), error = function(e) if (.geoUnreachable(e)) NULL else stop(e))
+}
+
+## The rows written while the remote was unreachable, as a list of list(rows, mode) in the order
+## written, in a hidden file beside the local file (prepInputs() lists that folder).
+.geoPendingPath <- function(ledger) file.path(ledger$destinationPath, paste0(".", ledger$file, ".unpushed.rds"))
+
+.geoHasPending <- function(ledger) file.exists(.geoPendingPath(ledger))
+
+.geoAddPending <- function(ledger, rows, mode) {
+  path <- .geoPendingPath(ledger)
+  entries <- if (file.exists(path)) readRDS(path) else list()
+  entries[[length(entries) + 1L]] <- list(rows = as.data.frame(rows), mode = mode)
+  tmp <- tempfile(pattern = paste0(".", basename(path), "."), tmpdir = dirname(path))
+  saveRDS(entries, tmp)
+  file.rename(tmp, path)
+}
+
+.geoClearPending <- function(ledger) unlink(.geoPendingPath(ledger))
+
+## `current` with the pending writes applied, in order, as they would have been
+.geoReplayPending <- function(ledger, current) {
+  Reduce(function(cur, e) .geoMerge(cur, .geoToSf(e$rows), ledger$key, e$mode),
+         readRDS(.geoPendingPath(ledger)), current)
+}
+
+## A read that finds pending rows and a login: push them. They stay pending if the remote cannot be
+## reached or the push fails.
+.geoPushOnRead <- function(ledger, verbose) {
+  tryCatch(
+    .geoWithLock(ledger, .geoWriteAttempts(ledger, rows = NULL, mode = "upsert", verbose)),
+    error = function(e) messagePreProcess("CacheGeoRead: ", ledger$file, ": rows written offline not ",
+                                          "pushed: ", conditionMessage(e), verbose = verbose))
+  invisible(NULL)
 }
 
 ## One writer at a time: the read, merge, save and push of a write are all held under one lock
@@ -488,33 +583,59 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
     })
 }
 
-## Make the local file the remote one. Returns where the local file stands afterwards.
+## Make the local file the remote one. Returns where the local file stands afterwards. If the
+## remote cannot be reached the local file is left as it is (`unreachable`). While rows are pending
+## the remote copy is merged with them, not put over the local file.
 .geoSync <- function(ledger, verbose) {
   localMd5 <- function() if (file.exists(ledger$path)) digest::digest(file = ledger$path)
   md5 <- localMd5()
-  remote <- .geoRemoteState(ledger)
+  unreachable <- list(exists = !is.null(md5), md5 = md5, remoteMd5 = NULL, state = "remote unreachable",
+                      unreachable = TRUE)
+  reach <- .geoReach(.geoRemoteState(ledger))
+  if (is.null(reach)) return(unreachable)
+  remote <- reach$value
+  pending <- .geoHasPending(ledger)
   state <- if (is.null(ledger$remote)) "local file" else "no file on the remote yet"
   if (remote$exists) {
-    if (!is.null(md5) && identical(md5, remote$md5)) {
+    if (!pending && !is.null(md5) && identical(md5, remote$md5)) {
       state <- "up to date"
     } else {
-      if (identical(ledger$remoteType, "disk")) {
-        .geoReplaceFile(remote$url, ledger$path)
-      } else if (identical(ledger$remoteType, "drive")) {
-        ## The md5 differs, so fetch. Not through prepInputs(): it keeps a local copy that matches
-        ## its own CHECKSUMS.txt (or the destinationPathShared one), which is the old ledger here.
-        .geoDriveDownload(remote$id, ledger$path, url = remote$url)
-      } else {
-        dir.create(ledger$destinationPath, recursive = TRUE, showWarnings = FALSE)
-        ## A URL has no md5 to compare: prepInputs() decides from its hash sidecar.
-        prepInputs(url = remote$url, targetFile = ledger$file, destinationPath = ledger$destinationPath,
-                   fun = NA, overwrite = FALSE, useCache = FALSE, verbose = verbose - 2)
+      fetchTo <- ledger
+      if (pending) { # not over the local file, which holds the pending rows
+        fetchTo$path <- tempfile(pattern = paste0(".", ledger$file, "."), tmpdir = dirname(ledger$path), fileext = ".rds")
+        on.exit(unlink(fetchTo$path))
       }
-      state <- if (identical(md5, localMd5())) "up to date" else "downloaded"
+      fetched <- .geoReach({
+        .geoFetch(fetchTo, remote, verbose)
+        if (pending) {
+          merged <- .geoReplayPending(ledger, .geoReadFile(fetchTo$path))
+          .geoSave(merged, ledger$path, md5)
+        }
+      })
+      if (is.null(fetched)) return(unreachable)
+      state <- if (pending) "remote merged with the rows written offline" else
+        if (identical(md5, localMd5())) "up to date" else "downloaded"
       md5 <- localMd5()
     }
   }
   list(exists = !is.null(md5), md5 = md5, remoteMd5 = remote$md5, state = state)
+}
+
+## Put the remote ledger file at `ledger$path`
+.geoFetch <- function(ledger, remote, verbose) {
+  if (identical(ledger$remoteType, "disk")) {
+    .geoReplaceFile(remote$url, ledger$path)
+  } else if (identical(ledger$remoteType, "drive")) {
+    ## The md5 differs, so fetch. Not through prepInputs(): it keeps a local copy that matches
+    ## its own CHECKSUMS.txt (or the destinationPathShared one), which is the old ledger here.
+    .geoDriveDownload(remote$id, ledger$path, url = remote$url)
+  } else {
+    dir.create(ledger$destinationPath, recursive = TRUE, showWarnings = FALSE)
+    ## A URL has no md5 to compare: prepInputs() decides from its hash sidecar.
+    prepInputs(url = remote$url, targetFile = ledger$file, destinationPath = ledger$destinationPath,
+               fun = NA, overwrite = FALSE, useCache = FALSE, verbose = verbose - 2)
+  }
+  invisible(NULL)
 }
 
 ## Copy `from` over `to` so that `to` is always the old file or the new one, never partly written
@@ -565,15 +686,30 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
   for (attempt in seq_len(.cacheGeoMaxTries)) {
     sync <- .geoSync(ledger, verbose)
     current <- if (sync$exists) .geoLoad(ledger$path, sync$md5) else .geoEmpty()
-    merged <- .geoMerge(current, rows, ledger$key, mode)
+    if (isTRUE(sync$unreachable)) {
+      if (is.null(rows))
+        stop("CacheGeoPush: ", ledger$file, ": the remote (", ledger$remote, ") is unreachable; ",
+             "the pending rows are kept in ", .geoPendingPath(ledger))
+      merged <- .geoMerge(current, rows, ledger$key, mode)
+      .geoSave(merged, ledger$path, sync$md5)
+      .geoAddPending(ledger, rows, mode)
+      messagePreProcess("CacheGeoWrite: ", ledger$file, ": ", NROW(merged), " row(s), remote unreachable; ",
+                        "saved locally, not pushed (CacheGeoPush() or the next write pushes them)",
+                        verbose = verbose)
+      return(invisible(merged))
+    }
+    if (!is.null(ledger$remote)) .geoRequireLogin()
+    merged <- if (is.null(rows)) current else .geoMerge(current, rows, ledger$key, mode)
     localMd5 <- .geoSave(merged, ledger$path, sync$md5)
     if (is.null(ledger$remote) || identical(localMd5, sync$remoteMd5)) {
+      .geoClearPending(ledger)
       messagePreProcess("CacheGeoWrite: ", ledger$file, ": ", NROW(merged), " row(s)",
                         if (identical(localMd5, sync$md5)) ", unchanged" else ", written", verbose = verbose)
       return(invisible(merged))
     }
     .geoPush(ledger)
     if (identical(.geoRemoteState(ledger)$md5, localMd5)) {
+      .geoClearPending(ledger)
       messagePreProcess("CacheGeoWrite: ", ledger$file, ": ", NROW(merged), " row(s), pushed to ",
                         ledger$remote, verbose = verbose)
       return(invisible(merged))
