@@ -4,6 +4,7 @@
 \alias{CacheGeoLedger}
 \alias{CacheGeoRead}
 \alias{CacheGeoWrite}
+\alias{CacheGeoPush}
 \alias{CacheGeo}
 \title{A ledger of spatial rows, shared through a folder or Google Drive}
 \usage{
@@ -29,6 +30,8 @@ CacheGeoWrite(
   mode = .cacheGeoModes,
   verbose = getOption("reproducible.verbose", 1)
 )
+
+CacheGeoPush(ledger, verbose = getOption("reproducible.verbose", 1))
 
 CacheGeo(
   ...,
@@ -103,7 +106,8 @@ order. \code{...} comes first so that an object named e.g. \code{le} is not part
 \value{
 \code{CacheGeoLedger()} a \code{CacheGeoLedger} object. \code{CacheGeoRead()} and \code{CacheGeo()} an
 \code{sf} object in the ledger's CRS, possibly with 0 rows. \code{CacheGeoWrite()} the whole ledger
-as an \code{sf} object, invisibly.
+as an \code{sf} object, invisibly. \code{CacheGeoPush()} the whole ledger, invisibly (\code{NULL} if
+nothing was pending).
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -140,6 +144,21 @@ stops). With no \code{remote} the ledger is the local file only.
 To share a ledger through Google Drive, create a folder, share it "Anyone with the link"
 as a viewer, and give the folder's URL as \code{remote} to everyone. Only the people who write
 need a Google login.
+}
+
+\section{Offline}{
+
+When the remote cannot be reached (a connection failure: the host name does not resolve, the
+connection fails or times out; e.g. on a compute node with no internet), the ledger keeps
+working on its local file. A read uses the local copy (0 rows if there is none). A write
+merges into and saves the local file, and records the written rows in a hidden file beside
+it (\verb{.<file>.unpushed.rds}); no Google login is needed for that. While that file exists the
+local file is never replaced by the remote copy. The next write that reaches the remote merges
+the remote, the pending rows and the new rows, pushes, checks the push and deletes the file;
+a read that reaches the remote returns the remote merged with the pending rows and pushes them
+too when a Google login is available. \code{CacheGeoPush()} pushes the pending rows at once, and
+stops with an error if the remote is still unreachable. Any other error (login, permission,
+a missing folder) is raised as usual.
 }
 
 \section{Old arguments of \code{CacheGeo()}}{
