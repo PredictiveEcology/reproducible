@@ -455,8 +455,11 @@ messageColoured <- function(..., colour = NULL, indent = NULL, hangingIndent = T
 .message$IndentDefault <- 1
 
 .message$FileLinkUsed <- function(ftL, fts, verbose) {
-  messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL), "; ")
-  messageCache("    The newly added (", basename(fts), ") is a file.link to that file)",
+  # one line per entry, not per file: an entry with many files (e.g., a list of rasters) linked all of them
+  more <- if (length(fts) > 1) paste0(" (and ", length(fts) - 1, " more)") else ""
+  messageCache("  (A file with identical properties already exists in the Cache: ", basename(ftL[1]), more,
+               "; the newly added ", basename(fts[1]), more,
+               if (nzchar(more)) " are file.links to those files)" else " is a file.link to that file)",
                verbose = verbose
   )
 }
