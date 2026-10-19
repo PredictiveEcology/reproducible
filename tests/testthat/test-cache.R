@@ -1734,6 +1734,14 @@ test_that("test useDBI TRUE <--> FALSE", {
   lapply(d, function(aa) expect_false(attr(aa, ".Cache")$newCache))
 })
 
+test_that("a file.link of a many-file entry is one message", {
+  testInit()
+  mess <- capture_messages(.message$FileLinkUsed(paste0("old_", 1:5, ".tif"), paste0("new_", 1:5, ".tif"), verbose = 1))
+  expect_length(mess, 1)
+  mess <- gsub("\\s+", " ", cli::ansi_strip(mess))
+  expect_true(grepl("old_1.tif (and 4 more); the newly added new_1.tif (and 4 more) are file.links", mess, fixed = TRUE))
+})
+
 test_that("terra files were creating file.link", {
   testInit("terra",
            tmpFileExt = c(".tif", ".tif"),
