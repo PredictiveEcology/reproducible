@@ -46,7 +46,7 @@ filesUsedTrace <- function(script, args = character(), folders, traceFile = NULL
     on.exit(unlink(traceFile), add = TRUE)
     status <- system2("strace",
                       c("-f", "-e", "trace=%file", "-o", shQuote(traceFile),
-                        "Rscript", shQuote(script), shQuote(args)))
+                        shQuote(file.path(R.home("bin"), "Rscript")), shQuote(script), shQuote(args)))
     if (!identical(status, 0L))
       warning("Rscript exited with status ", status, "; the file list may be incomplete.")
   }
