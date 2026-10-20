@@ -627,6 +627,10 @@ paddDFInitial <- function(outMess, rows = 1:2, .spaceTmpChar, colour) {
 .txtDownloadFailedFn <- function(pkg)
   paste0("Download failed; try rerunning after installing ", pkg, " package.")
 
+.txtBrowserChallenge <- paste0(
+  "The server requires a web browser (a Cloudflare browser check) and refuses ",
+  "scripted downloads; this cannot be fixed from R.")
+
 singularPlural <- function (singPlur, l, v) {
   if (!missing(l)) {
     out <- singPlur[(length(l) > 1) + 1]
