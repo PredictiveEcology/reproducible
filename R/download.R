@@ -180,6 +180,9 @@ downloadFile <- function(archive, targetFile, neededFiles,
         if (is(downloadResults, "try-error")) {
           if (any(grepl("is required but not yet installed", messOrig)))
             failed <- numTries + 2
+          # retrying a browser check cannot succeed; go straight to the manual-download advice
+          if (any(grepl(.txtBrowserChallenge, downloadResults, fixed = TRUE)))
+            failed <- max(failed, numTries)
 
           downloadResults <- dlErrorHandling(failed, downloadResults, warns, messOrig, numTries, url,
                                              fileToDownload, destinationPath, targetFile, checksumFile,
@@ -1394,11 +1397,22 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
       #   in a path, and a CDN that versions by `@` -- jsDelivr's
       #   /gh/user/repo@ref/file -- then answers 400 Invalid URL.
       reqq <- req
-      resp <- if (streamProg) {
-        .dlHttr2Stream(reqq, destFile, verbose = verbose)
-      } else {
-        reqq |> httr2::req_perform(path = destFile)
-      }
+      resp <- tryCatch(
+        if (streamProg) {
+          .dlHttr2Stream(reqq, destFile, verbose = verbose)
+        } else {
+          reqq |> httr2::req_perform(path = destFile)
+        },
+        httr2_http = function(e) {
+          # A Cloudflare browser check needs JavaScript; no retry or user agent
+          # gets past it, so say so instead of reporting a generic HTTP error.
+          if (identical(httr2::resp_header(e$resp, "cf-mitigated"), "challenge")) {
+            unlink(destFile)
+            stop(.txtBrowserChallenge, call. = FALSE)
+          }
+          stop(e)
+        }
+      )
       # Detect an HTML "Request Rejected" page (some servers return it with HTTP
       # 200). For the streamed path read only the head of the file rather than the
       # whole (possibly multi-GB) body into a string.
@@ -2707,9 +2721,13 @@ dlErrorHandling <- function(failed, downloadResults, warns, messOrig, numTries, 
     } else {
       urlMessage <- url
     }
+    messCause <- if (any(grepl(.txtBrowserChallenge, c(downloadResults, messOrig), fixed = TRUE))) {
+      paste0(.txtBrowserChallenge, "\n")
+    } else {
+      "This may be a permissions issue. Please check the url and permissions are correct.\n"
+    }
     messCommon <- paste0(
-      "Download of ", url, " failed. This may be a permissions issue. ",
-      "Please check the url and permissions are correct.\n",
+      "Download of ", url, " failed. ", messCause,
       "If the url is correct, it is possible that manually downloading it will work. ",
       "To try this, with your browser, go to\n",
       urlMessage, ",\n ... then download it manually, give it this name: '", fileToDownload,
