@@ -161,3 +161,14 @@ test_that("an error that is not a connection failure still propagates", {
   expect_error(CacheGeoWrite(led, toySquare("P4", 50, 60), verbose = 0), "404")
   expect_false(file.exists(pendingFile(dirname(led$path))))
 })
+
+test_that("isConnectionError() is TRUE for a connection failure only", {
+  expect_true(isConnectionError(tryCatch(offlineErr(), error = identity)))
+  expect_true(isConnectionError(simpleError("Timeout was reached [www.googleapis.com]")))
+  parent <- simpleError("Failed to connect to www.googleapis.com port 443")
+  wrapped <- structure(class = c("rlang_error", "error", "condition"),
+                       list(message = "HTTP request failed", parent = parent))
+  expect_true(isConnectionError(wrapped))
+  expect_false(isConnectionError(simpleError("Client error: (403) Forbidden")))
+  expect_false(isConnectionError(simpleError("File not found (404)")))
+})
