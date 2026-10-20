@@ -8,12 +8,13 @@ fileId <- "1AbCdEfGhIjKlMnOpQrStUvWxYz0123456"
 fileUrl <- paste0("https://drive.google.com/file/d/", fileId, "/view?usp=sharing")
 folderUrl <- paste0("https://drive.google.com/drive/folders/", fileId)
 
-## A dribble (a tibble with a `drive_resource` list-column) for one file
+## A dribble (a data.frame with a `drive_resource` list-column, as in test-cloudPublicFolder.R) for one file
 fakeDribble <- function(md5 = "md5A", name = "file.rds") {
   res <- list(id = fileId, name = name, mimeType = "application/octet-stream", size = "10",
               md5Checksum = md5, modifiedTime = "2026-01-01T00:00:00Z", webViewLink = fileUrl)
-  d <- tibble::tibble(name = name, id = fileId, drive_resource = list(res))
-  class(d) <- c("dribble", class(d))
+  d <- data.frame(name = name, id = fileId, stringsAsFactors = FALSE)
+  d$drive_resource <- list(res)
+  class(d) <- c("dribble", "tbl_df", "tbl", "data.frame")
   d
 }
 
