@@ -14,7 +14,7 @@ Description: A collection of high-level, machine- and OS-independent tools
     and digesting. Several features are still under development, including
     cloud storage of cached objects allowing for sharing between users. Several
     advanced options are available, see '?reproducibleOptions()'.
-SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files.
+SystemRequirements: 'unrar' (Linux/macOS) or '7-Zip' (Windows) to work with '.rar' files; 'strace' (Linux, optional) for filesUsedTrace().
 URL: 
     https://reproducible.predictiveecology.org,
     https://github.com/PredictiveEcology/reproducible
@@ -119,6 +119,7 @@ Collate:
     'download.R'
     'downloadTileAndUpload.R'
     'exportedMethods.R'
+    'filesUsedTrace.R'
     'gis.R'
     'helpers.R'
     'listNamed.R'
