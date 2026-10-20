@@ -476,8 +476,21 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 
 ## ---- an unreachable remote ---------------------------------------------------------------------
 
-## Is this error a failure to connect (as opposed to a refusal: login, permission, no such folder)?
-.geoUnreachable <- function(e) {
+#' Is an error a failure to reach the server?
+#'
+#' `TRUE` when an error says the host could not be resolved or connected to, or the connection
+#' timed out: what a download or Google Drive call gives on a machine with no internet, such as
+#' a compute node. `FALSE` for a refusal (no login, no permission, no such file), which a local
+#' copy does not fix. The [CacheGeoLedger()] functions use it to fall back to the local copy of a
+#' ledger; packages can use it the same way around their own remote calls.
+#'
+#' @param e A condition, as caught by [tryCatch()].
+#' @return `TRUE` or `FALSE`.
+#' @export
+#' @examples
+#' isConnectionError(simpleError("Could not resolve host: www.googleapis.com"))
+#' isConnectionError(simpleError("Client error: (403) Forbidden"))
+isConnectionError <- function(e) {
   msg <- conditionMessage(e)
   if (!is.null(e$parent)) msg <- paste(msg, conditionMessage(e$parent))
   grepl(paste0("could(n't| not) resolve host|failed to connect|could(n't| not) connect to server|",
@@ -487,7 +500,7 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 ## Evaluate `expr`: list(value) if it ran, NULL if the remote could not be reached. Any other error
 ## is raised as it was.
 .geoReach <- function(expr) {
-  tryCatch(list(value = expr), error = function(e) if (.geoUnreachable(e)) NULL else stop(e))
+  tryCatch(list(value = expr), error = function(e) if (isConnectionError(e)) NULL else stop(e))
 }
 
 ## The rows written while the remote was unreachable, as a list of list(rows, mode) in the order
