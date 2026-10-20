@@ -28,7 +28,7 @@
 #' need no separate handling: the `open` that preceded them is in the trace.
 #'
 #' @export
-#' @examplesIf nzchar(Sys.which("strace"))
+#' @examplesIf Sys.info()[["sysname"]] == "Linux" && nzchar(Sys.which("strace"))
 #' inputs <- file.path(tempdir(), "filesUsedTrace-inputs")
 #' dir.create(inputs, showWarnings = FALSE)
 #' writeLines("a", file.path(inputs, "used.txt"))
@@ -39,8 +39,8 @@
 #' unlink(c(inputs, script), recursive = TRUE)
 filesUsedTrace <- function(script, args = character(), folders, traceFile = NULL) {
   if (is.null(traceFile)) {
-    if (!nzchar(Sys.which("strace")))
-      stop("filesUsedTrace() needs 'strace' (Linux), which was not found on the PATH; ",
+    if (!identical(Sys.info()[["sysname"]], "Linux") || !nzchar(Sys.which("strace")))
+      stop("filesUsedTrace() needs Linux and 'strace', which was not found on the PATH; ",
            "install it (e.g. 'apt install strace') or pass an existing trace as 'traceFile'.")
     traceFile <- tempfile("filesUsedTrace-", fileext = ".txt")
     on.exit(unlink(traceFile), add = TRUE)

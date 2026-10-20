@@ -40,7 +40,7 @@ a file descriptor opened earlier (e.g. \code{read()}) are not file operations an
 need no separate handling: the \code{open} that preceded them is in the trace.
 }
 \examples{
-\dontshow{if (nzchar(Sys.which("strace"))) withAutoprint(\{ # examplesIf}
+\dontshow{if (Sys.info()[["sysname"]] == "Linux" && nzchar(Sys.which("strace"))) withAutoprint(\{ # examplesIf}
 inputs <- file.path(tempdir(), "filesUsedTrace-inputs")
 dir.create(inputs, showWarnings = FALSE)
 writeLines("a", file.path(inputs, "used.txt"))

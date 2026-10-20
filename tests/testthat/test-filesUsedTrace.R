@@ -1,4 +1,5 @@
 test_that("filesUsedTrace parses a trace file: successful opens under folders only", {
+  skip_on_os("windows") # a strace trace holds Linux paths ("/..."); a Windows temp dir is "C:/..."
   root <- withr::local_tempdir()
   inputs <- file.path(root, "inputs")
   cache <- file.path(root, "cache")
@@ -46,7 +47,7 @@ test_that("filesUsedTrace parses a trace file: successful opens under folders on
 
 test_that("filesUsedTrace traces a real Rscript run", {
   skip_on_cran()
-  skip_if(!nzchar(Sys.which("strace")), "strace not installed")
+  skip_if(!identical(Sys.info()[["sysname"]], "Linux") || !nzchar(Sys.which("strace")), "needs Linux and strace")
   root <- withr::local_tempdir()
   inputs <- file.path(root, "inputs")
   dir.create(inputs)
