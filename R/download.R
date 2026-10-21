@@ -650,17 +650,18 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 # With nothing saved for the key, or an error that is not a connection failure, the error is
 # raised.
 .remoteMetadata <- function(ask, store, ..., what, label, verbose = getOption("reproducible.verbose", 1)) {
+  storeName <- deparse(substitute(store)) # the entry's `function` tag; not part of the key
   online <- tryCatch(list(value = ask()), error = function(e) e)
   if (!inherits(online, "error")) {
     ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
     ## the function, so this cannot wrap the remote call itself (a failed call would clear it).
     Cache(store, ..., answer = online$value, omitArgs = "answer",
-          useCache = "overwrite", verbose = FALSE)
+          useCache = "overwrite", verbose = FALSE, .functionName = storeName)
     return(online$value)
   }
   if (!isConnectionError(online)) stop(online)
   saved <- tryCatch(
-    list(value = Cache(store, ..., omitArgs = "answer", verbose = FALSE)),
+    list(value = Cache(store, ..., omitArgs = "answer", verbose = FALSE, .functionName = storeName)),
     error = function(e) NULL)
   if (is.null(saved)) stop(online)
   messagePreProcess(what, " cannot be reached (", substr(conditionMessage(online), 1L, 80L),

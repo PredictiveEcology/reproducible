@@ -147,7 +147,12 @@ test_that("symlinks work with cache, input, output paths", {
   ### cache files in 'cache/'
   expect_true(length(list.files(linkedCacheDir)) > 0)
   expect_true(length(list.files(linkedCacheDir)) < 16) # Test for `useCache = FALSE`; should be only 3 unique cacheIds
-  expect_equal(length(unique(showCache()$cacheId)), 3L)
+  ## plus the entry of the remote metadata store (.httpHeadMetadataSaved(); see .remoteMetadata()),
+  ## which keeps what the server said about urlTif1 so prepInputs() works offline, whatever useCache is
+  sc <- showCache()
+  storeIds <- sc$cacheId[sc$tagKey == "function" & sc$tagValue == ".httpHeadMetadataSaved"]
+  expect_length(storeIds, 1L)
+  expect_equal(length(setdiff(unique(sc$cacheId), storeIds)), 3L)
 
   ### downloaded files etc. in 'inputs/'
   # expect_true(file.exists(file.path(linkedInputDir, "CanadaLandcover2010.zip")))
