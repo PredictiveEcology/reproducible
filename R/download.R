@@ -635,30 +635,32 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                             verbose = getOption("reproducible.verbose", 1)) {
   id <- as.character(googledrive::as_id(id)) # a URL and its id share the saved answer
   .remoteMetadata(function() .gdriveMetadataOnline(id, shared_drive, ls),
-                  key = list(id = id, shared_drive = shared_drive, ls = ls),
+                  .gdriveMetadataSaved, id, shared_drive, ls,
                   what = "Google Drive", label = id, verbose = verbose)
 }
 
 # Ask a remote for metadata and keep the answer so the lookup still works with no internet (a
 # compute node). `ask` is a function of no arguments that asks the remote; what it returns is
-# saved to the cache, so it must be plain values, not a connection or response object. `key` is
-# the plain value(s) the answer is saved under. The remote is asked every time it can be reached,
-# and its answer replaces the saved one. When it cannot be reached (see isConnectionError()) the
-# saved answer is returned, with a message naming `what` (the remote) and `label` (the thing asked
-# about). With nothing saved for the key, or an error that is not a connection failure, the error
-# is raised.
-.remoteMetadata <- function(ask, key, what, label, verbose = getOption("reproducible.verbose", 1)) {
+# saved to the cache, so it must be plain values, not a connection or response object. `store` is
+# the function the answer is saved under (one per remote, e.g. .gdriveMetadataSaved()) and `...`
+# its key arguments; Cache() keys on the store and `...`, so neither may change without losing
+# the answers already saved. The remote is asked every time it can be reached, and its answer
+# replaces the saved one. When it cannot be reached (see isConnectionError()) the saved answer
+# is returned, with a message naming `what` (the remote) and `label` (the thing asked about).
+# With nothing saved for the key, or an error that is not a connection failure, the error is
+# raised.
+.remoteMetadata <- function(ask, store, ..., what, label, verbose = getOption("reproducible.verbose", 1)) {
   online <- tryCatch(list(value = ask()), error = function(e) e)
   if (!inherits(online, "error")) {
     ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
     ## the function, so this cannot wrap the remote call itself (a failed call would clear it).
-    Cache(.remoteMetadataSaved, key, answer = online$value, omitArgs = "answer",
+    Cache(store, ..., answer = online$value, omitArgs = "answer",
           useCache = "overwrite", verbose = FALSE)
     return(online$value)
   }
   if (!isConnectionError(online)) stop(online)
   saved <- tryCatch(
-    list(value = Cache(.remoteMetadataSaved, key, omitArgs = "answer", verbose = FALSE)),
+    list(value = Cache(store, ..., omitArgs = "answer", verbose = FALSE)),
     error = function(e) NULL)
   if (is.null(saved)) stop(online)
   messagePreProcess(what, " cannot be reached (", substr(conditionMessage(online), 1L, 80L),
@@ -666,11 +668,12 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   saved$value
 }
 
-## The store behind .remoteMetadata(): Cache() keys on `key` (`answer`, what the remote said, is
-## omitted from the key). Run by Cache() on a miss: with an answer, to save it; without one, so
-## that a lookup offline with nothing saved fails rather than saves NULL.
-.remoteMetadataSaved <- function(key, answer = NULL) {
-  if (is.null(answer)) stop("No answer from the remote has been saved for this key")
+## The store behind .gdriveMetadata(): Cache() keys on the id, shared_drive and ls (`answer`, what
+## Drive said, is omitted from the key). Run by Cache() on a miss: with an answer, to save it;
+## without one, so that a lookup offline with nothing saved fails rather than saves NULL.
+## Its name, formals and body are part of the cache key of every answer saved since 3.2.1.9078.
+.gdriveMetadataSaved <- function(id, shared_drive, ls, answer = NULL) {
+  if (is.null(answer)) stop("No answer from Google Drive has been saved for ", id)
   answer
 }
 

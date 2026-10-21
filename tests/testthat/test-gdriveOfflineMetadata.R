@@ -66,6 +66,23 @@ test_that("Drive metadata is asked for every time online and the last answer is 
   expect_error(.gdriveMetadata(fileId, verbose = 0), "File not found")
 })
 
+test_that("a Drive answer saved by 3.2.1.9078 is found offline: the store and its cache key are unchanged", {
+  skip_if_not_installed("googledrive")
+  testInit("googledrive", opts = offlineOpts)
+  withr::local_options(reproducible.cachePath = tmpCache)
+  drive <- mockDrive()
+  drive$offline <- TRUE
+
+  ## the call .gdriveMetadata() made in 3.2.1.9078 to save what Drive said (R/download.R)
+  Cache(.gdriveMetadataSaved, fileId, NULL, FALSE, answer = fakeDribble("md5old"), omitArgs = "answer",
+        useCache = "overwrite", verbose = FALSE)
+  expect_true("a8aca050fea83621" %in% showCache(tmpCache, verbose = 0)$cacheId) # the cacheId 9078 wrote
+
+  expect_message(m <- .gdriveMetadata(fileId, verbose = 1), "cannot be reached")
+  expect_identical(m$drive_resource[[1]]$md5Checksum, "md5old")
+  expect_identical(drive$calls, 1L)
+})
+
 test_that("assessGoogle() and getRemoteMetadata() answer offline from the last online answer", {
   skip_if_not_installed("googledrive")
   testInit("googledrive", opts = offlineOpts)

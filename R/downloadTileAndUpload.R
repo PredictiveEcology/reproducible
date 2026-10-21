@@ -1136,7 +1136,7 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     # this block entirely, leaving `remoteHash` undefined and erroring below.
     # The server is asked every time it can be reached (the ETag tells a changed remote file); the
     # headers are kept so this still works with no internet. See .remoteMetadata().
-    head <- .remoteMetadata(function() .httpHeadMetadata(url), key = url,
+    head <- .remoteMetadata(function() .httpHeadMetadata(url), .httpHeadMetadataSaved, url,
                             what = "The server", label = url)
     etagRaw <- head$etag
     remoteHash <- etagRaw |>
@@ -1170,6 +1170,13 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
        contentLength = httr2::resp_header(response, "content-length"),
        date = httr2::resp_header(response, "Date"),
        contentDisposition = httr2::resp_header(response, "content-disposition"))
+}
+
+## The store behind the HEAD lookup, keyed on the URL; see .gdriveMetadataSaved() for the Drive one
+## and .remoteMetadata() for how both are used. Its name, formals and body are part of the cache key.
+.httpHeadMetadataSaved <- function(url, answer = NULL) {
+  if (is.null(answer)) stop("No answer from the server has been saved for ", url)
+  answer
 }
 
 # Conditional revalidation of a remote file using its ETag.
