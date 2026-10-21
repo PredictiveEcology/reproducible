@@ -76,7 +76,10 @@ test_that("a Drive answer saved by 3.2.1.9078 is found offline: the store and it
   ## the call .gdriveMetadata() made in 3.2.1.9078 to save what Drive said (R/download.R)
   Cache(.gdriveMetadataSaved, fileId, NULL, FALSE, answer = fakeDribble("md5old"), omitArgs = "answer",
         useCache = "overwrite", verbose = FALSE)
-  expect_true("a8aca050fea83621" %in% showCache(tmpCache, verbose = 0)$cacheId) # the cacheId 9078 wrote
+  ## the cacheId 9078 wrote: the store's name, formals and body are part of it. Not under covr,
+  ## whose tracing rewrites the body (a different function, so a different key).
+  if (!isTRUE(as.logical(Sys.getenv("R_COVR", "false"))))
+    expect_true("a8aca050fea83621" %in% showCache(tmpCache, verbose = 0)$cacheId)
 
   expect_message(m <- .gdriveMetadata(fileId, verbose = 1), "cannot be reached")
   expect_identical(m$drive_resource[[1]]$md5Checksum, "md5old")
