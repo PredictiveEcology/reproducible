@@ -1134,14 +1134,17 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     # size are wanted for the sidecar regardless of whether the caller needed
     # help naming the file -- and previously, supplying `targetFile` skipped
     # this block entirely, leaving `remoteHash` undefined and erroring below.
-    response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
-    etagRaw <- httr2::resp_headers(response)[["etag"]]
+    # The server is asked every time it can be reached (the ETag tells a changed remote file); the
+    # headers are kept so this still works with no internet. See .remoteMetadata().
+    head <- .remoteMetadata(function() .httpHeadMetadata(url), key = url,
+                            what = "The server", label = url)
+    etagRaw <- head$etag
     remoteHash <- etagRaw |>
       gsub(pattern = "^\"|\"", replacement = "")
 
-    content_disposition <- httr2::resp_header(response, "content-disposition")
-    fileSize <- httr2::resp_header(response, "content-length") |> as.numeric()
-    timestampOnline <- httr2::resp_header(response, "Date")
+    content_disposition <- head$contentDisposition
+    fileSize <- head$contentLength |> as.numeric()
+    timestampOnline <- head$date
     if (missing(targetFile)) {
       if (isTRUE(!(is.na(content_disposition)))) {
         targetFile <- sub('.*filename="([^"]+)".*', '\\1', content_disposition)
@@ -1156,6 +1159,17 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
   list(targetFile = targetFile, fileSize = fileSize, remoteHash = remoteHash,
        remoteAlgorithm = remoteAlgorithm, timestampOnline = timestampOnline,
        etag = etagRaw)
+}
+
+# HEAD a non-Drive URL and return the headers getRemoteMetadata() uses, as plain values (the
+# answer is saved by .remoteMetadata(), so not the httr2 response). A header the server did not
+# send is NULL.
+.httpHeadMetadata <- function(url) {
+  response <- httr2::request(url) |> httr2::req_method("HEAD") |> httr2::req_perform()
+  list(etag = httr2::resp_headers(response)[["etag"]],
+       contentLength = httr2::resp_header(response, "content-length"),
+       date = httr2::resp_header(response, "Date"),
+       contentDisposition = httr2::resp_header(response, "content-disposition"))
 }
 
 # Conditional revalidation of a remote file using its ETag.

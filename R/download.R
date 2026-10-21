@@ -629,36 +629,48 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 
 # The metadata of a Drive file (drive_get()) or the listing of a Drive folder (drive_ls(), with
 # `ls = TRUE`). Drive is asked every time it can be reached -- the md5Checksum in the answer is
-# what tells a changed remote file -- and the answer is saved in the cache, keyed on the id (and
-# shared_drive), so that when Drive cannot be reached (a compute node with no internet) the answer
-# last seen online is returned, with a message. With nothing saved for the id, or an error that is
-# not a connection failure (see isConnectionError()), the error is raised.
+# what tells a changed remote file -- and the answer is kept, keyed on the id (and shared_drive),
+# so that when Drive cannot be reached the answer last seen online is returned; see .remoteMetadata().
 .gdriveMetadata <- function(id, shared_drive = NULL, ls = FALSE,
                             verbose = getOption("reproducible.verbose", 1)) {
   id <- as.character(googledrive::as_id(id)) # a URL and its id share the saved answer
-  online <- tryCatch(list(value = .gdriveMetadataOnline(id, shared_drive, ls)), error = function(e) e)
+  .remoteMetadata(function() .gdriveMetadataOnline(id, shared_drive, ls),
+                  key = list(id = id, shared_drive = shared_drive, ls = ls),
+                  what = "Google Drive", label = id, verbose = verbose)
+}
+
+# Ask a remote for metadata and keep the answer so the lookup still works with no internet (a
+# compute node). `ask` is a function of no arguments that asks the remote; what it returns is
+# saved to the cache, so it must be plain values, not a connection or response object. `key` is
+# the plain value(s) the answer is saved under. The remote is asked every time it can be reached,
+# and its answer replaces the saved one. When it cannot be reached (see isConnectionError()) the
+# saved answer is returned, with a message naming `what` (the remote) and `label` (the thing asked
+# about). With nothing saved for the key, or an error that is not a connection failure, the error
+# is raised.
+.remoteMetadata <- function(ask, key, what, label, verbose = getOption("reproducible.verbose", 1)) {
+  online <- tryCatch(list(value = ask()), error = function(e) e)
   if (!inherits(online, "error")) {
     ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
-    ## the function, so this cannot wrap the Drive call itself (a failed call would clear it).
-    Cache(.gdriveMetadataSaved, id, shared_drive, ls, answer = online$value, omitArgs = "answer",
+    ## the function, so this cannot wrap the remote call itself (a failed call would clear it).
+    Cache(.remoteMetadataSaved, key, answer = online$value, omitArgs = "answer",
           useCache = "overwrite", verbose = FALSE)
     return(online$value)
   }
   if (!isConnectionError(online)) stop(online)
   saved <- tryCatch(
-    list(value = Cache(.gdriveMetadataSaved, id, shared_drive, ls, omitArgs = "answer", verbose = FALSE)),
+    list(value = Cache(.remoteMetadataSaved, key, omitArgs = "answer", verbose = FALSE)),
     error = function(e) NULL)
   if (is.null(saved)) stop(online)
-  messagePreProcess("Google Drive cannot be reached (", substr(conditionMessage(online), 1L, 80L),
-                    "); using the metadata of ", id, " last seen online", verbose = verbose)
+  messagePreProcess(what, " cannot be reached (", substr(conditionMessage(online), 1L, 80L),
+                    "); using the metadata of ", label, " last seen online", verbose = verbose)
   saved$value
 }
 
-## The store behind .gdriveMetadata(): Cache() keys on the id, shared_drive and ls (`answer`, what
-## Drive said, is omitted from the key). Run by Cache() on a miss: with an answer, to save it;
-## without one, so that a lookup offline with nothing saved fails rather than saves NULL.
-.gdriveMetadataSaved <- function(id, shared_drive, ls, answer = NULL) {
-  if (is.null(answer)) stop("No answer from Google Drive has been saved for ", id)
+## The store behind .remoteMetadata(): Cache() keys on `key` (`answer`, what the remote said, is
+## omitted from the key). Run by Cache() on a miss: with an answer, to save it; without one, so
+## that a lookup offline with nothing saved fails rather than saves NULL.
+.remoteMetadataSaved <- function(key, answer = NULL) {
+  if (is.null(answer)) stop("No answer from the remote has been saved for this key")
   answer
 }
 

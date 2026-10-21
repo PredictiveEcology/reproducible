@@ -81,6 +81,61 @@ test_that("assessGoogle() and getRemoteMetadata() answer offline from the last o
   expect_identical(getRemoteMetadata(url = fileUrl), meta)
 })
 
+## Mock the HEAD request of a non-Drive URL, as mockDrive() does for Drive: `state$answer` is the
+## httr2 response online, a connection error when `state$offline`, any other condition in `state$error`.
+mockHead <- function(answer = fakeHeadResponse(), .env = parent.frame()) {
+  state <- new.env()
+  state$offline <- FALSE
+  state$calls <- 0L
+  state$answer <- answer
+  state$error <- NULL
+  testthat::local_mocked_bindings(req_perform = function(...) {
+    state$calls <- state$calls + 1L
+    if (state$offline) gdriveOffline()
+    if (!is.null(state$error)) stop(state$error)
+    state$answer
+  }, .package = "httr2", .env = .env)
+  state
+}
+
+fakeHeadResponse <- function(etag = "\"etagA\"", name = "file.tif") {
+  httr2::response(status_code = 200L, headers = list(
+    etag = etag, `content-length` = "10", Date = "Mon, 01 Jan 2026 00:00:00 GMT",
+    `content-disposition` = paste0("attachment; filename=\"", name, "\"")))
+}
+
+test_that("getRemoteMetadata() on a non-Drive URL answers offline from the last online answer", {
+  skip_if_not_installed("httr2")
+  testInit(opts = offlineOpts)
+  withr::local_options(reproducible.cachePath = tmpCache)
+  head <- mockHead()
+  url <- "https://example.org/bucket/file.tif"
+  other <- "https://example.org/bucket/other.tif"
+
+  m1 <- getRemoteMetadata(isGDurl = FALSE, url = url)
+  m2 <- getRemoteMetadata(isGDurl = FALSE, url = url)
+  expect_identical(head$calls, 2L) # the server is asked every time: the etag tells a changed file
+  expect_identical(m2$remoteHash, "etagA")
+  expect_identical(m2$etag, "\"etagA\"")
+  expect_identical(m2$fileSize, 10)
+  expect_identical(m2$targetFile, "file.tif")
+  head$answer <- fakeHeadResponse("\"etagB\"") # the remote file changed
+  expect_identical(getRemoteMetadata(isGDurl = FALSE, url = url)$remoteHash, "etagB")
+
+  head$offline <- TRUE
+  expect_message(m4 <- getRemoteMetadata(isGDurl = FALSE, url = url), "cannot be reached")
+  expect_identical(m4$remoteHash, "etagB") # the last answer seen online
+  expect_identical(m4$targetFile, "file.tif")
+  ## a supplied targetFile is kept; the rest comes from the saved answer
+  expect_identical(getRemoteMetadata(targetFile = "mine.tif", isGDurl = FALSE, url = url)$targetFile, "mine.tif")
+  ## nothing saved for this URL: the error is raised
+  expect_error(getRemoteMetadata(isGDurl = FALSE, url = other), "resolve host")
+  ## any other error is raised as it is
+  head$offline <- FALSE
+  head$error <- "HTTP 404 Not Found"
+  expect_error(getRemoteMetadata(isGDurl = FALSE, url = url), "404")
+})
+
 test_that("the sign-in step before the lookup does not stop the offline path (no loaded token)", {
   skip_if_not_installed("googledrive")
   testInit("googledrive", opts = c(offlineOpts, list(gargle_oauth_email = "a@b.com", reproducible.gdriveNoAuth = NULL)))
