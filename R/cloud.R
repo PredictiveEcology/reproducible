@@ -62,6 +62,9 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
       driveLs <- tryCatch(# suppressMessages( # will show: "The googledrive package is requesting access to your Google account."
         .gdriveRetry(do.call(googledrive::drive_get, append(list(cfidTmp), args))),
         error = function(e) {
+          ## Drive could not be reached: not "no such folder". Raised, so a caller that works
+          ## offline (the CacheGeo ledger) can tell the two apart.
+          if (isConnectionError(e)) stop(e)
           if (!is.null(e$parent)) {
             if (grepl("File not found", as.character(e$parent)) && attempt == 2) {
               stop(e)

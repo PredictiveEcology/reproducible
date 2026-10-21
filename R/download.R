@@ -627,6 +627,51 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   }
 }
 
+# The metadata of a Drive file (drive_get()) or the listing of a Drive folder (drive_ls(), with
+# `ls = TRUE`). Drive is asked every time it can be reached -- the md5Checksum in the answer is
+# what tells a changed remote file -- and the answer is saved in the cache, keyed on the id (and
+# shared_drive), so that when Drive cannot be reached (a compute node with no internet) the answer
+# last seen online is returned, with a message. With nothing saved for the id, or an error that is
+# not a connection failure (see isConnectionError()), the error is raised.
+.gdriveMetadata <- function(id, shared_drive = NULL, ls = FALSE,
+                            verbose = getOption("reproducible.verbose", 1)) {
+  id <- as.character(googledrive::as_id(id)) # a URL and its id share the saved answer
+  online <- tryCatch(list(value = .gdriveMetadataOnline(id, shared_drive, ls)), error = function(e) e)
+  if (!inherits(online, "error")) {
+    ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
+    ## the function, so this cannot wrap the Drive call itself (a failed call would clear it).
+    Cache(.gdriveMetadataSaved, id, shared_drive, ls, answer = online$value, omitArgs = "answer",
+          useCache = "overwrite", verbose = FALSE)
+    return(online$value)
+  }
+  if (!isConnectionError(online)) stop(online)
+  saved <- tryCatch(
+    list(value = Cache(.gdriveMetadataSaved, id, shared_drive, ls, omitArgs = "answer", verbose = FALSE)),
+    error = function(e) NULL)
+  if (is.null(saved)) stop(online)
+  messagePreProcess("Google Drive cannot be reached (", substr(conditionMessage(online), 1L, 80L),
+                    "); using the metadata of ", id, " last seen online", verbose = verbose)
+  saved$value
+}
+
+## The store behind .gdriveMetadata(): Cache() keys on the id, shared_drive and ls (`answer`, what
+## Drive said, is omitted from the key). Run by Cache() on a miss: with an answer, to save it;
+## without one, so that a lookup offline with nothing saved fails rather than saves NULL.
+.gdriveMetadataSaved <- function(id, shared_drive, ls, answer = NULL) {
+  if (is.null(answer)) stop("No answer from Google Drive has been saved for ", id)
+  answer
+}
+
+.gdriveMetadataOnline <- function(id, shared_drive = NULL, ls = FALSE) {
+  id <- googledrive::as_id(id)
+  if (isTRUE(ls)) return(.gdriveRetry(googledrive::drive_ls(id, shared_drive = shared_drive)))
+  if (packageVersion("googledrive") < "2.0.0") {
+    .gdriveRetry(googledrive::drive_get(id, team_drive = shared_drive))
+  } else {
+    .gdriveRetry(googledrive::drive_get(id, shared_drive = shared_drive))
+  }
+}
+
 # What happened to the configured identities during the most recent cascade. Read
 # by .stopGoogleDriveAccess(): when anonymous access then gets a 404 on a private
 # file, the useful fact is *why* the authenticated attempt was abandoned, not the 404.
@@ -2570,41 +2615,12 @@ assessGoogle <- function(url, archive = NULL, targetFile = NULL,
   .gdrivePrepareAuth(url, team_drive = team_drive, verbose = verbose)
   on.exit(.gdriveRestoreAuth(), add = TRUE)
 
-  # Cache the drive_get / drive_ls result indefinitely. The Cache key
-  # includes the URL/ID, so each distinct file pays one API hit ever per
-  # cachePath; subsequent calls (in-memory or on-disk) are near-instant.
-  # Without this, .guessAtFile (and therefore the very first phase of
-  # pp_resolve_files) hits the Google Drive API on every call, ~1-2 s of
-  # latency that the sidecar fast-path further down the pipeline cannot
-  # recover.
-  #
-  # Do NOT wrap the inner call in `quote(...)`: Cache's digest treats a
-  # `quote(...)` expression as opaque text and never resolves the `url`
-  # symbol against the calling frame, so every URL collides on the same
-  # cache key and the first-cached fileAttr is returned for every later
-  # URL. retry() captures its `expr` argument with substitute() and works
-  # the same way whether or not it's wrapped in quote().
-  # if (is.null(archive) || is.na(archive)) {
-  fileAttr <- tryCatch({
-    if (isTRUE(isDirectory(url, FALSE))) {
-      Cache(
-        .gdriveRetry(googledrive::drive_ls(googledrive::as_id(url), shared_drive = team_drive)),
-        verbose = FALSE
-      )
-    } else {
-      if (packageVersion("googledrive") < "2.0.0") {
-        Cache(
-          .gdriveRetry(googledrive::drive_get(googledrive::as_id(url), team_drive = team_drive)),
-          verbose = FALSE
-        )
-      } else {
-        Cache(
-          .gdriveRetry(googledrive::drive_get(googledrive::as_id(url), shared_drive = team_drive)),
-          verbose = FALSE
-        )
-      }
-    }
-  }, error = function(e) .stopGoogleDriveAccess(url, e))
+  # Drive is asked on every call (so a changed remote file is seen); the answer is kept in the
+  # cache so this still works with no internet. See .gdriveMetadata().
+  fileAttr <- tryCatch(
+    .gdriveMetadata(url, shared_drive = team_drive, ls = isTRUE(isDirectory(url, FALSE)),
+                    verbose = verbose),
+    error = function(e) .stopGoogleDriveAccess(url, e))
 
   fileSize <- sapply(fileAttr$drive_resource, function(x) x$size)
   if (!is.null(unlist(fileSize))) {

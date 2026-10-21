@@ -1118,9 +1118,9 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
   if (missing(isGDurl))
     isGDurl <- isGoogleDriveURL(url) || isGoogleID(url)
   if (isGDurl) {
-    # Cache indefinitely — same rationale as assessGoogle().
-    file <- .gdriveRetry(googledrive::drive_get(url)) |>
-      Cache(verbose = FALSE)
+    # Drive is asked on every call (the md5Checksum tells a changed remote file); the answer is
+    # kept in the cache so this still works with no internet. See .gdriveMetadata().
+    file <- .gdriveMetadata(url)
     fileSize <- file$drive_resource[[1]]$size
     remoteHash <- file$drive_resource[[1]]$md5Checksum
     if (missing(targetFile)) {
