@@ -587,6 +587,14 @@ Mostly this would be changed from default \code{Inf} if the digesting is taking 
 Use this with caution, as some objects will have \emph{many} \code{NA} values in their first
 \emph{many} elements
 }
+\item{\code{lockFileRemove}}{
+Default: \code{TRUE}. Delete each lock file (e.g. \verb{<cacheId>.lock} in the cache) when its lock is
+released, so lock files exist only while in use. Needs a \code{filelock} whose \code{unlock()} has a
+\code{remove} argument (PredictiveEcology/filelock >= 1.0.3.9002); with any other \code{filelock}, or on
+Windows, the files are kept as before. Set it to \code{FALSE} while processes with an older
+\code{filelock} share a cache or lock files with newer ones: an older \code{filelock} does not notice
+that a file it waits on was deleted, so it could hold a lock at the same time as a newer one.
+}
 \item{\code{useragent}}{
 Default: \code{"https://github.com/PredictiveEcology/reproducible"}.
 User agent for downloads using this package.
