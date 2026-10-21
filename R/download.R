@@ -579,18 +579,27 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   }, error = function(e) e)
 }
 
+# Is this error a 403 that Google documents as retriable with backoff: the per-user or
+# per-project request quota (reason `userRateLimitExceeded` / `rateLimitExceeded`, "User rate
+# limit exceeded"), which many workers writing to Drive at once hit? It is not a denial.
+.gdriveIsRateLimit <- function(e) {
+  isTRUE(grepl("rateLimitExceeded|rate limit exceeded", conditionMessage(e), ignore.case = TRUE))
+}
+
 # Is this error a definitive "this identity cannot see the file" (HTTP 403/404),
 # as opposed to a transient failure -- token refresh against oauth2.googleapis.com,
-# DNS, a timeout, a 5xx -- that is worth retrying before giving the identity up?
+# DNS, a timeout, a 5xx, a 403 rate limit -- that is worth retrying before giving the identity up?
 .gdriveIsDenial <- function(e) {
+  if (.gdriveIsRateLimit(e)) return(FALSE)
   msg <- conditionMessage(e)
   isTRUE(grepl("\\((403|404)\\)|\\b40[34]\\b|File not found|insufficient", msg, ignore.case = TRUE))
 }
 
 # Is this error a transient Drive/network failure -- a timeout, DNS, a reset or refused
-# connection, an HTTP 5xx or 429, a token refresh against oauth2.googleapis.com -- that is
-# worth running again? A denial (403/404) never is.
+# connection, an HTTP 5xx or 429, a 403 rate limit, a token refresh against
+# oauth2.googleapis.com -- that is worth running again? A denial (403/404) never is.
 .gdriveIsTransient <- function(e) {
+  if (.gdriveIsRateLimit(e)) return(TRUE)
   if (.gdriveIsDenial(e)) return(FALSE)
   msg <- conditionMessage(e)
   if (inherits(e, "error") && !is.null(e$parent)) msg <- paste(msg, conditionMessage(e$parent))
@@ -602,12 +611,15 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 }
 
 # How many times a googledrive call is re-run after a transient failure (also the number of
-# retries of a configured identity in .gdrivePrepareAuth()), and the wait before the next one.
+# retries of a configured identity in .gdrivePrepareAuth()), and the wait before the next one:
+# doubling from 2 s and capped at 32 s (Google's backoff guidance; a per-user rate limit is a
+# quota over a 100 s window, which the default 6 retries, 94 s in all, reach past).
 .gdriveRetries <- function() getOption("reproducible.gdriveAuthRetries", 6L)
-.gdriveRetryWait <- function(attempt) Sys.sleep(2L * attempt)
+.gdriveRetryDelay <- function(attempt) as.integer(min(2^attempt, 32))
+.gdriveRetryWait <- function(attempt) Sys.sleep(.gdriveRetryDelay(attempt))
 
 # Run a googledrive call, and run it again after a transient failure (see .gdriveIsTransient())
-# up to `retries` more times, waiting 2 s x attempt between them. A denial and any other error
+# up to `retries` more times, waiting .gdriveRetryDelay() between them. A denial and any other error
 # are raised at once, so callers keep their own handling of "File not found". `retries = 0`
 # runs the call once. Wrap the call itself: .gdriveRetry(googledrive::drive_ls(...)).
 .gdriveRetry <- function(expr, retries = .gdriveRetries(),
@@ -621,7 +633,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
     if (attempt >= retries || !.gdriveIsTransient(res)) stop(res)
     attempt <- attempt + 1L
     messagePreProcess("Google Drive: transient failure (", substr(conditionMessage(res), 1L, 80L),
-                      "); retrying in ", 2L * attempt, " s (", attempt, " of ", retries, ")",
+                      "); retrying in ", .gdriveRetryDelay(attempt), " s (", attempt, " of ", retries, ")",
                       verbose = verbose)
     .gdriveRetryWait(attempt)
   }
@@ -629,34 +641,50 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 
 # The metadata of a Drive file (drive_get()) or the listing of a Drive folder (drive_ls(), with
 # `ls = TRUE`). Drive is asked every time it can be reached -- the md5Checksum in the answer is
-# what tells a changed remote file -- and the answer is saved in the cache, keyed on the id (and
-# shared_drive), so that when Drive cannot be reached (a compute node with no internet) the answer
-# last seen online is returned, with a message. With nothing saved for the id, or an error that is
-# not a connection failure (see isConnectionError()), the error is raised.
+# what tells a changed remote file -- and the answer is kept, keyed on the id (and shared_drive),
+# so that when Drive cannot be reached the answer last seen online is returned; see .remoteMetadata().
 .gdriveMetadata <- function(id, shared_drive = NULL, ls = FALSE,
                             verbose = getOption("reproducible.verbose", 1)) {
   id <- as.character(googledrive::as_id(id)) # a URL and its id share the saved answer
-  online <- tryCatch(list(value = .gdriveMetadataOnline(id, shared_drive, ls)), error = function(e) e)
+  .remoteMetadata(function() .gdriveMetadataOnline(id, shared_drive, ls),
+                  .gdriveMetadataSaved, id, shared_drive, ls,
+                  what = "Google Drive", label = id, verbose = verbose)
+}
+
+# Ask a remote for metadata and keep the answer so the lookup still works with no internet (a
+# compute node). `ask` is a function of no arguments that asks the remote; what it returns is
+# saved to the cache, so it must be plain values, not a connection or response object. `store` is
+# the function the answer is saved under (one per remote, e.g. .gdriveMetadataSaved()) and `...`
+# its key arguments; Cache() keys on the store and `...`, so neither may change without losing
+# the answers already saved. The remote is asked every time it can be reached, and its answer
+# replaces the saved one. When it cannot be reached (see isConnectionError()) the saved answer
+# is returned, with a message naming `what` (the remote) and `label` (the thing asked about).
+# With nothing saved for the key, or an error that is not a connection failure, the error is
+# raised.
+.remoteMetadata <- function(ask, store, ..., what, label, verbose = getOption("reproducible.verbose", 1)) {
+  storeName <- deparse(substitute(store)) # the entry's `function` tag; not part of the key
+  online <- tryCatch(list(value = ask()), error = function(e) e)
   if (!inherits(online, "error")) {
     ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
-    ## the function, so this cannot wrap the Drive call itself (a failed call would clear it).
-    Cache(.gdriveMetadataSaved, id, shared_drive, ls, answer = online$value, omitArgs = "answer",
-          useCache = "overwrite", verbose = FALSE)
+    ## the function, so this cannot wrap the remote call itself (a failed call would clear it).
+    Cache(store, ..., answer = online$value, omitArgs = "answer",
+          useCache = "overwrite", verbose = FALSE, .functionName = storeName)
     return(online$value)
   }
   if (!isConnectionError(online)) stop(online)
   saved <- tryCatch(
-    list(value = Cache(.gdriveMetadataSaved, id, shared_drive, ls, omitArgs = "answer", verbose = FALSE)),
+    list(value = Cache(store, ..., omitArgs = "answer", verbose = FALSE, .functionName = storeName)),
     error = function(e) NULL)
   if (is.null(saved)) stop(online)
-  messagePreProcess("Google Drive cannot be reached (", substr(conditionMessage(online), 1L, 80L),
-                    "); using the metadata of ", id, " last seen online", verbose = verbose)
+  messagePreProcess(what, " cannot be reached (", substr(conditionMessage(online), 1L, 80L),
+                    "); using the metadata of ", label, " last seen online", verbose = verbose)
   saved$value
 }
 
 ## The store behind .gdriveMetadata(): Cache() keys on the id, shared_drive and ls (`answer`, what
 ## Drive said, is omitted from the key). Run by Cache() on a miss: with an answer, to save it;
 ## without one, so that a lookup offline with nothing saved fails rather than saves NULL.
+## Its name, formals and body are part of the cache key of every answer saved since 3.2.1.9078.
 .gdriveMetadataSaved <- function(id, shared_drive, ls, answer = NULL) {
   if (is.null(answer)) stop("No answer from Google Drive has been saved for ", id)
   answer
@@ -766,7 +794,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       if (.gdriveIsDenial(res) || attempt > retries) break
       messagePreProcess("Google Drive: transient failure (",
                         substr(conditionMessage(res), 1L, 80L), "); retrying in ",
-                        2L * attempt, " s", verbose = verbose)
+                        .gdriveRetryDelay(attempt), " s", verbose = verbose)
       .gdriveRetryWait(attempt)
     }
     if (ok) return("token")

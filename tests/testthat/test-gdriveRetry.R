@@ -1,7 +1,49 @@
 ## .gdriveRetry(): a googledrive call is run again after a brief failure, never after a refusal.
 
 waits <- NULL
-noWait <- function(attempt) waits <<- c(waits, 2L * attempt)
+noWait <- function(attempt) waits <<- c(waits, reproducible:::.gdriveRetryDelay(attempt))
+
+## The condition gargle raises for a 403 from the Drive API, with Google's `reason` (as seen from
+## CacheGeoWrite() on the macOS runner: "User rate limit exceeded", reason userRateLimitExceeded).
+gargle403 <- function(reason, detail) {
+  structure(class = c("gargle_error_request_failed", "http_error_403", "rlang_error", "error", "condition"),
+            list(message = paste(c("Client error: (403) Forbidden", detail, paste0("• message: ", detail),
+                                   "• domain: usageLimits", paste0("• reason: ", reason)), collapse = "\n"),
+                 call = NULL))
+}
+
+test_that("a 403 rate limit is retried (Google: retriable with backoff); a 403 denial is not", {
+  waits <<- NULL
+  local_mocked_bindings(.gdriveRetryWait = noWait)
+  n <- 0L
+  limited <- function() {
+    n <<- n + 1L
+    if (n <= 2L) stop(gargle403("userRateLimitExceeded", "User rate limit exceeded."))
+    "ok"
+  }
+  expect_identical(reproducible:::.gdriveRetry(limited(), verbose = -1), "ok")
+  expect_identical(n, 3L)
+  expect_identical(waits, c(2L, 4L))
+  n <- 0L
+  expect_identical(reproducible:::.gdriveRetry({
+    n <- n + 1L
+    if (n == 1L) stop(gargle403("rateLimitExceeded", "Rate Limit Exceeded"))
+    "ok"
+  }, verbose = -1), "ok")
+  expect_identical(n, 2L)
+
+  denied <- gargle403("insufficientFilePermissions", "The user does not have sufficient permissions for this file.")
+  expect_true(reproducible:::.gdriveIsDenial(denied))
+  expect_false(reproducible:::.gdriveIsDenial(gargle403("userRateLimitExceeded", "User rate limit exceeded.")))
+  local_mocked_bindings(.gdriveRetryWait = function(attempt) stop("must not wait"))
+  n <- 0L
+  expect_error(reproducible:::.gdriveRetry({ n <- n + 1L; stop(denied) }, verbose = -1), "403")
+  expect_identical(n, 1L)
+})
+
+test_that("the wait before a retry doubles from 2 s and is capped at 32 s", {
+  expect_identical(vapply(1:7, reproducible:::.gdriveRetryDelay, integer(1)), c(2L, 4L, 8L, 16L, 32L, 32L, 32L))
+})
 
 test_that(".gdriveRetry() returns the value of a call that fails twice with a timeout", {
   waits <<- NULL
