@@ -611,7 +611,26 @@ basenames3 <- function(object, nParentDirs) {
 .robustDigestFormatOnly <- function(object, .objects, length, algo, quick,
                                     classOptions) {
   object <- .removeCacheAtts(object)
+  if (is.call(object)) object <- .digestEmbeddedS4(object, algo = algo)
   .doDigest(format(object), algo = algo)
+}
+
+# A call can hold evaluated objects, e.g. the values Cache() puts in place of names in an
+# unevaluated pipe. format() prints an S4 object such as a terra SpatVector as
+# `new("SpatVector", pntr = new("Rcpp_SpatVector", .xData = <environment>))`, the same for
+# every object, so calls using different ones got the same digest. Replace each S4 object
+# (not functions: a generic such as terra::aggregate is S4) by its own .robustDigest; calls
+# without one format exactly as before, so their digests do not change.
+.digestEmbeddedS4 <- function(x, algo) {
+  for (i in seq_along(x)) {
+    el <- x[[i]]
+    if (is.call(el)) {
+      x[[i]] <- .digestEmbeddedS4(el, algo = algo)
+    } else if (isS4(el) && !is.function(el)) {
+      x[[i]] <- paste(.robustDigest(el, algo = algo), collapse = "")
+    }
+  }
+  x
 }
 
 .doDigest <- function(x, algo, length = Inf, file,
