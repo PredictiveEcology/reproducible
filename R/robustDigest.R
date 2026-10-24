@@ -623,6 +623,7 @@ basenames3 <- function(object, nParentDirs) {
 # without one format exactly as before, so their digests do not change.
 .digestEmbeddedS4 <- function(x, algo) {
   for (i in seq_along(x)) {
+    if (identical(x[[i]], quote(expr = ))) next # an empty argument, as in x[, 1]
     el <- x[[i]]
     if (is.call(el)) {
       x[[i]] <- .digestEmbeddedS4(el, algo = algo)
