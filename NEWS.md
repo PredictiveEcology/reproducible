@@ -2,7 +2,7 @@
 
 ## Dependency changes
 
-* reproducible now needs R >= 4.4 (was 4.3), the oldest R version its checks run on.
+* reproducible now needs R >= 4.4 (was 4.3), the oldest R version its checks run on (#663).
 
 ## Enhancements
 
