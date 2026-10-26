@@ -38,3 +38,8 @@ test_that("a braced pipe in Cache() keys on the terra object it uses", {
   expect_equal(terra::xmin(r1), 0)
   expect_equal(terra::xmin(r2), 5000)
 })
+
+test_that("a call with an empty argument digests as before", {
+  cl <- quote(f(x[, 1], y = g(z[1, ])))
+  expect_identical(.robustDigest(cl), .doDigest(format(cl), algo = formals(.robustDigest)$algo))
+})
