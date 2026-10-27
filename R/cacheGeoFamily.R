@@ -479,9 +479,10 @@ CacheGeo <- function(..., ledger, area, compute, match = .cacheGeoMatches, toler
 #' Is an error a failure to reach the server?
 #'
 #' `TRUE` when an error says the host could not be resolved or connected to, or the connection
-#' timed out: what a download or Google Drive call gives on a machine with no internet, such as
-#' a compute node. `FALSE` for a refusal (no login, no permission, no such file), which a local
-#' copy does not fix. The [CacheGeoLedger()] functions use it to fall back to the local copy of a
+#' timed out, or googledrive found no Google credentials at all ("Can't get Google credentials"):
+#' what a download or Google Drive call gives on a machine with no internet or no login, such as
+#' a compute node. `FALSE` for a refusal (no permission, no such file), which a local copy does
+#' not fix. The [CacheGeoLedger()] functions use it to fall back to the local copy of a
 #' ledger; packages can use it the same way around their own remote calls.
 #'
 #' @param e A condition, as caught by [tryCatch()].
@@ -494,7 +495,7 @@ isConnectionError <- function(e) {
   msg <- conditionMessage(e)
   if (!is.null(e$parent)) msg <- paste(msg, conditionMessage(e$parent))
   grepl(paste0("could(n't| not) resolve host|failed to connect|could(n't| not) connect to server|",
-               "timeout was reached"), msg, ignore.case = TRUE)
+               "timeout was reached|can.t get google credentials"), msg, ignore.case = TRUE)
 }
 
 ## Evaluate `expr`: list(value) if it ran, NULL if the remote could not be reached. Any other error

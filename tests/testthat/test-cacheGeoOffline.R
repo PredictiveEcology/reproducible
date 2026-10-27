@@ -172,3 +172,31 @@ test_that("isConnectionError() is TRUE for a connection failure only", {
   expect_false(isConnectionError(simpleError("Client error: (403) Forbidden")))
   expect_false(isConnectionError(simpleError("File not found (404)")))
 })
+
+## A machine with no Google credentials at all (a compute node) fails in googledrive's drive_auth()
+noCredErr <- function() stop("Can't get Google credentials.", call. = FALSE)
+
+test_that("isConnectionError() is TRUE for missing Google credentials, also as a parent", {
+  expect_true(isConnectionError(simpleError("Can't get Google credentials.")))
+  expect_true(isConnectionError(simpleError("Can’t get Google credentials.")))
+  parent <- simpleError("Can't get Google credentials.")
+  wrapped <- structure(class = c("rlang_error", "error", "condition"),
+                       list(message = "Error in map(as_id(id), get_one_file_id)", parent = parent))
+  expect_true(isConnectionError(wrapped))
+  expect_false(isConnectionError(simpleError("Does not exist")))
+})
+
+test_that("with no Google credentials a read uses the local copy and a write is kept as pending", {
+  testInit(c("sf", "terra"))
+  remote <- checkPath(tempfile("remote"), create = TRUE)
+  dPath <- checkPath(tempfile("local"), create = TRUE)
+  led <- offlineLedger(dPath, remote)
+  CacheGeoWrite(led, toyRows(), verbose = 0)
+  local_mocked_bindings(.geoRemoteState = function(ledger) noCredErr(), .package = "reproducible")
+  expect_message(rows <- CacheGeoRead(led, area = NULL, verbose = 1), "remote unreachable, using the local copy")
+  expect_identical(sort(rows$polygonID), c("P1", "P2", "P3"))
+  expect_message(CacheGeoWrite(led, toySquare("P4", 50, 60), verbose = 1), "not pushed")
+  expect_true(file.exists(pendingFile(dPath)))
+  expect_true("P4" %in% readRDS(file.path(dPath, "toy.rds"))$polygonID)
+  expect_false("P4" %in% readRDS(file.path(remote, "toy.rds"))$polygonID)
+})

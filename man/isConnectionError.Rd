@@ -14,9 +14,10 @@ isConnectionError(e)
 }
 \description{
 \code{TRUE} when an error says the host could not be resolved or connected to, or the connection
-timed out: what a download or Google Drive call gives on a machine with no internet, such as
-a compute node. \code{FALSE} for a refusal (no login, no permission, no such file), which a local
-copy does not fix. The \code{\link[=CacheGeoLedger]{CacheGeoLedger()}} functions use it to fall back to the local copy of a
+timed out, or googledrive found no Google credentials at all ("Can't get Google credentials"):
+what a download or Google Drive call gives on a machine with no internet or no login, such as
+a compute node. \code{FALSE} for a refusal (no permission, no such file), which a local copy does
+not fix. The \code{\link[=CacheGeoLedger]{CacheGeoLedger()}} functions use it to fall back to the local copy of a
 ledger; packages can use it the same way around their own remote calls.
 }
 \examples{
