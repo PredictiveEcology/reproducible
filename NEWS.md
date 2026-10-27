@@ -14,6 +14,7 @@
 
 ## Bug fixes
 
+* `isConnectionError()` is now `TRUE` when googledrive fails with "Can't get Google credentials" (no Google token at all, as on an HPC compute node), also when it is the parent of a wrapping error. `CacheGeo()`, `CacheGeoRead()`, `CacheGeoWrite()` and the other Drive fallbacks then use the local copies, as they already do with no internet, instead of stopping.
 * Digesting a call with an empty argument, such as `x[, 1]`, no longer fails with `argument "el" is missing`. The error came from the S4 digest of calls added in 3.2.1.9080 and stopped any `Cache()` whose arguments held such a call.
 * `Cache()` of a braced pipe, e.g. `{ prepInputs(..., cropTo = area) |> terra::aggregate(fact = 8) } |> Cache()`, now keys on the terra objects the expression uses. A call's digest was the digest of its printed text, and a live `SpatVector` or `SpatRaster` prints as a pointer, so different areas got the same cacheId and the second returned the first one's result. Each S4 object inside a call is now digested with `.robustDigest()`; calls without one keep their cacheIds.
 * A Google Drive 403 whose reason is `userRateLimitExceeded` or `rateLimitExceeded` ("User rate limit exceeded", the per-user request quota that many workers writing to Drive at once hit, e.g. `CacheGeoWrite()`) is retried with the wait above. It was classed with the permission 403s and raised at once, although Google documents it as retriable with backoff.
