@@ -1,5 +1,9 @@
 # reproducible (development version)
 
+## Bug fixes
+
+* `.remoteMetadata()` (the saved Google Drive and HTTP HEAD answers used offline) rewrote the saved answer on every call that reached the remote, even when nothing had changed, so parallel jobs queued behind one clear, save and lock per file checked. It now reads the saved answer and replaces it only when the fields that identify the content differ (Drive: `id`, `name`, `md5Checksum`, `modifiedTime`, `size` per row; HEAD: ETag, content length, content disposition, not the per-request `Date`). The remote is still asked every time and its fresh answer is returned.
+
 ## Enhancements
 
 * New `filesUsedTrace(script, args, folders, traceFile)`: runs an R script under `strace` (Linux; `strace` optional, see SystemRequirements) and returns a `data.frame` (`path`, `folder`, `size`) of the existing files under `folders` that the run opened, so a run can be staged on a machine without internet by copying only those inputs and cache files. An existing trace file can be given instead of running the script.
