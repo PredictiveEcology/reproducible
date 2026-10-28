@@ -21,7 +21,8 @@ CacheGeoRead(
   area,
   match = .cacheGeoMatches,
   tolerance = 0,
-  verbose = getOption("reproducible.verbose", 1)
+  verbose = getOption("reproducible.verbose", 1),
+  bufferOK = FALSE
 )
 
 CacheGeoWrite(
@@ -78,7 +79,10 @@ explicitly.}
 \item{match}{Which rows to return for the \code{area}. \code{"intersects"} (the default): every row
 whose polygon overlaps the area. \code{"covers"}: the overlapping rows, but only when together
 they cover the area (otherwise none). \code{"within"}: the rows whose polygon lies inside the
-area.}
+area. \code{"legacy"}: the rule of the old \code{CacheGeo()}: every row that intersects the area
+(one that only touches it included, no sliver dropped), and none unless together they cover
+it. It is what a caller needs whose area may cover several polygons and who must keep the
+old selection exactly; \code{bufferOK} and \code{tolerance} then close gaps.}
 
 \item{tolerance}{A distance, in the ledger's map units (degrees for a longitude/latitude CRS). A row whose overlap with the area
 is gone after shrinking it inward by \code{tolerance} is a sliver and is not returned; each
@@ -87,6 +91,9 @@ the area is widened by \code{tolerance}.}
 
 \item{verbose}{\code{0} is silent, \code{1} (default) gives one short message per call, \code{2} also
 prints the rows returned.}
+
+\item{bufferOK}{For \code{match = "legacy"} only: a gap is also closed when the rows, buffered by
+10 km, cover the area (the old \code{CacheGeo()} argument of the same name). Ignored otherwise.}
 
 \item{rows}{The rows to add: an \code{sf} or \code{SpatVector} object, or a data.frame with a
 geometry column. They are transformed to the ledger's CRS.}

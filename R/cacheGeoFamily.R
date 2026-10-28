@@ -1,7 +1,7 @@
 ## The CacheGeo family: a ledger of spatial rows (a polygon plus any columns, list-columns included)
 ## kept in one .rds file, optionally shared through a remote. See ?CacheGeoLedger.
 
-.cacheGeoMatches <- c("intersects", "covers", "within")
+.cacheGeoMatches <- c("intersects", "covers", "within", "legacy")
 .cacheGeoModes <- c("upsert", "append")
 .cacheGeoRemoteTypes <- c("auto", "drive", "disk", "url")
 .cacheGeoMaxTries <- 3L # a write that finds the remote changed under it merges again this many times
@@ -91,7 +91,10 @@
 #' @param match Which rows to return for the `area`. `"intersects"` (the default): every row
 #'   whose polygon overlaps the area. `"covers"`: the overlapping rows, but only when together
 #'   they cover the area (otherwise none). `"within"`: the rows whose polygon lies inside the
-#'   area.
+#'   area. `"legacy"`: the rule of the old `CacheGeo()`: every row that intersects the area
+#'   (one that only touches it included, no sliver dropped), and none unless together they cover
+#'   it. It is what a caller needs whose area may cover several polygons and who must keep the
+#'   old selection exactly; `bufferOK` and `tolerance` then close gaps.
 #' @param tolerance A distance, in the ledger's map units (degrees for a longitude/latitude CRS). A row whose overlap with the area
 #'   is gone after shrinking it inward by `tolerance` is a sliver and is not returned; each
 #'   one is named in the message. For `"covers"`, gaps that narrow are ignored. For `"within"`,
@@ -107,6 +110,8 @@
 #'   `ledger`; the arguments after it must be named in full.
 #' @param targetFile,domain,FUN,cloudFolderID,useCloud,action,bufferOK,purge,useCache,overwrite
 #'   The old arguments of `CacheGeo()`; see above.
+#' @param bufferOK For `match = "legacy"` only: a gap is also closed when the rows, buffered by
+#'   10 km, cover the area (the old `CacheGeo()` argument of the same name). Ignored otherwise.
 #' @param verbose `0` is silent, `1` (default) gives one short message per call, `2` also
 #'   prints the rows returned.
 #'
@@ -174,11 +179,11 @@ print.CacheGeoLedger <- function(x, ...) {
 #' @export
 #' @rdname CacheGeoLedger
 CacheGeoRead <- function(ledger, area, match = .cacheGeoMatches, tolerance = 0,
-                         verbose = getOption("reproducible.verbose", 1)) {
+                         verbose = getOption("reproducible.verbose", 1), bufferOK = FALSE) {
   if (missing(area))
     stop("`area` is required; use `area = NULL` to read the whole ledger")
   match <- match.arg(match)
-  .geoRead(ledger, area, match, tolerance, verbose)$rows
+  .geoRead(ledger, area, match, tolerance, verbose, bufferOK = bufferOK)$rows
 }
 
 #' @export

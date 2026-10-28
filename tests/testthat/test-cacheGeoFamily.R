@@ -38,6 +38,29 @@ test_that("CacheGeoRead match = intersects / covers / within on three polygons",
   expect_error(CacheGeoRead(led, verbose = 0), "area")
 })
 
+test_that("CacheGeoRead match = legacy is the old CacheGeo() rule: intersecting rows, only if they cover the area", {
+  testInit(c("sf", "terra"))
+  led <- newToyLedger(checkPath(tempdir2(), create = TRUE))
+  ids <- function(...) sort(CacheGeoRead(led, ..., match = "legacy", verbose = 0)$polygonID)
+
+  ## an area over two polygons returns both rows
+  expect_identical(ids(toyArea(5, 15)), c("P1", "P2"))
+  ## an area inside one polygon returns that row
+  expect_identical(ids(toyArea(2, 8)), "P1")
+  ## a row that only touches the area is returned too (a sliver is not dropped)
+  expect_identical(ids(toyArea(10, 15)), c("P1", "P2"))
+  expect_identical(sort(CacheGeoRead(led, toyArea(10, 15), verbose = 0)$polygonID), "P2")
+  ## not covered (the gap 20-30 km): none, although P1/P2/P3 intersect
+  expect_identical(ids(toyArea(5, 35)), character(0))
+  ## bufferOK closes a gap narrower than 2 x 10 km
+  expect_identical(sort(CacheGeoRead(led, toyArea(5, 35), match = "legacy", bufferOK = TRUE,
+                                     verbose = 0)$polygonID), c("P1", "P2", "P3"))
+  ## the same rows as the old call form
+  old <- suppressMessages(CacheGeo(targetFile = "toy.rds", domain = toyArea(5, 15), action = "nothing",
+                                   destinationPath = led$destinationPath))
+  expect_identical(sort(old$polygonID), ids(toyArea(5, 15)))
+})
+
 test_that("CacheGeoRead always returns sf, with the list-columns, and 0 rows when nothing matches", {
   testInit(c("sf", "terra"))
   led <- newToyLedger(checkPath(tempdir2(), create = TRUE))
