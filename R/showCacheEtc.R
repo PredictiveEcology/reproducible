@@ -227,7 +227,16 @@ setMethod(
       filesToRemove1 <- objsDT[grepl(pattern = "cacheRaster", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- objsDT[grepl(pattern = "origFilename|filesToLoad|filenamesInCache", tagKey)][[.cacheTableTagColName()]]
       filesToRemove2 <- normPath(file.path(CacheStorageDir(x), basename(filesToRemove2)))
-      filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE)
+      cacheIdsToRm <- unique(objsDT[["cacheId"]])
+      ## Listing the whole storage folder costs O(files in the cache) (~45 s for 1.6M files), and
+      ##   `Cache(useCache = "overwrite")` does it for one id under the entry lock. For a few ids list only
+      ##   their files (1 id 1.3 s, 20 ids 3.3 s, 200 ids 31 s, whole folder 45 s on 1.6M files);
+      ##   from `.maxIdsForPatternListing` ids on, one full listing filtered in R is faster (see showCache).
+      ##   Ids are alphanumeric; if one is not, the pattern is not safe, so list everything.
+      onlyFewIds <- length(cacheIdsToRm) <= .maxIdsForPatternListing &&
+        all(grepl("^[0-9a-zA-Z]+$", cacheIdsToRm))
+      filesToRemove3 <- dir(CacheStorageDir(x), full.names = TRUE,
+                            pattern = if (onlyFewIds) paste0("^(", paste(cacheIdsToRm, collapse = "|"), ")[._]"))
 
       # Way faster to gsub for the cacheId, rather than greps
       ## An entry's files are `<cacheId>.<ext>` and its file-backed copies `<cacheId>_<name>`
@@ -235,7 +244,6 @@ setMethod(
       ##   speedup in 3e5b888b) left every `<cacheId>_*` file behind whenever the entry did not also tag it,
       ##   e.g. file-backed objects inside a cached simList.
       cacheIdsOfTheseFilenames <- gsub("^.*/([0-9a-zA-Z]+)[._].*$", "\\1", filesToRemove3)
-      cacheIdsToRm <- unique(objsDT[["cacheId"]])
       indicesToRm <- which(cacheIdsOfTheseFilenames %in% cacheIdsToRm)
       filesToRemove4 <- filesToRemove3[indicesToRm]
 
@@ -1254,3 +1262,6 @@ collect_showCache_async <- function(
   }
   invisible(NULL)
 }
+
+## Up to this many cacheIds, clearCache() lists only their files instead of the whole storage folder.
+.maxIdsForPatternListing <- 20L
