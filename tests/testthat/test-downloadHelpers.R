@@ -108,6 +108,10 @@ test_that("purgeChecksums removes only the named files", {
   ## Purging something absent leaves the file untouched rather than erroring.
   purgeChecksums(cf, "not-there.tif")
   expect_identical(nrow(data.table::fread(cf)), 2L)
+
+  ## The result is still a CHECKSUMS.txt that Checksums() reads (whitespace-separated)
+  cs <- Checksums(tmpdir, write = FALSE, checksumFile = cf)
+  expect_true(all(c("a.tif", "c.tif") %in% cs$expectedFile))
 })
 
 test_that(".gdriveHasToken reports token state without erroring", {
