@@ -398,8 +398,9 @@ pp_checksums_init <- function(ctx) {
     sharedRoots <- .getDestinationPathShared()
     sidecarDirs <- unique(c(ctx$destinationPath, .sharedDirsFor(sharedRoots, ctx$archive), sharedRoots))
     hasSidecar <- vapply(filesToCheck, function(f) {
-      length(.findRemoteHashSidecars(basename2(f), sidecarDirs)) > 0L &&
-        file.exists(f)
+      sidecars <- .findRemoteHashSidecars(basename2(f), sidecarDirs)
+      length(sidecars) > 0L && file.exists(f) &&
+        length(.trustedSidecars(sidecars, f, ctx$url, ctx$destinationPath)) > 0L
     }, FUN.VALUE = logical(1L))
     if (any(hasSidecar)) {
       filesPreVerified <- filesToCheck[hasSidecar]
@@ -685,7 +686,8 @@ pp_remote_hash_check <- function(ctx) {
     ctx$url, ctx$destinationPath, basename(localFile), ""
   )
   haveSidecar <- file.exists(remoteHashFileLocal) &&
-    isTRUE(suppressWarnings(file.size(remoteHashFileLocal)) > 0L)
+    isTRUE(suppressWarnings(file.size(remoteHashFileLocal)) > 0L) &&
+    length(.trustedSidecars(remoteHashFileLocal, localFile, ctx$url, ctx$destinationPath)) > 0L
 
   parsedSidecar <- if (haveSidecar) .parseRemoteHashFile(remoteHashFileLocal) else NULL
   # An ETag, when the sidecar has one, is the cheapest way to ask "is this still
@@ -982,6 +984,11 @@ pp_download <- function(ctx) {
 
         recAlgo <- if (haveStrong) strongAlgo else "etag"
         recHash <- if (haveStrong) meta$remoteHash else meta$etag
+        ## Vouch only for a file of the size the server reports. dlGeneric() already refuses a
+        ## body shorter than its Content-Length; a mismatch here means the remote changed since.
+        remoteSize <- suppressWarnings(as.numeric(meta$fileSize))[1L]
+        localSize <- file.size(dlFile[[1L]])
+        if (!is.na(remoteSize) && !isTRUE(remoteSize == localSize)) recHash <- NULL
 
         if (!is.null(recHash) && isTRUE(nzchar(recHash))) {
           sidecar <- makeRemoteHashFile(ctx$url, ctx$destinationPath,
@@ -990,7 +997,7 @@ pp_download <- function(ctx) {
           if (file.exists(sidecar)) unlink(sidecar)
           makeRemoteHashFile(ctx$url, ctx$destinationPath, basename(dlFile[[1L]]),
                              recHash, algorithm = recAlgo, write = TRUE,
-                             etag = if (haveStrong) meta$etag else NULL)
+                             etag = if (haveStrong) meta$etag else NULL, size = localSize)
         }
       }
     }
@@ -2009,6 +2016,16 @@ linkOrCopy <- function(from, to, symlink = TRUE, overwrite = TRUE,
           stop("Failed to copy file(s) to destination: ",
                attr(result2, "condition")$message)
         }
+        ## file.copy() returns FALSE, with only a warning, when a write fails part-way (a full
+        ## disk, a quota) and leaves the short copy behind. A copy onto an existing `to` that
+        ## was not to be overwritten is also FALSE; that one is left as it was.
+        failedCopy <- !result2 & !(existsTo[!result] & !overwrite)
+        if (any(failedCopy)) {
+          bad <- dest[!result][failedCopy]
+          unlink(bad)
+          stop("Failed to copy file(s) to destination (is the disk full?):\n  ",
+               paste(to[!result][failedCopy], collapse = "\n  "), call. = FALSE)
+        }
 
         toMessCollapsed <- paste(toMess, collapse = "\n")
         fromMessCollapsed <- paste(fromMess, collapse = "\n")
@@ -2613,6 +2630,56 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
     archive = archive,
     fileGuess = fileGuess
   )
+}
+
+#' The sidecars that still vouch for `localFile`
+#'
+#' A sidecar vouches only for a file of the size it recorded. One written before sizes were
+#' recorded is checked against the server's size, but only while the server still reports the
+#' sidecar's ETag or digest (a changed remote says nothing about the local copy); the size is
+#' then added to it. Where the size cannot be known (no record; remote unreachable, changed, or
+#' Google Drive) the sidecar is trusted, as before.
+#'
+#' A sidecar whose size does not match is removed, with `localFile`'s rows in the CHECKSUMS.txt
+#' beside it and in `destinationPath`: those rows were written from the same wrong file, and would
+#' otherwise report it as present and correct.
+#' @return The subset of `sidecars` that vouch for `localFile`.
+#' @keywords internal
+#' @noRd
+.trustedSidecars <- function(sidecars, localFile, url = NULL,
+                             destinationPath = dirname(localFile)) {
+  localSize <- file.size(localFile)
+  if (is.na(localSize)) return(sidecars)
+  ok <- vapply(sidecars, function(sc) {
+    parsed <- .parseRemoteHashFile(sc)
+    if (is.null(parsed)) return(TRUE)
+    if (length(parsed$size) == 1L && !is.na(parsed$size)) return(isTRUE(parsed$size == localSize))
+    u <- if (!is.null(parsed$url) && nzchar(parsed$url)) parsed$url else url
+    if (is.null(u) || !nzchar(u) || grepl("^file://", u) ||
+        isGoogleDriveURL(u) || isGoogleID(u)) return(TRUE)
+    meta <- tryCatch(getRemoteMetadata(url = u), error = function(e) NULL)
+    remoteSize <- suppressWarnings(as.numeric(meta$fileSize))[1L]
+    if (is.null(meta) || is.na(remoteSize)) return(TRUE)
+    sameVersion <- (!is.null(parsed$etag) && identical(meta$etag, parsed$etag)) ||
+      (!is.null(meta$remoteHash) && identical(tolower(parsed$hash), tolower(meta$remoteHash)))
+    if (!isTRUE(sameVersion)) return(TRUE)
+    if (remoteSize != localSize) return(FALSE)
+    cat(paste0("size:", format(localSize, scientific = FALSE)), file = sc, sep = "\n",
+        append = TRUE)
+    TRUE
+  }, logical(1))
+  for (sc in sidecars[!ok]) {
+    unlink(sc)
+    csfs <- identifyCHECKSUMStxtFile(c(dirname(sc), destinationPath))
+    rels <- c(basename(localFile), makeRelative(localFile, destinationPath))
+    for (i in which(!duplicated(normPath(csfs))))
+      if (isTRUE(file.size(csfs[i]) > 0))
+        try(purgeChecksums(csfs[i], rels[i]), silent = TRUE)
+  }
+  if (any(!ok))
+    messagePreProcess("Local file ", localFile, " is not the size its .hash sidecar recorded; ",
+                      "downloading it again", verbose = getOption("reproducible.verbose", 1))
+  sidecars[ok]
 }
 
 #' Find any remote-hash sidecar files for a given basename across one or more

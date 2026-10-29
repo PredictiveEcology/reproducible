@@ -1425,6 +1425,11 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   messagePreProcess("Downloading ", url, " ...", verbose = verbose)
 
   needDwnFl <- TRUE # this will try download.file if no httr2 or httr2 fails
+  ## The body goes to a temporary name beside `destFile` and is renamed onto it only once it is
+  ## known to be complete. Written straight to `destFile`, an attempt that died part-way left a
+  ## short file at the final name for the next step to pick up.
+  partFile <- tempfile(pattern = paste0(".", bn, "."), tmpdir = destinationPath, fileext = ".part")
+  on.exit(unlink(partFile), add = TRUE)
   # R version 4.1.3 doesn't have httr2 that can do these steps; httr2 is too old, I believe
 
   if (.requireNamespace("httr2") && .requireNamespace("curl")) {
@@ -1472,15 +1477,15 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
       reqq <- req
       resp <- tryCatch(
         if (streamProg) {
-          .dlHttr2Stream(reqq, destFile, verbose = verbose)
+          .dlHttr2Stream(reqq, partFile, verbose = verbose)
         } else {
-          reqq |> httr2::req_perform(path = destFile)
+          reqq |> httr2::req_perform(path = partFile)
         },
         httr2_http = function(e) {
           # A Cloudflare browser check needs JavaScript; no retry or user agent
           # gets past it, so say so instead of reporting a generic HTTP error.
           if (identical(httr2::resp_header(e$resp, "cf-mitigated"), "challenge")) {
-            unlink(destFile)
+            unlink(partFile)
             stop(.txtBrowserChallenge, call. = FALSE)
           }
           stop(e)
@@ -1489,9 +1494,12 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
       # Detect an HTML "Request Rejected" page (some servers return it with HTTP
       # 200). For the streamed path read only the head of the file rather than the
       # whole (possibly multi-GB) body into a string.
-      a <- if (streamProg) .dlRejectionProbeFile(destFile) else httr2::resp_body_string(resp)
+      a <- if (streamProg) .dlRejectionProbeFile(partFile) else httr2::resp_body_string(resp)
       isRjcted <- grepl("Request Rejected", a)
       if (!isTRUE(any(isRjcted)) && !httr2::resp_is_error(resp)) {
+        .dlCheckSize(partFile, resp, url)
+        if (!.renameOver(partFile, destFile))
+          stop("Download of ", url, " could not be moved into place at ", destFile, call. = FALSE)
         needDwnFl <- FALSE
         break
       }
@@ -1501,9 +1509,9 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
 
   if (needDwnFl) {
-    out <- try(download.file(url, destfile = destFile, mode = "wb"))
-    if (is(out, "try-error")) {
-      unlink(destFile)
+    out <- try(download.file(url, destfile = partFile, mode = "wb"))
+    if (is(out, "try-error") || !.renameOver(partFile, destFile)) {
+      unlink(partFile)
       stop(.txtDownloadFailedFn("httr2"))
       # stop("Download failed; try rerunning after installing 'httr2' package.")
     }
@@ -1552,8 +1560,8 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
     writeBin(chunk, con)
     got <- got + length(chunk)
     now <- Sys.time()
-    if (as.numeric(now - lastMsg) >= interval) {
-      elapsed <- as.numeric(now - t0)
+    if (as.numeric(difftime(now, lastMsg, units = "secs")) >= interval) {
+      elapsed <- as.numeric(difftime(now, t0, units = "secs"))
       pct <- if (!is.na(total)) paste0(" (", round(100 * got / total), "%)") else ""
       rate <- if (elapsed > 0) paste0(" | ", .humanBytes(got / elapsed), "/s") else ""
       messagePreProcess("  downloaded ", .humanBytes(got), totTxt, pct, rate, verbose = verbose)
@@ -1563,6 +1571,12 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   }
   close(con)
   conOpen <- FALSE
+  ## writeBin() only warns when a write fails (a full disk, a quota), so the loop above runs to
+  ## the end of the body while the file stops growing. The file must hold what was received.
+  onDisk <- file.size(destFile)
+  if (!isTRUE(onDisk == got))
+    stop("Download incomplete: received ", got, " bytes but only ", onDisk,
+         " were written to ", destFile, " (is the disk full?)", call. = FALSE)
   # Only emit the closing line if we already reported progress, i.e. the download
   # ran longer than one interval. Fast/instant downloads (e.g. a local `file://`
   # source, as in the test fixtures) then stay completely silent -- matching the
@@ -1570,9 +1584,31 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   # while genuinely long downloads still get periodic lines plus this summary.
   if (isTRUE(shownAny)) {
     messagePreProcess("  downloaded ", .humanBytes(got), totTxt, " in ",
-                      round(as.numeric(Sys.time() - t0), 1), "s", verbose = verbose)
+                      round(as.numeric(difftime(Sys.time(), t0, units = "secs")), 1), "s",
+                      verbose = verbose)
   }
   resp
+}
+
+#' Stop if a downloaded file is shorter or longer than the server said
+#'
+#' The size is checked only when the server sent a `Content-Length` for the body as stored,
+#' i.e. with no `Content-Encoding` (curl decompresses an encoded body, so its length differs).
+#' @param file The downloaded file.
+#' @param resp The httr2 response it came from.
+#' @param url For the message.
+#' @return `NULL`, invisibly; called for its error.
+#' @noRd
+.dlCheckSize <- function(file, resp, url) {
+  enc <- httr2::resp_header(resp, "content-encoding")
+  if (!is.null(enc) && !identical(tolower(enc), "identity")) return(invisible(NULL))
+  expected <- suppressWarnings(as.numeric(httr2::resp_header(resp, "content-length")))
+  if (length(expected) != 1L || is.na(expected)) return(invisible(NULL))
+  got <- file.size(file)
+  if (!isTRUE(got == expected))
+    stop("Download of ", url, " is incomplete: ", got, " bytes written, but the server sent ",
+         "Content-Length ", expected, call. = FALSE)
+  invisible(NULL)
 }
 
 #' Read the head of a just-downloaded file to detect an HTML rejection page
@@ -2923,10 +2959,11 @@ runDlFun <- function(args, dlFun) {
 #' unlink(tf)
 #'
 purgeChecksums <- function(checksumFile, fileToRemove) {
-  dt <- data.table::fread(checksumFile)
-  toPurge <- dt[file %in% fileToRemove]
-  dtNew <- dt[!toPurge, on = c("file", "checksum")]
-  data.table::fwrite(dtNew, file = checksumFile)
+  dt <- data.table::fread(checksumFile, colClasses = "character")
+  dtNew <- dt[!file %in% fileToRemove]
+  ## Written as Checksums() writes it. fwrite()'s commas made a CHECKSUMS.txt that Checksums()
+  ## (read.table(), whitespace-separated) read as one column named "file.checksum.filesize...".
+  writeChecksumsTable(as.data.frame(dtNew), checksumFile, dots = list())
 }
 
 download_resumable_httr2 <- function(file_name, local_path, gdriveDetails, fileSize = NULL,

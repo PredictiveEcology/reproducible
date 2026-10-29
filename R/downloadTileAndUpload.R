@@ -979,21 +979,32 @@ numCoresToUse <- function(min = 2, max = NULL) {
   whUrl <- which(keys == "url")
   if (length(whUrl)) url <- entries[[whUrl[[1L]]]]$value
 
-  # the digest line is any keyed line that is neither the etag nor the url
-  whDigest <- which(!keys %in% c("etag", "url"))
+  # size in bytes of the file the sidecar was written for; absent in older sidecars
+  size <- NULL
+  whSize <- which(keys == "size")
+  if (length(whSize)) size <- suppressWarnings(as.numeric(entries[[whSize[[1L]]]]$value))
+
+  # the digest line is any keyed line that is not the etag, url or size
+  whDigest <- which(!keys %in% c("etag", "url", "size"))
   if (length(whDigest)) {
     e <- entries[[whDigest[[1L]]]]
-    return(list(algorithm = e$key, hash = e$value, etag = etag, url = url))
+    out <- list(algorithm = e$key, hash = e$value, etag = etag, url = url)
+    out$size <- size # only when recorded
+    return(out)
   }
   if (!is.null(etag)) {
     # ETag only: keep algorithm/hash populated so callers that predate the
     # `etag` field continue to behave as they did.
-    return(list(algorithm = "etag", hash = etag, etag = etag, url = url))
+    out <- list(algorithm = "etag", hash = etag, etag = etag, url = url)
+    out$size <- size
+    return(out)
   }
 
   # Legacy single-hash sidecar: infer algorithm from hash length.
   line <- txt[[1L]]
-  list(algorithm = .classifyRemoteHashAlgo(line), hash = line, etag = NULL, url = url)
+  out <- list(algorithm = .classifyRemoteHashAlgo(line), hash = line, etag = NULL, url = url)
+  out$size <- size
+  out
 }
 
 # Path of the sidecar for (url, targetFile).
@@ -1043,9 +1054,14 @@ numCoresToUse <- function(min = 2, max = NULL) {
 }
 
 makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
-                               algorithm = NULL, write = FALSE, etag = NULL) {
+                               algorithm = NULL, write = FALSE, etag = NULL, size = NULL) {
   remoteHashFile <- .findRemoteHashFile(url, destinationPath, targetFile)
   if (isTRUE(write) && !file.exists(remoteHashFile)) {
+    # By default, the size of the file the sidecar is written beside: every writer has just
+    # verified that file against the remote.
+    besideFile <- file.path(destinationPath, basename(targetFile))
+    if (is.null(size) && file.exists(besideFile) && !dir.exists(besideFile))
+      size <- file.size(besideFile)
     # A digest and an ETag answer different questions, so record both when the
     # remote offers both:
     #   digest -- pins the bytes; can be recomputed locally to confirm that a
@@ -1071,6 +1087,11 @@ makeRemoteHashFile <- function(url, destinationPath, targetFile, remoteHash,
     # from this URL" is what makes revalidateRemotes() possible.
     if (length(lines) && !is.null(url) && isTRUE(nzchar(url)))
       lines <- c(lines, paste0("url:", url))
+    # The size the file had when the sidecar vouched for it; a file of another size is not the
+    # one the sidecar describes. After the digest line, which older readers take as the first
+    # keyed line that is not etag or url.
+    if (length(lines) && length(size) == 1L && isTRUE(size >= 0))
+      lines <- c(lines, paste0("size:", format(size, scientific = FALSE)))
     if (length(lines)) writeLines(lines, remoteHashFile)
   }
   return(remoteHashFile)

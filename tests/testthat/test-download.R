@@ -19,6 +19,7 @@ test_that("dlGeneric without httr2 downloads in binary mode (#635)", {
     .requireNamespace = function(pkg, ...) FALSE,
     download.file = function(url, destfile, mode = "w", ...) {
       mode <<- mode
+      file.create(destfile)
       0L
     }
   )
