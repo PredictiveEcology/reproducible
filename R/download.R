@@ -52,7 +52,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
   # browser(expr = exists("._downloadFile_1"))
   if (missing(.tempPath)) {
-    .tempPath <- tempdir2(rndstr(1, 6))
+    .tempPath <- .downloadStagingDir(destinationPath)
     on.exit(unlink(.tempPath, recursive = TRUE), add = TRUE)
   }
   if (missing(targetFile)) {
@@ -166,7 +166,7 @@ downloadFile <- function(archive, targetFile, neededFiles,
 
           )
         },
-        warnings = function(w) {
+        warning = function(w) {
           warns <<- w$message
         },
         message = function(m) {
@@ -2264,7 +2264,7 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
 
   noTargetFile <- is.null(targetFile) || length(targetFile) == 0
   if (missing(.tempPath)) {
-    .tempPath <- tempdir2(rndstr(1, 6))
+    .tempPath <- .downloadStagingDir(destinationPath)
     on.exit(
       {
         unlink(.tempPath, recursive = TRUE)

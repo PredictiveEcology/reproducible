@@ -893,6 +893,8 @@ pp_download <- function(ctx) {
   # downloadFile via a closure, so dlFun is passed as a lazy promise (variable
   # lookup) rather than being evaluated by do.call.
   dlFunCaptured <- ctx$dlFunCaptured
+  dlStage <- .downloadStagingDir(ctx$destinationPath)
+  on.exit(unlink(dlStage, recursive = TRUE), add = TRUE)
   dlArgs <- c(
     list(
       archive        = if (isTRUE(is.na(ctx$archive))) NULL else ctx$archive,
@@ -908,7 +910,7 @@ pp_download <- function(ctx) {
       purge          = ctx$purge,
       alsoExtract    = ctx$alsoExtract,
       verbose        = ctx$verbose,
-      .tempPath      = ctx$.tempPath,
+      .tempPath      = dlStage,
       .callingEnv    = ctx$.callingEnv
     ),
     ctx$dots
@@ -2630,6 +2632,25 @@ dealWithArchive <- function(archive, url, targetFile, checkSums, alsoExtract, de
     archive = archive,
     fileGuess = fileGuess
   )
+}
+
+#' Where a download is written before it is moved into `destinationPath`
+#'
+#' A hidden folder inside `destinationPath`, not under [tempdir2()]. On an HPC node `tempdir()`
+#' can be a small tmpfs (500 MB on the GPSC), so a multi-GB download staged there was cut short;
+#' on the same file system as its destination the finished file is also hard-linked into place
+#' rather than copied a second time. Falls back to [tempdir2()] when there is no
+#' `destinationPath` or the folder cannot be made. The caller removes it.
+#' @param destinationPath The folder the download is for, or `NULL`.
+#' @return The path of an existing, empty folder.
+#' @keywords internal
+#' @noRd
+.downloadStagingDir <- function(destinationPath) {
+  if (length(destinationPath) == 1L && !is.na(destinationPath) && nzchar(destinationPath)) {
+    d <- file.path(destinationPath, paste0(".reproducibleDownload_", rndstr(1, 8)))
+    if (isTRUE(dir.create(d, recursive = TRUE, showWarnings = FALSE))) return(normPath(d))
+  }
+  tempdir2(rndstr(1, 6))
 }
 
 #' The sidecars that still vouch for `localFile`

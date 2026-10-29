@@ -122,3 +122,64 @@ test_that("an ETag sidecar does not vouch for a local file of the wrong size", {
     "local file matches remote version"
   )
 })
+
+test_that("a download is staged in destinationPath, not in a small tempdir", {
+  skip_on_cran()
+  skip_if_not_installed("httr2")
+  skip_if_not_installed("curl")
+  testInit()
+
+  ## On a GPSC compute node tempdir() is a 500 MB tmpfs, and every download was first written
+  ## there (tempdir2()), so a 3.4 GB file was cut to exactly what fitted, twice, on two jobs.
+  ## The download must be written on the destination's file system.
+  smallTmp <- checkPath(file.path(tmpdir, "smallTmp"), create = TRUE)
+  withr::local_options(reproducible.tempPath = smallTmp)
+
+  body <- as.raw(sample(0:255, 3e6, TRUE))
+  srv <- startTestHttpServer(body)
+  on.exit(srv$stop(), add = TRUE)
+  dest <- checkPath(file.path(tmpdir, "dest"), create = TRUE)
+
+  seen <- character()
+  origDl <- dlGeneric
+  local_mocked_bindings(dlGeneric = function(url, destinationPath, ...) {
+    seen <<- c(seen, destinationPath)
+    origDl(url, destinationPath, ...)
+  })
+  f <- prepInputs(url = srv$url, destinationPath = dest, fun = NA, useCache = FALSE, verbose = -1)
+
+  expect_identical(readBin(f, "raw", length(body) + 1), body)
+  expect_true(length(seen) > 0)
+  expect_true(all(startsWith(normPath(seen), normPath(dest))))
+  expect_false(any(startsWith(normPath(seen), normPath(smallTmp))))
+  ## the staging folder is gone afterwards
+  expect_length(dir(dest, pattern = "^\\.reproducibleDownload_", all.files = TRUE), 0L)
+})
+
+test_that("downloadFile() passes a download's warnings on to its error handling", {
+  testInit()
+
+  ## withCallingHandlers() was given `warnings =`, which is not a condition class, so no
+  ## warning was ever recorded and the SSL check in dlErrorHandling() never saw one.
+  dest <- checkPath(file.path(tmpdir, "dest"), create = TRUE)
+  seenWarns <- character()
+  local_mocked_bindings(
+    downloadRemote = function(...) {
+      warning("a download warning")
+      stop("download failed")
+    },
+    dlErrorHandling = function(failed, downloadResults, warns, ...) {
+      seenWarns <<- c(seenWarns, warns)
+      stop("stop here")
+    }
+  )
+  needed <- file.path(dest, "x.bin")
+  expect_error(suppressWarnings(downloadFile(
+    archive = NULL, targetFile = "x.bin", neededFiles = needed,
+    destinationPath = dest, quick = FALSE,
+    checksumFile = file.path(dest, "CHECKSUMS.txt"),
+    checkSums = .emptyChecksumsResult,
+    url = "https://example.invalid/x.bin", needChecksums = 0, preDigest = NULL
+  )), "stop here")
+  expect_identical(seenWarns, "a download warning")
+})
