@@ -2409,3 +2409,22 @@ test_that("a quoted-call fun re-runs when the local file or a caller variable ch
     expect_identical(nrow(load()), 2L)             # caller variable changed
   }
 })
+
+test_that("a cache hit of a prepInputs with a long quoted-call fun prints its messages once", {
+  testInit(opts = list(reproducible.inputPaths = NULL))
+  withr::local_options(reproducible.cachePath = tmpCache, reproducible.verbose = 2)
+  f <- file.path(tmpdir, "a.csv")
+  write.csv(data.frame(x = 1:3), f, row.names = FALSE)
+  ## format() of a call this long is several lines; each used to repeat the messages
+  longArg <- seq(1000.123456, 2000.123456, length.out = 12)
+  load <- function() prepInputs(targetFile = "a.csv", destinationPath = tmpdir,
+                                fun = quote(utils::read.csv(targetFile, nrows = length(c(
+                                  1000.123456, 1100.123456, 1200.123456, 1300.123456, 1400.123456,
+                                  1500.123456, 1600.123456, 1700.123456, 1800.123456, 1900.123456)))),
+                                useCache = TRUE)
+  load()
+  mess <- capture_messages(load())
+  mess <- paste(mess, collapse = " ")
+  expect_identical(lengths(regmatches(mess, gregexpr("Object to retrieve", mess))), 1L)
+  expect_identical(lengths(regmatches(mess, gregexpr("Loaded!", mess))), 1L)
+})

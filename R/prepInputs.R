@@ -1785,7 +1785,7 @@ process <- function(out, funCaptured,
                   args
                 )
                 # out[["targetFile"]] <- out[["targetFilePath"]] # handle both
-                if (is.null(funChar)) funChar <- paste0(substr(format(theFun), start = 1, stop = 40), "...")
+                if (is.null(funChar)) funChar <- paste0(substr(paste(format(theFun), collapse = " "), start = 1, stop = 40), "...")
                 # key on what the call uses: the rest of `out` holds every CHECKSUMS.txt row in
                 #  destinationPath, so any new file there would miss
                 outUsed <- out[intersect(names(out), all.vars(theFun))]

@@ -275,7 +275,7 @@ messageQuestion <- function(..., verboseLevel = 0, appendLF = TRUE) {
 .messageFunctionFn <- function(..., appendLF = TRUE, verbose = getOption("reproducible.verbose"),
                                verboseLevel = 1) {
   fn <- cliCol(getOption("reproducible.messageColourFunction"))
-  fn(...)
+  fn(paste0(..., collapse = " ")) # a vector (e.g., a multi-line format()) would repeat the whole message
 }
 
 #' @param colour Any colour that can be understood by `cli`
