@@ -2245,3 +2245,18 @@ test_that(".digest with empty and broken files", {
   expect_true(length(a) == 1)
 
 })
+
+test_that("'Object to retrieve' is one message when the object is stored in more than one file", {
+  ## e.g., a raster's .tif and its .xml sidecar: one fileFormat tag per file
+  testInit(opts = list(reproducible.verbose = 2))
+  tags <- data.frame(cacheId = "abc", tagKey = c("fileFormat", "fileFormat", "file.size"),
+                     tagValue = c("tif", "xml", "100"))
+  mess <- capture_messages(.cacheMessageObjectToRetrieve("makeELFs", tags, cachePath = tmpCache,
+                                                         cacheId = "abc", verbose = 2))
+  mess <- paste(mess, collapse = " ")
+  expect_identical(lengths(regmatches(mess, gregexpr("Object to retrieve", mess))), 1L)
+  ## a vector functionName cannot repeat the message either
+  mess <- paste(capture_messages(.cacheMessage(1, c("a", "b"), fromMemoise = FALSE, verbose = 2)),
+                collapse = " ")
+  expect_identical(lengths(regmatches(mess, gregexpr("Loaded!", mess))), 1L)
+})
