@@ -4,6 +4,13 @@
 ## tags; entries that do not -- file-backed objects inside a cached SpaDES simList -- left their rasters behind
 ## (FireSense, 2026-09-24: 22 rasters of two cleared .inputObjects entries).
 
+## Lock files are not an entry's files: clearCache() must leave a held lock alone (a filelock that cannot
+##   remove its file at release leaves them behind).
+entryFiles <- function(storage, pattern) {
+  fs <- dir(storage, pattern = pattern)
+  fs[!endsWith(fs, reproducible:::suffixLockFile())]
+}
+
 test_that("clearCache(cacheId = ) removes the entry's file-backed rasters", {
   skip_if_not_installed("terra")
   testInit("terra")
@@ -24,7 +31,7 @@ test_that("clearCache(cacheId = ) removes the entry's file-backed rasters", {
   expect_true(file.exists(untagged))
 
   clearCache(tmpCache, cacheId = ids[1], ask = FALSE, verbose = -2)
-  expect_length(dir(storage, pattern = paste0("^", ids[1])), 0L)                # nothing of the entry left
+  expect_length(entryFiles(storage, paste0("^", ids[1])), 0L)               # nothing of the entry left
   expect_true(length(dir(storage, pattern = paste0("^", ids[2], "_"))) > 0)    # the other entry untouched
 })
 
@@ -44,7 +51,7 @@ test_that("clearCache(cacheId = ) removes exactly the files of those ids, for fe
   for (id in ids) file.create(file.path(storage, paste0(id, "_copy.tif")))
   decoys <- file.path(storage, c(paste0("x", ids[1], ".rds"), paste0(ids[1], "x.rds"), "unrelated.txt"))
   file.create(decoys)
-  filesOf <- function(i) dir(storage, pattern = paste0("^(", paste(i, collapse = "|"), ")[._]"))
+  filesOf <- function(i) entryFiles(storage, paste0("^(", paste(i, collapse = "|"), ")[._]"))
   before <- dir(storage)
   filesOfBefore1 <- filesOf(ids[1])
 
