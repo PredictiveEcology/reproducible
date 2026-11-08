@@ -444,7 +444,6 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
     for (id in cacheId) { # one entry at a time: each lock is released before the next is taken
       withLockFile(CacheTagLockFile(cachePath, id),
                    unlink(CacheDBFileSingle(cachePath = cachePath, cacheId = id, cacheSaveFormat = cacheSaveFormat)))
-      unlink(CacheTagLockFile(cachePath, id)) # an entry's lock files go with it, as in clearCache()
     }
   }
   unlink(CacheStoredFile(cachePath, cacheId = cacheId, cacheSaveFormat = cacheSaveFormat, readOnly = TRUE))

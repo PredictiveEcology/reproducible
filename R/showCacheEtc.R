@@ -264,6 +264,11 @@ setMethod(
       # }) |> unlist() |> unname()
 
       filesToRemove <- unique(c(filesToRemove1, filesToRemove2, filesToRemove4))
+      ## `<cacheId>.lock` and `<cacheId>.tags.lock` match the pattern above, but they are held by a
+      ##   running Cache() (e.g. `useCache = "overwrite"` clears the entry it holds). Deleting one lets the
+      ##   next process lock a fresh file at that path while the holder is still inside. Only the holder
+      ##   removes a lock file, when it releases it (releaseLockFile()).
+      filesToRemove <- filesToRemove[!endsWith(unlist(filesToRemove), suffixLockFile())]
       # filebackedInRepo <- objsDT[grepl(pattern = "fromDisk", tagKey) &
       #                           grepl(pattern = "TRUE", get(.cacheTableTagColName()))]
       #
