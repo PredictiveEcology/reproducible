@@ -202,7 +202,8 @@ test_that("test file-backed raster caching", {
     expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
     clearCache(tmpCache, userTags = "something2", ask = FALSE)
     expect_equal(NROW(showCache(tmpCache)), 0)
-    expect_equal(NROW(dir(CacheStorageDir(tmpCache))), 0) # make sure the `.tif` file is also gone
+    left <- dir(CacheStorageDir(tmpCache))
+    expect_equal(sum(!endsWith(left, suffixLockFile())), 0) # make sure the `.tif` file is also gone; lock files stay
 
     aa <- Cache(randomPolyToDisk, tmpfile[1], cachePath = tmpCache, userTags = "something2")
     expect_equal(NROW(showCache(tmpCache)[!tagKey %in% .ignoreTagKeys()]), val1)
