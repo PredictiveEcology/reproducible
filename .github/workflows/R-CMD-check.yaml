@@ -21,4 +21,6 @@ jobs:
       # Run \dontrun / \donttest examples the way CRAN's incoming checks do.
       check-args: 'c("--no-manual", "--as-cran", "--run-dontrun", "--run-donttest")'
       # Keep the windows oldrel-2 (R 4.4) leg reproducible tested before migrating.
+      # It is the oldest R tested, so it sets the R floor in DESCRIPTION; raise
+      # the floor when oldrel-2 rolls forward each April.
       extra-config: '[{"config":{"os":"windows-latest","nosuggests":false,"r":"oldrel-2"}}]'

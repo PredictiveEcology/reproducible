@@ -1,5 +1,9 @@
 # reproducible (development version)
 
+## Dependency changes
+
+* reproducible now needs R >= 4.4 (was 4.3), the oldest R version its checks run on (#663).
+
 ## Enhancements
 
 * New `filesUsedTrace(script, args, folders, traceFile)`: runs an R script under `strace` (Linux; `strace` optional, see SystemRequirements) and returns a `data.frame` (`path`, `folder`, `size`) of the existing files under `folders` that the run opened, so a run can be staged on a machine without internet by copying only those inputs and cache files. An existing trace file can be given instead of running the script.
