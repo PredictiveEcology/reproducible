@@ -587,7 +587,7 @@ isConnectionError <- function(e) {
     drive = {
       folder <- .geoDriveFolder(ledger, create = FALSE)
       if (is.null(folder)) return(none)
-      files <- driveLs(folder, verbose = 0)
+      files <- driveLs(folder, name = ledger$file, verbose = 0)
       files <- files[files$name %in% ledger$file, ]
       if (!NROW(files)) return(none)
       resources <- files$drive_resource

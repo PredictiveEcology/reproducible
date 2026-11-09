@@ -440,3 +440,45 @@ test_that("Drive remote: write, public-style read, no upload on read, no folder 
   suppressWarnings(CacheGeoRead(ghost, area = NULL, verbose = 0))
   expect_identical(NROW(googledrive::drive_find(q = missingQuery)), before)
 })
+
+test_that(".geoRemoteState() asks Drive only for the ledger's file name", {
+  skip_if_not_installed("googledrive")
+  seen <- new.env()
+  res <- function(id, time) list(id = id, modifiedTime = time, md5Checksum = paste0("md5", id),
+                                 webViewLink = paste0("url", id))
+  listing <- NULL
+  fakeLs <- function(path, pattern = NULL, q = NULL, ...) {
+    seen$q <- q
+    listing
+  }
+  mk <- function(...) {
+    x <- list(...)
+    d <- data.frame(name = vapply(x, `[[`, "", "name"), id = vapply(x, function(i) i$res$id, ""))
+    d$drive_resource <- lapply(x, `[[`, "res")
+    d
+  }
+  local_mocked_bindings(.geoDriveFolder = function(ledger, create) googledrive::as_dribble(),
+                        .package = "reproducible")
+  local_mocked_bindings(drive_ls = fakeLs, .package = "googledrive")
+  ledger <- list(remoteType = "drive", remote = "folder", file = "my ledger's.rds")
+
+  listing <- mk(list(name = "my ledger's.rds", res = res("old", "2024-01-01T00:00:00Z")),
+                list(name = "my ledger's.rds", res = res("new", "2025-01-01T00:00:00Z")))
+  st <- reproducible:::.geoRemoteState(ledger)
+  expect_identical(seen$q, "name = 'my ledger\\'s.rds'")
+  expect_true(st$exists)
+  expect_identical(st$id, "new")
+  expect_identical(st$md5, "md5new")
+  expect_identical(st$url, "urlnew")
+
+  listing <- mk(list(name = "other.rds", res = res("x", "2024-01-01T00:00:00Z")))
+  expect_false(reproducible:::.geoRemoteState(ledger)$exists)
+
+  listing <- mk(list(name = "my ledger's.rds", res = res("only", "2024-01-01T00:00:00Z")))
+  expect_identical(reproducible:::.geoRemoteState(ledger)$id, "only")
+})
+
+test_that(".cloudNameEqualsQuery() escapes quotes and backslashes", {
+  expect_identical(reproducible:::.cloudNameEqualsQuery("a.b"), "name = 'a.b'")
+  expect_identical(reproducible:::.cloudNameEqualsQuery("a\\b'c"), "name = 'a\\\\b\\'c'")
+})

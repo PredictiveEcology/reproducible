@@ -160,6 +160,11 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
   sprintf("name contains '%s'", pattern)
 }
 
+# The same, for one exact file name (`name = '...'`). Drive query strings escape \ and ' with a backslash.
+.cloudNameEqualsQuery <- function(name) {
+  sprintf("name = '%s'", gsub("(['\\\\])", "\\\\\\1", name))
+}
+
 ## Which Google Drive identity do reads of a cloud cache folder use? The same cascade as prepInputs()
 ## (.gdrivePrepareAuth(): a loaded token, then configured identities, then anonymous), probed on the
 ## folder, so a folder shared "Anyone with the link" is read without a Google sign-in. Returns "token"
@@ -174,7 +179,7 @@ checkAndMakeCloudFolderID <- function(cloudFolderID = getOption("reproducible.cl
   .gdrivePrepareAuth(id, verbose = verbose - 1)
 }
 
-driveLs <- function(cloudFolderID = NULL, pattern = NULL, cachePath = getOption("reproducible.cachePath"),
+driveLs <- function(cloudFolderID = NULL, pattern = NULL, name = NULL, cachePath = getOption("reproducible.cachePath"),
                     verbose = getOption("reproducible.verbose", 1),
                     team_drive = NULL) {
   .requireNamespace("googledrive",
@@ -192,7 +197,8 @@ driveLs <- function(cloudFolderID = NULL, pattern = NULL, cachePath = getOption(
   # `q` is appended to (ANDed with) the parent-folder clause drive_ls() builds, so
   # the API returns only this cacheId's files rather than the entire folder. NULL
   # when `pattern` is not a plain prefix (drive_ls(q = NULL) keeps prior behaviour).
-  nameQuery <- .cloudNamePrefixQuery(pattern)
+  # `name`, one exact file name, is narrowed the same way.
+  nameQuery <- if (is.null(name)) .cloudNamePrefixQuery(pattern) else .cloudNameEqualsQuery(name)
   messageCache("Retrieving file list in cloud folder", verbose = verbose)
   gdriveLs <- try(.gdriveRetry(
     googledrive::drive_ls(
