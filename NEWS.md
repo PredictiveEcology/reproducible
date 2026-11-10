@@ -15,6 +15,7 @@
 
 ## Bug fixes
 
+* A `Cache()` hit no longer turns an `sf` result into a `SpatVector` (or the reverse) just because the call's spatial argument has that class. Since 3.2.1.9066 every hit was converted to the class of the first `sf`/`SpatVector` argument, so `Cache(f, studyArea = <SpatVector>)` for a function that always returns `sf` gave `sf` the first time and a `SpatVector` on every later hit. The entry now records the class of that argument when it is saved, and a hit is converted only when the saved output had the class of its input and the current input has the other class. Entries saved before this are returned as they were stored.
 * `Cache(useCache = "overwrite")` on an existing key no longer lets a second process into the locked section. `clearCache()` listed the entry's `<cacheId>.lock` and `<cacheId>.tags.lock` files among the entry's files and deleted the lock the caller was holding, so the next process locked a fresh file and both ran at once. `clearCache()` now never removes lock files of an entry (only the holder removes its lock, on release), and `rmFromCache()` no longer deletes the tags lock after releasing it.
 
 * A single Cache hit printed its "Object to retrieve" and "Loaded!" messages several times when `prepInputs(fun = <long call>)` formatted over several lines, or when the cached object was stored in more than one file (e.g., a `.tif` and its `.xml`). Each is now one message; cache keys are unchanged.

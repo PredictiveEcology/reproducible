@@ -707,23 +707,34 @@ isUpdated <- function(x) {
 #'
 #' `sf` and `SpatVector` objects share a cacheId (see `.robustDigest()`), so a
 #' call first cached with one class can be hit by the other. If the cached
-#' `output` is an `sf` or `SpatVector`, convert it to the class of the first
-#' `sf` or `SpatVector` among the evaluated arguments of `func_call`.
-#' Anything else is returned unchanged.
+#' `output` is an `sf` or `SpatVector` of the other class than the first `sf` or
+#' `SpatVector` among the evaluated arguments of `func_call`, convert it -- but
+#' only when the entry's `inputVectorClass` tag (written at save time, see
+#' `.inputVectorClass()`) shows the output had the class of the input it was made
+#' from. A function that returns `sf` whatever it is given keeps returning `sf`.
+#' Entries without the tag are returned unchanged.
 #'
 #' @param output The object loaded from the cache (memoised or on disk).
 #' @param func_call The call with evaluated arguments (`callList$func_call`).
+#' @param cacheId,cachePaths The entry's cacheId and the cache repositories.
 #' @param verbose Passed to `messageCache`.
 #' @return `output`, possibly converted.
 #' @keywords internal
 #' @noRd
-returnInClassOfInput <- function(output, func_call, verbose = getOption("reproducible.verbose")) {
+returnInClassOfInput <- function(output, func_call, cacheId, cachePaths,
+                                 verbose = getOption("reproducible.verbose")) {
   isSf <- function(x) inherits(x, "sf")
-  isVect <- function(x) inherits(x, "SpatVector")
-  if (!(isSf(output) || isVect(output))) return(output)
-  inp <- Find(function(x) isSf(x) || isVect(x), as.list(func_call)[-1])
-  if (is.null(inp) || isSf(inp) == isSf(output)) return(output)
-  if (isSf(inp)) {
+  if (!(isSf(output) || inherits(output, "SpatVector"))) return(output)
+  inpClass <- .inputVectorClass(func_call)
+  if (is.null(inpClass) || identical(inpClass == "sf", isSf(output))) return(output)
+  savedInpClass <- NULL
+  for (cp in cachePaths) {
+    savedInpClass <- extractFromCache(showCacheFast(cacheId, cp), elem = "inputVectorClass")
+    if (length(savedInpClass)) break
+  }
+  outClass <- if (isSf(output)) "sf" else "SpatVector"
+  if (!identical(savedInpClass[1], outClass)) return(output)
+  if (inpClass == "sf") {
     if (!requireNamespace("sf", quietly = TRUE)) return(output)
     out <- sf::st_as_sf(output)
     cls <- c("SpatVector", "sf")
@@ -735,4 +746,13 @@ returnInClassOfInput <- function(output, func_call, verbose = getOption("reprodu
   messageCache("Cached result was a ", cls[1], "; returned as ", cls[2], " to match the input",
                verbose = verbose)
   out
+}
+
+#' `"sf"` or `"SpatVector"`: the class of the first such argument in `func_call`
+#' @return `NULL` if there is none.
+#' @keywords internal
+#' @noRd
+.inputVectorClass <- function(func_call) {
+  inp <- Find(function(x) inherits(x, c("sf", "SpatVector")), as.list(func_call)[-1])
+  if (is.null(inp)) NULL else if (inherits(inp, "sf")) "sf" else "SpatVector"
 }
