@@ -625,7 +625,7 @@ local_cacheGeoReads <- function(envir = parent.frame()) {
 ## Drive layout for the test suite:
 ##
 ##   testsForPkgs/                        <- stable parent, NEVER deleted
-##     run-<GHA run>-<job>-<rnd>/         <- one per test SESSION, removed on teardown
+##     run-<GHA run>-<job>-<rnd>/         <- one per test SESSION, removed by setup.R's teardown
 ##       <per-test working folders>
 ##
 ## The suite originally used "testsForPkgs" itself as the working root and
@@ -640,7 +640,8 @@ local_cacheGeoReads <- function(envir = parent.frame()) {
 ## does not accumulate one folder per run. Their names carry the GHA run and job
 ## when available, so anything left behind by a cancelled run (which cannot run
 ## its own teardown) is traceable; the random suffix keeps concurrent local runs
-## apart too.
+## apart too. Such leftovers are trashed by .sweepOldCloudTestRuns() in a later
+## session.
 
 ## The stable parent. Fetched if it exists, created once if not, and never
 ## removed -- deleting it is precisely the bug described above.
@@ -660,10 +661,31 @@ local_cacheGeoReads <- function(envir = parent.frame()) {
       } else {
         retry(quote(googledrive::drive_mkdir(name = "testsForPkgs")))
       }
+      .sweepOldCloudTestRuns(dir)
     }
     dir
   }
 })
+
+## Trash session folders that an earlier session left behind: a cancelled or
+## timed-out run never reaches its teardown. Only folders this account owns (in
+## a personal My Drive only the owner may trash), named run-*, and older than
+## `olderThanDays` so no running session loses its folder. At most `max` per
+## call, so a backlog drains over a few sessions without slowing any one of them.
+## Trashed, not deleted, so a mistake can be undone for 30 days. Never errors.
+.sweepOldCloudTestRuns <- function(parent, olderThanDays = 3, max = 50) {
+  cutoff <- format(Sys.time() - olderThanDays * 86400, "%Y-%m-%dT%H:%M:%S", tz = "UTC")
+  old <- tryCatch(googledrive::drive_ls(
+    googledrive::as_id(parent$id),
+    q = c("name contains 'run-'", "'me' in owners", sprintf("createdTime < '%s'", cutoff)),
+    n_max = max
+  ), error = function(e) NULL)
+  if (!NROW(old)) return(invisible(0L))
+  old <- old[startsWith(old$name, "run-"), ]
+  for (i in seq_len(NROW(old)))
+    try(googledrive::with_drive_quiet(googledrive::drive_trash(old[i, ])), silent = TRUE)
+  invisible(NROW(old))
+}
 
 .cloudTestRootName <- local({
   nm <- NULL
@@ -677,16 +699,22 @@ local_cacheGeoReads <- function(envir = parent.frame()) {
   }
 })
 
-## This session's working folder, inside the stable parent.
+## This session's working folder, inside the stable parent. Removed once, when
+## the session ends, by the teardown in setup.R. It used to be removed after
+## every test that called googleSetupForUseCloud(), so the next test created
+## another with the same name -- and the last one, made by a test that never
+## removed it, was left behind on every run.
 ##
-## Self-healing on purpose: googleSetupForUseCloud() removes it in its teardown,
-## so a later test_that() in the same session finds it gone. Without the
-## existence check, drive_mkdir(path = <deleted folder>) fails, retries five
-## times and reports "Failed after 5 attempts". (The old fixed-name code got
-## this right by accident, re-creating "testsForPkgs" whenever it was missing.)
+## `peek = TRUE` returns the folder if this session made one, else NULL, and
+## creates nothing: that is what the teardown needs.
+##
+## Self-healing: if the folder has gone (removed by hand, or by a test),
+## drive_mkdir(path = <deleted folder>) would fail five times and report "Failed
+## after 5 attempts", so it is re-created instead.
 .cloudTestRoot <- local({
   dir <- NULL
-  function() {
+  function(peek = FALSE) {
+    if (isTRUE(peek)) return(dir)
     stillThere <- !is.null(dir) && isTRUE(tryCatch({
       googledrive::drive_get(id = dir$id); TRUE
     }, error = function(e) FALSE))
@@ -699,12 +727,10 @@ local_cacheGeoReads <- function(envir = parent.frame()) {
 })
 
 googleSetupForUseCloud <- function(cloudFolderID, tmpdir, tmpCache) {
-  testsForPkgsDir <- .cloudTestRoot()
   on.exit2({
-    ## Teardown is best-effort: removing this session's own root takes its
-    ## subfolders with it, and a 404 here means something already went. Never
-    ## fail a test on cleanup.
-    try(googledrive::drive_rm(testsForPkgsDir), silent = TRUE)
+    ## Teardown is best-effort: a 404 here means something already went. Never
+    ## fail a test on cleanup. The session folder itself is removed once, at the
+    ## end of the session (setup.R), not here.
     try(googledrive::drive_rm(cloudFolderID), silent = TRUE)
     try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpdir)), silent = TRUE)
     try(googledrive::drive_rm(cloudFolderFromCacheRepo(tmpCache)), silent = TRUE)
