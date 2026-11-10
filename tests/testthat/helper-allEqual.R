@@ -8,6 +8,46 @@ skip_if_no_token <- function() {
   testthat::skip_if_not(googledrive::drive_has_token(), "No Drive token")
 }
 
+## Authenticate to Google Drive from the credential the CI workflow staged
+## (PredictiveEcology/actions stage-gdrive-auth), or one you point at locally.
+## Each env var holds a PATH, and at most one is set:
+##   GDRIVE_OAUTH_TOKEN -- a saveRDS'd user OAuth token -> drive_auth(token = )
+##   GOOGLEDRIVE_AUTH   -- a service-account key (JSON)  -> drive_auth(path = )
+## A service account can read, and can upload to a Shared Drive, but cannot
+## upload into a folder in a person's My Drive (no storage quota): the upload
+## tests then fail, which is the intended signal.
+##
+## Returns NULL when a token is loaded or nothing is configured, else a string
+## saying why the configured credential did not work. Never errors: callers
+## decide whether that is a skip or a failure.
+.gdriveAuthFromEnv <- function() {
+  if (googledrive::drive_has_token()) return(NULL)
+  tokenFile <- Sys.getenv("GDRIVE_OAUTH_TOKEN")
+  saFile <- Sys.getenv("GOOGLEDRIVE_AUTH")
+  if (!nzchar(tokenFile) && !nzchar(saFile)) return(NULL)
+  why <- tryCatch({
+    if (nzchar(tokenFile)) {
+      tok <- readRDS(tokenFile)
+      ## Drop the token's own cache_path before using it. drive_auth() writes
+      ## the refreshed token back to that path, which is wherever the token was
+      ## MINTED (e.g. ~/.secret on a dev machine). On a CI runner that directory
+      ## does not exist, the write fails, and gargle surfaces it as "Can't get
+      ## Google credentials" -- indistinguishable from having no credential.
+      tok$cache_path <- NULL
+      googledrive::drive_auth(token = tok)
+    } else {
+      googledrive::drive_auth(path = saFile)
+    }
+    if (googledrive::drive_has_token()) NULL else "drive_auth() returned no token"
+  }, error = function(e) conditionMessage(e))
+  if (!is.null(why)) {
+    why <- paste0(if (nzchar(tokenFile)) "GDRIVE_OAUTH_TOKEN" else "GOOGLEDRIVE_AUTH",
+                  " was not usable: ", why)
+    message(why)
+  }
+  why
+}
+
 ## Run `expr` and convert transient upstream HTTP/network errors into a skip
 ## so flaky CDN behaviour (e.g. GitHub raw returning 5xx during a request)
 ## does not surface as a test FAIL. Non-transient errors propagate unchanged.
@@ -182,41 +222,7 @@ testInit <- function(libraries = character(), ask = FALSE, verbose, tmpFileExt =
     if (isTRUE(skip_gauth))
       skip("SKIP_GAUTH=true; skipping Google Drive tests")
     if (isNamespaceLoaded("googledrive"))
-      if ((!googledrive::drive_has_token())) {
-        ## Only a real user OAuth token is supported. A service account has no
-        ## Drive quota on user-owned folders: it authenticates fine but cannot
-        ## complete an upload round-trip, so the Drive tests start and then stop
-        ## part-way. Nothing fails loudly -- covr does not fail on test errors
-        ## and prints no skip summary -- so those code paths just silently show
-        ## 0 coverage (CacheGeo() sat at 0/176 lines this way).
-        ##
-        ## GDRIVE_OAUTH_TOKEN is a path to a serialized token, staged by the
-        ## reusable workflow from the org-level GOOGLEDRIVE_AUTH secret (see
-        ## PredictiveEcology/actions); locally, point it at your own saveRDS'd
-        ## token. Service accounts are not supported -- see above -- so when
-        ## this is unset the Drive tests skip via skip_if_no_token().
-        oauthTokenFile <- Sys.getenv("GDRIVE_OAUTH_TOKEN")
-        if (nzchar(oauthTokenFile) && file.exists(oauthTokenFile)) {
-          tok <- tryCatch(readRDS(oauthTokenFile), error = function(e) {
-            message("GDRIVE_OAUTH_TOKEN could not be read: ", conditionMessage(e))
-            NULL
-          })
-          if (!is.null(tok)) {
-            ## Drop the token's own cache_path before using it. drive_auth()
-            ## writes the refreshed token back to that path, which is wherever
-            ## the token was MINTED (e.g. ~/.secret on a dev machine). On a CI
-            ## runner that directory does not exist, the write fails, and gargle
-            ## surfaces it as the maximally unhelpful "Can't get Google
-            ## credentials" -- indistinguishable from having no credential at
-            ## all. A runner should not be persisting a credential to disk
-            ## anyway, so this is the right behaviour regardless.
-            tok$cache_path <- NULL
-            tryCatch(googledrive::drive_auth(token = tok),
-                     error = function(e)
-                       message("GDRIVE_OAUTH_TOKEN was not usable: ", conditionMessage(e)))
-          }
-        }
-      }
+      .gdriveAuthFromEnv()
 
     skip_if_no_token()
   }
