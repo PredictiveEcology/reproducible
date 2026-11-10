@@ -647,7 +647,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
                             verbose = getOption("reproducible.verbose", 1)) {
   id <- as.character(googledrive::as_id(id)) # a URL and its id share the saved answer
   .remoteMetadata(function() .gdriveMetadataOnline(id, shared_drive, ls),
-                  .gdriveMetadataSaved, id, shared_drive, ls,
+                  .gdriveMetadataSaved, id, shared_drive, ls, identity = .gdriveMetadataIdentity,
                   what = "Google Drive", label = id, verbose = verbose)
 }
 
@@ -656,30 +656,41 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
 # saved to the cache, so it must be plain values, not a connection or response object. `store` is
 # the function the answer is saved under (one per remote, e.g. .gdriveMetadataSaved()) and `...`
 # its key arguments; Cache() keys on the store and `...`, so neither may change without losing
-# the answers already saved. The remote is asked every time it can be reached, and its answer
-# replaces the saved one. When it cannot be reached (see isConnectionError()) the saved answer
-# is returned, with a message naming `what` (the remote) and `label` (the thing asked about).
-# With nothing saved for the key, or an error that is not a connection failure, the error is
-# raised.
-.remoteMetadata <- function(ask, store, ..., what, label, verbose = getOption("reproducible.verbose", 1)) {
+# the answers already saved. The remote is asked every time it can be reached and its fresh answer
+# is returned; the saved answer is replaced only when `identity(answer)` differs from
+# `identity(saved)`. `identity` keeps the fields that identify the remote content and drops the
+# ones that change with every request, so an unchanged remote costs one cache read, not a clear, a
+# save and the entry's lock (which parallel jobs queue behind). When the remote cannot be reached
+# (see isConnectionError()) the saved answer is returned, with a message naming `what` (the remote)
+# and `label` (the thing asked about). With nothing saved for the key, or an error that is not a
+# connection failure, the error is raised.
+.remoteMetadata <- function(ask, store, ..., identity = base::identity, what, label,
+                            verbose = getOption("reproducible.verbose", 1)) {
   storeName <- deparse(substitute(store)) # the entry's `function` tag; not part of the key
-  online <- tryCatch(list(value = ask()), error = function(e) e)
-  if (!inherits(online, "error")) {
-    ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
-    ## the function, so this cannot wrap the remote call itself (a failed call would clear it).
-    Cache(store, ..., answer = online$value, omitArgs = "answer",
-          useCache = "overwrite", verbose = FALSE, .functionName = storeName)
-    return(online$value)
-  }
-  if (!isConnectionError(online)) stop(online)
   saved <- tryCatch(
     list(value = Cache(store, ..., omitArgs = "answer", verbose = FALSE, .functionName = storeName)),
     error = function(e) NULL)
-  if (is.null(saved)) stop(online)
-  messagePreProcess(what, " cannot be reached (", substr(conditionMessage(online), 1L, 80L),
-                    "); using the metadata of ", label, " last seen online", verbose = verbose)
-  saved$value
+  online <- tryCatch(list(value = ask()), error = function(e) e)
+  if (inherits(online, "error")) {
+    if (!isConnectionError(online) || is.null(saved)) stop(online)
+    messagePreProcess(what, " cannot be reached (", substr(conditionMessage(online), 1L, 80L),
+                      "); using the metadata of ", label, " last seen online", verbose = verbose)
+    return(saved$value)
+  }
+  ## Replace the saved answer only now: useCache = "overwrite" clears the entry before it runs
+  ## the function, so this cannot wrap the remote call itself (a failed call would clear it).
+  if (is.null(saved) || !identical(identity(saved$value), identity(online$value)))
+    Cache(store, ..., answer = online$value, omitArgs = "answer",
+          useCache = "overwrite", verbose = FALSE, .functionName = storeName)
+  online$value
 }
+
+## What identifies the content of a Drive answer (a dribble from drive_get() or drive_ls()): per
+## row the id, name, md5Checksum, modifiedTime and size, the fields getRemoteMetadata() uses. The
+## rest (links, thumbnails, view and permission fields) can differ between two requests for the
+## same file.
+.gdriveMetadataIdentity <- function(answer)
+  lapply(answer$drive_resource, `[`, c("id", "name", "md5Checksum", "modifiedTime", "size"))
 
 ## The store behind .gdriveMetadata(): Cache() keys on the id, shared_drive and ls (`answer`, what
 ## Drive said, is omitted from the key). Run by Cache() on a miss: with an answer, to save it;

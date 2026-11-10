@@ -1158,7 +1158,7 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
     # The server is asked every time it can be reached (the ETag tells a changed remote file); the
     # headers are kept so this still works with no internet. See .remoteMetadata().
     head <- .remoteMetadata(function() .httpHeadMetadata(url), .httpHeadMetadataSaved, url,
-                            what = "The server", label = url)
+                            identity = .httpHeadMetadataIdentity, what = "The server", label = url)
     etagRaw <- head$etag
     remoteHash <- etagRaw |>
       gsub(pattern = "^\"|\"", replacement = "")
@@ -1192,6 +1192,10 @@ getRemoteMetadata <- function(targetFile, isGDurl, url) {
        date = httr2::resp_header(response, "Date"),
        contentDisposition = httr2::resp_header(response, "content-disposition"))
 }
+
+## What identifies the content behind a HEAD answer: the ETag, size and file name. Not `date`, the
+## time of the request, which differs on every call.
+.httpHeadMetadataIdentity <- function(answer) answer[c("etag", "contentLength", "contentDisposition")]
 
 ## The store behind the HEAD lookup, keyed on the URL; see .gdriveMetadataSaved() for the Drive one
 ## and .remoteMetadata() for how both are used. Its name, formals and body are part of the cache key.

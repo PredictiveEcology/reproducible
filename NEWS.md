@@ -1,5 +1,9 @@
 # reproducible (development version)
 
+## Bug fixes
+
+* `.remoteMetadata()` (the saved Google Drive and HTTP HEAD answers used offline) rewrote the saved answer on every call that reached the remote, even when nothing had changed, so parallel jobs queued behind one clear, save and lock per file checked. It now reads the saved answer and replaces it only when the fields that identify the content differ (Drive: `id`, `name`, `md5Checksum`, `modifiedTime`, `size` per row; HEAD: ETag, content length, content disposition, not the per-request `Date`). The remote is still asked every time and its fresh answer is returned.
+
 ## Enhancements
 
 * `CacheGeoRead()` on a Google Drive remote asks Drive only for the ledger's file name, not for the whole folder, so reading many ledgers from a large folder no longer lists every file each time.

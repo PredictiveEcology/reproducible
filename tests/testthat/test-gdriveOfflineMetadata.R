@@ -66,6 +66,43 @@ test_that("Drive metadata is asked for every time online and the last answer is 
   expect_error(.gdriveMetadata(fileId, verbose = 0), "File not found")
 })
 
+## Count the times the saved answer is replaced: Cache(useCache = "overwrite") clears the entry with
+## clearCacheOverwrite() (R/cache.R) before saving the new one.
+countOverwrites <- function(.env = parent.frame()) {
+  state <- new.env()
+  state$n <- 0L
+  clearing <- reproducible:::clearCacheOverwrite
+  counting <- function(...) { state$n <- state$n + 1L; clearing(...) }
+  testthat::local_mocked_bindings(clearCacheOverwrite = counting, .package = "reproducible", .env = .env)
+  state
+}
+
+test_that("the saved Drive answer is rewritten only when the remote file changed", {
+  skip_if_not_installed("googledrive")
+  testInit("googledrive", opts = offlineOpts)
+  withr::local_options(reproducible.cachePath = tmpCache)
+  drive <- mockDrive()
+  saves <- countOverwrites()
+
+  .gdriveMetadata(fileId, verbose = 0)
+  .gdriveMetadata(fileId, verbose = 0)
+  .gdriveMetadata(fileId, verbose = 0)
+  expect_identical(saves$n, 0L) # first call saved (not an overwrite); same answer: not rewritten
+  expect_identical(drive$calls, 3L) # but Drive is still asked every time
+
+  ## a per-request field changes (a new link, a new field): not a change of the file
+  d <- fakeDribble()
+  d$drive_resource[[1]]$webViewLink <- "https://drive.google.com/other"
+  d$drive_resource[[1]]$thumbnailLink <- "https://lh3.example/expires-soon"
+  drive$answer <- d
+  expect_identical(.gdriveMetadata(fileId, verbose = 0), d) # the fresh answer is what is returned
+  expect_identical(saves$n, 0L)
+
+  drive$answer <- fakeDribble("md5B") # a different md5
+  expect_identical(.gdriveMetadata(fileId, verbose = 0)$drive_resource[[1]]$md5Checksum, "md5B")
+  expect_identical(saves$n, 1L)
+})
+
 test_that("a Drive answer saved by 3.2.1.9078 is found offline: the store and its cache key are unchanged", {
   skip_if_not_installed("googledrive")
   testInit("googledrive", opts = offlineOpts)
@@ -189,4 +226,24 @@ test_that("a CacheGeo ledger on Google Drive says the remote cannot be reached, 
 
   expect_message(rows <- CacheGeoRead(led, area = NULL, verbose = 1), "remote unreachable, using the local copy")
   expect_identical(sort(rows$polygonID), c("P1", "P2", "P3"))
+})
+
+test_that("the saved HEAD answer is rewritten only when the ETag, size or name changed, not the Date", {
+  skip_if_not_installed("httr2")
+  testInit(opts = offlineOpts)
+  withr::local_options(reproducible.cachePath = tmpCache)
+  head <- mockHead()
+  saves <- countOverwrites()
+  url <- "https://example.org/bucket/file.tif"
+
+  getRemoteMetadata(isGDurl = FALSE, url = url)
+  expect_identical(saves$n, 0L)
+  r <- fakeHeadResponse()
+  r$headers$Date <- "Tue, 02 Jan 2026 00:00:00 GMT" # every request has its own Date
+  head$answer <- r
+  getRemoteMetadata(isGDurl = FALSE, url = url)
+  expect_identical(saves$n, 0L)
+  head$answer <- fakeHeadResponse("\"etagB\"")
+  expect_identical(getRemoteMetadata(isGDurl = FALSE, url = url)$remoteHash, "etagB")
+  expect_identical(saves$n, 1L)
 })
