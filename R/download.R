@@ -595,6 +595,12 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
   isTRUE(grepl("\\((403|404)\\)|\\b40[34]\\b|File not found|insufficient", msg, ignore.case = TRUE))
 }
 
+# Did gargle find no usable token for this identity ("Can't get Google credentials")?
+# Not a denial and not transient: the identity is simply not available here.
+.gdriveIsNoCredentials <- function(e) {
+  isTRUE(grepl("can.t get google credentials", conditionMessage(e), ignore.case = TRUE))
+}
+
 # Is this error a transient Drive/network failure -- a timeout, DNS, a reset or refused
 # connection, an HTTP 5xx or 429, a 403 rate limit, a token refresh against
 # oauth2.googleapis.com -- that is worth running again? A denial (403/404) never is.
@@ -802,14 +808,21 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
       if (isTRUE(res)) { ok <- TRUE; break }
       .gdriveLastAuth$attempts <- c(.gdriveLastAuth$attempts,
                                     paste0(label, ": ", conditionMessage(res)))
-      if (.gdriveIsDenial(res) || attempt > retries) break
+      if (.gdriveIsDenial(res) || .gdriveIsNoCredentials(res) || attempt > retries) break
       messagePreProcess("Google Drive: transient failure (",
                         substr(conditionMessage(res), 1L, 80L), "); retrying in ",
                         .gdriveRetryDelay(attempt), " s", verbose = verbose)
       .gdriveRetryWait(attempt)
     }
     if (ok) return("token")
-    if (.gdriveIsDenial(res)) {
+    if (.gdriveIsNoCredentials(res)) {
+      # gargle found no token for this identity. googledrive is still set to
+      # authenticate, so the anonymous read would fail the same way: deauthorize.
+      # There is no token to put back afterwards.
+      denied <- TRUE
+      try(googledrive::drive_deauth(), silent = TRUE)
+      .gdriveLastAuth$deauthed <- TRUE
+    } else if (.gdriveIsDenial(res)) {
       # This identity authenticated but cannot read the file: clear its (possibly
       # poisoning) token before trying the next rung, and remember how to put the
       # email identity back afterwards -- drive_deauth() is process-wide, and a

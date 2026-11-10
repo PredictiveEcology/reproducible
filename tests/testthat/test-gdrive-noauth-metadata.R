@@ -306,3 +306,27 @@ test_that(".gdrivePrepareAuth: after a denial, .gdriveRestoreAuth() puts the ema
   expect_identical(events, c("auth:a@b.com", "deauth", "auth:a@b.com"))
   expect_false(isTRUE(reproducible:::.gdriveLastAuth$deauthed))
 })
+
+test_that(".gdrivePrepareAuth: an email with no cached token -> deauthorize before 'anon'", {
+  ## A public file read with gargle_oauth_email set but no token for it (e.g. a CI
+  ## runner): without the deauth, the anonymous read tried to authenticate again
+  ## and failed with "Can't get Google credentials".
+  skip_if_not_installed("googledrive")
+  withr::local_options(reproducible.gdriveNoAuth = NULL, gargle_oauth_email = "a@b.com")
+  withr::local_envvar(GOOGLEDRIVE_AUTH = "", GARGLE_SERVICE_ACCOUNT = "")
+  events <- character()
+  testthat::local_mocked_bindings(.gdriveHasToken = function() FALSE,
+                                  .gdriveRetryWait = function(attempt) stop("must not wait"))
+  testthat::local_mocked_bindings(
+    as_id = function(x) x,
+    drive_auth = function(...) {
+      events <<- c(events, "auth:email")
+      stop("Can't get Google credentials.\nAre you running googledrive in a non-interactive session?")
+    },
+    drive_get = function(...) { events <<- c(events, "probe"); invisible(TRUE) },
+    drive_deauth = function(...) events <<- c(events, "deauth"),
+    .package = "googledrive")
+  expect_identical(suppressMessages(reproducible:::.gdrivePrepareAuth("u")), "anon")
+  expect_identical(events, c("auth:email", "deauth"))   # tried once, then deauthorized
+  expect_null(reproducible:::.gdriveLastAuth$restoreEmail) # nothing to put back
+})
