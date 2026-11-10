@@ -15,6 +15,7 @@
 
 ## Bug fixes
 
+* `prepInputs()` can again read a public Google Drive file when `gargle_oauth_email` is set but there is no token for it, as on a CI runner. The sign-in failed with "Can't get Google credentials", was retried for about 94 s, and then the anonymous read tried to sign in again and failed the same way. That error now ends the sign-in attempt at once and the read goes ahead anonymously.
 * `Cache(useCache = "overwrite")` on an existing key no longer lets a second process into the locked section. `clearCache()` listed the entry's `<cacheId>.lock` and `<cacheId>.tags.lock` files among the entry's files and deleted the lock the caller was holding, so the next process locked a fresh file and both ran at once. `clearCache()` now never removes lock files of an entry (only the holder removes its lock, on release), and `rmFromCache()` no longer deletes the tags lock after releasing it.
 
 * A single Cache hit printed its "Object to retrieve" and "Loaded!" messages several times when `prepInputs(fun = <long call>)` formatted over several lines, or when the cached object was stored in more than one file (e.g., a `.tif` and its `.xml`). Each is now one message; cache keys are unchanged.
