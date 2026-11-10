@@ -106,7 +106,7 @@ metadata_define_preEval <- function(detailed_key, func_name, userTags,
 
 metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
                                      .objects, length, algo, quick, classOptions,
-                                     elapsedTimeFUN) {
+                                     elapsedTimeFUN, inputVectorClass = NULL) {
   objSize <- NA
   if (getOption("reproducible.objSize", TRUE)) {
     hasPointer <- usesPointer(outputToSave)
@@ -135,7 +135,9 @@ metadata_define_postEval <- function(metadata, cacheId, outputToSave, userTags,
     list(format(as.numeric(objSize))) |> setNames(nm = .cacheTagsSecondGroup[2]),
     list(isTRUE(any(nchar(fns) > 0))) |> setNames(nm = .cacheTagsSecondGroup[3]),
     list(resultHash) |> setNames(nm = .cacheTagsSecondGroup[4]),
-    list(format(elapsedTimeFUN, units = "secs")) |> setNames(nm = .cacheTagsSecondGroup[5])
+    list(format(elapsedTimeFUN, units = "secs")) |> setNames(nm = .cacheTagsSecondGroup[5]),
+    ## lets a hit from the other vector class know if the output followed its input
+    if (!is.null(inputVectorClass)) list(inputVectorClass = inputVectorClass)
   )
   cache_key <- cacheId
   metadataNew <- userTagsListToDT(cache_key, userTagsList)

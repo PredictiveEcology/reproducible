@@ -153,7 +153,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
       .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                               isHit = TRUE, .callingEnv = .callingEnv,
                               urlFrameId = .urlFrameId)
-      return(returnInClassOfInput(outputFromMemoise, callList$func_call, verbose))
+      return(returnInClassOfInput(outputFromMemoise, callList$func_call, keyFull$key, cachePaths, verbose))
     }
 
     # After memoising fail, try files; need to check Cache dir and set lockfile
@@ -184,7 +184,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
       .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                               isHit = TRUE, .callingEnv = .callingEnv,
                               urlFrameId = .urlFrameId)
-      return(returnInClassOfInput(outputFromDisk, callList$func_call, verbose))
+      return(returnInClassOfInput(outputFromDisk, callList$func_call, keyFull$key, cachePaths, verbose))
     }
 
   }
@@ -211,7 +211,7 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
     .maybeRecordUrlForCache(callList, keyFull, cachePaths, drv, conn,
                             isHit = TRUE, .callingEnv = .callingEnv,
                             urlFrameId = .urlFrameId)
-    return(returnInClassOfInput(outputFromDisk, callList$func_call, verbose))
+    return(returnInClassOfInput(outputFromDisk, callList$func_call, keyFull$key, cachePaths, verbose))
   } # Derive some metadata prior to evaluation so "showSimilar" can have something to compare with
 
   times$EvaluateStart <- Sys.time()
@@ -252,7 +252,8 @@ Cache <- function(FUN, ..., dryRun = getOption("reproducible.dryRun", FALSE),
   # update metadata with other elements including elapsedTime for evaluation
   metadata <- metadata_define_postEval(metadata, keyFull$key, outputFromEvaluate,
                                        userTags, .objects, length, algo, quick,
-                                       classOptions, elapsedTimeFUN)
+                                       classOptions, elapsedTimeFUN,
+                                       inputVectorClass = .inputVectorClass(callList$func_call))
 
   outputFromEvaluate <- doSaveToCache(outputFromEvaluate, metadata, cachePaths, callList = callList, # callList$func,
                                       .objects, length, algo, quick, classOptions,
