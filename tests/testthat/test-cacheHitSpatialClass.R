@@ -63,3 +63,24 @@ test_that("a call without sf/SpatVector arguments is unchanged", {
   expect_false(any(grepl("returned as", msgs)))
   expect_s4_class(r2, "SpatVector")
 })
+
+test_that("a function that always returns sf still returns sf from a SpatVector call", {
+  ## e.g. scfmutils::prepInputsFireRegimePolys(studyArea = <SpatVector>) returns sf;
+  ## the hit must not be converted to the input's class (it was, 3.2.1.9066-9085)
+  skipIfNoSpatial()
+  testInit(opts = list(reproducible.digestVersion = 4, reproducible.useMemoise = FALSE))
+  h <- function(studyArea) sf::st_as_sf(makeVect())
+  v <- makeVect()
+  r1 <- Cache(h, studyArea = v, cachePath = tmpCache)
+  expect_s3_class(r1, "sf")
+  msgs <- capture_messages(r2 <- Cache(h, studyArea = v, cachePath = tmpCache))
+  expect_true(any(grepl("Loaded! Cached result", msgs)))
+  expect_false(any(grepl("returned as", msgs)))
+  expect_s3_class(r2, "sf")
+
+  ## memoised hit too
+  withr::local_options(reproducible.useMemoise = TRUE)
+  Cache(h, studyArea = v, cachePath = tmpCache)
+  r3 <- Cache(h, studyArea = v, cachePath = tmpCache)
+  expect_s3_class(r3, "sf")
+})
