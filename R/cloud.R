@@ -478,16 +478,26 @@ cloudUploadFromCache <- function(isInCloud, outputHash, cachePath, cloudFolderID
             media = med, path = googledrive::as_id(cloudFolderID),
             name = nam, overwrite = FALSE
           )
-        ))
+        ), silent = TRUE)
       })
 
       du2 <- try(.gdriveRetry(googledrive::drive_upload(
         media = cacheDB,
         path = googledrive::as_id(cloudFolderID), name = basename2(cacheDB),
         overwrite = FALSE
-      )))
-      if (is(du, "try-error")) {
-        return(du)
+      )), silent = TRUE)
+      ## `du` is a list with one result per file, so test each element; testing
+      ## the list itself (as this did before) never caught a failed upload.
+      results <- c(du, list(du2))
+      names(results) <- c(newFileName, basename2(cacheDB))
+      failed <- vapply(results, is, logical(1), "try-error")
+      if (any(failed)) {
+        warning("Cloud upload failed for cacheId ", outputHash, " (local cache is intact):\n",
+                paste0(names(results)[failed], ": ",
+                       vapply(results[failed], function(x) conditionMessage(attr(x, "condition")), ""),
+                       collapse = "\n"),
+                call. = FALSE)
+        return(invisible(results[failed]))
       }
     } else {
       # Nothing on disk to push: do not abort the run -- the local cache is

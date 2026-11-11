@@ -2,6 +2,7 @@
 
 ## Bug fixes
 
+* `Cache(useCloud = TRUE)` now warns when uploading a cached object to Google Drive fails, naming each file that failed and why. The failure check tested the whole list of upload results instead of each one, so it never fired: a failed upload printed only googledrive's error and the cloud copy was silently incomplete. The local cache is unaffected, and the run still continues.
 * `.remoteMetadata()` (the saved Google Drive and HTTP HEAD answers used offline) rewrote the saved answer on every call that reached the remote, even when nothing had changed, so parallel jobs queued behind one clear, save and lock per file checked. It now reads the saved answer and replaces it only when the fields that identify the content differ (Drive: `id`, `name`, `md5Checksum`, `modifiedTime`, `size` per row; HEAD: ETag, content length, content disposition, not the per-request `Date`). The remote is still asked every time and its fresh answer is returned.
 
 ## Enhancements
