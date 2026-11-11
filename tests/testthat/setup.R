@@ -71,6 +71,12 @@ withr::defer(
     data.table::setDTthreads(origDTthreads)
     try(reproducible::clearCache(ask = FALSE, verbose = -1))
     try(unlink("CHECKSUMS.txt"), silent = TRUE) # comes from an unknown place
+    ## This session's Drive folder (see .cloudTestRoot() in helper-allEqual.R),
+    ## removed with everything the tests put in it. Only if one was made.
+    if (isNamespaceLoaded("googledrive")) {
+      cloudRoot <- .cloudTestRoot(peek = TRUE)
+      if (!is.null(cloudRoot)) try(googledrive::drive_rm(cloudRoot), silent = TRUE)
+    }
   },
   teardown_env()
 )
