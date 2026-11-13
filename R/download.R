@@ -2042,6 +2042,48 @@ dlGeneric <- function(url, destinationPath, targetFile = NULL, applyRemap = TRUE
   startsWith(nms, paste0(base, ".")) | filePathSansExt(nms) %in% filePathSansExt(base)
 }
 
+# Which files of a Google Drive folder url to fetch (a logical over `nms`, the folder's file
+# names). An `archive` in the folder is fetched alone. A `targetFile` comes with its companions as
+# `alsoExtract` says for a url (see ?prepInputs): NULL or "similar", the files sharing its name
+# without the extension; NA or "none", it alone; "all", the whole folder; other values, those
+# files, each also tried as a regular expression. With neither, the whole folder, or the files
+# `alsoExtract` matches. A folder can hold many large files unrelated to the one asked for.
+.gdriveFolderKeep <- function(nms, archive = NULL, targetFile = NULL, alsoExtract = NULL) {
+  if (length(archive) && any(nms %in% basename2(archive)))
+    return(nms %in% basename2(archive))
+  everything <- rep(TRUE, length(nms))
+  matching <- function(ae) seq_along(nms) %in% unlist(lapply(ae, grep, x = nms))
+  if (!length(targetFile)) {
+    ae <- alsoExtract[!is.na(alsoExtract)]
+    if (!length(ae) || identical(ae, "all")) return(everything)
+    return(matching(ae))
+  }
+  target <- basename2(targetFile)
+  if (!length(alsoExtract) || identical(alsoExtract[1], "similar"))
+    return(.similarTo(nms, target))
+  if (anyNA(alsoExtract) || identical(alsoExtract[1], "none"))
+    return(nms %in% target)
+  if (identical(alsoExtract[1], "all"))
+    return(everything)
+  nms %in% c(target, basename2(alsoExtract)) | matching(alsoExtract)
+}
+
+# The files in a Google Drive folder. googledrive::drive_ls() lists a folder on a shared drive
+# through that drive, which fails ("Shared drive not found") for an account that can open the
+# folder but is not a member of the drive. A search of every drive the account can see then
+# finds the folder's files; if that fails too, drive_ls()'s error is the one raised.
+.gdriveLsFolder <- function(url) {
+  id <- googledrive::as_id(url)
+  tryCatch(.gdriveRetry(googledrive::drive_ls(id)), error = function(e) {
+    found <- tryCatch(
+      .gdriveRetry(googledrive::drive_find(q = sprintf("'%s' in parents", id), corpus = "allDrives")),
+      error = function(e2) NULL
+    )
+    if (is.null(found)) stop(e)
+    found
+  })
+}
+
 # GitHub cannot list a directory in any form a link parser can read: the file
 # browser at github.com/OWNER/REPO/tree/... is a React app whose markup holds no
 # usable hrefs, and raw.githubusercontent 404s on a directory outright. Its
@@ -2441,19 +2483,10 @@ downloadRemote <- function(url, archive, targetFile, checkSums, dlFun = NULL,
               drive_files <- data.frame(name = bf$name, id = bf$url,
                                         stringsAsFactors = FALSE)
             } else {
-              drive_files <- .gdriveRetry(googledrive::drive_ls(googledrive::as_id(url)))
+              drive_files <- .gdriveLsFolder(url)
             }
-            if (!is.null(alsoExtract) && length(alsoExtract) > 0) {
-              fileIndex <- seq_len(NROW(drive_files))
-              if (length(alsoExtract) > 1)
-                fileIndex <- sapply(alsoExtract, function(ae) grep(pattern = ae, drive_files$name)) |>
-                  as.vector()
-              else {
-                if (!identical("all", alsoExtract))
-                  fileIndex <- grep(pattern = alsoExtract, drive_files$name)
-              }
-              drive_files <- drive_files[fileIndex, ]
-            }
+            drive_files <- drive_files[.gdriveFolderKeep(drive_files$name, archive, targetFile, alsoExtract), ,
+                                       drop = FALSE]
 
             ## Which files of the folder to fetch follows the rules for a single file: one
             ## already in destinationPath whose CHECKSUMS.txt row matches is kept; one that is
