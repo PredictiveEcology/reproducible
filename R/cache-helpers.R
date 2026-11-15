@@ -107,7 +107,8 @@ setAs(from = "character", to = "Path", function(from) {
 #'        for a copy within one folder, a renamed file, or when `rsync` or `robocopy` is not used) writes
 #'        a temporary file beside the destination and renames it into place, so a process reading the
 #'        destination never sees it half-written and a hard link at the destination is replaced, not
-#'        written through. Modification times are kept.
+#'        written through. Modification times are kept. `overwrite = FALSE` is a check, then the
+#'        rename: it is not exclusive against another process writing the same destination.
 #'
 #' @param delDestination Logical, whether the destination should have any files deleted,
 #' if they don't exist in the source. This is `/purge` for robocopy and --delete for
@@ -153,7 +154,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
 
   if (!useFileCopy) {
     if (isWindows() && isTRUE(file.size(from) > 1e6)) {
-      if (!isTRUE(unique(dir.exists(to)))) toDir <- dirname(to) # extract just the directory part
+      toDir <- if (dir.exists(to)) to else dirname(to) # extract just the directory part
       robocopyBin <- tryCatch(Sys.which("robocopy"), warning = function(w) NA_character_)
 
       robocopy <- if (silent) {
@@ -190,7 +191,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
         # rsync can't handle file renaming on copy
         useFileCopy <- TRUE
       } else {
-        if (!dir.exists(to)) toDir <- dirname(to) # extract just the directory part
+        toDir <- if (dir.exists(to)) to else dirname(to) # extract just the directory part
         rsyncBin <- tryCatch(Sys.which("rsync"), warning = function(w) NA_character_)
         opts <- if (silent) " -a " else " -avP "
         # rsync command can't handle spaces file/dir names -- must protect them
@@ -216,17 +217,7 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
     lapply(unique(dirname(to)), checkPath, create = create)
     if (dir.exists(to)) to <- file.path(to, basename(from))
     if (overwrite || !file.exists(to)) {
-      ## Write a temporary file beside `to`, then rename it into place: a process reading `to` never
-      ## sees it half-written, and a hard link at `to` is replaced, not written through.
-      tmp <- tempfile(pattern = paste0(".", basename(to), "."), tmpdir = dirname(to))
-      on.exit(unlink(tmp), add = TRUE)
-      if (!isTRUE(file.copy(from = from, to = tmp, recursive = FALSE, copy.date = TRUE))) {
-        stop("could not copy ", from, " to ", to)
-      }
-      if (!isTRUE(suppressWarnings(file.rename(tmp, to)))) {
-        unlink(to) # Windows does not rename over an existing file
-        if (!isTRUE(file.rename(tmp, to))) stop("could not place ", to)
-      }
+      .copyViaTemp(from, to)
     }
   }
 
@@ -481,6 +472,19 @@ nextNumericName <- function(string) {
   paste0(out, ".", theExt)
 }
 
+## Copy `from` to `to` through a temporary file in `to`'s folder, renamed into place: a process
+## reading `to` never sees it half-written, and a hard link at `to` is replaced, not written through.
+.copyViaTemp <- function(from, to) {
+  checkPath(dirname(to), create = TRUE)
+  tmp <- tempfile(pattern = paste0(".", basename(to), "."), tmpdir = dirname(to))
+  on.exit(unlink(tmp))
+  if (!isTRUE(file.copy(from, tmp, recursive = FALSE, copy.date = TRUE))) {
+    stop("could not copy ", from, " to ", to)
+  }
+  if (!.renameOver(tmp, to)) stop("could not place ", to)
+  invisible(to)
+}
+
 #' Put the cache's copy of a file at its destination
 #'
 #' Used when a file-backed object is restored from the cache. Two things make this safe for a
@@ -504,8 +508,7 @@ publishFile <- function(from, to) {
     if (!file.exists(from[i])) {
       stop("the cache has no file ", from[i], " to restore ", to[i], " from")
     }
-    checkPath(dirname(to[i]), create = TRUE)
-    copySingleFile(from[i], to[i])
+    .copyViaTemp(from[i], to[i])
   }
   invisible(to)
 }

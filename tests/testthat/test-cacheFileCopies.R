@@ -216,35 +216,44 @@ test_that("copyFile() replaces the destination by rename and keeps no temporary 
   src <- file.path(d, "src.bin")
   writeBin(as.raw(1:200), src)
   to <- file.path(d, "to.bin")
-  inode <- function(x) system2("stat", c("-c", "%i", x), stdout = TRUE)
+  rd <- function(x) readBin(x, "raw", 1000)
 
   copyFile(src, to)
-  expect_identical(readBin(to, "raw", 1000), as.raw(1:200))
+  expect_identical(rd(to), as.raw(1:200))
   expect_equal(as.numeric(file.info(to)$mtime), as.numeric(file.info(src)$mtime), tolerance = 1e-3)
-  before <- inode(to)
-  copyFile(src, to)                                         # overwrite = TRUE: a new file takes the name
-  expect_false(identical(inode(to), before))
 
-  ## a hard link at `to`: the other name keeps its content
+  ## replaced, not written into: a hard link at `to` keeps the old content
   link <- file.path(d, "link.bin")
   file.link(to, link)
   writeBin(as.raw(200:1), src)
   copyFile(src, to)
-  expect_identical(readBin(to, "raw", 1000), as.raw(200:1))
-  expect_identical(readBin(link, "raw", 1000), as.raw(1:200))
+  expect_identical(rd(to), as.raw(200:1))
+  expect_identical(rd(link), as.raw(1:200))
+
+  ## the same through the rsync route on Linux (another folder, same name)
+  d2 <- file.path(d, "a")
+  dir.create(d2)
+  to2 <- file.path(d2, "src.bin")
+  writeBin(as.raw(rep(9L, 3)), to2)
+  link2 <- file.path(d, "link2.bin")
+  file.link(to2, link2)
+  copyFile(src, to2)
+  expect_identical(rd(to2), as.raw(200:1))
+  expect_identical(rd(link2), as.raw(rep(9L, 3)))
 
   ## overwrite = FALSE refuses an existing destination
   writeBin(as.raw(rep(7L, 5)), src)
   copyFile(src, to, overwrite = FALSE)
-  expect_identical(readBin(to, "raw", 1000), as.raw(200:1))
+  expect_identical(rd(to), as.raw(200:1))
 
-  ## `to` a folder: the file lands inside it, under its own name
-  sub <- file.path(d, "sub")
+  ## `to` a folder (another folder than `from`): the file lands inside it, under its own name
+  sub <- file.path(d2, "sub")
   dir.create(sub)
   copyFile(src, sub)
-  expect_identical(readBin(file.path(sub, "src.bin"), "raw", 1000), as.raw(rep(7L, 5)))
+  expect_identical(rd(file.path(sub, "src.bin")), as.raw(rep(7L, 5)))
 
   ## a failed copy leaves nothing behind
   expect_error(suppressWarnings(copyFile(file.path(d, "missing.bin"), file.path(d, "gone.bin"))), "could not copy")
-  expect_identical(sort(dir(d, all.files = TRUE, no.. = TRUE)), c("link.bin", "src.bin", "sub", "to.bin"))
+  expect_identical(sort(dir(d, all.files = TRUE, no.. = TRUE)),
+                   c("a", "link.bin", "link2.bin", "src.bin", "to.bin"))
 })

@@ -38,7 +38,8 @@ Uses \verb{/MIR} flag. Default \code{TRUE}.}
 for a copy within one folder, a renamed file, or when \code{rsync} or \code{robocopy} is not used) writes
 a temporary file beside the destination and renames it into place, so a process reading the
 destination never sees it half-written and a hard link at the destination is replaced, not
-written through. Modification times are kept.}
+written through. Modification times are kept. \code{overwrite = FALSE} is a check, then the
+rename: it is not exclusive against another process writing the same destination.}
 
 \item{delDestination}{Logical, whether the destination should have any files deleted,
 if they don't exist in the source. This is \verb{/purge} for robocopy and --delete for
