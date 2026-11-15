@@ -103,7 +103,11 @@ setAs(from = "character", to = "Path", function(from) {
 #'        which appears to be much faster than the internal `file.copy` function.
 #'        Uses `/MIR` flag. Default `TRUE`.
 #'
-#' @param overwrite Passed to `file.copy`
+#' @param overwrite If `FALSE`, an existing destination is left as it is. The `file.copy` route (used
+#'        for a copy within one folder, a renamed file, or when `rsync` or `robocopy` is not used) writes
+#'        a temporary file beside the destination and renames it into place, so a process reading the
+#'        destination never sees it half-written and a hard link at the destination is replaced, not
+#'        written through. Modification times are kept.
 #'
 #' @param delDestination Logical, whether the destination should have any files deleted,
 #' if they don't exist in the source. This is `/purge` for robocopy and --delete for
@@ -210,7 +214,20 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
   }
   if (isTRUE(useFileCopy)) {
     lapply(unique(dirname(to)), checkPath, create = create)
-    file.copy(from = from, to = to, overwrite = overwrite, recursive = FALSE)
+    if (dir.exists(to)) to <- file.path(to, basename(from))
+    if (overwrite || !file.exists(to)) {
+      ## Write a temporary file beside `to`, then rename it into place: a process reading `to` never
+      ## sees it half-written, and a hard link at `to` is replaced, not written through.
+      tmp <- tempfile(pattern = paste0(".", basename(to), "."), tmpdir = dirname(to))
+      on.exit(unlink(tmp), add = TRUE)
+      if (!isTRUE(file.copy(from = from, to = tmp, recursive = FALSE, copy.date = TRUE))) {
+        stop("could not copy ", from, " to ", to)
+      }
+      if (!isTRUE(suppressWarnings(file.rename(tmp, to)))) {
+        unlink(to) # Windows does not rename over an existing file
+        if (!isTRUE(file.rename(tmp, to))) stop("could not place ", to)
+      }
+    }
   }
 
   return(invisible(to))
@@ -488,19 +505,7 @@ publishFile <- function(from, to) {
       stop("the cache has no file ", from[i], " to restore ", to[i], " from")
     }
     checkPath(dirname(to[i]), create = TRUE)
-    tmp <- tempfile(pattern = paste0(".", basename(to[i]), "."), tmpdir = dirname(to[i]))
-    ok <- file.copy(from[i], tmp, copy.date = TRUE)
-    if (!isTRUE(ok)) {
-      unlink(tmp)
-      stop("could not copy ", from[i], " to ", to[i])
-    }
-    if (!isTRUE(suppressWarnings(file.rename(tmp, to[i])))) {
-      unlink(to[i]) # Windows does not rename over an existing file
-      if (!isTRUE(file.rename(tmp, to[i]))) {
-        unlink(tmp)
-        stop("could not place ", to[i])
-      }
-    }
+    copySingleFile(from[i], to[i])
   }
   invisible(to)
 }

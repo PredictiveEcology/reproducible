@@ -208,3 +208,43 @@ test_that("a cached SpatRaster keeps its layer order and repeated layers", {
   expect_identical(names(s2), c("a", "b", "c"))
   expect_equal(unname(terra::values(s2)[1, ]), c(3, 1, 1))
 })
+
+test_that("copyFile() replaces the destination by rename and keeps no temporary file", {
+  testInit()
+  skip_on_os("windows")
+  d <- withr::local_tempdir()
+  src <- file.path(d, "src.bin")
+  writeBin(as.raw(1:200), src)
+  to <- file.path(d, "to.bin")
+  inode <- function(x) system2("stat", c("-c", "%i", x), stdout = TRUE)
+
+  copyFile(src, to)
+  expect_identical(readBin(to, "raw", 1000), as.raw(1:200))
+  expect_equal(as.numeric(file.info(to)$mtime), as.numeric(file.info(src)$mtime), tolerance = 1e-3)
+  before <- inode(to)
+  copyFile(src, to)                                         # overwrite = TRUE: a new file takes the name
+  expect_false(identical(inode(to), before))
+
+  ## a hard link at `to`: the other name keeps its content
+  link <- file.path(d, "link.bin")
+  file.link(to, link)
+  writeBin(as.raw(200:1), src)
+  copyFile(src, to)
+  expect_identical(readBin(to, "raw", 1000), as.raw(200:1))
+  expect_identical(readBin(link, "raw", 1000), as.raw(1:200))
+
+  ## overwrite = FALSE refuses an existing destination
+  writeBin(as.raw(rep(7L, 5)), src)
+  copyFile(src, to, overwrite = FALSE)
+  expect_identical(readBin(to, "raw", 1000), as.raw(200:1))
+
+  ## `to` a folder: the file lands inside it, under its own name
+  sub <- file.path(d, "sub")
+  dir.create(sub)
+  copyFile(src, sub)
+  expect_identical(readBin(file.path(sub, "src.bin"), "raw", 1000), as.raw(rep(7L, 5)))
+
+  ## a failed copy leaves nothing behind
+  expect_error(suppressWarnings(copyFile(file.path(d, "missing.bin"), file.path(d, "gone.bin"))), "could not copy")
+  expect_identical(sort(dir(d, all.files = TRUE, no.. = TRUE)), c("link.bin", "src.bin", "sub", "to.bin"))
+})
