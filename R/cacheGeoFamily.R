@@ -34,7 +34,11 @@
 #'   the push. If another writer changed the remote in between, it merges again, up to 3
 #'   times. The whole write is held under a file lock, so writers on one machine (or, on a
 #'   shared-disk folder, on every machine that mounts it) take turns. Writing to Google
-#'   Drive needs a Google login (see `googledrive::drive_auth()`).
+#'   Drive needs a Google login (see `googledrive::drive_auth()`). Each new row gets a
+#'   `writtenAt` column, the time (`POSIXct`, UTC) it was written, replacing any it had; rows
+#'   written before this column existed have `NA`. No row can have been written after its file
+#'   was last modified, so a reader looking for the newest row of an entry across several
+#'   files can read them newest-modified first and stop once its rows are newer than the next file.
 #' * `CacheGeo()` reads; if the `area` is not covered by the ledger it calls `compute(area)`,
 #'   writes the result and returns the rows. An error in `compute` is an error in `CacheGeo()`.
 #'
@@ -190,6 +194,7 @@ CacheGeoWrite <- function(ledger, rows, mode = .cacheGeoModes,
     stop("The ledger's remote (", ledger$remote, ") is a read-only URL; CacheGeoWrite() cannot write ",
          "to it. Use a Google Drive folder or a shared-disk folder as `remote`.")
   rows <- .geoToSf(rows)
+  rows$writtenAt <- rep(as.POSIXct(Sys.time(), tz = "UTC"), NROW(rows))
   dir.create(ledger$destinationPath, recursive = TRUE, showWarnings = FALSE)
   .geoWithRemote(ledger, verbose = verbose, expr =
     .geoWithLock(ledger, .geoWriteAttempts(ledger, rows, mode, verbose))
@@ -638,7 +643,7 @@ isConnectionError <- function(e) {
 ## Put the remote ledger file at `ledger$path`
 .geoFetch <- function(ledger, remote, verbose) {
   if (identical(ledger$remoteType, "disk")) {
-    .geoReplaceFile(remote$url, ledger$path)
+    .copyViaTemp(remote$url, ledger$path)
   } else if (identical(ledger$remoteType, "drive")) {
     ## The md5 differs, so fetch. Not through prepInputs(): it keeps a local copy that matches
     ## its own CHECKSUMS.txt (or the destinationPathShared one), which is the old ledger here.
@@ -650,18 +655,6 @@ isConnectionError <- function(e) {
                fun = NA, overwrite = FALSE, useCache = FALSE, verbose = verbose - 2)
   }
   invisible(NULL)
-}
-
-## Copy `from` over `to` so that `to` is always the old file or the new one, never partly written
-.geoReplaceFile <- function(from, to) {
-  dir.create(dirname(to), recursive = TRUE, showWarnings = FALSE)
-  tmp <- tempfile(pattern = paste0(".", basename(to), "."), tmpdir = dirname(to))
-  if (!file.copy(from, tmp)) stop("Could not copy ", from, " to ", tmp)
-  if (!file.rename(tmp, to)) {
-    unlink(tmp)
-    stop("Could not replace ", to)
-  }
-  invisible(to)
 }
 
 ## Download the Drive file `id` over `path`, by a rename, so `path` is never partly written and a
@@ -681,7 +674,7 @@ isConnectionError <- function(e) {
 
 .geoPush <- function(ledger) {
   switch(ledger$remoteType,
-    disk = .geoReplaceFile(ledger$path, .geoRemoteFile(ledger)),
+    disk = .copyViaTemp(ledger$path, .geoRemoteFile(ledger)),
     drive = {
       folder <- .geoDriveFolder(ledger, create = TRUE)
       pushed <- .gdriveRetry(googledrive::drive_put(media = ledger$path,
@@ -752,6 +745,7 @@ isConnectionError <- function(e) {
 }
 
 .geoMerge <- function(current, rows, key, mode) {
+  before <- current
   if (!NROW(current)) current <- rows[integer(0), ] # nothing yet: the ledger takes the new rows' CRS
   crs <- sf::st_crs(current)
   if (!is.na(crs) && !is.na(sf::st_crs(rows)) && sf::st_crs(rows) != crs)
@@ -768,7 +762,9 @@ isConnectionError <- function(e) {
   merged <- sf::st_sf(attrs, geometry = geom)
   if (!is.null(key) && key %in% names(merged)) merged <- merged[order(merged[[key]]), ]
   rownames(merged) <- NULL
-  merged
+  ## Rewriting rows as they are changes only their `writtenAt`: keep the ledger, so nothing is pushed
+  noStamp <- function(x) x[, setdiff(names(x), "writtenAt")]
+  if (NROW(before) && identical(noStamp(merged), noStamp(before))) before else merged
 }
 
 ## Save to a temporary name and rename over the file, unless the content is what is already there.
