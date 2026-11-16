@@ -593,3 +593,33 @@ test_that("urlLog: prepInputs(dlFun = ) with no url is recorded", {
   expect_match(recs[[1]]$url, "getMyData()", fixed = TRUE)
   expect_match(recs[[1]]$fn, "dlFun")
 })
+
+test_that("urlLog: a local file read with no url is recorded as local:<path>, and replayed on a hit", {
+  testInit(needInternet = FALSE, opts = list(reproducible.inputPaths = NULL))
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = file.path(tmpdir, "cache"))
+  writeLines("a,b\n1,2", file.path(tmpdir, "local.csv"))
+  want <- paste0("local:", normPath(file.path(tmpdir, "local.csv")))
+
+  clearUrlLog()
+  prepInputs(targetFile = "local.csv", destinationPath = tmpdir, fun = NA)
+  recs <- prepInputsLog()
+  expect_length(recs, 1L)
+  expect_equal(recs[[1]]$url, want)
+  expect_equal(recs[[1]]$fn, "prepInputs (local)")
+  expect_equal(recs[[1]]$targetFile, "local.csv")
+
+  clearUrlLog()
+  preProcess(targetFile = file.path(tmpdir, "local.csv"), destinationPath = tmpdir)
+  expect_equal(prepInputsLog()[[1]]$url, want)
+  expect_equal(prepInputsLog()[[1]]$fn, "preProcess (local)")
+
+  readIt <- function(dp) prepInputs(targetFile = "local.csv", destinationPath = dp, fun = NA)
+  Cache(readIt(tmpdir))
+  clearUrlLog()
+  Cache(readIt(tmpdir)) # hit
+  recs <- prepInputsLog()
+  expect_length(recs, 1L)
+  expect_equal(recs[[1]]$url, want)
+  expect_equal(recs[[1]]$fn, "prepInputs (local)")
+  expect_false(is.na(recs[[1]]$cacheId))
+})

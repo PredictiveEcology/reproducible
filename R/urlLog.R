@@ -46,7 +46,7 @@
 .urlLogEnv$frames       <- list()
 .urlLogEnv$frameCounter <- 0L
 .urlLogEnv$announced    <- FALSE   # one-time "how to view" hint per session
-.urlLogEnv$pid          <- NA_integer_ # the process that owns this state; set in .onLoad
+.urlLogEnv$pid          <- Sys.getpid() # the process that owns this state; reset in .onLoad
 .urlLogEnv$parentPid    <- NA_integer_ # set in a forked child: where its records are sent
 .urlLogEnv$spoolCounter <- 0L
 
@@ -61,9 +61,7 @@
 ## (PSOCK clusters, callr) are not forks; their records stay in their own session.
 .urlLogForkCheck <- function() {
   me <- Sys.getpid()
-  if (is.na(.urlLogEnv$pid)) {
-    .urlLogEnv$pid <- me
-  } else if (.urlLogEnv$pid != me) {
+  if (.urlLogEnv$pid != me) {
     .urlLogEnv$parentPid <- .urlLogEnv$pid
     .urlLogEnv$pid <- me
   }
@@ -80,11 +78,7 @@
     f <- file.path(d, sprintf("%d-%08d.rds", Sys.getpid(), .urlLogEnv$spoolCounter))
     if (!file.exists(f)) break
   }
-  tmp <- paste0(f, ".tmp")
-  try({
-    saveRDS(item, tmp, compress = FALSE)
-    file.rename(tmp, f)
-  }, silent = TRUE)
+  try(.saveRDSAtomic(item, f, compress = FALSE), silent = TRUE)
   invisible()
 }
 
@@ -153,7 +147,8 @@
 #' The download ledger: a record of the data a run read from outside
 #'
 #' reproducible keeps a ledger of the web addresses (URLs) and Google Drive files that
-#' data were read from, so that a finished run can say where its inputs came from.
+#' data were read from, and of the local files `prepInputs()` read without a URL, so that a
+#' finished run can say where its inputs came from.
 #' `prepInputsLog()` returns the ledger of the current R session, `clearUrlLog()` empties it,
 #' [urlLog()] reads the ledger kept in a cache, and `logUrlAccess()` adds an access that
 #' did not go through `prepInputs()`.
@@ -164,6 +159,10 @@
 #'   \item [prepInputs()] and [preProcess()] (`fn` is `"prepInputs"` or `"preProcess"`);
 #'   \item a `dlFun` given to them with no `url` (`fn` ends in `"(dlFun)"`; the `url`
 #'     column holds `"dlFun: "` and the `dlFun` expression);
+#'   \item a local file given to them with no `url` and no `dlFun` (`fn` ends in
+#'     `"(local)"`; the `url` column holds `"local:"` and the absolute path of the
+#'     `archive`, or of the `targetFile` if there is no archive). Select the remote
+#'     sources with `!startsWith(url, "local:")`;
 #'   \item the listing of a directory-index URL that `preProcess()` expands into files
 #'     (`fn` is `"prepInputs (directory index)"`);
 #'   \item [CacheGeo()] and [CacheGeoWrite()], for the Google Drive ledger file they read or
@@ -301,15 +300,18 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   invisible()
 }
 
-## Build the (fn, url, cacheId) idempotency key. Field separator is \037 (US),
-## which never appears in URLs / function names / cacheIds. Whether the access
+## Field separator (\037, US) of the idempotency key and of the reproducible.urlRecord
+## tag; it never appears in URLs, function names, paths or cacheIds.
+.urlSep <- "\037"
+
+## Build the (fn, url, cacheId) idempotency key. Whether the access
 ## was a miss or a hit is internal cache mechanics, not part of the access
 ## identity, so it isn't keyed here.
 .urlLogKey <- function(fn, url, cacheId) {
   paste(fn,
         paste(url, collapse = "\036"),
         if (is.null(cacheId) || !length(cacheId)) "NA" else cacheId,
-        sep = "\037")
+        sep = .urlSep)
 }
 
 ## Collapse a possibly-vector char value to a single field, NA if empty.
@@ -404,26 +406,21 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   if (is.character(url) && !length(url)) return(invisible())
   .maybeAnnounceUrlLog()
 
+  push <- list(fn = fn, url = url,
+               targetFile = targetFile, archive = archive,
+               alsoExtract = alsoExtract,
+               destinationPath = destinationPath)
   ## Inside a Cache wrapper: defer to Cache by pushing to its frame(s).
   ## Cache will write session records (with the cacheId) and tag the cacheId.
   .urlIngestSpool()
   if (length(.urlLogEnv$frames) > 0L &&
       (is.null(cacheId) || any(is.na(cacheId)))) {
-    push <- list(fn = fn, url = url,
-                 targetFile = targetFile, archive = archive,
-                 alsoExtract = alsoExtract,
-                 destinationPath = destinationPath)
     .pushToFrames(push, names(.urlLogEnv$frames))
     return(invisible())
   }
 
   ## Bare call (no Cache around): write directly with cacheId = NA.
-  rec <- .urlLogRecord(fn = fn, url = url,
-                       targetFile = targetFile, archive = archive,
-                       alsoExtract = alsoExtract,
-                       destinationPath = destinationPath,
-                       cacheId = cacheId)
-  .writeSessionRecord(rec)
+  .writeSessionRecord(.recordFromPush(push, cacheId = cacheId))
 }
 
 ## ---- Cache url-frame lifecycle -------------------------------------------
@@ -461,7 +458,7 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
 
 ## One cache tag per url holding the whole record, so a hit replays each url with
 ## its own fn, targetFile, archive, alsoExtract and destinationPath. Fields are
-## separated by \037; the trailing "." keeps strsplit() from dropping empty fields.
+## separated by .urlSep; the trailing "." keeps strsplit() from dropping empty fields.
 .urlRecordFields <- c("fn", "url", "targetFile", "archive", "alsoExtract", "destinationPath")
 
 .encodeUrlRecord <- function(rec) {
@@ -469,11 +466,11 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
     v <- if (f == "destinationPath") .absPathOrNA(rec[[f]]) else .scalarOrNA(rec[[f]])
     if (is.na(v)) "" else v
   }, character(1))
-  paste(c(vals, "."), collapse = "\037")
+  paste(c(vals, "."), collapse = .urlSep)
 }
 
 .decodeUrlRecords <- function(x) {
-  lapply(strsplit(x, "\037", fixed = TRUE), function(v) {
+  lapply(strsplit(x, .urlSep, fixed = TRUE), function(v) {
     v <- v[seq_along(.urlRecordFields)]
     v[is.na(v) | !nzchar(v)] <- NA_character_
     as.list(setNames(v, .urlRecordFields))

@@ -28,8 +28,9 @@ folders. Sooner or later someone asks "what does this project need?": to cite th
 check a source has not changed, or to run the project on a machine with no internet.
 
 reproducible answers that question with a *download ledger*. Every call to `prepInputs()` or
-`preProcess()` with a `url` writes one record: the address, the file it was meant to give, and
-where it was put. This vignette shows how to read the ledger, how it behaves with `Cache()`, and
+`preProcess()` writes one record: the address, the file it was meant to give, and where it was
+put. A call with no `url` that reads a file already on disk is recorded too, with
+`local:<path>` in place of the address. This vignette shows how to read the ledger, how it behaves with `Cache()`, and
 how to go from the ledger to the list of files to copy to another machine.
 
 # The ledger of a session
@@ -56,6 +57,18 @@ data.table::rbindlist(prepInputsLog(), fill = TRUE)[, c("fn", "url", "targetFile
 
 A url is recorded when it is used, whether or not a download was needed: the second time the
 file is already in `destinationPath`, but the project still uses it.
+
+A file read with no `url` is recorded as `local:` and its path. These are inputs someone put
+on the disk by hand; they have no source to download from, so they must be copied.
+
+```{r local}
+writeLines("id\n1", file.path(inputs, "byHand.csv"))
+clearUrlLog()
+byHand <- prepInputs(targetFile = "byHand.csv", destinationPath = inputs, fun = NA)
+led <- data.table::rbindlist(prepInputsLog(), fill = TRUE)
+led[, c("fn", "url")]
+led[!startsWith(url, "local:")] # only the remote sources
+```
 
 # The ledger and `Cache()`
 
@@ -128,10 +141,10 @@ cache entry made with `options(reproducible.urlLog = FALSE)`).
 To run a project on a machine without internet, copy the files it reads. Two tools give that list,
 and they answer different questions.
 
-1. **The ledger** names the *remote* data: each url and the `destinationPath` and `targetFile` it
-   was saved as. Copy those files (and `archive`, if one was given) into the same
-   `destinationPath` on the other machine, and `prepInputs()` finds them there without
-   downloading. This list is complete even when the run came from the cache, because hits replay
+1. **The ledger** names every input `prepInputs()` read: each url with the `destinationPath` and
+   `targetFile` it was saved as, and each local file (`local:<path>`). Copy those files (and
+   `archive`, if one was given) into the same `destinationPath` on the other machine, and
+   `prepInputs()` finds them there without downloading. This list is complete even when the run came from the cache, because hits replay
    their urls.
 
     ```{r copyList}

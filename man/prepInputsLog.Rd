@@ -35,7 +35,8 @@ the function that called \code{logUrlAccess()}.}
 }
 \description{
 reproducible keeps a ledger of the web addresses (URLs) and Google Drive files that
-data were read from, so that a finished run can say where its inputs came from.
+data were read from, and of the local files \code{prepInputs()} read without a URL, so that a
+finished run can say where its inputs came from.
 \code{prepInputsLog()} returns the ledger of the current R session, \code{clearUrlLog()} empties it,
 \code{\link[=urlLog]{urlLog()}} reads the ledger kept in a cache, and \code{logUrlAccess()} adds an access that
 did not go through \code{prepInputs()}.
@@ -47,6 +48,10 @@ One record is written each time one of these is called with a URL:
 \item \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}} (\code{fn} is \code{"prepInputs"} or \code{"preProcess"});
 \item a \code{dlFun} given to them with no \code{url} (\code{fn} ends in \code{"(dlFun)"}; the \code{url}
 column holds \code{"dlFun: "} and the \code{dlFun} expression);
+\item a local file given to them with no \code{url} and no \code{dlFun} (\code{fn} ends in
+\code{"(local)"}; the \code{url} column holds \code{"local:"} and the absolute path of the
+\code{archive}, or of the \code{targetFile} if there is no archive). Select the remote
+sources with \code{!startsWith(url, "local:")};
 \item the listing of a directory-index URL that \code{preProcess()} expands into files
 (\code{fn} is \code{"prepInputs (directory index)"});
 \item \code{\link[=CacheGeo]{CacheGeo()}} and \code{\link[=CacheGeoWrite]{CacheGeoWrite()}}, for the Google Drive ledger file they read or
