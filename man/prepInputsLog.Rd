@@ -45,6 +45,8 @@ did not go through \code{prepInputs()}.
 One record is written each time one of these is called with a URL:
 \itemize{
 \item \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}} (\code{fn} is \code{"prepInputs"} or \code{"preProcess"});
+\item a \code{dlFun} given to them with no \code{url} (\code{fn} ends in \code{"(dlFun)"}; the \code{url}
+column holds \code{"dlFun: "} and the \code{dlFun} expression);
 \item the listing of a directory-index URL that \code{preProcess()} expands into files
 (\code{fn} is \code{"prepInputs (directory index)"});
 \item \code{\link[=CacheGeo]{CacheGeo()}} and \code{\link[=CacheGeoWrite]{CacheGeoWrite()}}, for the Google Drive ledger file they read or
@@ -65,9 +67,12 @@ URLs as tags on the cache entry: \code{reproducible.url}, \code{reproducible.url
 \code{reproducible.urlFirstSeen}, \code{reproducible.urlLastSeen} and \code{reproducible.urlHitCount}.
 The tags stay in the cache, so \code{\link[=urlLog]{urlLog()}} and \code{showCache(userTags = "reproducible.url")}
 report them later. On a cache hit nothing is evaluated, so no download is made, but the
-tags are read and the same records are written again to the ledger, and \code{hitCount} is
-increased. An entry that holds URLs from more than one function is replayed under the
-name of the first.
+tags are read and the same records (each url with its own \code{fn}, \code{targetFile}, \code{archive},
+\code{alsoExtract} and \code{destinationPath}) are written again to the ledger, and \code{hitCount} is
+increased. A \code{Cache()} call nested inside another passes its urls to the outer one
+whether it was computed or a hit, so the outer entry is tagged with every url read
+beneath it. If the cached function fails, the urls it read are still written, with
+\code{cacheId} \code{NA}.
 }
 
 \section{The option \code{reproducible.urlLog}}{
@@ -82,10 +87,20 @@ anything in the list \code{env$extra} is added to each record as extra columns. 
 caller owns the environment.}
 \item{a function}{called with each record (a list); there is no de-duplication.}
 }
+With an environment or a function, records still go to the session ledger too, so
+\code{prepInputsLog()} always holds every access of the session.
 SpaDES.core uses the environment form: with \code{options(spades.urlLog = TRUE)} (the
 default) each \code{simList} carries its own ledger, with \code{module} and \code{event} columns,
 read with \code{urlLog(sim)}. \code{spades.urlLog = FALSE} turns that off. \code{prepInputsLog()} is
 the ledger of the session; \code{urlLog(sim)} is the ledger of one run.
+}
+
+\section{Parallel code}{
+
+A forked child (\code{parallel::mclapply()}, a fork cluster, \code{future}'s multicore plan) sends
+its records to the process that forked it, which adds them to its own ledger, and to the
+\code{Cache()} call open around the fork. A separate R session (a PSOCK cluster, \code{callr}) has
+its own ledger; read it there with \code{prepInputsLog()}.
 }
 
 \section{Why a ledger can miss an access}{
@@ -93,13 +108,13 @@ the ledger of the session; \code{urlLog(sim)} is the ledger of one run.
 The ledger holds only what was passed to \code{prepInputs()}, \code{preProcess()} or
 \code{logUrlAccess()}. Code that downloads another way (\code{download.file()},
 \code{googledrive::drive_download()}, a package that reads a web service) is not seen unless it
-calls \code{logUrlAccess()}. A cache entry made before URL tags existed has no tags; the
-URL is recovered only for the direct form \code{Cache(prepInputs(url = ...))}, and the tags are
-then added. Inside a \code{Cache()} call that is itself a cache hit the inner code does not
-run, so only the tags on that entry can be replayed. SpaDES.core's \code{cacheChaining}
-can restore the cache entries of several events without running them; their records are
-replayed from the tags too, so an access without a tag is missing. With
-\code{reproducible.urlLog = FALSE} nothing is recorded.
+calls \code{logUrlAccess()}. A cache hit replays the tags on its entry, so an entry made
+without them is silent on a hit: one made with \code{reproducible.urlLog = FALSE}, one made
+before URL tags existed, and one made before reproducible 3.2.1.9089 around an inner
+\code{Cache()} hit (such an entry lacks the inner urls). For a legacy entry of the direct
+form \code{Cache(prepInputs(url = ...))} the url is recovered from the call and the tags are
+added. Clearing such entries, or one run with \code{useCache = "overwrite"}, rebuilds their
+tags. With \code{reproducible.urlLog = FALSE} nothing is recorded.
 }
 
 \section{Cloud caches}{

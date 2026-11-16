@@ -482,3 +482,114 @@ test_that("CacheGeo's Drive ledger read and write are recorded in the url ledger
   expect_true("https://drive.google.com/file/d/XYZ/view" %in% urls)
   expect_true("https://drive.google.com/file/d/ABC123/view" %in% urls)
 })
+
+## ---- Completeness: every access reaches prepInputsLog(), however it was called or cached ----
+
+test_that("urlLog: an inner Cache hit inside an outer miss tags the outer entry, so its hit replays the url", {
+  testInit(needInternet = FALSE)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  fetch <- function(u) { logUrlAccess(u, fn = "prepInputs", targetFile = "a.tif"); u }
+  inner <- function(u) Cache(fetch(u))
+  outer <- function(u, k) { inner(u); k }
+  inner("https://example.com/nested.tif")          # inner entry exists before the outer runs
+  clearUrlLog()
+  Cache(outer("https://example.com/nested.tif", 1)) # outer miss, inner hit
+  expect_true("https://example.com/nested.tif" %in% urlLog(tmpdir, which = c("cacheId", "url"))$url[
+    urlLog(tmpdir, which = c("cacheId", "url", "function"))$`function` == "outer"])
+  clearUrlLog()
+  Cache(outer("https://example.com/nested.tif", 1)) # outer hit: nothing inside runs
+  recs <- prepInputsLog()
+  expect_length(recs, 1L)
+  expect_equal(recs[[1]]$url, "https://example.com/nested.tif")
+  expect_equal(recs[[1]]$targetFile, "a.tif")
+})
+
+test_that("urlLog: an access inside a Cache() that then fails is still recorded", {
+  testInit(needInternet = FALSE)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  clearUrlLog()
+  boom <- function(u) { logUrlAccess(u, fn = "prepInputs"); stop("fails after the download") }
+  expect_error(Cache(boom("https://example.com/failed.tif")), "fails after")
+  recs <- prepInputsLog()
+  expect_length(recs, 1L)
+  expect_equal(recs[[1]]$url, "https://example.com/failed.tif")
+  expect_true(is.na(recs[[1]]$cacheId))
+})
+
+test_that("urlLog: a hit replays each url's own fn, targetFile, archive and destinationPath", {
+  testInit(needInternet = FALSE)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  dp <- file.path(tmpdir, "inputs")
+  two <- function() {
+    logUrlAccess("https://example.com/one.zip", fn = "prepInputs", targetFile = "one.tif",
+                 archive = "one.zip", destinationPath = dp)
+    logUrlAccess("https://example.com/two.csv", fn = "getClimate", targetFile = "two.csv",
+                 destinationPath = dp)
+    1
+  }
+  clearUrlLog()
+  Cache(two())
+  miss <- data.table::rbindlist(prepInputsLog(), fill = TRUE)
+  clearUrlLog()
+  Cache(two())
+  hit <- data.table::rbindlist(prepInputsLog(), fill = TRUE)
+  cols <- c("fn", "url", "targetFile", "archive", "alsoExtract", "destinationPath", "cacheId")
+  expect_equal(hit[order(url), ..cols], miss[order(url), ..cols])
+  ul <- urlLog(tmpdir, which = c("url", "caller", "targetFile", "destinationPath"))
+  expect_equal(ul[order(url)]$caller, c("prepInputs", "getClimate"))
+  expect_equal(ul[order(url)]$targetFile, c("one.tif", "two.csv"))
+  expect_equal(unique(ul$destinationPath), normPath(dp))
+})
+
+test_that("urlLog: an environment or function sink does not hide records from prepInputsLog()", {
+  testInit(needInternet = FALSE)
+  clearUrlLog()
+  e <- new.env(parent = emptyenv())
+  e$extra <- list(module = "modA", event = "init")
+  withr::with_options(list(reproducible.urlLog = e),
+                      logUrlAccess("https://example.com/env.tif", fn = "prepInputs"))
+  got <- list()
+  withr::with_options(list(reproducible.urlLog = function(rec) got[[length(got) + 1L]] <<- rec),
+                      logUrlAccess("https://example.com/fun.tif", fn = "prepInputs"))
+  expect_length(e$records, 1L)
+  expect_length(got, 1L)
+  recs <- prepInputsLog()
+  expect_equal(vapply(recs, `[[`, "", "url"),
+               c("https://example.com/env.tif", "https://example.com/fun.tif"))
+  expect_equal(recs[[1]]$module, "modA")
+})
+
+test_that("urlLog: accesses made in forked children (mclapply) reach the parent's log and Cache", {
+  skip_on_os("windows")
+  testInit(needInternet = FALSE)
+  withr::local_options(reproducible.urlLog = TRUE, reproducible.cachePath = tmpdir)
+  fetch <- function(u) { logUrlAccess(u, fn = "prepInputs"); u }
+  clearUrlLog()
+  invisible(parallel::mclapply(c("https://example.com/f1", "https://example.com/f2"), fetch,
+                               mc.cores = 2))
+  expect_setequal(vapply(prepInputsLog(), `[[`, "", "url"),
+                  c("https://example.com/f1", "https://example.com/f2"))
+
+  par <- function(us) unlist(parallel::mclapply(us, fetch, mc.cores = 2))
+  clearUrlLog()
+  Cache(par(c("https://example.com/f3", "https://example.com/f4")))
+  recs <- prepInputsLog()
+  expect_setequal(vapply(recs, `[[`, "", "url"), c("https://example.com/f3", "https://example.com/f4"))
+  expect_false(anyNA(vapply(recs, `[[`, "", "cacheId")))
+  clearUrlLog()
+  Cache(par(c("https://example.com/f3", "https://example.com/f4"))) # hit: replayed from the tags
+  expect_setequal(vapply(prepInputsLog(), `[[`, "", "url"),
+                  c("https://example.com/f3", "https://example.com/f4"))
+})
+
+test_that("urlLog: prepInputs(dlFun = ) with no url is recorded", {
+  testInit(needInternet = FALSE, opts = list(reproducible.inputPaths = NULL))
+  withr::local_options(reproducible.urlLog = TRUE)
+  clearUrlLog()
+  getMyData <- function() data.frame(x = 1:3)
+  prepInputs(destinationPath = tmpdir, dlFun = getMyData())
+  recs <- prepInputsLog()
+  expect_length(recs, 1L)
+  expect_match(recs[[1]]$url, "getMyData()", fixed = TRUE)
+  expect_match(recs[[1]]$fn, "dlFun")
+})

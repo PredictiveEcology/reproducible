@@ -207,6 +207,7 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
             "for the `writeTo` file, and `purge = 7` to download again.")
     .pkgEnv$.deprecMsgEmitted <- c(.pkgEnv$.deprecMsgEmitted, "preProcess(overwrite)")
   }
+  .viaPrepInputs <- !missing(.tempPath)
   ## URL-log hook fires only on direct preProcess() calls. When called from
   ## prepInputs, the prepInputs head already logged (so the COG fast-path,
   ## which bypasses preProcess, is still covered).
@@ -246,6 +247,12 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #       `if (x) fn else NULL`)    -- an expression referencing caller-frame
   #                                    variables that may be out of scope later
   dlFunCaptured <- .resolveDlFunCaptured(dlFunCaptured, dlFun)
+  ## With no url, a dlFun is the remote source: record its expression in the url column.
+  if (!length(url[!is.na(url)]) && !is.null(dlFunCaptured))
+    .logUrlAccess(paste(if (.viaPrepInputs) "prepInputs" else "preProcess", "(dlFun)"),
+                  url = .dlFunLabel(dlFunCaptured), targetFile = targetFile,
+                  archive = archive, alsoExtract = alsoExtract,
+                  destinationPath = destinationPath)
 
   dots <- list(...)
   fun  <- .checkFunInDots(fun = fun, dots = dots)
@@ -1345,6 +1352,13 @@ pp_finalize <- function(ctx) {
   filesize = character(),
   algorithm = character()
 )
+
+## The text recorded in the url ledger for a dlFun download that has no url.
+.dlFunLabel <- function(dlFun) {
+  txt <- if (is.function(dlFun)) "<function>" else
+    paste(deparse(dlFun, width.cutoff = 500L, nlines = 3L), collapse = " ")
+  paste0("dlFun: ", substr(txt, 1L, 300L))
+}
 
 #' Decide how to materialize a captured `dlFun` expression
 #'

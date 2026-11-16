@@ -23,7 +23,9 @@ the packages that own them.}
 \item{which}{Character vector of columns to return, in the order given. Allowed
 values: \code{"cacheId"}, \code{"function"} (the function that was cached), \code{"module"} and
 \code{"event"} (the SpaDES module and event type, \code{NA} outside SpaDES), \code{"url"},
-\code{"caller"} (\code{prepInputs} or \code{preProcess}), \code{"firstSeen"}, \code{"lastSeen"},
+\code{"caller"} (\code{prepInputs} or \code{preProcess}), \code{"targetFile"}, \code{"archive"}, \code{"alsoExtract"}
+and \code{"destinationPath"} (as given to the call that read the url; \code{NA} for entries
+made before these were stored), \code{"firstSeen"}, \code{"lastSeen"},
 \code{"hitCount"} (times the entry was reused) and \code{"createdDate"}.}
 }
 \value{
