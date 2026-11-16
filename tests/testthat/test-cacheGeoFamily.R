@@ -110,6 +110,41 @@ test_that("CacheGeoWrite upserts by key and appends on request", {
   expect_identical(readRDS(file)$extra[readRDS(file)$polygonID == "P4"], 7)
 })
 
+test_that("CacheGeoWrite stamps each new row with writtenAt; a rewrite as it was keeps the old stamp", {
+  testInit(c("sf", "terra"))
+  dPath <- checkPath(tempdir2(), create = TRUE)
+  t0 <- Sys.time()
+  led <- newToyLedger(dPath)
+  file <- file.path(dPath, "toy.rds")
+  first <- readRDS(file)
+  expect_s3_class(first$writtenAt, "POSIXct")
+  expect_false(anyNA(first$writtenAt))
+  expect_true(all(first$writtenAt >= t0 - 1))
+  expect_true(all(first$writtenAt <= file.mtime(file) + 1)) # no row written after its file
+
+  Sys.sleep(1.1)
+  CacheGeoWrite(led, toySquare("P2", 10, 20, param = "refit"), verbose = 0)
+  after <- readRDS(file)
+  stamp <- function(id, x) x$writtenAt[x$polygonID == id]
+  expect_gt(stamp("P2", after), stamp("P2", first))          # the refit has a new time
+  expect_identical(stamp("P1", after), stamp("P1", first))   # the others keep theirs
+
+  ## a stamp given with the rows is replaced by the write time
+  given <- toySquare("P4", 50, 60)
+  given$writtenAt <- as.POSIXct("2000-01-01", tz = "UTC")
+  CacheGeoWrite(led, given, verbose = 0)
+  expect_gt(stamp("P4", readRDS(file)), as.POSIXct("2001-01-01", tz = "UTC"))
+
+  ## rows written before the stamp existed read back with NA
+  old <- readRDS(file)
+  old$writtenAt <- NULL
+  saveRDS(old, file)
+  CacheGeoWrite(led, toySquare("P5", 70, 80), verbose = 0)
+  x <- readRDS(file)
+  expect_true(all(is.na(x$writtenAt[x$polygonID != "P5"])))
+  expect_false(is.na(stamp("P5", x)))
+})
+
 test_that("a ledger with no key replaces a row of the same geometry", {
   testInit(c("sf", "terra"))
   dPath <- checkPath(tempdir2(), create = TRUE)
