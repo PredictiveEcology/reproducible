@@ -638,7 +638,7 @@ isConnectionError <- function(e) {
 ## Put the remote ledger file at `ledger$path`
 .geoFetch <- function(ledger, remote, verbose) {
   if (identical(ledger$remoteType, "disk")) {
-    .geoReplaceFile(remote$url, ledger$path)
+    .copyViaTemp(remote$url, ledger$path)
   } else if (identical(ledger$remoteType, "drive")) {
     ## The md5 differs, so fetch. Not through prepInputs(): it keeps a local copy that matches
     ## its own CHECKSUMS.txt (or the destinationPathShared one), which is the old ledger here.
@@ -650,18 +650,6 @@ isConnectionError <- function(e) {
                fun = NA, overwrite = FALSE, useCache = FALSE, verbose = verbose - 2)
   }
   invisible(NULL)
-}
-
-## Copy `from` over `to` so that `to` is always the old file or the new one, never partly written
-.geoReplaceFile <- function(from, to) {
-  dir.create(dirname(to), recursive = TRUE, showWarnings = FALSE)
-  tmp <- tempfile(pattern = paste0(".", basename(to), "."), tmpdir = dirname(to))
-  if (!file.copy(from, tmp)) stop("Could not copy ", from, " to ", tmp)
-  if (!file.rename(tmp, to)) {
-    unlink(tmp)
-    stop("Could not replace ", to)
-  }
-  invisible(to)
 }
 
 ## Download the Drive file `id` over `path`, by a rename, so `path` is never partly written and a
@@ -681,7 +669,7 @@ isConnectionError <- function(e) {
 
 .geoPush <- function(ledger) {
   switch(ledger$remoteType,
-    disk = .geoReplaceFile(ledger$path, .geoRemoteFile(ledger)),
+    disk = .copyViaTemp(ledger$path, .geoRemoteFile(ledger)),
     drive = {
       folder <- .geoDriveFolder(ledger, create = TRUE)
       pushed <- .gdriveRetry(googledrive::drive_put(media = ledger$path,
