@@ -204,10 +204,14 @@ copySingleFile <- function(from = NULL, to = NULL, useRobocopy = TRUE,
           "'", from, "' ", toDir, "/"
         )
 
-        # THe warnings here are being caught; and use file.copy
-        useFileCopy <- capture.output(system(rsync, intern = FALSE, ignore.stderr = TRUE, ignore.stdout = TRUE))
-        filesCopied <- file.exists(file.path(toDir, basename(from)))
-        useFileCopy <- any(!filesCopied)
+        # judge rsync by its exit status: a destination that existed before says nothing;
+        # no rsync on the PATH, or a failed rsync, falls back to file.copy
+        status <- if (nzchar(rsyncBin)) {
+          suppressWarnings(system(rsync, intern = FALSE, ignore.stderr = TRUE, ignore.stdout = TRUE))
+        } else {
+          1L
+        }
+        useFileCopy <- !identical(as.integer(status), 0L)
       }
     } else {
       useFileCopy <- TRUE

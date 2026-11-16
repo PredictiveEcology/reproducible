@@ -257,3 +257,17 @@ test_that("copyFile() replaces the destination by rename and keeps no temporary 
   expect_identical(sort(dir(d, all.files = TRUE, no.. = TRUE)),
                    c("a", "link.bin", "link2.bin", "src.bin", "to.bin"))
 })
+
+test_that("copyFile() into another folder replaces an existing file when rsync is not installed", {
+  ## Fedora CI has no rsync: the rsync route was judged by the destination existing,
+  ## so an old file there was kept and nothing was copied
+  d <- withr::local_tempdir()
+  src <- file.path(d, "src.bin")
+  writeBin(as.raw(1:200), src)
+  dir.create(file.path(d, "a"))
+  to <- file.path(d, "a", "src.bin")
+  writeBin(as.raw(rep(9L, 3)), to)
+  withr::local_envvar(PATH = "")
+  copyFile(src, to)
+  expect_identical(readBin(to, "raw", 1000), as.raw(1:200))
+})
