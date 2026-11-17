@@ -21,6 +21,7 @@
   .pkgEnv$SysInfo <- Sys.info() # record once at loading; repeatedly calling Sys.info is a waste
 
   .pkgEnv$runningOnMac <- isMac()
+  .urlLogEnv$pid <- Sys.getpid() # a forked child sees this pid and sends its url records here
   ## Note: showCache async pre-population is no longer fired here.
   ## .onLoad runs before the user's real cachePath is set (e.g. by
   ## SpaDES.project::setupProject()), so spawning here would target the

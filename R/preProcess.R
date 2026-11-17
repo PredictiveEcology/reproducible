@@ -246,6 +246,16 @@ preProcess <- function(targetFile = NULL, url = NULL, archive = NULL, alsoExtrac
   #       `if (x) fn else NULL`)    -- an expression referencing caller-frame
   #                                    variables that may be out of scope later
   dlFunCaptured <- .resolveDlFunCaptured(dlFunCaptured, dlFun)
+  ## With no url the ledger records the source another way, in the url column: a dlFun by
+  ## its expression ("dlFun: <expr>"), a local file by its path ("local:<absolute path>").
+  if (!length(url[!is.na(url)])) {
+    src <- if (is.null(dlFunCaptured)) "local" else "dlFun"
+    .logUrlAccess(paste0(if (directCall) "preProcess" else "prepInputs", " (", src, ")"),
+                  url = if (src == "dlFun") .dlFunLabel(dlFunCaptured)
+                        else .localFileLabel(archive, targetFile, destinationPath),
+                  targetFile = targetFile, archive = archive, alsoExtract = alsoExtract,
+                  destinationPath = destinationPath)
+  }
 
   dots <- list(...)
   fun  <- .checkFunInDots(fun = fun, dots = dots)
@@ -1345,6 +1355,23 @@ pp_finalize <- function(ctx) {
   filesize = character(),
   algorithm = character()
 )
+
+## The text recorded in the url ledger for a dlFun download that has no url.
+.dlFunLabel <- function(dlFun) {
+  txt <- if (is.function(dlFun)) "<function>" else deparse1(dlFun, width.cutoff = 500L)
+  paste0("dlFun: ", substr(txt, 1L, 300L))
+}
+
+## The text recorded in the url ledger for a local file read with no url: the archive if
+## one is given (the file to copy), else the targetFile; NULL (nothing recorded) if neither.
+.localFileLabel <- function(archive, targetFile, destinationPath) {
+  f <- if (length(archive[!is.na(archive)])) archive else targetFile
+  f <- f[!is.na(f) & nzchar(f)]
+  if (!length(f)) return(NULL)
+  rel <- !isAbsolutePath(f)
+  f[rel] <- file.path(destinationPath, f[rel])
+  paste0("local:", normPath(f))
+}
 
 #' Decide how to materialize a captured `dlFun` expression
 #'

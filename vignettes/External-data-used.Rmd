@@ -1,0 +1,170 @@
+---
+title: "Listing the external data a project uses"
+author:
+  - "Eliot J. B. McIntire"
+date: '`r strftime(Sys.Date(), "%B %d %Y")`'
+output:
+  rmarkdown::html_vignette:
+    number_sections: yes
+    self_contained: yes
+    toc: yes
+vignette: >
+  %\VignetteIndexEntry{Listing the external data a project uses}
+  %\VignetteDepends{data.table, knitr, reproducible}
+  %\VignetteKeyword{prepInputs}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(reproducible.verbose = -1)
+```
+
+A project often reads data from many places: files on the web, Google Drive, other people's
+folders. Sooner or later someone asks "what does this project need?": to cite the data, to
+check a source has not changed, or to run the project on a machine with no internet.
+
+reproducible answers that question with a *download ledger*. Every call to `prepInputs()` or
+`preProcess()` writes one record: the address, the file it was meant to give, and where it was
+put. A call with no `url` that reads a file already on disk is recorded too, with
+`local:<path>` in place of the address. This vignette shows how to read the ledger, how it behaves with `Cache()`, and
+how to go from the ledger to the list of files to copy to another machine.
+
+# The ledger of a session
+
+`prepInputsLog()` returns every access of the current R session. `clearUrlLog()` empties it.
+The examples here use local files given as `file://` urls, so they run without internet; a
+`https://` or Google Drive url is recorded the same way.
+
+```{r ledger}
+library(reproducible)
+src <- file.path(tempdir(), "sources")
+dir.create(src, showWarnings = FALSE)
+writeLines("a,b\n1,2", file.path(src, "table.csv"))
+writeLines("x,y\n3,4", file.path(src, "other.csv"))
+url1 <- paste0("file://", file.path(src, "table.csv"))
+url2 <- paste0("file://", file.path(src, "other.csv"))
+inputs <- file.path(tempdir(), "inputs")
+
+clearUrlLog()
+tab <- prepInputs(url = url1, targetFile = "table.csv", destinationPath = inputs, fun = NA)
+
+data.table::rbindlist(prepInputsLog(), fill = TRUE)[, c("fn", "url", "targetFile", "destinationPath")]
+```
+
+A url is recorded when it is used, whether or not a download was needed: the second time the
+file is already in `destinationPath`, but the project still uses it.
+
+A file read with no `url` is recorded as `local:` and its path. These are inputs someone put
+on the disk by hand; they have no source to download from, so they must be copied.
+
+```{r local}
+writeLines("id\n1", file.path(inputs, "byHand.csv"))
+clearUrlLog()
+byHand <- prepInputs(targetFile = "byHand.csv", destinationPath = inputs, fun = NA)
+led <- data.table::rbindlist(prepInputsLog(), fill = TRUE)
+led[, c("fn", "url")]
+led[!startsWith(url, "local:")] # only the remote sources
+```
+
+# The ledger and `Cache()`
+
+On a cache hit the cached function does not run, so nothing is downloaded. The ledger would miss
+the data if it relied on the download. Instead, `Cache()` stores the urls read inside it as tags
+on the cache entry, and replays them on every hit. The ledger of a run is therefore the same
+whether its steps were computed or came from the cache.
+
+```{r cache}
+options(reproducible.cachePath = file.path(tempdir(), "cache"))
+getTables <- function(u1, u2, dp) {
+  list(prepInputs(url = u1, targetFile = "table.csv", destinationPath = dp, fun = NA),
+       prepInputs(url = u2, targetFile = "other.csv", destinationPath = dp, fun = NA))
+}
+
+clearUrlLog()
+out <- Cache(getTables(url1, url2, inputs)) # computed
+clearUrlLog()
+out <- Cache(getTables(url1, url2, inputs)) # a cache hit: nothing runs, the urls are replayed
+data.table::rbindlist(prepInputsLog(), fill = TRUE)[, c("fn", "url", "targetFile", "cacheId")]
+```
+
+This holds for nested calls too. If an outer `Cache()` is computed and an inner `Cache()` inside
+it is a hit, the inner urls are passed to the outer entry, so a later hit of the outer entry
+replays them.
+
+The tags stay in the cache after the session ends. `urlLog()` reads them for a whole cache
+folder: the data every cached step of a project has used.
+
+```{r urlLog}
+urlLog(getOption("reproducible.cachePath"),
+       which = c("function", "url", "targetFile", "destinationPath"))
+```
+
+# In a SpaDES project
+
+SpaDES.core keeps one ledger per run: `urlLog(sim)` gives the records of that `simList`, with the
+module and event that read each url. The records also reach `prepInputsLog()`. Event caching,
+`.inputObjects` caching and `cacheChaining` all replay the tags, as above.
+
+```{r spades, eval = FALSE}
+sim <- SpaDES.core::simInitAndSpades(...)
+urlLog(sim, which = c("module", "event", "url", "targetFile", "destinationPath"))
+```
+
+# Data read by other means
+
+The ledger only sees `prepInputs()` and `preProcess()` (and `CacheGeo()`). Code that downloads
+with `download.file()`, `googledrive::drive_download()` or a web-service package should say so
+with `logUrlAccess()`, once per access, just before the download. Inside `Cache()` it is tagged
+and replayed like any other record.
+
+```{r other}
+getStation <- function(id) {
+  u <- paste0("https://example.com/stations/", id, ".csv")
+  logUrlAccess(u, targetFile = paste0(id, ".csv"))
+  # download.file(u, ...) would go here
+  data.frame(id = id)
+}
+clearUrlLog()
+st <- getStation("A1")
+data.table::rbindlist(prepInputsLog(), fill = TRUE)[, c("fn", "url")]
+```
+
+`?prepInputsLog` lists everything that is recorded and the few cases that are not (for example a
+cache entry made with `options(reproducible.urlLog = FALSE)`).
+
+# Running a project without internet
+
+To run a project on a machine without internet, copy the files it reads. Two tools give that list,
+and they answer different questions.
+
+1. **The ledger** names every input `prepInputs()` read: each url with the `destinationPath` and
+   `targetFile` it was saved as, and each local file (`local:<path>`). Copy those files (and
+   `archive`, if one was given) into the same `destinationPath` on the other machine, and
+   `prepInputs()` finds them there without downloading. This list is complete even when the run came from the cache, because hits replay
+   their urls.
+
+    ```{r copyList}
+    ## from the cache; for one session, data.table::rbindlist(prepInputsLog(), fill = TRUE)
+    led <- urlLog(getOption("reproducible.cachePath"),
+                  which = c("url", "targetFile", "destinationPath"))
+    led <- led[!is.na(targetFile) & !is.na(destinationPath)]
+    unique(file.path(led$destinationPath, led$targetFile))
+    ```
+
+2. **`filesUsedTrace()`** (Linux, needs `strace`) runs a script and returns every existing file
+   under the given folders that the run opened: inputs, cache entries, module code. It shows
+   exactly what *this* run read, but no more. On a cache hit the raw inputs behind the entry are
+   never opened, so they are not in the list. If the cache key then changes on the other machine,
+   the step is recomputed and needs those raw inputs.
+
+    ```{r trace, eval = FALSE}
+    used <- filesUsedTrace("run.R", folders = c("inputs", "cache"))
+    ```
+
+For a machine without internet, copy both: the traced files (cache entries and anything read
+locally), and the files the ledger names (the raw inputs, so a cache miss there can still be
+recomputed). Or copy the project's whole input and cache folders, if they are not too large.
