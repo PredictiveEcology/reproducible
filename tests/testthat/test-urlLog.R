@@ -609,7 +609,7 @@ test_that("urlLog: a local file read with no url is recorded as local:<path>, an
   expect_equal(recs[[1]]$targetFile, "local.csv")
 
   clearUrlLog()
-  preProcess(targetFile = file.path(tmpdir, "local.csv"), destinationPath = tmpdir)
+  preProcess(targetFile = file.path(tmpdir, "local.csv"), destinationPath = tmpdir, fun = NA)
   expect_equal(prepInputsLog()[[1]]$url, want)
   expect_equal(prepInputsLog()[[1]]$fn, "preProcess (local)")
 
