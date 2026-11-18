@@ -257,7 +257,8 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
       ))
     }))
     if (i %in% 1) {
-      dtFile <- outs[[1]]$local_path # grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE)
+      ## found by name: Drive may list the object file before the `.dbFile`
+      dtFile <- grep(suffixMultipleDBFiles(), rbindlist(outs)$local_path, fixed = TRUE, value = TRUE)[1]
       dt <- loadFile(dtFile, cacheSaveFormat = fileExt(dtFile),
                      cacheId = outputHash, cachePath = cachePath, # in case it needs swapCacheFormat
                      drv = drv, conn = conn, verbose = verbose)
@@ -276,12 +277,10 @@ cloudDownload <- function(outputHash, newFileName, gdriveLs, cachePath, cloudFol
   }
   outs <- rbindlist(outs)
 
-  if (!useDBI()) {
-    dtFileInCache <- CacheDBFileSingle(cachePath, cacheId = outputHash)
-    suppressMessages(hardLinkOrCopy(dtFile, dtFileInCache))
-  }
-  objFiles <- grep(CacheDBFileSingleExt(), outs$local_path, value = TRUE, invert = TRUE)
-  # objFiles <- grep(paste0(".", formatCheck(cachePath, outputHash)), objFiles, value = TRUE)
+  ## Every file keeps its cloud name, which carries the format it was saved in. Naming the `.dbFile`
+  ## by this session's cacheSaveFormat put qs2 data in a `.dbFile.rds`: readRDS() then failed on it,
+  ## or, once the qs2 pair was removed, it was left as a lone `.dbFile` (2026-11-17).
+  objFiles <- if (useDBI()) setdiff(outs$local_path, dtFile) else outs$local_path
   filenamesInCache <- file.path(CacheStorageDir(cachePath = cachePath), basename2(objFiles))
   hardLinkOrCopy(objFiles, to = filenamesInCache)
 
