@@ -143,3 +143,28 @@ test_that("onlyStorageFiles keeps object files and drops metadata/lock files", {
 
   expect_identical(kept, paste0(cid, ".rds"))
 })
+
+test_that("an entry whose object file is missing recomputes, not loads its dbFile", {
+  ## Only the `.dbFile.rds` of an entry left on disk (its object file deleted or never written):
+  ## checkSameCacheId() returned that dbFile as "the entry in another format", Cache() loaded the
+  ## tag table as the object, the format swap deleted both files, and the "accessed" tag update
+  ## then failed with "cannot open the connection" (fireSense_ELFs in LandRCBM, 2026-11-17).
+  testInit()
+  withr::local_options(reproducible.cacheSaveFormat = "rds", reproducible.useDBI = FALSE)
+  cp <- checkPath(file.path(tmpdir, "orphanDbFile"), create = TRUE)
+  runs <- 0L
+  expensive <- function(x) {
+    runs <<- runs + 1L
+    x + 1
+  }
+  first <- Cache(expensive, x = 1, cachePath = cp, verbose = 0)
+  cacheId <- attr(first, "tags") |> sub(pattern = "cacheId:", replacement = "")
+  obj <- CacheStoredFile(cp, cacheId, cacheSaveFormat = "rds")
+  expect_true(file.exists(obj))
+  unlink(obj)
+  expect_true(file.exists(CacheDBFileSingle(cp, cacheId, cacheSaveFormat = "rds")))
+
+  second <- Cache(expensive, x = 1, cachePath = cp, verbose = 0)
+  expect_identical(runs, 2L)
+  expect_equal(as.numeric(second), 2)
+})
