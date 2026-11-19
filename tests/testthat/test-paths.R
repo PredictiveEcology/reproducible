@@ -79,3 +79,25 @@ test_that("getRelative returns '.' when the path is (or is within) relativeToPat
   expect_identical(as.character(getRelative("/a/b/proj/inputs/x.tif", "/a/b/proj")),
                    "inputs/x.tif")
 })
+
+test_that("makeRelative strips a base reached through a symlink from a file not yet on disk", {
+  # regression: preProcess() normalizes a new destinationPath before creating it, so the
+  #   symlink stays in its path; once the folder exists, normPath() resolves the base but
+  #   not a file still to be extracted, the prefix did not match, and 0 files extracted
+  skip_on_os("windows") # file.symlink() needs administrator rights
+  td <- withr::local_tempdir()
+  real <- checkPath(file.path(td, "real"), create = TRUE)
+  link <- file.path(td, "link")
+  file.symlink(real, link)
+  base <- normPath(file.path(link, "sub"))
+  dir.create(base)
+  expect_identical(makeRelative(file.path(base, "a.tif"), base), "a.tif")
+})
+
+test_that("makeRelative leaves a file outside a relative base absolute", {
+  # the retry with the base as given must skip a relative base: as a regular
+  #   expression, "." matches the leading "/" of any absolute path
+  outside <- file.path(withr::local_tempdir(), "x.tif")
+  withr::local_dir(withr::local_tempdir())
+  expect_identical(makeRelative(outside, "."), normPath(outside))
+})

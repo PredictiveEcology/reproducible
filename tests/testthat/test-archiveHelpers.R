@@ -110,3 +110,21 @@ test_that(".listFilesInArchive probes the system tool for the first candidate on
   expect_no_error(.listFilesInArchive(c(rar, file.path(td, "real.tar"))))
   expect_identical(seen, rar)
 })
+
+test_that("extractFromArchive extracts every file into a destinationPath reached through a symlink", {
+  ## A first download: preProcess() normalizes destinationPath before creating it, so the
+  ## symlink stays in its path. All needed files were dropped as "outside" it, 0 files
+  ## extracted, and the retries ended on the message asking to install `archive`.
+  skip_on_os("windows") # file.symlink() needs administrator rights
+  td <- withr::local_tempdir()
+  zipfile <- mkZip(checkPath(file.path(td, "src"), create = TRUE))
+  real <- checkPath(file.path(td, "real"), create = TRUE)
+  link <- file.path(td, "link")
+  file.symlink(real, link)
+  dest <- normPath(file.path(link, "sub"))
+  dir.create(dest)
+  file.copy(zipfile, dest)
+  extractFromArchive(file.path(dest, "test.zip"), destinationPath = dest,
+                     neededFiles = file.path(dest, c("a.txt", "b.txt")), .tempPath = td)
+  expect_true(all(file.exists(file.path(real, "sub", c("a.txt", "b.txt")))))
+})
