@@ -128,3 +128,26 @@ test_that("extractFromArchive extracts every file into a destinationPath reached
                      neededFiles = file.path(dest, c("a.txt", "b.txt")), .tempPath = td)
   expect_true(all(file.exists(file.path(real, "sub", c("a.txt", "b.txt")))))
 })
+
+test_that(".listFilesInArchive reports the first attempt's error, not only the last", {
+  ## Each retry drops a tool, so the last attempt always fails asking to install `archive`,
+  ## whatever went wrong; that message alone hid the real failure.
+  skip_if_not_installed("archive")
+  td <- withr::local_tempdir()
+  bad <- file.path(td, "bad.zip")
+  writeLines(rep("not a zip archive", 5), bad) # > 10 bytes: not taken for a truncated download
+  first <- tryCatch(archive::archive(bad), error = function(e) conditionMessage(e))
+  err <- tryCatch(.listFilesInArchive(bad), error = function(e) conditionMessage(e))
+  expect_match(err, first, fixed = TRUE)
+})
+
+test_that("extractFromArchive reports the first attempt's error, not only the last", {
+  skip_if_not_installed("archive")
+  td <- withr::local_tempdir()
+  bad <- file.path(td, "bad.zip")
+  writeLines(rep("not a zip archive", 5), bad)
+  first <- tryCatch(archive::archive(bad), error = function(e) conditionMessage(e))
+  err <- tryCatch(extractFromArchive(bad, destinationPath = td, .tempPath = td),
+                  error = function(e) conditionMessage(e))
+  expect_match(err, first, fixed = TRUE)
+})
