@@ -13,6 +13,18 @@
 .message$stopNeedArchive <- function(archive)
   paste0("Please install.packages('archive') to extract files from \n", archive)
 
+## Each retry over `dontUses` drops an extraction tool, so the last attempt's error says only
+## that no tool was left (stopNeedArchive), whatever went wrong. Report every attempt's error,
+## the first (all tools available) first.
+.message$stopAllExtractAttempts <- function(archive, errs) {
+  tools <- vapply(dontUses[seq_along(errs)], function(d) {
+    if (is.null(d)) "with all tools" else paste("without", paste(d, collapse = " or "))
+  }, character(1))
+  keep <- !duplicated(errs)
+  paste0("Every attempt to read ", archive, " failed:\n",
+         paste0("  ", tools[keep], ": ", trimws(errs[keep]), collapse = "\n"))
+}
+
 ## Advice for installing an archive-extraction binary. Defined once: both the
 ## "7z has no RAR codec" and the "no 7z/unrar at all" paths offer it, and the
 ## two must not drift apart.
