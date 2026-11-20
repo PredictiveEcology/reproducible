@@ -2261,3 +2261,17 @@ test_that("'Object to retrieve' is one message when the object is stored in more
                 collapse = " ")
   expect_identical(lengths(regmatches(mess, gregexpr("Loaded!", mess))), 1L)
 })
+
+test_that("'Object to retrieve' names the entry's own file, not a raster's .tif inside it", {
+  skip_if_not_installed("terra")
+  testInit("terra", opts = list(reproducible.verbose = 1))
+  tif <- file.path(tmpdir, "r.tif")
+  terra::writeRaster(terra::rast(nrows = 2, ncols = 2, vals = 1:4), tif)
+  f <- function(fn) list(r = terra::rast(fn))
+  Cache(f(tif), cachePath = tmpCache)
+  mess <- paste(capture_messages(Cache(f(tif), cachePath = tmpCache)), collapse = " ")
+  stored <- regmatches(mess, regexpr("Object to retrieve \\(fn: [^,]+, [^)]+\\)", mess))
+  expect_length(stored, 1)
+  expect_false(grepl("\\.tif\\)", stored))
+  expect_true(grepl("\\.(rds|qs2?)\\)", stored))
+})
