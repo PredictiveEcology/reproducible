@@ -488,13 +488,10 @@ setMethod(
   class(objSize) <- "object_size"
   bigFile <- isTRUE(objSize > 1e6)
 
-  fileFormat <- unique(extractFromCache(fullCacheTableForObj, elem = "fileFormat")) # can have a single tif for many entries
-  if (is.null(fileFormat))
-    fileFormat <- cacheSaveFormat
-
+  ## the entry's own file; a `fileFormat` tag is that of a file-backed object inside it (e.g. a .tif)
   messageCache(.message$ObjToRetrieveFn(functionName), ", ",
                #             messageCache("...(Object to retrieve (fn: ", .messageFunctionFn(functionName), ", ",
-               paste(basename2(CacheStoredFile(cachePath, cacheId, cacheSaveFormat = fileFormat,
+               paste(basename2(CacheStoredFile(cachePath, cacheId, cacheSaveFormat = cacheSaveFormat,
                                                readOnly = TRUE)), collapse = ", "),
                ")",
                if (bigFile) " is large: ",
