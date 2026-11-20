@@ -602,6 +602,7 @@ extractFromArchive <- function(archive,
     FALSE
   }
 
+  errs <- character()
   for (dontUse in dontUses) {
     tryC <- try({
       if (!(all(compareNA(result, "OK")) && hasAllFiles)) {
@@ -768,8 +769,9 @@ extractFromArchive <- function(archive,
     if (!is(tryC, "try-error")) {
       break
     }
+    errs <- c(errs, conditionMessage(attr(tryC, "condition")))
     if (identical(dontUse, tail(dontUses, 1)[[1]])) {
-      stop(tryC)
+      stop(.message$stopAllExtractAttempts(archive[1], errs), call. = FALSE)
     }
   }
 
@@ -1341,6 +1343,7 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
 .listFilesInArchive <- function(archive, dontUse = NULL) {
   needSystemCall <- (length(archive) > 0 && fileExt(archive[1]) %in% knownSystemArchiveExtensions)
 
+  errs <- character()
   for (dontUse in dontUses) {
     tryC <- try({
 
@@ -1459,8 +1462,9 @@ appendChecksumsTable <- function(checkSumFilePath, filesToChecksum,
     if (!is(tryC, "try-error")) {
       break
     }
+    errs <- c(errs, conditionMessage(attr(tryC, "condition")))
     if (identical(dontUse, tail(dontUses, 1)[[1]])) {
-      stop(tryC)
+      stop(.message$stopAllExtractAttempts(archive[1], errs), call. = FALSE)
     }
   }
   return(filesInArchive)

@@ -1509,7 +1509,7 @@ checkSameCacheId <- function(f) {
   ## storage dir, ~1 s per Cache() miss in a 1M-file cache
   candidates <- paste0(cacheId, c(".", suffixMultipleDBFiles()), rep(.cacheSaveFormats, each = 2))
   sameCacheID <- sort(candidates[file.exists(file.path(dirname(f), candidates))])
-  if (!useDBI() && length(sameCacheID) > 1) {
+  if (!useDBI() && length(sameCacheID)) { # a lone `.dbFile` is not a stored object
     ## dirname(f) is the storage dir (cacheOutputs/), so its parent is the
     ## cachePath. Derived from `f` rather than from the option, which is unset
     ## when the caller passed cachePath= directly.

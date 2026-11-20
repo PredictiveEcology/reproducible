@@ -380,26 +380,22 @@ makeRelative <- function(files, absoluteBase) {
       files[areAbs] <- normPath(files[areAbs])
       if (length(absoluteBase) < length(files))
         absoluteBase <- rep(absoluteBase, length.out = length(files))
-      if (.pkgEnv$runningOnMac) {
-        # on macos, normPath returns a different answer depending on whether
-        #   the file(s) exists or not. Here, try first as with other OSs; then
-        #   below, try again for those that are still absolute.
-        absoluteBaseOrig <- absoluteBase
-      }
+      # normPath resolves symlinks only in paths that exist: a file not yet on disk
+      #   keeps the symlink that its (existing) base loses, e.g., a destinationPath
+      #   normalized before it was created, or macOS's /var -> /private/var. Try
+      #   the normalized base first; then, for files still absolute, the base as given
+      #   (tidied, symlinks kept; only if absolute, as "." would match any character).
+      absoluteBaseOrig <- normPathRel(absoluteBase)
       absoluteBase <- normPath(absoluteBase) # can be "." which means 'any character' in a grep
       files[areAbs] <- unlist(Map(ab = absoluteBase[areAbs], file = files[areAbs], function(ab, file)
         gsub(paste0("^", ab, "/{0,1}"), "", file)
       ))
-      if (.pkgEnv$runningOnMac) {
-        areAbs <- isAbsolutePath(files)
-        if (any(areAbs)) {
-          # if (exists("aaaa", envir = .GlobalEnv)) browser()
-          files[areAbs] <- unlist(Map(ab = absoluteBaseOrig[areAbs],
-                                      file = files[areAbs], function(ab, file)
-                                        gsub(paste0("^", ab, "/{0,1}"), "", file)
-          ))
-        }
-
+      areAbs <- isAbsolutePath(files) & isAbsolutePath(absoluteBaseOrig[seq_along(files)])
+      if (any(areAbs)) {
+        files[areAbs] <- unlist(Map(ab = absoluteBaseOrig[areAbs],
+                                    file = files[areAbs], function(ab, file)
+                                      gsub(paste0("^", ab, "/{0,1}"), "", file)
+        ))
       }
       # if (length(files) > 1)
       #   if (exists("aaaa", envir = .GlobalEnv)) browser()

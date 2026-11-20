@@ -46,6 +46,89 @@
 .urlLogEnv$frames       <- list()
 .urlLogEnv$frameCounter <- 0L
 .urlLogEnv$announced    <- FALSE   # one-time "how to view" hint per session
+.urlLogEnv$pid          <- Sys.getpid() # the process that owns this state; reset in .onLoad
+.urlLogEnv$parentPid    <- NA_integer_ # set in a forked child: where its records are sent
+.urlLogEnv$spoolCounter <- 0L
+
+## ---- Forked children (parallel::mclapply, makeForkCluster, future multicore) ----
+##
+## A forked child has a copy of .urlLogEnv: what it records, and what it pushes onto
+## the url frames of the parent's open Cache() calls, would die with it. So a child
+## also writes each record into a spool folder of its parent (tempdir() is shared
+## with a fork), and the parent reads that folder whenever it next records, drains a
+## frame, or is asked for prepInputsLog(). Frame ids carry the pid of the process
+## that opened them, so a child knows which frames are its own. Separate R sessions
+## (PSOCK clusters, callr) are not forks; their records stay in their own session.
+.urlLogForkCheck <- function() {
+  me <- Sys.getpid()
+  if (.urlLogEnv$pid != me) {
+    .urlLogEnv$parentPid <- .urlLogEnv$pid
+    .urlLogEnv$pid <- me
+  }
+  invisible()
+}
+
+.urlSpoolDir <- function(pid) file.path(tempdir(), paste0("reproducible-urlLog-", pid))
+
+.urlSpool <- function(pid, item) {
+  d <- .urlSpoolDir(pid)
+  dir.create(d, showWarnings = FALSE, recursive = TRUE)
+  repeat {
+    .urlLogEnv$spoolCounter <- .urlLogEnv$spoolCounter + 1L
+    f <- file.path(d, sprintf("%d-%08d.rds", Sys.getpid(), .urlLogEnv$spoolCounter))
+    if (!file.exists(f)) break
+  }
+  try(.saveRDSAtomic(item, f, compress = FALSE), silent = TRUE)
+  invisible()
+}
+
+## Read what forked children of this process recorded, oldest first.
+.urlIngestSpool <- function() {
+  .urlLogForkCheck()
+  d <- .urlSpoolDir(Sys.getpid())
+  if (!dir.exists(d)) return(invisible())
+  fs <- dir(d, pattern = "[.]rds$", full.names = TRUE)
+  if (!length(fs)) return(invisible())
+  fs <- fs[order(file.mtime(fs), fs)]
+  for (f in fs) {
+    item <- tryCatch(readRDS(f), error = function(e) NULL)
+    unlink(f)
+    if (is.null(item)) next
+    if (identical(item$type, "push")) {
+      open <- intersect(item$frames, names(.urlLogEnv$frames))
+      if (length(open)) .pushToFrames(item$push, open) else .writeSessionRecord(item$rec)
+    } else {
+      .writeSessionRecord(item$rec)
+    }
+  }
+  invisible()
+}
+
+.frameOwner <- function(ids) as.integer(sub("^f([0-9]+)_.*$", "\\1", ids))
+
+## Push one access onto open url frames: in memory for this process's own frames,
+## through the spool for frames a parent process opened. `rec` is the record the
+## parent writes if those frames have closed by the time it reads the spool.
+.pushToFrames <- function(push, ids, rec = NULL) {
+  if (!length(ids)) return(invisible())
+  owner <- .frameOwner(ids)
+  me <- Sys.getpid()
+  for (id in ids[owner == me]) {
+    n <- length(.urlLogEnv$frames[[id]]) + 1L
+    .urlLogEnv$frames[[id]][[n]] <- push
+  }
+  for (pid in unique(owner[owner != me])) {
+    if (is.null(rec)) rec <- .recordFromPush(push, cacheId = NA_character_)
+    .urlSpool(pid, list(type = "push", frames = ids[owner == pid], push = push, rec = rec))
+  }
+  invisible()
+}
+
+.recordFromPush <- function(push, cacheId) {
+  .urlLogRecord(fn = push$fn, url = push$url, targetFile = push$targetFile,
+                archive = push$archive, alsoExtract = push$alsoExtract,
+                destinationPath = push$destinationPath, cacheId = cacheId)
+}
 
 ## One-time, per-session hint pointing users at the log. Fires the first time
 ## a URL access is recorded (any mode except FALSE), respects verbosity.
@@ -64,7 +147,8 @@
 #' The download ledger: a record of the data a run read from outside
 #'
 #' reproducible keeps a ledger of the web addresses (URLs) and Google Drive files that
-#' data were read from, so that a finished run can say where its inputs came from.
+#' data were read from, and of the local files `prepInputs()` read without a URL, so that a
+#' finished run can say where its inputs came from.
 #' `prepInputsLog()` returns the ledger of the current R session, `clearUrlLog()` empties it,
 #' [urlLog()] reads the ledger kept in a cache, and `logUrlAccess()` adds an access that
 #' did not go through `prepInputs()`.
@@ -73,6 +157,12 @@
 #' One record is written each time one of these is called with a URL:
 #' \itemize{
 #'   \item [prepInputs()] and [preProcess()] (`fn` is `"prepInputs"` or `"preProcess"`);
+#'   \item a `dlFun` given to them with no `url` (`fn` ends in `"(dlFun)"`; the `url`
+#'     column holds `"dlFun: "` and the `dlFun` expression);
+#'   \item a local file given to them with no `url` and no `dlFun` (`fn` ends in
+#'     `"(local)"`; the `url` column holds `"local:"` and the absolute path of the
+#'     `archive`, or of the `targetFile` if there is no archive). Select the remote
+#'     sources with `!startsWith(url, "local:")`;
 #'   \item the listing of a directory-index URL that `preProcess()` expands into files
 #'     (`fn` is `"prepInputs (directory index)"`);
 #'   \item [CacheGeo()] and [CacheGeoWrite()], for the Google Drive ledger file they read or
@@ -91,9 +181,12 @@
 #' `reproducible.urlFirstSeen`, `reproducible.urlLastSeen` and `reproducible.urlHitCount`.
 #' The tags stay in the cache, so [urlLog()] and `showCache(userTags = "reproducible.url")`
 #' report them later. On a cache hit nothing is evaluated, so no download is made, but the
-#' tags are read and the same records are written again to the ledger, and `hitCount` is
-#' increased. An entry that holds URLs from more than one function is replayed under the
-#' name of the first.
+#' tags are read and the same records (each url with its own `fn`, `targetFile`, `archive`,
+#' `alsoExtract` and `destinationPath`) are written again to the ledger, and `hitCount` is
+#' increased. A `Cache()` call nested inside another passes its urls to the outer one
+#' whether it was computed or a hit, so the outer entry is tagged with every url read
+#' beneath it. If the cached function fails, the urls it read are still written, with
+#' `cacheId` `NA`.
 #'
 #' @section The option `reproducible.urlLog`:
 #' Where records go is set by `options(reproducible.urlLog = )`:
@@ -106,22 +199,30 @@
 #'     caller owns the environment.}
 #'   \item{a function}{called with each record (a list); there is no de-duplication.}
 #' }
+#' With an environment or a function, records still go to the session ledger too, so
+#' `prepInputsLog()` always holds every access of the session.
 #' SpaDES.core uses the environment form: with `options(spades.urlLog = TRUE)` (the
 #' default) each `simList` carries its own ledger, with `module` and `event` columns,
 #' read with `urlLog(sim)`. `spades.urlLog = FALSE` turns that off. `prepInputsLog()` is
 #' the ledger of the session; `urlLog(sim)` is the ledger of one run.
 #'
+#' @section Parallel code:
+#' A forked child (`parallel::mclapply()`, a fork cluster, `future`'s multicore plan) sends
+#' its records to the process that forked it, which adds them to its own ledger, and to the
+#' `Cache()` call open around the fork. A separate R session (a PSOCK cluster, `callr`) has
+#' its own ledger; read it there with `prepInputsLog()`.
+#'
 #' @section Why a ledger can miss an access:
 #' The ledger holds only what was passed to `prepInputs()`, `preProcess()` or
 #' `logUrlAccess()`. Code that downloads another way (`download.file()`,
 #' `googledrive::drive_download()`, a package that reads a web service) is not seen unless it
-#' calls `logUrlAccess()`. A cache entry made before URL tags existed has no tags; the
-#' URL is recovered only for the direct form `Cache(prepInputs(url = ...))`, and the tags are
-#' then added. Inside a `Cache()` call that is itself a cache hit the inner code does not
-#' run, so only the tags on that entry can be replayed. SpaDES.core's `cacheChaining`
-#' can restore the cache entries of several events without running them; their records are
-#' replayed from the tags too, so an access without a tag is missing. With
-#' `reproducible.urlLog = FALSE` nothing is recorded.
+#' calls `logUrlAccess()`. A cache hit replays the tags on its entry, so an entry made
+#' without them is silent on a hit: one made with `reproducible.urlLog = FALSE`, one made
+#' before URL tags existed, and one made before reproducible 3.2.1.9089 around an inner
+#' `Cache()` hit (such an entry lacks the inner urls). For a legacy entry of the direct
+#' form `Cache(prepInputs(url = ...))` the url is recovered from the call and the tags are
+#' added. Clearing such entries, or one run with `useCache = "overwrite"`, rebuilds their
+#' tags. With `reproducible.urlLog = FALSE` nothing is recorded.
 #'
 #' @section Cloud caches:
 #' Reading or writing a `Cache(useCloud = TRUE)` entry on Google Drive is not recorded in the
@@ -172,7 +273,10 @@
 #' options(op)
 #' }
 #' clearUrlLog()
-prepInputsLog <- function() .urlLogEnv$records
+prepInputsLog <- function() {
+  .urlIngestSpool()
+  .urlLogEnv$records
+}
 
 #' @rdname prepInputsLog
 #' @export
@@ -196,15 +300,18 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   invisible()
 }
 
-## Build the (fn, url, cacheId) idempotency key. Field separator is \037 (US),
-## which never appears in URLs / function names / cacheIds. Whether the access
+## Field separator (\037, US) of the idempotency key and of the reproducible.urlRecord
+## tag; it never appears in URLs, function names, paths or cacheIds.
+.urlSep <- "\037"
+
+## Build the (fn, url, cacheId) idempotency key. Whether the access
 ## was a miss or a hit is internal cache mechanics, not part of the access
 ## identity, so it isn't keyed here.
 .urlLogKey <- function(fn, url, cacheId) {
   paste(fn,
         paste(url, collapse = "\036"),
         if (is.null(cacheId) || !length(cacheId)) "NA" else cacheId,
-        sep = "\037")
+        sep = .urlSep)
 }
 
 ## Collapse a possibly-vector char value to a single field, NA if empty.
@@ -257,13 +364,11 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
 ## TRUE only when the user explicitly set the option to FALSE (kill switch).
 .urlLogOff <- function() isFALSE(getOption("reproducible.urlLog", NULL))
 
-## Write one record to whichever sink is active. Applies idempotency.
-## NULL (default) and TRUE both route to the package-level in-memory log so
-## prepInputsLog() captures accesses (incl. bare prepInputs with no Cache) out of
-## the box; an environment or function sink overrides that destination.
+## Write one record to the active sink and to the session log. Applies idempotency.
 .writeSessionRecord <- function(rec) {
   sink <- getOption("reproducible.urlLog", NULL)
   if (isFALSE(sink)) return(invisible())
+  .urlLogForkCheck()
   key <- .urlLogKey(rec$fn, rec$url, rec$cacheId)
   if (is.environment(sink)) {
     if (is.null(sink$seen))    sink$seen    <- character()
@@ -274,12 +379,14 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
     }
   } else if (is.function(sink)) {
     try(sink(rec), silent = TRUE)
-  } else {
-    ## NULL (default) or TRUE -> package-level in-memory log.
-    if (!key %in% .urlLogEnv$seen) {
-      .urlLogEnv$seen <- c(.urlLogEnv$seen, key)
-      .urlLogEnv$records[[length(.urlLogEnv$records) + 1L]] <- rec
-    }
+  }
+  ## The session log gets every record whatever the sink, so prepInputsLog() is
+  ## complete for the session (an environment sink, e.g. SpaDES.core's, is one run's).
+  if (!key %in% .urlLogEnv$seen) {
+    .urlLogEnv$seen <- c(.urlLogEnv$seen, key)
+    .urlLogEnv$records[[length(.urlLogEnv$records) + 1L]] <- rec
+    if (!is.na(.urlLogEnv$parentPid))
+      .urlSpool(.urlLogEnv$parentPid, list(type = "session", rec = rec))
   }
   invisible()
 }
@@ -299,28 +406,21 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   if (is.character(url) && !length(url)) return(invisible())
   .maybeAnnounceUrlLog()
 
+  push <- list(fn = fn, url = url,
+               targetFile = targetFile, archive = archive,
+               alsoExtract = alsoExtract,
+               destinationPath = destinationPath)
   ## Inside a Cache wrapper: defer to Cache by pushing to its frame(s).
   ## Cache will write session records (with the cacheId) and tag the cacheId.
+  .urlIngestSpool()
   if (length(.urlLogEnv$frames) > 0L &&
       (is.null(cacheId) || any(is.na(cacheId)))) {
-    push <- list(fn = fn, url = url,
-                 targetFile = targetFile, archive = archive,
-                 alsoExtract = alsoExtract,
-                 destinationPath = destinationPath)
-    for (id in names(.urlLogEnv$frames)) {
-      n <- length(.urlLogEnv$frames[[id]]) + 1L
-      .urlLogEnv$frames[[id]][[n]] <- push
-    }
+    .pushToFrames(push, names(.urlLogEnv$frames))
     return(invisible())
   }
 
   ## Bare call (no Cache around): write directly with cacheId = NA.
-  rec <- .urlLogRecord(fn = fn, url = url,
-                       targetFile = targetFile, archive = archive,
-                       alsoExtract = alsoExtract,
-                       destinationPath = destinationPath,
-                       cacheId = cacheId)
-  .writeSessionRecord(rec)
+  .writeSessionRecord(.recordFromPush(push, cacheId = cacheId))
 }
 
 ## ---- Cache url-frame lifecycle -------------------------------------------
@@ -330,22 +430,51 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
 ## exit so interrupted Cache calls don't leak slots.
 .openCacheUrlFrame <- function() {
   if (.urlLogOff()) return(NULL)
+  .urlIngestSpool()
   .urlLogEnv$frameCounter <- .urlLogEnv$frameCounter + 1L
-  id <- paste0("f", .urlLogEnv$frameCounter)
+  id <- paste0("f", Sys.getpid(), "_", .urlLogEnv$frameCounter)
   .urlLogEnv$frames[[id]] <- list()
   id
 }
 
+## A frame still holding accesses when it closes belongs to a Cache() call that
+## did not finish (its function or the save failed): the accesses happened, so
+## they are written with cacheId = NA.
 .closeCacheUrlFrame <- function(id) {
   if (is.null(id)) return(invisible())
+  left <- .takeCacheUrlFrame(id)
   .urlLogEnv$frames[[id]] <- NULL
+  for (push in left) .writeSessionRecord(.recordFromPush(push, cacheId = NA_character_))
   invisible()
 }
 
 .takeCacheUrlFrame <- function(id) {
   if (is.null(id)) return(list())
+  .urlIngestSpool()
   recs <- .urlLogEnv$frames[[id]]
+  if (!is.null(recs)) .urlLogEnv$frames[[id]] <- list()
   if (is.null(recs)) list() else recs
+}
+
+## One cache tag per url holding the whole record, so a hit replays each url with
+## its own fn, targetFile, archive, alsoExtract and destinationPath. Fields are
+## separated by .urlSep; the trailing "." keeps strsplit() from dropping empty fields.
+.urlRecordFields <- c("fn", "url", "targetFile", "archive", "alsoExtract", "destinationPath")
+
+.encodeUrlRecord <- function(rec) {
+  vals <- vapply(.urlRecordFields, function(f) {
+    v <- if (f == "destinationPath") .absPathOrNA(rec[[f]]) else .scalarOrNA(rec[[f]])
+    if (is.na(v)) "" else v
+  }, character(1))
+  paste(c(vals, "."), collapse = .urlSep)
+}
+
+.decodeUrlRecords <- function(x) {
+  lapply(strsplit(x, .urlSep, fixed = TRUE), function(v) {
+    v <- v[seq_along(.urlRecordFields)]
+    v[is.na(v) | !nzchar(v)] <- NA_character_
+    as.list(setNames(v, .urlRecordFields))
+  })
 }
 
 ## ---- Matched-call URL extraction (legacy cache-hit recovery) -------------
@@ -406,7 +535,7 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
 ## isHit == FALSE -> first write: url/urlFn/firstSeen/lastSeen=now/hitCount=0
 ## isHit == TRUE  -> bump lastSeen + hitCount; back-fill url/urlFn/firstSeen
 ##                   if a pre-existing entry has none.
-.persistUrlTags <- function(cacheId, fn, url, cachePath, drv, conn, isHit) {
+.persistUrlTags <- function(cacheId, fn, url, cachePath, drv, conn, isHit, records = list()) {
   if (is.null(cacheId) || !nzchar(cacheId)) return(invisible())
   if (is.null(url) || !length(url)) return(invisible())
   if (is.null(cachePath) || !nzchar(cachePath)) return(invisible())
@@ -423,6 +552,7 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   hasFirstSeen <- "reproducible.urlFirstSeen" %in% existing
   hasLastSeen  <- "reproducible.urlLastSeen"  %in% existing
   hasCount     <- "reproducible.urlHitCount"  %in% existing
+  hasRecord    <- "reproducible.urlRecord"    %in% existing
 
   addOne <- function(key, value) {
     try(.addTagsRepo(cacheId = cacheId, cachePath = cachePath,
@@ -436,6 +566,7 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   }
 
   if (!hasUrl) for (u in url) addOne("reproducible.url", u)
+  if (!hasRecord) for (r in records) addOne("reproducible.urlRecord", .encodeUrlRecord(r))
   if (!hasFn)        addOne("reproducible.urlFn", fn)
   if (!hasFirstSeen) addOne("reproducible.urlFirstSeen", now)
   if (hasLastSeen)   updateOne("reproducible.urlLastSeen", now) else addOne("reproducible.urlLastSeen", now)
@@ -452,16 +583,54 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
   invisible()
 }
 
+## Replay the url tags of one cache entry, as on a Cache() hit: one session record per
+## url, each also pushed onto the frames of enclosing Cache() calls other than
+## `urlFrameId`, so an outer entry computed around this hit is tagged as if the entry's
+## code had run. Returns the replayed records (list(), if the entry has no url tags).
+## SpaDES.core calls this for the events a cacheChaining jump restores without a Cache() call.
+.replayUrlTags <- function(cacheId, cachePath, drv = getDrv(getOption("reproducible.drv", NULL)),
+                           conn = getOption("reproducible.conn", NULL), urlFrameId = NULL) {
+  if (.urlLogOff()) return(invisible(list()))
+  sc <- tryCatch(showCacheFast(cacheId = cacheId, cachePath = cachePath,
+                               strict = FALSE, drv = drv, conn = conn, verbose = 0),
+                 error = function(e) NULL)
+  if (is.null(sc) || NROW(sc) == 0L) return(invisible(list()))
+  tagged <- extractFromCache(sc, "reproducible.urlRecord")
+  items <- if (length(tagged)) {
+    .decodeUrlRecords(tagged) # each url with its own fields
+  } else {
+    ## entries written before the reproducible.urlRecord tag
+    urls <- extractFromCache(sc, "reproducible.url")
+    fn <- extractFromCache(sc, "reproducible.urlFn", ifNot = "prepInputs")[1L]
+    lapply(urls, function(u) list(fn = fn, url = u))
+  }
+  .replayItems(items, cacheId, urlFrameId)
+  invisible(items)
+}
+
+.replayItems <- function(items, cacheId, urlFrameId = NULL) {
+  if (!length(items)) return(invisible())
+  ## Pure cache-hit replay -- inner code didn't run, so .logUrlAccess didn't
+  ## fire; announce here (once per session) now that a URL is confirmed.
+  .maybeAnnounceUrlLog()
+  outer <- setdiff(names(.urlLogEnv$frames), urlFrameId)
+  for (it in items) {
+    .writeSessionRecord(.recordFromPush(it, cacheId = cacheId))
+    .pushToFrames(it, outer)
+  }
+  invisible()
+}
+
 ## Single dispatcher called from Cache() at hit-return and post-save branches.
 ##
 ## On miss (isHit=FALSE): drain this Cache's url frame (pushed by inner
 ## prepInputs/preProcess), write one session record per (fn, url) with the
 ## cacheId, and tag the cacheId.
 ##
-## On hit (isHit=TRUE): read existing reproducible.url* tags from the cache
-## DB via showCacheFast + extractFromCache, and replay one session record
-## per url. fromCache distinction isn't tracked at the record level (the
-## DB tag hitCount captures access frequency separately).
+## On hit (isHit=TRUE): read the reproducible.urlRecord (or, for older entries,
+## reproducible.url*) tags from the cache DB, replay one session record per url,
+## and push each onto the frames of enclosing Cache() calls, so an outer entry
+## computed around an inner hit is tagged as if the inner call had run.
 .maybeRecordUrlForCache <- function(callList, keyFull, cachePaths, drv, conn,
                                     isHit, .callingEnv = parent.frame(),
                                     urlFrameId = NULL) {
@@ -495,64 +664,37 @@ logUrlAccess <- function(url, fn = NULL, targetFile = NULL, archive = NULL,
     }
     if (length(items) == 0L) return(invisible())
 
-    for (it in items) {
-      rec <- .urlLogRecord(fn = it$fn, url = it$url,
-                           targetFile = it$targetFile,
-                           archive = it$archive,
-                           alsoExtract = it$alsoExtract,
-                           destinationPath = it$destinationPath,
-                           cacheId = cacheId)
-      .writeSessionRecord(rec)
-    }
+    for (it in items) .writeSessionRecord(.recordFromPush(it, cacheId = cacheId))
     ## One tag-write for the whole vector so the `hasUrl` early-exit inside
     ## .persistUrlTags doesn't skip the 2nd, 3rd, ... urls of the same miss.
     try(.persistUrlTags(cacheId, items[[1L]]$fn,
                         vapply(items, `[[`, character(1), "url"),
-                        cachePath, drv, conn, isHit = FALSE), silent = TRUE)
+                        cachePath, drv, conn, isHit = FALSE, records = items), silent = TRUE)
   } else {
-    sc <- tryCatch(showCacheFast(cacheId = cacheId, cachePath = cachePath,
-                                 strict = FALSE, drv = drv, conn = conn,
-                                 verbose = 0),
-                   error = function(e) NULL)
-    urls  <- if (is.null(sc) || NROW(sc) == 0L) character(0)
-             else extractFromCache(sc, "reproducible.url")
-    fnTag <- if (length(urls) == 0L) NA_character_
-             else extractFromCache(sc, "reproducible.urlFn",
-                                   ifNot = "prepInputs")[1L]
-
-    ## Option 1 recovery: a legacy entry (created before this feature) has no
-    ## reproducible.url* tags, and the URL is only hashed in the cache DB. The
-    ## one place a literal URL still exists on a hit is the current matched
-    ## call -- extract it for the direct Cache(prepInputs(url=...)) shape.
-    ## Then .persistUrlTags below back-fills the tags so the entry self-heals.
-    if (length(urls) == 0L) {
+    items <- .replayUrlTags(cacheId, cachePath, drv = drv, conn = conn,
+                            urlFrameId = urlFrameId)
+    if (!length(items)) {
+      ## Option 1 recovery: a legacy entry (created before this feature) has no
+      ## reproducible.url* tags, and the URL is only hashed in the cache DB. The
+      ## one place a literal URL still exists on a hit is the current matched
+      ## call -- extract it for the direct Cache(prepInputs(url=...)) shape.
+      ## Then .persistUrlTags below back-fills the tags so the entry self-heals.
       info <- .urlInfoFromMatchedCall(callList$new_call, callList$.functionName,
                                       .callingEnv = .callingEnv)
       if (is.null(info)) return(invisible())
-      urls  <- info$url
-      fnTag <- info$fn
+      ## destinationPath: the value in the current matched call
+      ## (Cache(prepInputs(..., destinationPath = ...)) shape), else the option.
+      destExpr <- callList$new_call$destinationPath
+      dest <- if (!is.null(destExpr)) {
+        tryCatch(eval(destExpr, .callingEnv), error = function(e) NULL)
+      } else {
+        getOption("reproducible.destinationPath", ".")
+      }
+      items <- lapply(info$url, function(u) list(fn = info$fn, url = u, destinationPath = dest))
+      .replayItems(items, cacheId, urlFrameId)
     }
-    ## Pure cache-hit replay -- inner code didn't run, so .logUrlAccess didn't
-    ## fire; announce here (once per session) now that a URL is confirmed.
-    .maybeAnnounceUrlLog()
-
-    ## destinationPath for hit replays: prefer the value in the current matched
-    ## call (Cache(prepInputs(..., destinationPath = ...)) shape), else fall
-    ## back to the option default so the column isn't blank.
-    destExpr <- callList$new_call$destinationPath
-    dest <- if (!is.null(destExpr)) {
-      tryCatch(eval(destExpr, .callingEnv), error = function(e) NULL)
-    } else {
-      getOption("reproducible.destinationPath", ".")
-    }
-    for (u in urls) {
-      rec <- .urlLogRecord(fn = fnTag, url = u,
-                           destinationPath = dest,
-                           cacheId = cacheId)
-      .writeSessionRecord(rec)
-    }
-    try(.persistUrlTags(cacheId, fnTag, urls, cachePath, drv, conn,
-                        isHit = TRUE), silent = TRUE)
+    try(.persistUrlTags(cacheId, items[[1L]]$fn, vapply(items, `[[`, character(1), "url"),
+                        cachePath, drv, conn, isHit = TRUE), silent = TRUE)
   }
   invisible()
 }
@@ -692,7 +834,9 @@ preProcessCheckURLs <- function(path = ".",
                     hitCount = "reproducible.urlHitCount",
                     `function` = "function", module = "module", event = "eventType")
 .urlLogWhich <- c("cacheId", "function", "module", "event", "url", "caller",
+                  "targetFile", "archive", "alsoExtract", "destinationPath",
                   "firstSeen", "lastSeen", "hitCount", "createdDate")
+.urlLogRecordCols <- c("targetFile", "archive", "alsoExtract", "destinationPath")
 
 #' The URL ledger kept in a cache
 #'
@@ -711,7 +855,9 @@ preProcessCheckURLs <- function(path = ".",
 #' @param which Character vector of columns to return, in the order given. Allowed
 #'   values: `"cacheId"`, `"function"` (the function that was cached), `"module"` and
 #'   `"event"` (the SpaDES module and event type, `NA` outside SpaDES), `"url"`,
-#'   `"caller"` (`prepInputs` or `preProcess`), `"firstSeen"`, `"lastSeen"`,
+#'   `"caller"` (`prepInputs` or `preProcess`), `"targetFile"`, `"archive"`, `"alsoExtract"`
+#'   and `"destinationPath"` (as given to the call that read the url; `NA` for entries
+#'   made before these were stored), `"firstSeen"`, `"lastSeen"`,
 #'   `"hitCount"` (times the entry was reused) and `"createdDate"`.
 #' @param ... Passed to methods; unused by the default method.
 #'
@@ -748,7 +894,7 @@ urlLog.default <- function(x = getOption("reproducible.cachePath"), which = c("f
   ids <- unique(urlTags$cacheId)
 
   tags <- showCache(x, cacheId = ids, verbose = FALSE)
-  tags <- tags[tags$tagKey %in% .urlLogTagKeys]
+  tags <- tags[tags$tagKey %in% c(.urlLogTagKeys, "reproducible.urlRecord")]
 
   ## one value per (cacheId, key), the most recent if repeated; url keeps them all
   pick <- function(key) {
@@ -761,6 +907,19 @@ urlLog.default <- function(x = getOption("reproducible.cachePath"), which = c("f
   for (nm in intersect(which, names(.urlLogTagKeys)[-1])) {
     d <- pick(.urlLogTagKeys[[nm]])
     out[[nm]] <- d$tagValue[match(out$cacheId, d$cacheId)]
+  }
+  ## Per-url fields, and a per-url caller, from the reproducible.urlRecord tags
+  recTags <- tags[tags$tagKey == "reproducible.urlRecord", c("cacheId", "tagValue")]
+  if (any(c("caller", .urlLogRecordCols) %in% which)) {
+    for (nm in intersect(which, .urlLogRecordCols)) out[[nm]] <- NA_character_
+    if (NROW(recTags)) {
+      recs <- rbindlist(.decodeUrlRecords(recTags$tagValue))
+      recs$cacheId <- recTags$cacheId
+      m <- match(paste(out$cacheId, out$url), paste(recs$cacheId, recs$url))
+      has <- !is.na(m)
+      for (nm in intersect(which, .urlLogRecordCols)) out[[nm]][has] <- recs[[nm]][m[has]]
+      if ("caller" %in% which) out$caller[has] <- recs$fn[m[has]]
+    }
   }
   if ("hitCount" %in% which) out$hitCount <- suppressWarnings(as.integer(out$hitCount))
   for (nm in intersect(which, c("firstSeen", "lastSeen")))

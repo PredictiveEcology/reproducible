@@ -519,8 +519,14 @@ isConnectionError <- function(e) {
   path <- .geoPendingPath(ledger)
   entries <- if (file.exists(path)) readRDS(path) else list()
   entries[[length(entries) + 1L]] <- list(rows = as.data.frame(rows), mode = mode)
+  .saveRDSAtomic(entries, path)
+}
+
+## saveRDS() to a hidden temporary name beside `path`, then rename it over `path`, so a
+## reader never sees a half-written file.
+.saveRDSAtomic <- function(object, path, ...) {
   tmp <- tempfile(pattern = paste0(".", basename(path), "."), tmpdir = dirname(path))
-  saveRDS(entries, tmp)
+  saveRDS(object, tmp, ...)
   file.rename(tmp, path)
 }
 

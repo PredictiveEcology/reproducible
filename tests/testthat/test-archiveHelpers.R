@@ -110,3 +110,44 @@ test_that(".listFilesInArchive probes the system tool for the first candidate on
   expect_no_error(.listFilesInArchive(c(rar, file.path(td, "real.tar"))))
   expect_identical(seen, rar)
 })
+
+test_that("extractFromArchive extracts every file into a destinationPath reached through a symlink", {
+  ## A first download: preProcess() normalizes destinationPath before creating it, so the
+  ## symlink stays in its path. All needed files were dropped as "outside" it, 0 files
+  ## extracted, and the retries ended on the message asking to install `archive`.
+  skip_on_os("windows") # file.symlink() needs administrator rights
+  td <- withr::local_tempdir()
+  zipfile <- mkZip(checkPath(file.path(td, "src"), create = TRUE))
+  real <- checkPath(file.path(td, "real"), create = TRUE)
+  link <- file.path(td, "link")
+  file.symlink(real, link)
+  dest <- normPath(file.path(link, "sub"))
+  dir.create(dest)
+  file.copy(zipfile, dest)
+  extractFromArchive(file.path(dest, "test.zip"), destinationPath = dest,
+                     neededFiles = file.path(dest, c("a.txt", "b.txt")), .tempPath = td)
+  expect_true(all(file.exists(file.path(real, "sub", c("a.txt", "b.txt")))))
+})
+
+test_that(".listFilesInArchive reports the first attempt's error, not only the last", {
+  ## Each retry drops a tool, so the last attempt always fails asking to install `archive`,
+  ## whatever went wrong; that message alone hid the real failure.
+  skip_if_not_installed("archive")
+  td <- withr::local_tempdir()
+  bad <- file.path(td, "bad.zip")
+  writeLines(rep("not a zip archive", 5), bad) # > 10 bytes: not taken for a truncated download
+  first <- tryCatch(archive::archive(bad), error = function(e) conditionMessage(e))
+  err <- tryCatch(.listFilesInArchive(bad), error = function(e) conditionMessage(e))
+  expect_match(err, first, fixed = TRUE)
+})
+
+test_that("extractFromArchive reports the first attempt's error, not only the last", {
+  skip_if_not_installed("archive")
+  td <- withr::local_tempdir()
+  bad <- file.path(td, "bad.zip")
+  writeLines(rep("not a zip archive", 5), bad)
+  first <- tryCatch(archive::archive(bad), error = function(e) conditionMessage(e))
+  err <- tryCatch(extractFromArchive(bad, destinationPath = td, .tempPath = td),
+                  error = function(e) conditionMessage(e))
+  expect_match(err, first, fixed = TRUE)
+})

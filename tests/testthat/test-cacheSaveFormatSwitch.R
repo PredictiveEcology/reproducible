@@ -143,3 +143,62 @@ test_that("onlyStorageFiles keeps object files and drops metadata/lock files", {
 
   expect_identical(kept, paste0(cid, ".rds"))
 })
+
+test_that("an entry whose object file is missing recomputes, not loads its dbFile", {
+  ## Only the `.dbFile.rds` of an entry left on disk (its object file deleted or never written):
+  ## checkSameCacheId() returned that dbFile as "the entry in another format", Cache() loaded the
+  ## tag table as the object, the format swap deleted both files, and the "accessed" tag update
+  ## then failed with "cannot open the connection" (fireSense_ELFs in LandRCBM, 2026-11-17).
+  testInit()
+  withr::local_options(reproducible.cacheSaveFormat = "rds", reproducible.useDBI = FALSE)
+  cp <- checkPath(file.path(tmpdir, "orphanDbFile"), create = TRUE)
+  runs <- 0L
+  expensive <- function(x) {
+    runs <<- runs + 1L
+    x + 1
+  }
+  first <- Cache(expensive, x = 1, cachePath = cp, verbose = 0)
+  cacheId <- attr(first, "tags") |> sub(pattern = "cacheId:", replacement = "")
+  obj <- CacheStoredFile(cp, cacheId, cacheSaveFormat = "rds")
+  expect_true(file.exists(obj))
+  unlink(obj)
+  expect_true(file.exists(CacheDBFileSingle(cp, cacheId, cacheSaveFormat = "rds")))
+
+  second <- Cache(expensive, x = 1, cachePath = cp, verbose = 0)
+  expect_identical(runs, 2L)
+  expect_equal(as.numeric(second), 2)
+})
+
+test_that("a cloud entry saved as qs2 downloads into an rds session under its own names", {
+  ## cloudDownload() named the downloaded `.dbFile` by this session's cacheSaveFormat, so a qs2
+  ## entry became `.dbFile.rds` holding qs2 data: readRDS() failed on it ("unknown input format"),
+  ## and once the qs2 pair was removed it was a lone `.dbFile` (fireSense_ELFs, 2026-11-17).
+  ## Drive is simulated by a folder; both listing orders are tried.
+  skip_if_not_installed("qs2")
+  skip_if_not_installed("googledrive")
+  testInit()
+  withr::local_options(reproducible.useDBI = FALSE)
+  f <- function(x) list(a = x, b = letters)
+  drive <- checkPath(file.path(tmpdir, "drive"), create = TRUE)
+  withr::with_options(list(reproducible.cacheSaveFormat = "qs2"),
+                      Cache(f, x = 1, cachePath = drive, verbose = 0))
+  driveFiles <- dir(CacheStorageDir(drive), pattern = "^[0-9a-f]{16}\\.(dbFile\\.)?qs2$")
+  expect_length(driveFiles, 2)
+  cacheId <- sub("\\..*", "", driveFiles[1])
+  local_mocked_bindings(
+    drive_download = function(file, path, overwrite) {
+      file.copy(file.path(CacheStorageDir(drive), unclass(file)), path, overwrite = TRUE)
+      data.frame(name = basename(path), local_path = path)
+    },
+    as_id = function(x) x,
+    .package = "googledrive")
+  withr::local_options(reproducible.cacheSaveFormat = "rds")
+  for (ord in list(driveFiles, rev(driveFiles))) {
+    cp <- checkPath(file.path(tmpdir, paste0("dl", ord[1])), create = TRUE)
+    gdriveLs <- data.frame(name = ord, id = ord)
+    cloudDownload(cacheId, ord, gdriveLs, cp, "folder", verbose = 0)
+    expect_setequal(dir(CacheStorageDir(cp), pattern = cacheId), driveFiles)
+    out <- Cache(f, x = 1, cachePath = cp, verbose = 0)
+    expect_identical(out$b, letters)
+  }
+})
