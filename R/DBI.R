@@ -82,7 +82,26 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
       )
     ), silent = TRUE)
   }
+  .ensureCacheIdIndex(conn, CacheDBTableName(cachePath, drv), cachePath)
   # )
+}
+
+## An index on cacheId, so that a lookup of one entry does not read the whole table (a table
+## has about 11 rows per entry: 5.5 million rows for 500,000 entries). It is made with the table,
+## and once per session for a table made before the index existed. Failure (e.g., a read-only
+## database) only leaves lookups as slow as they were.
+.ensureCacheIdIndex <- function(conn, dbTabNam, cachePath) {
+  key <- paste0(normPath(cachePath), "|", dbTabNam)
+  if (isTRUE(.pkgEnv$cacheIdIndexed[[key]])) return(invisible(TRUE))
+  ok <- try(DBI::dbExecute(conn, paste0(
+    "CREATE INDEX IF NOT EXISTS ", DBI::dbQuoteIdentifier(conn, paste0(dbTabNam, "_cacheId")),
+    " ON ", DBI::dbQuoteIdentifier(conn, dbTabNam), " (\"cacheId\")")), silent = TRUE)
+  ok <- !is(ok, "try-error")
+  if (ok) {
+    if (is.null(.pkgEnv$cacheIdIndexed)) .pkgEnv$cacheIdIndexed <- list()
+    .pkgEnv$cacheIdIndexed[[key]] <- TRUE
+  }
+  invisible(ok)
 }
 
 #' Save an object to Cache

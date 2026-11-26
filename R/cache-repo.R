@@ -803,6 +803,7 @@ getHashFromDB <- function(tries, conn, drv, repo, dbTabNam, outputHash) {
     DBI::dbDisconnect(conn)
     conn <- dbConnectAll(drv, cachePath = repo)
   }
+  .ensureCacheIdIndex(conn, dbTabNam, repo)
   qry <- glue::glue_sql("SELECT * FROM {DBI::SQL(glue::double_quote(dbTabName))} where \"cacheId\" = ({outputHash})",
                         dbTabName = dbTabNam,
                         outputHash = outputHash,
