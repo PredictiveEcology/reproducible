@@ -13,9 +13,11 @@ concurrency:
 
 jobs:
   R-CMD-check:
-    uses: PredictiveEcology/actions/.github/workflows/R-CMD-check.yaml@main
+    uses: PredictiveEcology/actions/.github/workflows/R-CMD-check.yaml@feat/postgres-service  # TEMPORARY: back to @main once PredictiveEcology/actions#108 merges
     secrets: inherit
     with:
+      # A Postgres server on the ubuntu-latest (release) leg: tests/test-all.R runs the cache tests against it.
+      postgres: true
       extra-packages: |
         rspatial/geodata
       # Run \dontrun / \donttest examples the way CRAN's incoming checks do.
