@@ -637,8 +637,15 @@ setMethod(
 
       dbTabNam <- CacheDBTableName(x, drv = drv)
       # tab <- dbReadTable(conn, dbTabNam)
+      qry <- paste0("SELECT * FROM \"", dbTabNam, "\"")
+      if (!is.null(cacheId)) {
+        ## only these entries, with the cacheId index: reading the whole table took 5 s on 500,000 entries
+        .ensureCacheIdIndex(conn, dbTabNam, x)
+        qry <- paste0("SELECT * FROM ", DBI::dbQuoteIdentifier(conn, dbTabNam),
+                      " WHERE \"cacheId\" IN (", .sqlValues(conn, cacheId), ")")
+      }
       res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
-        DBI::dbSendQuery(conn, paste0("SELECT * FROM \"", dbTabNam, "\""))
+        DBI::dbSendQuery(conn, qry)
       ))
       tab <- DBI::dbFetch(res)
       DBI::dbClearResult(res)
