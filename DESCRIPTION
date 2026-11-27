@@ -71,7 +71,6 @@ Suggests:
     DBI,
     future,
     geodata,
-    glue,
     googledrive,
     httr,
     httr2 (>= 1.2.1),
