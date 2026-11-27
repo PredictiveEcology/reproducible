@@ -86,6 +86,7 @@ Default: \code{NULL}. Sets a specific connection to a database, e.g.,
 \code{dbConnect(drv = RSQLite::SQLite())} or \verb{dbConnect(drv = RPostgres::Postgres()}.
 For remote database servers, setting one connection may be far faster than using
 \code{drv} which must make a new connection every time.
+If set, \code{Cache()} uses the DBI backend, whatever \code{useDBI} is (see \code{useDBI}).
 }
 \item{\code{destinationPath}}{
 Default: \code{NULL}. Used in \code{\link[=prepInputs]{prepInputs()}} and \code{\link[=preProcess]{preProcess()}}.
@@ -100,8 +101,9 @@ via \code{\link[=messagePreProcess]{messagePreProcess()}} (which the calling app
 dynamic terminal the native in-place bar is used and this has no effect.
 }
 \item{\code{drv}}{
-Default: \code{RSQLite::SQLite()}. Sets the default driver for the backend database system.
-Only tested with \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
+Default: \code{NULL}, i.e., \code{RSQLite::SQLite()} when \code{useDBI} is \code{TRUE}. Sets the driver for the
+backend database system. Only tested with \code{RSQLite::SQLite()} and \code{RPostgres::Postgres()}.
+If set, \code{Cache()} uses the DBI backend, whatever \code{useDBI} is (see \code{useDBI}).
 }
 \item{dryRun}{
 Default: \code{FALSE}. Digest the arguments and report on the closest previous
@@ -476,6 +478,12 @@ metadata are converted to the other backend on first use, without loss.
 Default value can be overridden by setting environment variable
 \code{R_REPRODUCIBLE_USE_DBI} to \code{"true"} or \code{"false"}.
 As of version 0.3, the database backend is \pkg{DBI} instead of \pkg{archivist}.
+Together with \code{drv} and \code{conn}, this picks one of three backends:
+\code{useDBI = FALSE} and neither set: the file backend;
+\code{useDBI = TRUE} and neither set: \code{SQLite}, in \code{cache.db} in the \code{cachePath};
+\code{drv} or \code{conn} set: that database (e.g., Postgres), whatever \code{useDBI} is.
+\code{Cache()} then turns \code{useDBI} on, with a message. To go back to the file backend,
+set \code{drv} and \code{conn} to \code{NULL} as well as \code{useDBI} to \code{FALSE}.
 }
 \item{\code{useGdown}}{
 Default: \code{FALSE}. If a user provides a Google Drive url to \code{preProcess}/\code{prepInputs},

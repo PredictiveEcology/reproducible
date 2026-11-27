@@ -10,6 +10,17 @@ test_that("Cache() with reproducible.drv set does not announce the backend on ev
   expect_false(any(grepl("Using DBI backend", mess)))
 })
 
+test_that("a set reproducible.drv turns DBI on once, saying why, when useDBI is FALSE", {
+  skip_if_not_installed("RSQLite")
+  testInit(verbose = TRUE, opts = list(reproducible.useMemoise = FALSE, reproducible.useDBI = FALSE))
+  if (is.null(getOption("reproducible.drv"))) withr::local_options(reproducible.drv = RSQLite::SQLite())
+  mess1 <- capture_messages(Cache(rnorm, 1, cachePath = tmpdir))
+  expect_true(useDBI())
+  expect_equal(sum(grepl("Using the DBI backend because", mess1)), 1L)
+  mess2 <- capture_messages(Cache(rnorm, 1, cachePath = tmpdir))
+  expect_false(any(grepl("DBI backend", mess2)))
+})
+
 test_that("clearCache() empties a server database's table", {
   testInit(verbose = -2, opts = list(reproducible.useDBI = TRUE))
   drv <- getOption("reproducible.drv")

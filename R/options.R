@@ -83,6 +83,7 @@
 #'     `dbConnect(drv = RSQLite::SQLite())` or `dbConnect(drv = RPostgres::Postgres()`.
 #'     For remote database servers, setting one connection may be far faster than using
 #'     `drv` which must make a new connection every time.
+#'     If set, `Cache()` uses the DBI backend, whatever `useDBI` is (see `useDBI`).
 #'   }
 #'   \item{`destinationPath`}{
 #'     Default: `NULL`. Used in [prepInputs()] and [preProcess()].
@@ -97,8 +98,9 @@
 #'     dynamic terminal the native in-place bar is used and this has no effect.
 #'   }
 #'   \item{`drv`}{
-#'     Default: `RSQLite::SQLite()`. Sets the default driver for the backend database system.
-#'     Only tested with `RSQLite::SQLite()` and `RPostgres::Postgres()`.
+#'     Default: `NULL`, i.e., `RSQLite::SQLite()` when `useDBI` is `TRUE`. Sets the driver for the
+#'     backend database system. Only tested with `RSQLite::SQLite()` and `RPostgres::Postgres()`.
+#'     If set, `Cache()` uses the DBI backend, whatever `useDBI` is (see `useDBI`).
 #'   }
 #'   \item{dryRun}{
 #'     Default: `FALSE`. Digest the arguments and report on the closest previous
@@ -497,6 +499,12 @@
 #'     Default value can be overridden by setting environment variable
 #'     `R_REPRODUCIBLE_USE_DBI` to `"true"` or `"false"`.
 #'     As of version 0.3, the database backend is \pkg{DBI} instead of \pkg{archivist}.
+#'     Together with `drv` and `conn`, this picks one of three backends:
+#'     `useDBI = FALSE` and neither set: the file backend;
+#'     `useDBI = TRUE` and neither set: `SQLite`, in `cache.db` in the `cachePath`;
+#'     `drv` or `conn` set: that database (e.g., Postgres), whatever `useDBI` is.
+#'     `Cache()` then turns `useDBI` on, with a message. To go back to the file backend,
+#'     set `drv` and `conn` to `NULL` as well as `useDBI` to `FALSE`.
 #'   }
 #'   \item{`useGdown`}{
 #'     Default: `FALSE`. If a user provides a Google Drive url to `preProcess`/`prepInputs`,

@@ -420,9 +420,14 @@ isDevMode <- function(useCache, userTags) {
 
 optionsSetForCache <- function(drv = NULL, conn = NULL, envir = parent.frame(1),
                                 verbose = getOption("reproducible.verbose")) {
-  ## drv and conn default to their options, so only switch (and say so) when DBI is not on yet
+  ## A set drv or conn means the DBI backend, whatever reproducible.useDBI says. drv and conn default
+  ## to their options, so switch (and say why) only when DBI is not on yet: once per session.
   if ((!is.null(drv) || !is.null(conn)) && !isTRUE(getOption("reproducible.useDBI"))) {
-    useDBI(TRUE, verbose = verbose)
+    if (isTRUE(useDBI(TRUE, verbose = -2)))
+      messageCache("Using the DBI backend because a database ", if (is.null(conn)) "driver" else "connection",
+                   " is set (`drv`/`conn`, or options `reproducible.drv`/`reproducible.conn`), although ",
+                   "`reproducible.useDBI` is FALSE. To use the file backend, set both options to NULL.",
+                   verbose = verbose)
   }
   if (isFALSE(useDBI())) {
     opts <- options(

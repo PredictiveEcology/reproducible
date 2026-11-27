@@ -150,7 +150,8 @@ test_that("an entry whose object file is missing recomputes, not loads its dbFil
   ## tag table as the object, the format swap deleted both files, and the "accessed" tag update
   ## then failed with "cannot open the connection" (fireSense_ELFs in LandRCBM, 2026-11-17).
   testInit()
-  withr::local_options(reproducible.cacheSaveFormat = "rds", reproducible.useDBI = FALSE)
+  withr::local_options(reproducible.cacheSaveFormat = "rds", reproducible.useDBI = FALSE,
+                       reproducible.drv = NULL, reproducible.conn = NULL) # a set drv or conn turns DBI on
   cp <- checkPath(file.path(tmpdir, "orphanDbFile"), create = TRUE)
   runs <- 0L
   expensive <- function(x) {
@@ -177,7 +178,8 @@ test_that("a cloud entry saved as qs2 downloads into an rds session under its ow
   skip_if_not_installed("qs2")
   skip_if_not_installed("googledrive")
   testInit()
-  withr::local_options(reproducible.useDBI = FALSE)
+  withr::local_options(reproducible.useDBI = FALSE,
+                       reproducible.drv = NULL, reproducible.conn = NULL) # a set drv or conn turns DBI on
   f <- function(x) list(a = x, b = letters)
   drive <- checkPath(file.path(tmpdir, "drive"), create = TRUE)
   withr::with_options(list(reproducible.cacheSaveFormat = "qs2"),
