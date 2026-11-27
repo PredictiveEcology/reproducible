@@ -448,7 +448,7 @@ dlGoogle <- function(url, archive = NULL, targetFile = NULL,
           googledrive::as_id(url),
           path = destFile,
           type = type,
-          overwrite = overwrite, verbose = TRUE)
+          overwrite = overwrite)
       )
     }
 
