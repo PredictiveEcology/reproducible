@@ -633,7 +633,8 @@ setMethod(
       if (!is.null(cacheId)) {
         ## only these entries, with the cacheId index: reading the whole table took 5 s on 500,000 entries
         .ensureCacheIdIndex(conn, dbTabNam, x)
-        qry <- glue::glue_sql(paste0(qry, " WHERE \"cacheId\" IN ({ids*})"), ids = cacheId, .con = conn)
+        qry <- paste0("SELECT * FROM ", DBI::dbQuoteIdentifier(conn, dbTabNam),
+                      " WHERE \"cacheId\" IN (", .sqlValues(conn, cacheId), ")")
       }
       res <- retry(retries = 250, exponentialDecayBase = 1.01, quote(
         DBI::dbSendQuery(conn, qry)

@@ -86,6 +86,9 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
   # )
 }
 
+## SQL literals of `x`, comma separated, quoted by the connection (for `IN (...)` and `= ...`)
+.sqlValues <- function(conn, x) paste(DBI::dbQuoteString(conn, as.character(x)), collapse = ", ")
+
 ## An index on cacheId, so that a lookup of one entry does not read the whole table (a table
 ## has about 11 rows per entry: 5.5 million rows for 500,000 entries). It is made with the table,
 ## and once per session for a table made before the index existed. Failure (e.g., a read-only
@@ -93,9 +96,12 @@ createCache <- function(cachePath = getOption("reproducible.cachePath"),
 .ensureCacheIdIndex <- function(conn, dbTabNam, cachePath) {
   key <- paste0(normPath(cachePath), "|", dbTabNam)
   if (isTRUE(.pkgEnv$cacheIdIndexed[[key]])) return(invisible(TRUE))
-  ok <- try(DBI::dbExecute(conn, paste0(
-    "CREATE INDEX IF NOT EXISTS ", DBI::dbQuoteIdentifier(conn, paste0(dbTabNam, "_cacheId")),
-    " ON ", DBI::dbQuoteIdentifier(conn, dbTabNam), " (\"cacheId\")")), silent = TRUE)
+  qry <- paste0("CREATE INDEX IF NOT EXISTS ", DBI::dbQuoteIdentifier(conn, paste0(dbTabNam, "_cacheId")),
+                " ON ", DBI::dbQuoteIdentifier(conn, dbTabNam), " (\"cacheId\")")
+  ok <- try({
+    res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(DBI::dbSendStatement(conn, qry)))
+    DBI::dbClearResult(res)
+  }, silent = TRUE)
   ok <- !is(ok, "try-error")
   if (ok) {
     if (is.null(.pkgEnv$cacheIdIndexed)) .pkgEnv$cacheIdIndexed <- list()
@@ -444,12 +450,8 @@ rmFromCache <- function(cachePath = getOption("reproducible.cachePath"),
       on.exit(DBI::dbDisconnect(conn))
     }
     # from https://cran.r-project.org/web/packages/DBI/vignettes/spec.html
-    query <- glue::glue_sql(
-      "DELETE FROM {DBI::SQL(glue::double_quote(dbTabName))} WHERE \"cacheId\" IN ({cacheId*})",
-      dbTabName = CacheDBTableName(cachePath, drv),
-      cacheId = cacheId,
-      .con = conn
-    )
+    query <- paste0("DELETE FROM ", DBI::dbQuoteIdentifier(conn, CacheDBTableName(cachePath, drv)),
+                    " WHERE \"cacheId\" IN (", .sqlValues(conn, cacheId), ")")
     res <- DBI::dbSendQuery(conn, query)
 
     if (FALSE) { # this is the "unsafe" version
@@ -661,18 +663,12 @@ dbConnectAll <- function(drv = getDrv(getOption("reproducible.drv", NULL)),
       #                 "createdDate" = as.character(Sys.time()))
       #
       # retry(quote(dbAppendTable(conn, CacheDBTableName(cachePath, drv), dt), retries = 15))
-      # glue_sql escapes the values (same idiom as rmFromCache/getHashFromDB);
-      # see the note in .addTagsRepo() -- an unescaped single quote in `tagValue`
-      # would otherwise produce invalid SQL.
-      qry <- glue::glue_sql(
-        "UPDATE {DBI::SQL(glue::double_quote(dbTabName))} SET \"tagValue\" = {tagValue}",
-        " WHERE \"cacheId\" = ({cacheId}) AND \"tagKey\" = ({tagKey})",
-        dbTabName = CacheDBTableName(cachePath, drv),
-        tagValue = as.character(tagValue),
-        cacheId = cacheId,
-        tagKey = tagKey,
-        .con = conn
-      )
+      # the values are quoted (see the note in .addTagsRepo() -- an unescaped single quote in
+      # `tagValue` would otherwise produce invalid SQL)
+      qry <- paste0("UPDATE ", DBI::dbQuoteIdentifier(conn, CacheDBTableName(cachePath, drv)),
+                    " SET \"tagValue\" = ", .sqlValues(conn, as.character(tagValue)),
+                    " WHERE \"cacheId\" = (", .sqlValues(conn, cacheId),
+                    ") AND \"tagKey\" = (", .sqlValues(conn, tagKey), ")")
       rs <- # retry(retries = 250, exponentialDecayBase = 1.01, quote(
         DBI::dbSendStatement(conn, qry)
       # ))
@@ -1088,11 +1084,8 @@ movedCache <- function(new, old, drv = getDrv(getOption("reproducible.drv", NULL
     }
     newTable <- CacheDBTableName(new, drv = drv)
 
-    qry <- glue::glue_sql("ALTER TABLE {`old`} RENAME TO {`new`}",
-      old = oldTable,
-      new = newTable,
-      .con = conn
-    )
+    qry <- paste0("ALTER TABLE ", DBI::dbQuoteIdentifier(conn, oldTable),
+                  " RENAME TO ", DBI::dbQuoteIdentifier(conn, newTable))
     res <- retry(retries = 15, exponentialDecayBase = 1.01, quote(DBI::dbSendQuery(conn, qry)))
     # dbFetch(res)
     out <- DBI::dbClearResult(res)

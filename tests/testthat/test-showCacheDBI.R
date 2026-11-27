@@ -12,14 +12,20 @@ dbiCacheIdSetup <- function(env = parent.frame()) {
   list(cp = cp, ids = sort(unique(showCache(cp)$cacheId)))
 }
 
-usesCacheIdIndex <- function(cp) {
-  drv <- getDrv(NULL)
+## TRUE if the cache table of `cp` has the cacheId index (works on SQLite and Postgres)
+hasCacheIdIndex <- function(cp) {
+  drv <- getDrv(getOption("reproducible.drv", NULL))
   conn <- dbConnectAll(drv, cachePath = cp)
   on.exit(DBI::dbDisconnect(conn))
   tbl <- CacheDBTableName(cp, drv = drv)
-  plan <- DBI::dbGetQuery(conn, paste0("EXPLAIN QUERY PLAN SELECT * FROM \"", tbl,
-                                       "\" WHERE \"cacheId\" IN ('a', 'b')"))
-  any(grepl("USING INDEX", plan$detail))
+  idx <- if (is(conn, "SQLiteConnection")) {
+    DBI::dbGetQuery(conn, "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = $1",
+                    params = list(tbl))$name
+  } else {
+    DBI::dbGetQuery(conn, "SELECT indexname FROM pg_indexes WHERE tablename = $1",
+                    params = list(tbl))$indexname
+  }
+  paste0(tbl, "_cacheId") %in% idx
 }
 
 test_that("DBI showCache(cacheId = ) returns the same rows as filtering the whole table", {
@@ -52,17 +58,17 @@ test_that("DBI showCache(cacheId = ) asks the database for those entries only", 
 
 test_that("a DBI cache gets an index on cacheId, also one made before the index existed", {
   s <- dbiCacheIdSetup()
-  expect_true(usesCacheIdIndex(s$cp))
+  expect_true(hasCacheIdIndex(s$cp))
 
   ## a cache made by an earlier version: no index
-  drv <- getDrv(NULL)
+  drv <- getDrv(getOption("reproducible.drv", NULL))
   conn <- dbConnectAll(drv, cachePath = s$cp)
   tbl <- CacheDBTableName(s$cp, drv = drv)
   DBI::dbExecute(conn, paste0("DROP INDEX \"", tbl, "_cacheId\""))
   DBI::dbDisconnect(conn)
   .pkgEnv$cacheIdIndexed <- NULL
-  expect_false(usesCacheIdIndex(s$cp))
+  expect_false(hasCacheIdIndex(s$cp))
 
   expect_equal(length(unique(showCache(s$cp, cacheId = s$ids[1])$cacheId)), 1L)
-  expect_true(usesCacheIdIndex(s$cp))
+  expect_true(hasCacheIdIndex(s$cp))
 })
