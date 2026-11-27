@@ -2,6 +2,7 @@
 
 ## Bug fixes
 
+* With a Postgres (or other server) database in `options(reproducible.drv)`, `Cache()` said "Using DBI backend." on every call, and `clearCache()` with no other arguments deleted the cache files but left every row in the database table, so the cleared entries still showed in `showCache()`. `Cache()` now says it only when it switches DBI on, and `clearCache()` empties the table. `test-cacheDrvOption.R`.
 * Downloading from Google Drive without `httr2` works again with googledrive 2.2.0, which dropped the `verbose` argument of `drive_download()` ("unused argument (verbose = TRUE)").
 
 * The "Object to retrieve" message named a cached entry by the format of a file-backed object inside it (e.g. `2eb795ae5a8fe182.tif` for a `simList` holding a raster) instead of the entry's own file. The message only; what is loaded was always right. `test-cache.R`.

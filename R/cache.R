@@ -420,7 +420,8 @@ isDevMode <- function(useCache, userTags) {
 
 optionsSetForCache <- function(drv = NULL, conn = NULL, envir = parent.frame(1),
                                 verbose = getOption("reproducible.verbose")) {
-  if (!is.null(drv) || !is.null(conn)) {
+  ## drv and conn default to their options, so only switch (and say so) when DBI is not on yet
+  if ((!is.null(drv) || !is.null(conn)) && !isTRUE(getOption("reproducible.useDBI"))) {
     useDBI(TRUE, verbose = verbose)
   }
   if (isFALSE(useDBI())) {

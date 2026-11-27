@@ -395,7 +395,8 @@ test_that("CacheIsACache does not rename another cachePath's table (DBI)", {
   skip_if_not_installed("RSQLite")
   skip_if_not_installed("DBI")
   testInit()
-  withr::local_options(reproducible.useDBI = TRUE)
+  ## about one SQLite database file holding both tables, so not the reproducible.drv a user may have set
+  withr::local_options(reproducible.useDBI = TRUE, reproducible.drv = NULL, reproducible.conn = NULL)
   skip_if_not(useDBI())
 
   drv <- getDrv(NULL)
