@@ -70,5 +70,15 @@ if (nzchar(Sys.getenv("R_REPRO_TEST_FULL_MATRIX")) &&
     )
     test_check("reproducible",
                filter = paste(paste0("^", dbiBackedTests), collapse = "|"))
+
+    ## With a Postgres server (POSTGRES_TEST_SERVER=true: the one CI leg the shared workflow's
+    ## `postgres` input gives one, or locally), the cache tests again with reproducible.drv set,
+    ## as a Postgres user would. Connection settings come from the PGHOST, PGPORT, PGUSER,
+    ## PGPASSWORD and PGDATABASE environment variables.
+    if (isTRUE(as.logical(Sys.getenv("POSTGRES_TEST_SERVER", "false"))) &&
+        requireNamespace("RPostgres", quietly = TRUE)) {
+      options(reproducible.drv = RPostgres::Postgres())
+      test_check("reproducible", filter = "^cache|^showCache|^clearCache")
+    }
   }
 }

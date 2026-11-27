@@ -200,6 +200,14 @@ setMethod(
 
       if (useDBI()) {
         unlink(file.path(x, "rasters"), recursive = TRUE)
+        ## a server database (e.g. Postgres) keeps its table when the local file is removed: empty it
+        if (!grepl("SQLite", class(if (is.null(conn)) drv else conn)[1])) {
+          connClear <- if (is.null(conn)) dbConnectAll(drv, cachePath = x) else conn
+          tbl <- CacheDBTableName(x, drv = drv)
+          if (DBI::dbExistsTable(connClear, tbl))
+            DBI::dbExecute(connClear, paste0("DELETE FROM ", DBI::dbQuoteIdentifier(connClear, tbl)))
+          if (is.null(conn)) DBI::dbDisconnect(connClear)
+        }
         unlink(CacheDBFile(x, drv = drv, conn = conn), recursive = TRUE, force = TRUE)
       }
 

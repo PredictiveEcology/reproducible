@@ -161,6 +161,7 @@ test_that("the pre-warm child exits after its scan even when nobody collects", {
           "showCache pre-warm fork disabled under covr")
 
   withr::local_options(reproducible.useDBI = FALSE,
+                       reproducible.drv = NULL, reproducible.conn = NULL, # a set drv or conn turns DBI on
                        reproducible.showCachePreWarm = TRUE,
                        reproducible.verbose = -2)
   withr::defer(for (j in parallel:::children())

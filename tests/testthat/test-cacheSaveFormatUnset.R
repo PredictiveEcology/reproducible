@@ -112,6 +112,7 @@ test_that("unset cacheSaveFormat keeps a qs2 entry's tag file in qs2 on a Cache(
 
   origUseDBI <- useDBI()
   on.exit(useDBI(origUseDBI), add = TRUE)
+  withr::local_options(reproducible.drv = NULL, reproducible.conn = NULL) # a set drv or conn turns DBI on
   useDBI(FALSE) # the tag file only exists on the file-based backend
 
   cp <- checkPath(file.path(tmpdir, "unsetFmtTags"), create = TRUE)
@@ -140,6 +141,7 @@ test_that("a qs2-named tag file holding rds is read and rewritten as qs2", {
 
   origUseDBI <- useDBI()
   on.exit(useDBI(origUseDBI), add = TRUE)
+  withr::local_options(reproducible.drv = NULL, reproducible.conn = NULL) # a set drv or conn turns DBI on
   useDBI(FALSE)
 
   cp <- checkPath(file.path(tmpdir, "rdsInQs2Tags"), create = TRUE)

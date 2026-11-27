@@ -3,7 +3,8 @@
 ## in a cache of ~230k entries. It now uses the resultHash index beside cacheOutputs.
 
 test_that("an identical big result is linked without reading the whole cache (multifile)", {
-  testInit(verbose = TRUE, opts = list(reproducible.useMemoise = FALSE, reproducible.useDBI = FALSE))
+  testInit(verbose = TRUE, opts = list(reproducible.useMemoise = FALSE, reproducible.useDBI = FALSE,
+                                     reproducible.drv = NULL, reproducible.conn = NULL)) # a drv turns DBI on
   N <- .objectSizeMinForBig / 4
   f1 <- function(n) {
     set.seed(1)
@@ -25,7 +26,8 @@ test_that("an identical big result is linked without reading the whole cache (mu
 })
 
 test_that("a stale resultHash index entry is ignored (multifile)", {
-  testInit(verbose = TRUE, opts = list(reproducible.useMemoise = FALSE, reproducible.useDBI = FALSE))
+  testInit(verbose = TRUE, opts = list(reproducible.useMemoise = FALSE, reproducible.useDBI = FALSE,
+                                     reproducible.drv = NULL, reproducible.conn = NULL)) # a drv turns DBI on
   N <- .objectSizeMinForBig / 4
   f1 <- function(n) {
     set.seed(1)

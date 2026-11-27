@@ -262,6 +262,14 @@ test_that("test file-backed raster caching", {
     # clearCache(x = tmpdir)
     clearCache(x = tmpdir)
     try(unlink(CacheDBFile(tmpdir)), silent = TRUE)
+    ## a server database keeps tmpdir's table when its file is removed; drop it, as movedCache() renames into it
+    dropServerTable <- function(cp) {
+      if (!useDBI() || grepl("SQLite", class(getDrv(getOption("reproducible.drv", NULL)))[1])) return()
+      connTmp <- dbConnectAll(getDrv(getOption("reproducible.drv")), cachePath = cp)
+      on.exit(DBI::dbDisconnect(connTmp))
+      DBI::dbRemoveTable(connTmp, CacheDBTableName(cp), fail_if_missing = FALSE)
+    }
+    dropServerTable(tmpdir)
     try(unlink(CacheStorageDir(tmpdir), recursive = TRUE), silent = TRUE)
     froms <- normPath(dir(tmpCache, recursive = TRUE, full.names = TRUE))
     checkPath(file.path(tmpdir, "rasters"), create = TRUE)
@@ -274,7 +282,8 @@ test_that("test file-backed raster caching", {
     # ._prepareOutputs_1 <<- ._prepareOutputs_2 <<- ._getFromRepo <<- 1
     # Will silently update the filename of the RasterLayer, and recover it
     type <- gsub("Connection", "", class(getOption("reproducible.conn")))
-    isSQLite <- cli::ansi_grepl(type, "NULL")
+    isSQLite <- cli::ansi_grepl(type, "NULL") &&
+      grepl("SQLite", class(getDrv(getOption("reproducible.drv", NULL)))[1]) # a drv may be set without a conn
     if (!isSQLite) {
       warn1 <- capture_warnings(movedCache(tmpdir, old = tmpCache))
     }
@@ -330,7 +339,7 @@ test_that("test file-backed raster caching", {
       to = gsub(normPath(tmpCache), normPath(tmpdir), froms)
     )
     if (!isSQLite) {
-      DBI::dbRemoveTable(conn, CacheDBTableName(tmpdir))
+      dropServerTable(tmpdir)
     }
     movedCache(tmpdir, tmpCache)
     out <- Cache(fn2, bbS, cachePath = tmpdir, userTags = "something2")

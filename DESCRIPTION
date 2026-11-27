@@ -82,6 +82,7 @@ Suggests:
     RCurl (>= 1.95-4.8),
     rlang,
     rmarkdown,
+    RPostgres,
     RSQLite,
     R.utils,
     rvest,
